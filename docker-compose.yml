@@ -9,6 +9,9 @@ services:
     working_dir: /var/www
     volumes:
       - .:/var/www
+    # Start a simple PHP built-in server so the container responds on the mapped port automatically.
+    # This is fine for development. For production, use nginx or another proper webserver.
+    command: php -S 0.0.0.0:8000 -t public
     ports:
       - 8000:8000
     depends_on:
