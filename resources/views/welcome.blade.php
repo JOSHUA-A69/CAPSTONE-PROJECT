@@ -69,7 +69,7 @@
                     {{-- Illustration removed: small placeholder --}}
 
                     <div class="h-full w-full flex items-center justify-center p-6">
-                        <div class="text-center text-sm text-[#706f6c] dark:text-[#A1A09A]">Hero illustration removed</div>
+                        <div class="text-center text-sm text-[#706f6c] dark:text-[#A1A09A]"></div>
                     </div>
                 </div>
             </main>
