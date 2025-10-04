@@ -60,9 +60,26 @@ require __DIR__.'/auth.php';
 // ==========================
 // Role-based dashboards
 // ==========================
-Route::middleware(['auth', 'role:admin'])->get('/admin', fn () => view('admin.dashboard'))->name('admin.dashboard');
-Route::middleware(['auth', 'role:staff'])->get('/staff', fn () => view('staff.dashboard'))->name('staff.dashboard');
-Route::middleware(['auth', 'role:adviser'])->get('/adviser', fn () => view('adviser.dashboard'))->name('adviser.dashboard');
-Route::middleware(['auth', 'role:priest'])->get('/priest', fn () => view('priest.dashboard'))->name('priest.dashboard');
-Route::middleware(['auth', 'role:requestor'])->get('/requestor', fn () => view('requestor.dashboard'))->name('requestor.dashboard');
+// Use the middleware class name with parameter here instead of the alias string
+// to avoid Laravel attempting to resolve the alias as a class during middleware
+// termination (which can produce "Target class [role] does not exist.").
+Route::get('/admin', fn () => view('admin.dashboard'))
+    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
+    ->name('admin.dashboard');
+
+Route::get('/staff', fn () => view('staff.dashboard'))
+    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':staff'])
+    ->name('staff.dashboard');
+
+Route::get('/adviser', fn () => view('adviser.dashboard'))
+    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])
+    ->name('adviser.dashboard');
+
+Route::get('/priest', fn () => view('priest.dashboard'))
+    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':priest'])
+    ->name('priest.dashboard');
+
+Route::get('/requestor', fn () => view('requestor.dashboard'))
+    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':requestor'])
+    ->name('requestor.dashboard');
 

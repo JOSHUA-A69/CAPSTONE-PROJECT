@@ -45,6 +45,10 @@
                         <div class="flex items-center gap-3">
                             @auth
                                 <a href="{{ url('/dashboard') }}" class="px-4 py-2 rounded text-sm border border-transparent bg-white text-[#1b1b18]">Dashboard</a>
+                                <form method="POST" action="{{ route('logout') }}" class="inline">
+                                    @csrf
+                                    <button type="submit" class="px-4 py-2 rounded text-sm border border-transparent hover:bg-gray-100">Sign Out</button>
+                                </form>
                             @else
                                 <a href="{{ route('login') }}" class="px-4 py-2 rounded text-sm border border-transparent hover:underline">Sign In</a>
                                 @if (Route::has('register'))

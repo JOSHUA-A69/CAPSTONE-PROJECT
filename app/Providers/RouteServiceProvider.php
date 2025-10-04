@@ -28,6 +28,20 @@ class RouteServiceProvider extends BaseProvider
     }
 
     /**
+     * Get the named route for a role (used for redirect()->route()).
+     */
+    public static function routeNameForRole(?string $role): string
+    {
+        return match($role) {
+            'admin'   => 'admin.dashboard',
+            'staff'   => 'staff.dashboard',
+            'adviser' => 'adviser.dashboard',
+            'priest'  => 'priest.dashboard',
+            default   => 'requestor.dashboard',
+        };
+    }
+
+    /**
      * Define your route model bindings, pattern filters, etc.
      */
     public function boot(): void

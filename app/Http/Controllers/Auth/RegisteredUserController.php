@@ -65,12 +65,12 @@ class RegisteredUserController extends Controller
             }
         }
 
-        // Redirect to role-specific landing (fallback to generic dashboard)
-        $rolePath = RouteServiceProvider::redirectTo($user->role ?? ($user->userRole->role_name ?? null));
-        if ($rolePath) {
-            return redirect($rolePath);
+        // Redirect to role-specific landing using named routes
+        $routeName = RouteServiceProvider::routeNameForRole($user->role ?? ($user->userRole->role_name ?? null));
+        if ($routeName) {
+            return redirect()->route($routeName);
         }
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->route('dashboard');
     }
 }
