@@ -22,12 +22,14 @@ return new class extends Migration
 
         // Seed default roles
         $now = now();
+        // Use role_name values that match the existing users.role enum
+        // so the mapping UPDATE statement will find matches.
         $roles = [
-            ['role_name' => 'admin', 'description' => 'Administrator', 'created_at' => $now, 'updated_at' => $now],
-            ['role_name' => 'staff', 'description' => 'Staff', 'created_at' => $now, 'updated_at' => $now],
-            ['role_name' => 'adviser', 'description' => 'Adviser', 'created_at' => $now, 'updated_at' => $now],
-            ['role_name' => 'requestor', 'description' => 'Requestor', 'created_at' => $now, 'updated_at' => $now],
-            ['role_name' => 'priest', 'description' => 'Priest', 'created_at' => $now, 'updated_at' => $now],
+            ['role_name' => 'admin', 'description' => 'CREaM Administrator - highest-level user; manages system-wide settings, users, and reports.', 'created_at' => $now, 'updated_at' => $now],
+            ['role_name' => 'staff', 'description' => 'CREaM Staff - supports daily operations, processing reservations and generating reports.', 'created_at' => $now, 'updated_at' => $now],
+            ['role_name' => 'adviser', 'description' => 'Organization Adviser - reviews and approves requests for their organization and views related reports.', 'created_at' => $now, 'updated_at' => $now],
+            ['role_name' => 'requestor', 'description' => 'Requestor - submits requests for services and tracks approval status.', 'created_at' => $now, 'updated_at' => $now],
+            ['role_name' => 'priest', 'description' => 'Priest - officiant assigned to approved events and reviews event details.', 'created_at' => $now, 'updated_at' => $now],
         ];
         DB::table('user_roles')->insert($roles);
 
