@@ -29,10 +29,27 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // ✅ Role-based redirect
-        return redirect()->intended(
-            RouteServiceProvider::redirectTo(Auth::user()->role)
-        );
+        // Role-based redirect: prefer the role landing page but allow an
+        // 'intended' redirect only if it points into the same role area.
+        $rolePath = RouteServiceProvider::redirectTo(Auth::user()->role);
+
+        // Get intended URL from the session (if any)
+        $intended = $request->session()->pull('url.intended');
+
+        if ($intended) {
+            // Normalize intended path (strip host)
+            $intendedPath = parse_url($intended, PHP_URL_PATH) ?: '/';
+
+            // Allow the intended redirect only when it belongs to the same
+            // role-area (e.g. /admin/* for admin) to avoid sending users
+            // back to unrelated pages.
+            if (str_starts_with($intendedPath, $rolePath)) {
+                return redirect()->intended($rolePath);
+            }
+        }
+
+        // Default: send user to their role landing page
+        return redirect($rolePath);
     }
 
     /**
