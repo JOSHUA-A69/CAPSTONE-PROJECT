@@ -16,7 +16,7 @@
                             <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
                         </div>
                         <div>
-                            <label for="middle_name" class="block text-sm font-medium text-[#1b1b18]">Middle name</label>
+                            <label for="middle_name" class="block text-sm font-medium text-[#1b1b18]">Middle name (optional)</label>
                             <input id="middle_name" name="middle_name" type="text" value="{{ old('middle_name') }}" class="mt-2 w-full rounded-md border border-[#e3e3e0] px-4 py-3 text-sm" />
                             <x-input-error :messages="$errors->get('middle_name')" class="mt-2" />
                         </div>

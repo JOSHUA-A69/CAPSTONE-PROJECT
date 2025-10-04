@@ -83,3 +83,8 @@ Route::get('/requestor', fn () => view('requestor.dashboard'))
     ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':requestor'])
     ->name('requestor.dashboard');
 
+// Admin user management route - only admins can delete other user accounts
+Route::delete('/admin/users/{id}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])
+    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
+    ->name('admin.users.destroy');
+
