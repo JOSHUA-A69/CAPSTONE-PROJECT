@@ -9,7 +9,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use App\Providers\RouteServiceProvider;
 use App\Models\UserRole;
@@ -35,7 +37,7 @@ class RegisteredUserController extends Controller
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')],
             'phone' => ['nullable', 'string', 'max:50'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:admin,staff,adviser,requestor,priest'],
@@ -58,6 +60,15 @@ class RegisteredUserController extends Controller
         ]);
 
         event(new Registered($user));
+
+        // Explicitly send the email verification notification so UI signups
+        // always receive a verification email immediately (avoids relying
+        // solely on event listener mappings or queue workers).
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            Log::error('Failed to send verification email on registration: '.$e->getMessage());
+        }
 
         Auth::login($user);
 

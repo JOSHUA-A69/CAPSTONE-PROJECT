@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +15,31 @@ use Illuminate\Support\Facades\Auth;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Development helper: allow a logged-in pending user to mark their email
+// as verified so they can reach role-specific pages during local testing.
+// This route is only registered when the application environment is 'local'.
+if (app()->environment('local')) {
+    Route::get('/dev/verify-me', function () {
+        /** @var User|null $user */
+        $user = Auth::user();
+        if (! $user) {
+            return redirect('/');
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            $user->email_verified_at = now();
+            $user->status = 'active';
+            $user->save();
+
+            // Fire the Verified event so any listeners run (for consistency)
+            event(new \Illuminate\Auth\Events\Verified($user));
+        }
+
+        // Redirect to dashboard which will forward to the role-specific page
+        return redirect()->route('dashboard');
+    })->middleware('auth')->name('dev.verify');
+}
 
 // Default dashboard: redirect users to their role-specific dashboard
 Route::get('/dashboard', function () {
