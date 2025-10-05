@@ -118,3 +118,12 @@ Route::post('/admin/users/{id}/approve', [\App\Http\Controllers\Admin\UserApprov
     ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
     ->name('admin.users.approve');
 
+// Admin user CRUD (list, create, store, edit, update)
+Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [\App\Http\Controllers\Admin\UserManagementController::class, 'create'])->name('users.create');
+    Route::post('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');
+    Route::get('/users/{id}/edit', [\App\Http\Controllers\Admin\UserManagementController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{id}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])->name('users.update');
+});
+
