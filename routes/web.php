@@ -64,27 +64,31 @@ require __DIR__.'/auth.php';
 // to avoid Laravel attempting to resolve the alias as a class during middleware
 // termination (which can produce "Target class [role] does not exist.").
 Route::get('/admin', fn () => view('admin.dashboard'))
-    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
+    ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
     ->name('admin.dashboard');
 
 Route::get('/staff', fn () => view('staff.dashboard'))
-    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':staff'])
+    ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':staff'])
     ->name('staff.dashboard');
 
 Route::get('/adviser', fn () => view('adviser.dashboard'))
-    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])
+    ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])
     ->name('adviser.dashboard');
 
 Route::get('/priest', fn () => view('priest.dashboard'))
-    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':priest'])
+    ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':priest'])
     ->name('priest.dashboard');
 
 Route::get('/requestor', fn () => view('requestor.dashboard'))
-    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':requestor'])
+    ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':requestor'])
     ->name('requestor.dashboard');
 
 // Admin user management route - only admins can delete other user accounts
 Route::delete('/admin/users/{id}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])
     ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
     ->name('admin.users.destroy');
+
+Route::post('/admin/users/{id}/approve', [\App\Http\Controllers\Admin\UserApprovalController::class, 'approve'])
+    ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
+    ->name('admin.users.approve');
 

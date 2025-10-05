@@ -51,18 +51,29 @@
                         <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                     </div>
 
-                    <div class="mb-4">
-                        <label for="role" class="block text-sm font-medium text-[#1b1b18]">User Role</label>
-                        <select id="role" name="role" required class="mt-2 w-full rounded-md border border-[#e3e3e0] px-4 py-3 text-sm">
-                            <option value="">Select your role</option>
-                            <option value="admin" {{ old('role')=='admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="staff" {{ old('role')=='staff' ? 'selected' : '' }}>Staff</option>
-                            <option value="adviser" {{ old('role')=='adviser' ? 'selected' : '' }}>Adviser</option>
-                            <option value="requestor" {{ old('role')=='requestor' ? 'selected' : '' }}>Requestor</option>
-                            <option value="priest" {{ old('role')=='priest' ? 'selected' : '' }}>Priest</option>
-                        </select>
-                        <x-input-error :messages="$errors->get('role')" class="mt-2" />
-                    </div>
+                    @if(config('registration.allow_role_selection'))
+                        <div class="mb-4">
+                            <label for="role" class="block text-sm font-medium text-[#1b1b18]">User Role</label>
+                            <select id="role" name="role" class="mt-2 w-full rounded-md border border-[#e3e3e0] px-4 py-3 text-sm">
+                                <option value="">Select your role</option>
+                                <option value="admin" {{ old('role')=='admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="staff" {{ old('role')=='staff' ? 'selected' : '' }}>Staff</option>
+                                <option value="adviser" {{ old('role')=='adviser' ? 'selected' : '' }}>Adviser</option>
+                                <option value="requestor" {{ old('role')=='requestor' ? 'selected' : '' }}>Requestor</option>
+                                <option value="priest" {{ old('role')=='priest' ? 'selected' : '' }}>Priest</option>
+                            </select>
+                            <x-input-error :messages="$errors->get('role')" class="mt-2" />
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="elevated_code" class="block text-sm font-medium text-[#1b1b18]">Elevated registration code (required for high roles)</label>
+                            <input id="elevated_code" name="elevated_code" type="text" value="{{ old('elevated_code') }}" class="mt-2 w-full rounded-md border border-[#e3e3e0] px-4 py-3 text-sm" />
+                            <x-input-error :messages="$errors->get('elevated_code')" class="mt-2" />
+                        </div>
+                    @else
+                        <!-- Self-registration is only for Requestors. Higher roles must be created by an admin. -->
+                        <input type="hidden" name="role" value="requestor" />
+                    @endif
 
                     <div class="mt-6">
                         <button type="submit" class="w-full bg-[#2ecc71] hover:bg-[#28c76a] text-white font-semibold py-3 rounded-full">Register</button>

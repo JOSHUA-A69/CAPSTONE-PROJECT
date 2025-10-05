@@ -31,15 +31,20 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'phone' => ['nullable', 'string', 'max:50'],
-            'role' => ['required', 'in:admin,staff,adviser,requestor,priest'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+            'role' => ['required', 'in:admin,staff,adviser,requestor,priest'],
+        ];
+        $validated = $request->validate($rules);
+
+        // Accept the chosen role from the form. Accounts will be created with
+        // a 'pending' status and must verify email to become active.
+        $chosenRole = $validated['role'] ?? 'requestor';
 
         $user = User::create([
             'first_name' => $validated['first_name'],
@@ -47,7 +52,8 @@ class RegisteredUserController extends Controller
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? null,
-            'role' => $validated['role'],
+            'role' => $chosenRole,
+            'status' => 'pending',
             'password' => Hash::make($validated['password']),
         ]);
 
@@ -65,12 +71,8 @@ class RegisteredUserController extends Controller
             }
         }
 
-        // Redirect to role-specific landing using named routes
-        $routeName = RouteServiceProvider::routeNameForRole($user->role ?? ($user->userRole->role_name ?? null));
-        if ($routeName) {
-            return redirect()->route($routeName);
-        }
-
-        return redirect()->route('dashboard');
+        // Send the user to the email verification notice so they must verify
+        // their email before accessing role-specific pages.
+        return redirect()->route('verification.notice');
     }
 }
