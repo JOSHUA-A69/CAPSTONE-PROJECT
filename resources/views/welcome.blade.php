@@ -68,11 +68,36 @@
                     </div>
 
                     <div class="py-12 flex items-center justify-center">
-                        <div class="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow p-8">
-                            <div class="h-64 bg-[url('/images/hero-placeholder.svg')] bg-cover bg-center rounded-lg flex items-center justify-center">
-                                <div class="text-center bg-white/60 dark:bg-black/40 p-4 rounded">
-                                    <div class="text-2xl font-semibold text-[var(--er-green)]">eReligiousServices</div>
-                                    <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">Experience seamless booking and community engagement</div>
+                        <div class="w-full max-w-md">
+                            <div class="h-64 relative overflow-hidden">
+                                <!-- Decorative SVG background: soft radial shapes for a modern, calm hero -->
+                                <svg class="absolute inset-0 w-full h-full" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <defs>
+                                        <radialGradient id="g1" cx="30%" cy="30%" r="50%">
+                                            <stop offset="0%" stop-color="#E9FFF3" />
+                                            <stop offset="60%" stop-color="#F8FFF9" />
+                                            <stop offset="100%" stop-color="#FFFFFF" />
+                                        </radialGradient>
+                                        <radialGradient id="g2" cx="70%" cy="70%" r="45%">
+                                            <stop offset="0%" stop-color="#E6FFF0" stop-opacity="0.9" />
+                                            <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.6" />
+                                        </radialGradient>
+                                    </defs>
+
+                                    <rect width="100%" height="100%" fill="url(#g1)" />
+                                    <circle cx="620" cy="120" r="140" fill="url(#g2)" />
+                                    <circle cx="160" cy="240" r="100" fill="#F3FFF7" opacity="0.9" />
+                                </svg>
+
+                                <!-- subtle overlay to add depth and support dark mode -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-white/40 via-white/10 to-transparent dark:from-black/30 dark:via-black/10"></div>
+
+                                <!-- foreground frosted panel -->
+                                <div class="relative z-10 flex items-center justify-center h-full">
+                                    <div class="text-center backdrop-blur-sm p-2">
+                                        <div class="text-2xl font-semibold text-[var(--er-green)]">eReligiousServices</div>
+                                        <div class="mt-2 text-sm text-gray-600 dark:text-gray-300">Experience seamless booking and community engagement</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
