@@ -98,10 +98,6 @@
             </div>
         </main>
 
-        <footer class="mt-16 border-t bg-white dark:bg-gray-900">
-            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 text-sm text-gray-500">
-                © {{ date('Y') }} eReligiousServices — Center for Religious Education and Mission
-            </div>
-        </footer>
+        @include('layouts.footer')
     </body>
 </html>
