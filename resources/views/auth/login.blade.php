@@ -3,7 +3,7 @@
         <div class="max-w-[420px] w-full bg-white dark:bg-[#161615] rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.06)] border border-[#e3e3e0] dark:border-[#3E3E3A]">
             <div class="p-8 lg:p-10">
                 <div class="flex flex-col items-center mb-6">
-                    <img src="/favicon.ico" alt="eReligiousServices" class="w-16 h-16 rounded-full mb-4" />
+                    <img src="/images/ers-logo.png" alt="eReligiousServices" class="w-16 h-16 rounded-full mb-4 object-contain" />
                     <h1 class="text-3xl font-bold text-[#2ecc71]">Sign In</h1>
                 </div>
 

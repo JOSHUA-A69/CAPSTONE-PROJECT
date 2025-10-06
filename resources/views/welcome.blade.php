@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{{ config('app.name', 'eReligiousServices') }}</title>
 
-        <!-- Favicon / site logo -->
-        <link rel="icon" href="/images/ers-logo.svg" />
+    <!-- Favicon / site logo -->
+    <link rel="icon" href="/images/ers-logo.png" />
 
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -17,7 +17,7 @@
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-16 items-center justify-between">
                     <a href="{{ url('/') }}" class="flex items-center gap-3">
-                        <img src="/images/ers-logo.svg" alt="eReligiousServices logo" class="w-12 h-12 object-contain" />
+                        <img src="/images/ers-logo.png" alt="eReligiousServices logo" class="w-12 h-12 object-contain" />
                         <div class="hidden sm:block">
                             <div class="font-semibold text-lg">eReligiousServices</div>
                             <div class="text-xs text-gray-500">Center for Religious Education and Mission</div>

@@ -1,3 +1,3 @@
 <span {{ $attributes->merge(['class' => 'inline-block']) }}>
-    <img src="/favicon.ico" alt="eReligiousServices" class="w-8 h-8" />
+    <img src="/images/ers-logo.png" alt="eReligiousServices" class="w-8 h-8 object-contain" />
 </span>
