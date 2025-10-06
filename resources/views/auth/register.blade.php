@@ -7,18 +7,18 @@
 
                 <form method="POST" action="{{ route('register') }}">
                     @csrf
-                    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4">
-                        <div class="sm:col-span-2">
+                    <div class="grid grid-cols-1 gap-3 mb-4">
+                        <div>
                             <label for="first_name" class="block text-sm font-medium text-[#1b1b18]">First name</label>
                             <input id="first_name" name="first_name" type="text" value="{{ old('first_name') }}" required autofocus class="mt-2 w-full rounded-md border border-[#e3e3e0] px-4 py-3 text-base" />
                             <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
                         </div>
-                        <div class="sm:col-span-1">
+                        <div>
                             <label for="middle_name" class="block text-sm font-medium text-[#1b1b18]">Middle name (optional)</label>
                             <input id="middle_name" name="middle_name" type="text" value="{{ old('middle_name') }}" class="mt-2 w-full rounded-md border border-[#e3e3e0] px-4 py-3 text-base" />
                             <x-input-error :messages="$errors->get('middle_name')" class="mt-2" />
                         </div>
-                        <div class="sm:col-span-1">
+                        <div>
                             <label for="last_name" class="block text-sm font-medium text-[#1b1b18]">Last name</label>
                             <input id="last_name" name="last_name" type="text" value="{{ old('last_name') }}" required class="mt-2 w-full rounded-md border border-[#e3e3e0] px-4 py-3 text-base" />
                             <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
