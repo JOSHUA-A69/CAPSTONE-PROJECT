@@ -1,3 +1,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom design tokens and small utilities to match the project's hero design */
+@layer base {
+	:root {
+		--er-green: #2ecc71; /* primary green */
+		--er-dark: #1b1b18;  /* heading dark */
+		--er-muted: #706f6c; /* muted text */
+	}
+
+	body {
+		font-family: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+	}
+}
+
+@layer components {
+	.er-hero-title {
+		@apply font-extrabold; /* weight */
+		color: var(--er-dark);
+	}
+
+	.er-cta-primary {
+		@apply inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--er-green)] text-white shadow-lg;
+	}
+
+	.er-cta-ghost {
+		@apply inline-flex items-center gap-2 px-5 py-3 rounded-full border bg-white text-[var(--er-dark)];
+	}
+
+	.er-stat-card {
+		@apply bg-white dark:bg-gray-800 rounded-2xl shadow p-6 text-center;
+	}
+}
+
+@layer utilities {
+	.text-hero-4xl { font-size: 3.25rem; line-height: 1; }
+	@media (min-width: 768px) { .text-hero-4xl { font-size: 4rem; } }
+}
