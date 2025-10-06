@@ -38,3 +38,25 @@
 	.text-hero-4xl { font-size: 3.25rem; line-height: 1; }
 	@media (min-width: 768px) { .text-hero-4xl { font-size: 4rem; } }
 }
+
+@layer components {
+	/* Compact footer utilities */
+	.er-footer {
+		background-color: var(--er-green);
+		color: #fff;
+	}
+	.er-footer-inner {
+		max-width: 80rem; /* similar to max-w-7xl (~1120px) */
+		margin-left: auto;
+		margin-right: auto;
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+	.er-footer-title { font-size: 1.125rem; font-weight: 700; }
+	.er-footer-sub { font-size: 0.75rem; opacity: 0.9; }
+	.er-footer-desc { font-size: 0.875rem; color: rgba(255,255,255,0.9); line-height:1.4; }
+	.er-footer-col h4 { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; }
+	.er-footer-col ul li a { text-decoration: none; }
+	.er-footer-col ul li a:hover { text-decoration: underline; }
+	.er-footer-icons svg { color: rgba(255,255,255,0.9); }
+}
