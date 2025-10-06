@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -44,6 +45,17 @@ class LoginRequest extends FormRequest
 
         // Include role in the credentials so authentication only succeeds
         // when email, password and role all match.
+        // Prevent suspended accounts from attempting to login.
+        $user = User::where('email', $this->string('email'))
+            ->where('role', $this->string('role'))
+            ->first();
+
+        if ($user && ($user->status ?? 'active') === 'suspended') {
+            throw ValidationException::withMessages([
+                'email' => 'Your account has been suspended. Please contact support.',
+            ]);
+        }
+
         if (! Auth::attempt($this->only('email', 'password', 'role'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
