@@ -165,78 +165,250 @@ If you'd like to contribute, please:
 2. Create a feature branch.
 3. Run tests and ensure lints pass where applicable.
 
+# eReligiousServices — Project overview and setup
+
+This repository contains eReligiousServices — a Laravel application for booking and community engagement used by the Center for Religious Education and Mission (CREaM). This README provides a concise, practical setup guide for other machines (both Docker-based and manual), a refined overview of the project, and troubleshooting tips for common problems when cloning and booting the project.
+
+## Table of contents
+- Overview
+- Requirements
+- Quick start (Docker — recommended)
+- Manual setup (host machine without Docker)
+- Building frontend assets (Vite/Tailwind)
+- Database migrations & seeding
+- Environment and missing files after clone
+- Useful composer / artisan / docker commands
+- Ports and services (what runs where)
+- Troubleshooting
+- Contributing
+
 ---
 
-If you want, I can also:
+## Overview
 
-- Add a dedicated `docs/` folder with more granular developer guides (e.g., database design, ER diagrams).
-- Scaffold an Admin users list UI (table + delete actions) so admins can manage users via the web UI.
-- Add sample `.env.testing` and a `Makefile` or PowerShell script for faster dev bootstrapping.
+eReligiousServices is a Laravel (PHP) web application focused on event/liturgy booking and community workflows. Key capabilities:
 
-Tell me which extras you want and I will add them next.
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+- Role-based authentication and dashboards (roles: admin, staff, adviser, requestor, priest).
+- Registration and email verification flows.
+- Admin user management and role assignment.
+- Online booking, event listings, and basic profile management (first/middle/last names, phone, email).
+- Vite + Tailwind for frontend assets; MySQL for data storage; Mailhog included for local email testing.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The repository includes a Docker Compose setup to make running locally easier and consistent across machines.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Git
+- Docker Engine + Docker Compose (recommended) — modern Docker (Docker Desktop) that supports `docker compose` CLI
+- If not using Docker: PHP 8.1+ (with pdo_mysql, mbstring, bcmath, xml, gd), Composer, MySQL 8+, Node.js (18+ recommended), npm/yarn
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Notes for Windows users: these docs use PowerShell examples; on macOS / Linux run the equivalent shell commands.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Quick start (Docker — recommended)
 
-## Learning Laravel
+This is the fastest and most reproducible way to get the project running on another machine.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+1. Clone the repo and cd into it:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```powershell
+git clone <repo-url> eReligiousServices
+cd eReligiousServices
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. Create a `.env` file (copy the example). If your clone does not include `.env` create it now:
 
-## Laravel Sponsors
+```powershell
+copy .env.example .env
+# open .env and set APP_NAME, APP_URL if you like; default DB values below match docker-compose.yml
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. Start containers (build and run in background):
 
-### Premium Partners
+```powershell
+docker compose up -d --build
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+4. Install PHP dependencies inside the `app` container and generate an app key:
+
+```powershell
+docker compose exec app composer install --no-interaction --prefer-dist
+docker compose exec app php artisan key:generate
+```
+
+5. Run database migrations and seeders:
+
+```powershell
+docker compose exec app php artisan migrate --seed
+```
+
+6. Install and build frontend assets (inside container):
+
+```powershell
+docker compose exec app sh -c "npm ci --silent && npm run build --silent"
+```
+
+7. Open the app in your browser:
+
+- Application: http://localhost:8000
+- MailHog (dev SMTP UI): http://localhost:8025 (if Mailhog service is running)
+- phpMyAdmin: http://localhost:8080 (if enabled in compose)
+
+8. Helpful commands (stop, restart, logs):
+
+```powershell
+# stop and remove containers and network
+docker compose down --remove-orphans
+
+# stop only
+docker compose stop
+
+# show logs for a service
+docker compose logs -f app
+
+# show running compose services
+docker compose ps
+```
+
+## Manual setup (no Docker)
+
+If you prefer not to use Docker, set up on the host
+
+1. Install PHP 8.1+ with required extensions (pdo_mysql, mbstring, bcmath, xml, gd, etc.)
+2. Install Composer and Node.js (18+)
+3. Clone repo and copy `.env.example` to `.env`
+4. Install PHP deps:
+
+```powershell
+composer install --no-interaction --prefer-dist
+```
+
+5. Install Node deps and build assets:
+
+```powershell
+npm ci
+npm run build
+```
+
+6. Generate an app key and run migrations:
+
+```powershell
+php artisan key:generate
+php artisan migrate --seed
+```
+
+7. Serve app locally:
+
+```powershell
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+## Building frontend assets (Vite + Tailwind)
+
+Assets are located under `resources/js` and `resources/css`. The project uses Vite. Build options:
+
+- Inside the app container (recommended when using Docker):
+
+```powershell
+docker compose exec app sh -c "npm ci && npm run build"
+```
+
+- On the host (non-Docker):
+
+```powershell
+npm ci
+npm run build
+```
+
+The production output will be placed in `public/build` and referenced by Blade when `public/build/manifest.json` exists.
+
+## Database migrations & seeding
+
+- Run migrations:
+
+```powershell
+docker compose exec app php artisan migrate
+```
+
+- Migrate fresh + seed (development only — drops data):
+
+```powershell
+docker compose exec app php artisan migrate:fresh --seed
+```
+
+## Environment & missing files after clone
+
+When cloning from a remote repository the following are commonly missing or need to be created:
+
+- `.env` — copy `.env.example` and set values (APP_KEY, DB credentials, MAIL settings).
+- `vendor/` — created by running `composer install`.
+- `node_modules/` — created by running `npm ci` or `npm install`.
+- `storage/` and `bootstrap/cache` — when missing, create them and (on Linux/macOS) set permissions so the webserver/process can write:
+
+```powershell
+# create folders if missing
+mkdir storage\framework storage\logs bootstrap\cache
+
+# on Linux/macOS example permissions (adjust user/group as needed)
+sudo chown -R $USER:www-data storage bootstrap/cache
+sudo chmod -R ug+rwx storage bootstrap/cache
+```
+
+Windows note: permissions are usually okay for local development, but ensure your editor/antivirus is not locking files.
+
+## Useful composer / artisan / docker commands
+
+- Composer install: `composer install --no-interaction --prefer-dist`
+- Composer dump autoload: `composer dump-autoload -o`
+- Clear caches: `php artisan config:clear && php artisan route:clear && php artisan view:clear`
+- Generate key: `php artisan key:generate`
+- Run tests: `vendor/bin/phpunit` (or `./vendor/bin/phpunit` on POSIX)
+
+When using Docker prefix with `docker compose exec app` (for example `docker compose exec app php artisan migrate`).
+
+## Ports & services (defaults used by compose)
+
+- App (PHP built-in server inside container): http://localhost:8000
+- MailHog web UI (dev SMTP): http://localhost:8025 (SMTP on port 1025)
+- phpMyAdmin: http://localhost:8080 (if enabled in compose)
+
+Check `docker-compose.yml` for exact ports and service names (service name is `app` in this project; container_name may be `laravel_app`).
+
+## Troubleshooting
+
+- If the app title remains "Laravel":
+	- Edit `.env` and set `APP_NAME="eReligiousServices"` and clear config cache. If you changed `config/app.php` fallback, clear config cache too.
+
+- Composer memory errors on install:
+	- Use `COMPOSER_MEMORY_LIMIT=-1 composer install` or allocate more memory to Docker if running in a container.
+
+- Node build errors:
+	- Ensure Node 18+ is installed. On containers run `docker compose exec app node -v` to inspect.
+
+- Container exec reporting not running: be sure to use the Compose service name. For this repo the service is `app`:
+
+```powershell
+# correct
+docker compose exec app sh -c "npm ci && npm run build"
+
+# incorrect (container name instead of service may fail with some docker compose versions)
+docker compose exec laravel_app sh -c "..."
+```
+
+- Database connection errors: confirm `.env` DB_HOST matches the compose service name (commonly `db` or `mysql_db`), or when running on host use `127.0.0.1` and the host port mapping.
+
+- If Blade templates or config changes don't show up, clear caches:
+
+```powershell
+docker compose exec app php artisan config:clear
+docker compose exec app php artisan view:clear
+docker compose exec app php artisan route:clear
+```
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+If you'd like to contribute:
 
-## Code of Conduct
+1. Fork and create a feature branch.
+2. Run tests and keep changes small and documented.
+3. Open a PR describing the change and its reasoning.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
