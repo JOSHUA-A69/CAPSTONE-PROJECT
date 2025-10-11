@@ -4,6 +4,9 @@
 <div class="container mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-semibold">Organizations</h1>
+        <div>
+            <a href="{{ route('staff.organizations.create') }}" class="btn btn-primary">New Organization</a>
+        </div>
     </div>
 
     @if(session('status'))
