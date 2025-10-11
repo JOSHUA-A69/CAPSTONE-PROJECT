@@ -20,6 +20,12 @@
                             {{ __('Manage Users') }}
                         </x-nav-link>
                     @endif
+
+                    @if(auth()->check() && auth()->user()->role === 'staff')
+                        <x-nav-link :href="route('staff.organizations.index')" :active="request()->routeIs('staff.organizations*')">
+                            {{ __('Manage Organizations') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -78,6 +84,12 @@
             @if(auth()->check() && auth()->user()->role === 'admin')
                 <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users*')">
                     {{ __('Manage Users') }}
+                </x-responsive-nav-link>
+            @endif
+
+            @if(auth()->check() && auth()->user()->role === 'staff')
+                <x-responsive-nav-link :href="route('staff.organizations.index')" :active="request()->routeIs('staff.organizations*')">
+                    {{ __('Manage Organizations') }}
                 </x-responsive-nav-link>
             @endif
         </div>

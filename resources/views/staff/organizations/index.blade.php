@@ -4,7 +4,6 @@
 <div class="container mx-auto p-4">
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-semibold">Organizations</h1>
-        <a href="{{ route('staff.organizations.create') }}" class="btn btn-primary">New Organization</a>
     </div>
 
     @if(session('status'))
@@ -15,8 +14,7 @@
         @if($organizations->isEmpty())
             <div class="p-6 text-center">
                 <p class="text-gray-600">No organizations have been created yet.</p>
-                <p class="mt-3"><a href="{{ route('staff.organizations.create') }}" class="text-blue-600">Create the first organization</a></p>
-                <p class="mt-2 text-sm text-gray-500">Tip: assign an adviser from the list of registered users who have the 'adviser' role.</p>
+                <p class="mt-2 text-sm text-gray-500">Tip: assign an adviser from the list of registered users who have the 'adviser' role. Use the "Manage Organizations" button in the header to create a new organization.</p>
             </div>
         @else
         <table class="min-w-full divide-y">
