@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto p-4">
+<div class="max-w-3xl mx-auto px-4 py-6">
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-semibold">Organizations</h1>
         <div>
@@ -14,6 +14,7 @@
     @endif
 
     <div class="bg-white shadow rounded">
+        <div class="overflow-x-auto">
         @if($organizations->isEmpty())
             <div class="p-6 text-center">
                 <p class="text-gray-600">No organizations have been created yet.</p>
@@ -50,6 +51,7 @@
             </tbody>
         </table>
         @endif
+        </div>
     </div>
 
     <div class="mt-4">

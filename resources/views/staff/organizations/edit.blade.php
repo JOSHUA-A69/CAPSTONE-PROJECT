@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto p-4">
+<div class="max-w-3xl mx-auto px-4 py-6">
     <h1 class="text-2xl font-semibold mb-4">Edit Organization</h1>
 
     <form method="POST" action="{{ route('staff.organizations.update', $organization->org_id) }}">
