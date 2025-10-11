@@ -97,6 +97,16 @@ Route::get('/staff', fn () => view('staff.dashboard'))
     ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':staff'])
     ->name('staff.dashboard');
 
+// Staff organization management
+Route::prefix('staff')->name('staff.')->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':staff'])->group(function () {
+    Route::get('/organizations', [\App\Http\Controllers\Staff\OrganizationController::class, 'index'])->name('organizations.index');
+    Route::get('/organizations/create', [\App\Http\Controllers\Staff\OrganizationController::class, 'create'])->name('organizations.create');
+    Route::post('/organizations', [\App\Http\Controllers\Staff\OrganizationController::class, 'store'])->name('organizations.store');
+    Route::get('/organizations/{org_id}/edit', [\App\Http\Controllers\Staff\OrganizationController::class, 'edit'])->name('organizations.edit');
+    Route::put('/organizations/{org_id}', [\App\Http\Controllers\Staff\OrganizationController::class, 'update'])->name('organizations.update');
+    Route::delete('/organizations/{org_id}', [\App\Http\Controllers\Staff\OrganizationController::class, 'destroy'])->name('organizations.destroy');
+});
+
 Route::get('/adviser', fn () => view('adviser.dashboard'))
     ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])
     ->name('adviser.dashboard');

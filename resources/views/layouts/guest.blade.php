@@ -20,7 +20,11 @@
         <div class="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
             <div class="flex-1 flex flex-col sm:justify-center items-center pt-6 sm:pt-0 pb-12">
                 <div class="w-full sm:max-w-md mt-6 px-4 py-4 bg-white dark:bg-gray-800 shadow-md overflow-hidden sm:rounded-lg">
-                    {{ $slot }}
+                    @isset($slot)
+                        {{ $slot }}
+                    @else
+                        @yield('content')
+                    @endisset
                 </div>
             </div>
 

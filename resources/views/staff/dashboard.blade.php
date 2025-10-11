@@ -13,6 +13,14 @@
                     @endphp
 
                     Welcome, {{ $displayName }}! This is your staff dashboard.
+                    <div class="mt-4">
+                        <div class="p-4 bg-white rounded shadow">
+                            <h3 class="text-lg font-medium">Manage</h3>
+                            <ul class="mt-2 space-y-1">
+                                <li><a href="{{ route('staff.organizations.index') }}" class="text-blue-600">Organizations</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

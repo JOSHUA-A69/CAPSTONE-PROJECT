@@ -31,7 +31,11 @@
 
             <!-- Page Content -->
             <main class="flex-1">
-                {{ $slot }}
+                @isset($slot)
+                    {{ $slot }}
+                @else
+                    @yield('content')
+                @endisset
             </main>
 
             @include('layouts.footer')
