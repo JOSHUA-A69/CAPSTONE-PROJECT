@@ -13,6 +13,25 @@
                     @endphp
 
                     Welcome, {{ $displayName }}! This is your adviser dashboard.
+
+                    <div class="mt-4">
+                        <div class="p-4 bg-white rounded shadow">
+                            <h3 class="text-lg font-medium">Assigned Organization</h3>
+                            @if($user->organizations->isEmpty())
+                                <p class="text-sm text-gray-600 mt-2">You are not assigned to any organization yet.</p>
+                                <p class="text-sm text-gray-500 mt-2">Staff can assign you to an organization via the Organizations management page.</p>
+                            @else
+                                <ul class="mt-2 space-y-2">
+                                    @foreach($user->organizations as $org)
+                                        <li>
+                                            <div class="font-medium">{{ $org->org_name }}</div>
+                                            <div class="text-sm text-gray-600">{{ Str::limit($org->org_desc ?? '—', 120) }}</div>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

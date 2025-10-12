@@ -17,13 +17,13 @@
                     </x-nav-link>
                     @if(auth()->check() && auth()->user()->role === 'admin')
                         <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users*')">
-                            {{ __('Manage Users') }}
+                            {{ __('User Accounts') }}
                         </x-nav-link>
                     @endif
 
                     @if(auth()->check() && auth()->user()->role === 'staff')
                         <x-nav-link :href="route('staff.organizations.index')" :active="request()->routeIs('staff.organizations*')">
-                            {{ __('Manage Organizations') }}
+                            {{ __('Organizations') }}
                         </x-nav-link>
                     @endif
                 </div>
