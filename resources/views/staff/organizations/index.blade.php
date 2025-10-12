@@ -37,7 +37,7 @@
                         <td class="px-4 py-2">{{ 
                             Str::limit($org->org_desc ?? '—', 80)
                         }}</td>
-                        <td class="px-4 py-2">{{ optional($org->adviser)->first_name ?? '—' }}</td>
+                        <td class="px-4 py-2">{{ optional($org->adviser)->full_name ?? '—' }}</td>
                         <td class="px-4 py-2 text-right">
                             <a href="{{ route('staff.organizations.edit', $org->org_id) }}" class="text-blue-600 mr-2">Edit</a>
                             <form action="{{ route('staff.organizations.destroy', $org->org_id) }}" method="POST" class="inline">
