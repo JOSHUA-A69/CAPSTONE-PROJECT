@@ -14,6 +14,12 @@
 
                     Welcome, {{ $displayName }}! This is your adviser dashboard.
 
+                    <div class="mt-4 mb-4">
+                        <a href="{{ route('adviser.reservations.index') }}" class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                            Review Reservation Requests
+                        </a>
+                    </div>
+
                     <div class="mt-4">
                         <div class="p-4 bg-white rounded shadow">
                             <h3 class="text-lg font-medium">Assigned Organization</h3>

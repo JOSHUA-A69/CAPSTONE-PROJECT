@@ -42,6 +42,22 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:admin,staff,adviser,requestor,priest'],
         ];
+        // If role selection is disabled, force role to requestor regardless of input
+        if (!config('registration.allow_role_selection')) {
+            $request->merge(['role' => 'requestor']);
+        }
+
+        // If the chosen role is elevated, require a valid elevated code
+        $elevatedRoles = config('registration.elevated_roles', []);
+        $elevatedCodes = config('registration.elevated_codes', []);
+        if (in_array($request->input('role'), $elevatedRoles, true)) {
+            $rules['elevated_code'] = ['required', function ($attribute, $value, $fail) use ($elevatedCodes) {
+                if (empty($elevatedCodes) || !in_array(trim((string)$value), $elevatedCodes, true)) {
+                    $fail('The provided elevated registration code is invalid.');
+                }
+            }];
+        }
+
         $validated = $request->validate($rules);
 
         // Accept the chosen role from the form. Accounts will be created with

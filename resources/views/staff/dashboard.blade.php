@@ -13,6 +13,21 @@
                     @endphp
 
                     Welcome, {{ $displayName }}! This is your staff dashboard.
+
+                    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <a href="{{ route('staff.reservations.index') }}" class="block p-4 bg-gray-50 dark:bg-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
+                            <div class="font-semibold">Manage Reservations</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-300">Review, approve, and triage reservation requests.</div>
+                        </a>
+                        <a href="{{ route('staff.organizations.index') }}" class="block p-4 bg-gray-50 dark:bg-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
+                            <div class="font-semibold">Manage Organizations</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-300">Create and edit organizations and assign advisers.</div>
+                        </a>
+                        <a href="{{ route('staff.services.index') }}" class="block p-4 bg-gray-50 dark:bg-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-600">
+                            <div class="font-semibold">Manage Services</div>
+                            <div class="text-sm text-gray-600 dark:text-gray-300">Maintain the liturgical/ministry services catalog.</div>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

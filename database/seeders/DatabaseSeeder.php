@@ -13,11 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Seed role test users (admin, staff, adviser, priest, requestor)
+        $this->call(CreateRoleTestUsersSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Seed baseline services catalog aligned with thesis scope
+        $this->call(BaselineServicesSeeder::class);
+
+    // Seed student organizations and assign the Adviser user
+    $this->call(BaselineOrganizationsSeeder::class);
+
+    // Seed common venues for scheduling
+    $this->call(BaselineVenuesSeeder::class);
     }
 }

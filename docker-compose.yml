@@ -1,54 +1,53 @@
-version: '3.8'
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: laravel_app
-    restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
-    # Start a simple PHP built-in server so the container responds on the mapped port automatically.
-    # This is fine for development. For production, use nginx or another proper webserver.
-    command: php -S 0.0.0.0:8000 -t public
-    ports:
-      - 8000:8000
-    depends_on:
-      - db
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: laravel_app
+        restart: unless-stopped
+        working_dir: /var/www
+        volumes:
+            - .:/var/www
+        # Start a simple PHP built-in server so the container responds on the mapped port automatically.
+        # This is fine for development. For production, use nginx or another proper webserver.
+        command: php -S 0.0.0.0:8000 -t public
+        ports:
+            - 8000:8000
+        depends_on:
+            - db
 
-  db:
-    image: mysql:8.0
-    container_name: mysql_db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: ereligious_db
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_USER: laravel
-      MYSQL_PASSWORD: laravel
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
+    db:
+        image: mysql:8.0
+        container_name: mysql_db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ereligious_db
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_USER: laravel
+            MYSQL_PASSWORD: laravel
+        ports:
+            - "3306:3306"
+        volumes:
+            - db_data:/var/lib/mysql
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    restart: unless-stopped
-    environment:
-      PMA_HOST: db
-      PMA_USER: laravel
-      PMA_PASSWORD: laravel
-    ports:
-      - 8080:80
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        container_name: phpmyadmin
+        restart: unless-stopped
+        environment:
+            PMA_HOST: db
+            PMA_USER: laravel
+            PMA_PASSWORD: laravel
+        ports:
+            - 8080:80
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: mailhog
-    restart: unless-stopped
-    ports:
-      - "1025:1025" # SMTP
-      - "8025:8025" # Web UI
+    mailhog:
+        image: mailhog/mailhog:latest
+        container_name: mailhog
+        restart: unless-stopped
+        ports:
+            - "1025:1025" # SMTP
+            - "8025:8025" # Web UI
 
 volumes:
-  db_data:
+    db_data:
