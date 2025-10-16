@@ -105,32 +105,11 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', \App\Http\Middleware
     Route::get('/organizations/{org_id}/edit', [\App\Http\Controllers\Staff\OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::put('/organizations/{org_id}', [\App\Http\Controllers\Staff\OrganizationController::class, 'update'])->name('organizations.update');
     Route::delete('/organizations/{org_id}', [\App\Http\Controllers\Staff\OrganizationController::class, 'destroy'])->name('organizations.destroy');
-
-    // Services management
-    Route::get('/services', [\App\Http\Controllers\Staff\ServiceController::class, 'index'])->name('services.index');
-    Route::get('/services/create', [\App\Http\Controllers\Staff\ServiceController::class, 'create'])->name('services.create');
-    Route::post('/services', [\App\Http\Controllers\Staff\ServiceController::class, 'store'])->name('services.store');
-    Route::get('/services/{service_id}/edit', [\App\Http\Controllers\Staff\ServiceController::class, 'edit'])->name('services.edit');
-    Route::put('/services/{service_id}', [\App\Http\Controllers\Staff\ServiceController::class, 'update'])->name('services.update');
-    Route::delete('/services/{service_id}', [\App\Http\Controllers\Staff\ServiceController::class, 'destroy'])->name('services.destroy');
-
-    // Reservations management
-    Route::get('/reservations', [\App\Http\Controllers\Staff\ReservationController::class, 'index'])->name('reservations.index');
-    Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Staff\ReservationController::class, 'show'])->name('reservations.show');
-    Route::post('/reservations/{reservation_id}/approve', [\App\Http\Controllers\Staff\ReservationController::class, 'approve'])->name('reservations.approve');
-    Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Staff\ReservationController::class, 'cancel'])->name('reservations.cancel');
 });
 
 Route::get('/adviser', fn () => view('adviser.dashboard'))
     ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])
     ->name('adviser.dashboard');
-
-// Adviser reservation review
-Route::prefix('adviser')->name('adviser.')->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])->group(function () {
-    Route::get('/reservations', [\App\Http\Controllers\Adviser\ReservationController::class, 'index'])->name('reservations.index');
-    Route::post('/reservations/{reservation_id}/approve', [\App\Http\Controllers\Adviser\ReservationController::class, 'approve'])->name('reservations.approve');
-    Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Adviser\ReservationController::class, 'reject'])->name('reservations.reject');
-});
 
 Route::get('/priest', fn () => view('priest.dashboard'))
     ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':priest'])
@@ -139,13 +118,6 @@ Route::get('/priest', fn () => view('priest.dashboard'))
 Route::get('/requestor', fn () => view('requestor.dashboard'))
     ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':requestor'])
     ->name('requestor.dashboard');
-
-// Requestor reservations
-Route::prefix('requestor')->name('requestor.')->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':requestor'])->group(function () {
-    Route::get('/reservations', [\App\Http\Controllers\Requestor\ReservationController::class, 'index'])->name('reservations.index');
-    Route::get('/reservations/create', [\App\Http\Controllers\Requestor\ReservationController::class, 'create'])->name('reservations.create');
-    Route::post('/reservations', [\App\Http\Controllers\Requestor\ReservationController::class, 'store'])->name('reservations.store');
-});
 
 // Admin user management route - only admins can delete other user accounts
 Route::delete('/admin/users/{id}', [\App\Http\Controllers\Admin\UserManagementController::class, 'destroy'])
