@@ -32,6 +32,13 @@ class OrganizationController extends Controller
     public function store(OrganizationRequest $request): RedirectResponse
     {
         $data = $request->validated();
+
+        // Handle custom organization name
+        if (isset($data['org_name']) && $data['org_name'] === 'Other' && !empty($data['custom_org_name'])) {
+            $data['org_name'] = $data['custom_org_name'];
+        }
+        unset($data['custom_org_name']);
+
         Organization::create($data);
         return Redirect::route('staff.organizations.index')->with('status', 'organization-created');
     }
@@ -46,7 +53,15 @@ class OrganizationController extends Controller
     public function update(OrganizationRequest $request, $org_id): RedirectResponse
     {
         $organization = Organization::findOrFail($org_id);
-        $organization->update($request->validated());
+        $data = $request->validated();
+
+        // Handle custom organization name
+        if (isset($data['org_name']) && $data['org_name'] === 'Other' && !empty($data['custom_org_name'])) {
+            $data['org_name'] = $data['custom_org_name'];
+        }
+        unset($data['custom_org_name']);
+
+        $organization->update($data);
         return Redirect::route('staff.organizations.index')->with('status', 'organization-updated');
     }
 

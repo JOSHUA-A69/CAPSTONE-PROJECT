@@ -26,4 +26,9 @@ class ReservationHistory extends Model
     {
         return $this->belongsTo(Reservation::class, 'reservation_id', 'reservation_id');
     }
+
+    public function performedBy()
+    {
+        return $this->belongsTo(User::class, 'performed_by', 'id');
+    }
 }

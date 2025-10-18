@@ -31,6 +31,66 @@
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
+                <!-- Notification Bell (Admin/Staff/Priest) -->
+                @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'staff', 'priest']))
+                <div class="relative mr-4" x-data="{
+                    open: false,
+                    count: 0,
+                    loadNotifications() {
+                        @if(auth()->user()->role === 'priest')
+                        fetch('{{ route('priest.notifications.recent') }}')
+                        @else
+                        fetch('{{ route('admin.notifications.recent') }}')
+                        @endif
+                            .then(response => response.json())
+                            .then(data => {
+                                document.getElementById('notification-list').innerHTML = data.html;
+                            });
+                    },
+                    updateCount() {
+                        @if(auth()->user()->role === 'priest')
+                        fetch('{{ route('priest.notifications.count') }}')
+                        @else
+                        fetch('{{ route('admin.notifications.count') }}')
+                        @endif
+                            .then(response => response.json())
+                            .then(data => this.count = data.count);
+                    }
+                }" x-init="
+                    updateCount();
+                    setInterval(() => updateCount(), 30000);
+                ">
+                    <button @click="open = !open; if(open) loadNotifications()" class="relative p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <span x-show="count > 0" class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-600 rounded-full" x-text="count"></span>
+                    </button>
+
+                    <!-- Notification Dropdown -->
+                    <div x-show="open" @click.away="open = false" class="absolute right-0 mt-3 w-[500px] max-w-[calc(100vw-24px)] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden overflow-x-hidden z-50" style="display: none;">
+                        <div>
+                            <!-- Header -->
+                            <div class="px-6 py-4 flex items-center justify-between bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">Notifications</h3>
+                                <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Notification List -->
+                            <div id="notification-list" class="max-h-[560px] overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900">
+                                <!-- Notifications will be loaded here -->
+                                <div class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
