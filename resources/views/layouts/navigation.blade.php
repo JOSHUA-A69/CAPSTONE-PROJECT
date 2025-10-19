@@ -31,14 +31,18 @@
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <!-- Notification Bell (Admin/Staff/Priest) -->
-                @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'staff', 'priest']))
+                <!-- Notification Bell (Admin/Staff/Priest/Adviser) -->
+                @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'staff', 'priest', 'adviser']))
                 <div class="relative mr-4" x-data="{
                     open: false,
                     count: 0,
                     loadNotifications() {
                         @if(auth()->user()->role === 'priest')
                         fetch('{{ route('priest.notifications.recent') }}')
+                        @elseif(auth()->user()->role === 'adviser')
+                        fetch('{{ route('adviser.notifications.recent') }}')
+                        @elseif(auth()->user()->role === 'requestor')
+                        fetch('{{ route('requestor.notifications.recent') }}')
                         @else
                         fetch('{{ route('admin.notifications.recent') }}')
                         @endif
@@ -50,6 +54,10 @@
                     updateCount() {
                         @if(auth()->user()->role === 'priest')
                         fetch('{{ route('priest.notifications.count') }}')
+                        @elseif(auth()->user()->role === 'adviser')
+                        fetch('{{ route('adviser.notifications.count') }}')
+                        @elseif(auth()->user()->role === 'requestor')
+                        fetch('{{ route('requestor.notifications.count') }}')
                         @else
                         fetch('{{ route('admin.notifications.count') }}')
                         @endif
@@ -59,8 +67,27 @@
                 }" x-init="
                     updateCount();
                     setInterval(() => updateCount(), 30000);
+                    // Also update when window regains focus (returning from notification page)
+                    window.addEventListener('focus', () => updateCount());
+                    window.addEventListener('notification-update', () => updateCount());
                 ">
-                    <button @click="open = !open; if(open) loadNotifications()" class="relative p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 focus:outline-none">
+                    <button @click="
+                        open = !open;
+                        if (open) {
+                            loadNotifications();
+                            // Mark all as read on open to stop repeat popups
+                            @if(auth()->user()->role === 'priest')
+                            fetch('{{ route('priest.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
+                            @elseif(auth()->user()->role === 'adviser')
+                            fetch('{{ route('adviser.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
+                            @elseif(auth()->user()->role === 'requestor')
+                            fetch('{{ route('requestor.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
+                            @else
+                            fetch('{{ route('admin.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
+                            @endif
+                                .then(() => { this.count = 0; window.dispatchEvent(new Event('notification-update')); });
+                        }
+                    " class="relative p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 focus:outline-none">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>

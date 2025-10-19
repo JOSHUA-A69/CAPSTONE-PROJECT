@@ -38,16 +38,17 @@
                                 {{ ucfirst(str_replace('_', ' ', $r->status)) }}
                             </span>
                         </td>
-                        <td class="px-4 py-2 text-right">
+                        <td class="px-4 py-2 text-right space-x-3">
                             @if($r->status === 'pending')
-                            <form method="POST" action="{{ route('adviser.reservations.approve', $r->reservation_id) }}" class="inline">
-                                @csrf
-                                <button class="text-green-600 hover:underline mr-2">Approve</button>
-                            </form>
-                            <button onclick="showRejectModal({{ $r->reservation_id }})" class="text-red-600 hover:underline">Reject</button>
-                            @else
-                            —
+                                <form method="POST" action="{{ route('adviser.reservations.approve', $r->reservation_id) }}" class="inline">
+                                    @csrf
+                                    <button class="text-green-600 hover:underline">Approve</button>
+                                </form>
+                                <a href="{{ route('adviser.reservations.show', $r->reservation_id) }}#reject" class="text-red-600 hover:underline">Reject</a>
                             @endif
+                            <a href="{{ route('adviser.reservations.show', $r->reservation_id) }}" class="text-blue-600 hover:underline">
+                                View Details
+                            </a>
                         </td>
                     </tr>
                     @endforeach
@@ -61,36 +62,4 @@
         {{ $reservations->links() }}
     </div>
 </div>
-
-<!-- Reject Modal -->
-<div id="rejectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
-    <div class="flex items-center justify-center h-full">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 class="text-lg font-semibold mb-4">Reject Reservation</h3>
-            <form id="rejectForm" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label class="block text-sm font-medium mb-2">Reason for rejection</label>
-                    <textarea name="reason" class="form-textarea w-full" rows="3" required></textarea>
-                </div>
-                <div class="flex gap-2">
-                    <button type="submit" class="btn btn-primary">Submit</button>
-                    <button type="button" onclick="hideRejectModal()" class="btn">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-function showRejectModal(reservationId) {
-    const form = document.getElementById('rejectForm');
-    form.action = `/adviser/reservations/${reservationId}/reject`;
-    document.getElementById('rejectModal').classList.remove('hidden');
-}
-
-function hideRejectModal() {
-    document.getElementById('rejectModal').classList.add('hidden');
-}
-</script>
 @endsection

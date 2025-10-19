@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 
+// CSRF Token Refresh Route (for preventing 419 errors on long-open pages)
+Route::get('/refresh-csrf', function () {
+    return response()->json(['token' => csrf_token()]);
+});
+
 Route::get('/', function () {
     return view('welcome');
 });
@@ -151,10 +156,31 @@ Route::prefix('requestor')->name('requestor.')->middleware(['auth', 'verified', 
     Route::post('/reservations/{reservation_id}/confirm/{token}', [\App\Http\Controllers\Requestor\ReservationController::class, 'confirmReservation'])->name('reservations.confirm-reservation');
     Route::post('/reservations/{reservation_id}/decline/{token}', [\App\Http\Controllers\Requestor\ReservationController::class, 'declineReservation'])->name('reservations.decline-reservation');
     Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Requestor\ReservationController::class, 'cancel'])->name('reservations.cancel');
+
+    // Notification Routes
+    Route::get('/notifications', [\App\Http\Controllers\Requestor\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/count', [\App\Http\Controllers\Requestor\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
+    Route::get('/notifications/recent', [\App\Http\Controllers\Requestor\NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Requestor\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Requestor\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::get('/notifications/{id}', [\App\Http\Controllers\Requestor\NotificationController::class, 'show'])->name('notifications.show');
 });
 
 // Adviser Reservation Routes
 Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])->group(function () {
+    // Notification Routes
+    Route::get('/notifications', [\App\Http\Controllers\Adviser\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/count', [\App\Http\Controllers\Adviser\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
+    Route::get('/notifications/recent', [\App\Http\Controllers\Adviser\NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Adviser\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Adviser\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::get('/notifications/{id}', [\App\Http\Controllers\Adviser\NotificationController::class, 'show'])->name('notifications.show');
+
+    // Cancellation Routes
+    Route::get('/cancellations/{id}', [\App\Http\Controllers\Adviser\CancellationController::class, 'show'])->name('cancellations.show');
+    Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Adviser\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+
+    // Reservation Routes
     Route::get('/reservations', [\App\Http\Controllers\Adviser\ReservationController::class, 'index'])->name('reservations.index');
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Adviser\ReservationController::class, 'show'])->name('reservations.show');
     Route::post('/reservations/{reservation_id}/approve', [\App\Http\Controllers\Adviser\ReservationController::class, 'approve'])->name('reservations.approve');
@@ -168,12 +194,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/reservations/{reservation_id}/assign-priest', [\App\Http\Controllers\Admin\ReservationController::class, 'assignPriest'])->name('reservations.assign-priest');
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Admin\ReservationController::class, 'reject'])->name('reservations.reject');
 
+    // Cancellation Routes
+    Route::get('/cancellations/{id}', [\App\Http\Controllers\Admin\CancellationController::class, 'show'])->name('cancellations.show');
+    Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Admin\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+
     // Notification Routes (specific routes first, then parameterized)
     Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/count', [\App\Http\Controllers\Admin\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
     Route::get('/notifications/recent', [\App\Http\Controllers\Admin\NotificationController::class, 'getRecent'])->name('notifications.recent');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::get('/notifications/{id}/priest-declined', [\App\Http\Controllers\Admin\NotificationController::class, 'showPriestDeclined'])->name('notifications.priest-declined');
+    Route::get('/notifications/{id}/priest-action', [\App\Http\Controllers\Admin\NotificationController::class, 'showPriestAction'])->name('notifications.priest-action');
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::get('/notifications/{id}', [\App\Http\Controllers\Admin\NotificationController::class, 'show'])->name('notifications.show');
 });
@@ -190,6 +221,10 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/reservations/{reservation_id}/assign-priest', [\App\Http\Controllers\Staff\ReservationController::class, 'assignPriest'])->name('reservations.assign-priest');
     Route::post('/reservations/{reservation_id}/follow-up', [\App\Http\Controllers\Staff\ReservationController::class, 'sendFollowUp'])->name('reservations.follow-up');
     Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Staff\ReservationController::class, 'cancel'])->name('reservations.cancel');
+
+    // Cancellation Routes
+    Route::get('/cancellations/{id}', [\App\Http\Controllers\Staff\CancellationController::class, 'show'])->name('cancellations.show');
+    Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Staff\CancellationController::class, 'confirm'])->name('cancellations.confirm');
 });
 
 // Priest Reservation Routes (specific routes BEFORE parameterized ones)
@@ -203,6 +238,10 @@ Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\H
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Priest\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Priest\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 
+    // Cancellation Routes
+    Route::get('/cancellations/{id}', [\App\Http\Controllers\Priest\CancellationController::class, 'show'])->name('cancellations.show');
+    Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Priest\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+
     // Reservation routes
     Route::get('/reservations', [\App\Http\Controllers\Priest\ReservationController::class, 'index'])->name('reservations.index');
     Route::get('/reservations/calendar', [\App\Http\Controllers\Priest\ReservationController::class, 'calendar'])->name('reservations.calendar');
@@ -210,6 +249,7 @@ Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\H
     // POST routes for actions
     Route::post('/reservations/{reservation_id}/confirm', [\App\Http\Controllers\Priest\ReservationController::class, 'confirm'])->name('reservations.confirm');
     Route::post('/reservations/{reservation_id}/decline', [\App\Http\Controllers\Priest\ReservationController::class, 'decline'])->name('reservations.decline');
+    Route::post('/reservations/{reservation_id}/undecline', [\App\Http\Controllers\Priest\ReservationController::class, 'undecline'])->name('reservations.undecline');
     // GET route for individual reservation (must be last among /reservations/* routes)
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Priest\ReservationController::class, 'show'])->name('reservations.show');
 });

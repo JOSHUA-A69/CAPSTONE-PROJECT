@@ -7,6 +7,7 @@ use App\Models\Reservation;
 use App\Services\ReservationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 
 /**
@@ -68,6 +69,12 @@ class ReservationController extends Controller
      */
     public function show($reservation_id)
     {
+        $priestId = Auth::id();
+
+        // Allow priests to view reservations where they are:
+        // 1. Currently assigned as officiant (officiant_id = priest_id)
+        // 2. Previously declined (has a decline record)
+        // 3. Received notification for this reservation
         $reservation = Reservation::with([
             'user',
             'service',
@@ -75,7 +82,19 @@ class ReservationController extends Controller
             'organization.adviser',
             'history.performedBy'
         ])
-            ->where('officiant_id', Auth::id())
+            ->where(function ($query) use ($priestId, $reservation_id) {
+                $query->where('officiant_id', $priestId)
+                    ->orWhereHas('declines', function ($q) use ($priestId) {
+                        $q->where('priest_id', $priestId);
+                    })
+                    ->orWhereExists(function ($q) use ($priestId, $reservation_id) {
+                        $q->select(DB::raw(1))
+                            ->from('notifications')
+                            ->where('reservation_id', $reservation_id)
+                            ->where('user_id', $priestId)
+                            ->where('type', 'Assignment');
+                    });
+            })
             ->findOrFail($reservation_id);
 
         return view('priest.reservations.show', compact('reservation'));
@@ -116,8 +135,8 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // TODO: Send notification to requestor, adviser, and admin
-        // $this->notificationService->notifyPriestConfirmed($reservation);
+        // Send notification to admin/staff
+        $this->notificationService->notifyPriestConfirmed($reservation, Auth::id());
 
         return Redirect::back()
             ->with('status', 'reservation-confirmed')
@@ -125,7 +144,7 @@ class ReservationController extends Controller
     }
 
     /**
-     * Decline assigned service
+     * Decline assigned service (works for both unconfirmed and confirmed reservations)
      */
     public function decline(Request $request, $reservation_id)
     {
@@ -136,15 +155,13 @@ class ReservationController extends Controller
         $reservation = Reservation::where('officiant_id', Auth::id())
             ->findOrFail($reservation_id);
 
-        // Only decline if status is pending_priest_confirmation or admin_approved (reassignment) and not yet confirmed
-        if (!in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved'])) {
+        // Check if this is a cancellation of already confirmed reservation
+        $isCancellation = ($reservation->priest_confirmation === 'confirmed');
+
+        // Allow decline for: pending_priest_confirmation, admin_approved, OR approved (confirmed)
+        if (!in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved', 'approved'])) {
             return Redirect::back()
                 ->with('error', 'This reservation cannot be declined at this stage.');
-        }
-
-        if ($reservation->priest_confirmation === 'confirmed') {
-            return Redirect::back()
-                ->with('error', 'You have already confirmed this reservation. Please contact CREaM admin if you need to cancel.');
         }
 
         $reason = $request->input('reason');
@@ -172,19 +189,129 @@ class ReservationController extends Controller
         ]);
 
         // Create history
+        $historyAction = $isCancellation ? 'priest_cancelled_confirmation' : 'priest_declined';
+        $historyRemarks = $isCancellation
+            ? 'Priest cancelled their previously confirmed reservation. Reason: ' . $reason
+            : 'Priest declined availability. Reason: ' . $reason;
+
         $reservation->history()->create([
             'performed_by' => $priestId,
-            'action' => 'priest_declined',
-            'remarks' => 'Priest declined availability. Reason: ' . $reason,
+            'action' => $historyAction,
+            'remarks' => $historyRemarks,
             'performed_at' => now(),
         ]);
 
         // Send notification to admin and staff for reassignment - pass priest ID
-        $this->notificationService->notifyPriestDeclined($reservation, $reason, $priestId);
+        if ($isCancellation) {
+            $this->notificationService->notifyPriestCancelledConfirmation($reservation, $reason, $priestId);
+        } else {
+            $this->notificationService->notifyPriestDeclined($reservation, $reason, $priestId);
+        }
+
+        $message = $isCancellation
+            ? 'You have cancelled your confirmation. CREaM administrators have been notified to assign another priest.'
+            : 'You have declined this assignment. CREaM administrators have been notified to assign another priest.';
 
         return Redirect::route('priest.reservations.index')
             ->with('status', 'reservation-declined')
-            ->with('message', 'You have declined this assignment. CREaM administrators have been notified to assign another priest.');
+            ->with('message', $message);
+    }
+
+    /**
+     * Undo decline - Priest wants to accept the assignment they previously declined
+     */
+    public function undecline($reservation_id)
+    {
+        $priestId = Auth::id();
+
+        // Find the reservation
+        $reservation = Reservation::findOrFail($reservation_id);
+
+        // Find the decline record
+        $decline = \App\Models\PriestDecline::where('reservation_id', $reservation_id)
+            ->where('priest_id', $priestId)
+            ->latest('declined_at')
+            ->first();
+
+        if (!$decline) {
+            return Redirect::back()->with('error', 'Decline record not found.');
+        }
+
+        // Check if reservation was already reassigned to another priest
+        if ($reservation->officiant_id && $reservation->officiant_id != $priestId) {
+            return Redirect::route('priest.reservations.declined')
+                ->with('error', 'This reservation has already been reassigned to another priest. You cannot undo your decline.');
+        }
+
+        // Check if reservation status allows undecline
+        if (!in_array($reservation->status, ['pending_priest_reassignment', 'adviser_approved', 'admin_approved'])) {
+            return Redirect::route('priest.reservations.declined')
+                ->with('error', 'This reservation is no longer available for reassignment (Status: ' . $reservation->status . ').');
+        }
+
+        // Restore the priest assignment
+        $reservation->update([
+            'officiant_id' => $priestId,
+            'priest_confirmation' => null, // Reset to allow confirmation
+            'priest_confirmed_at' => null,
+            'status' => 'pending_priest_confirmation', // Back to awaiting priest confirmation
+        ]);
+
+        // Count total declines by this priest for this reservation (for admin awareness)
+        $totalDeclines = \App\Models\PriestDecline::where('reservation_id', $reservation_id)
+            ->where('priest_id', $priestId)
+            ->count();
+
+        // Delete the decline record
+        $decline->delete();
+
+        // Create history entry with decline count
+        $historyRemarks = 'Priest undid their decline and is now available for this assignment.';
+        if ($totalDeclines > 1) {
+            $historyRemarks .= ' (This priest has declined this reservation ' . $totalDeclines . ' time(s))';
+        }
+
+        $reservation->history()->create([
+            'performed_by' => $priestId,
+            'action' => 'priest_reassigned',
+            'remarks' => $historyRemarks,
+            'performed_at' => now(),
+        ]);
+
+        // Create notifications for ALL admins and staff
+        $admins = \App\Models\User::whereIn('role', ['admin', 'staff'])->get();
+        $priestName = Auth::user()->first_name . ' ' . Auth::user()->last_name;
+
+        // Add warning if priest has changed mind multiple times
+        $indecisionWarning = '';
+        if ($totalDeclines > 1) {
+            $indecisionWarning = ' ⚠️ (Changed mind ' . $totalDeclines . ' times)';
+        }
+
+        foreach ($admins as $admin) {
+            \App\Models\Notification::create([
+                'user_id' => $admin->id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => '<strong>' . $priestName . '</strong> restored their previously declined reservation' . $indecisionWarning,
+                'type' => 'Update',
+                'sent_at' => now(),
+                'data' => json_encode([
+                    'priest_name' => $priestName,
+                    'priest_id' => $priestId,
+                    'service_name' => $reservation->service->service_name,
+                    'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
+                    'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                    'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
+                    'action' => 'undecline',
+                    'decline_count' => $totalDeclines,
+                ]),
+            ]);
+        }
+
+        // Send email notifications to admin/staff
+        $this->notificationService->notifyPriestUndeclined($reservation, $priestId);        return Redirect::route('priest.reservations.show', $reservation_id)
+            ->with('status', 'reservation-undeclined')
+            ->with('message', 'Success! You have undone your decline. Please confirm your availability for this service.');
     }
 
     /**

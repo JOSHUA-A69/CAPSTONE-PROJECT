@@ -34,6 +34,7 @@ class NotificationController extends Controller
     public function getRecent()
     {
         $notifications = Notification::where('user_id', Auth::id())
+            ->unread()
             ->with('reservation')
             ->orderBy('sent_at', 'desc')
             ->limit(5)
@@ -149,6 +150,19 @@ class NotificationController extends Controller
             return redirect()->route('admin.notifications.priest-declined', $notification->notification_id);
         }
 
+        // If it's a priest confirmation/cancellation notification, show detailed view
+        if (in_array($notification->type, ['Update', 'Urgent']) && $notification->reservation_id) {
+            $data = $notification->data;
+            if (is_string($data)) {
+                $data = json_decode($data, true);
+            }
+            $action = $data['action'] ?? null;
+
+            if (in_array($action, ['priest_confirmed', 'priest_cancelled_confirmation', 'priest_undeclined'])) {
+                return redirect()->route('admin.notifications.priest-action', $notification->notification_id);
+            }
+        }
+
         // For other types, redirect to reservation
         if ($notification->reservation_id) {
             return redirect()->route('admin.reservations.show', $notification->reservation_id);
@@ -178,6 +192,29 @@ class NotificationController extends Controller
         );
 
         return view('admin.notifications.priest-declined', compact('notification', 'availablePriests'));
+    }
+
+    /**
+     * Show priest action notification detail (confirmed/cancelled/undeclined)
+     */
+    public function showPriestAction($id)
+    {
+        $notification = Notification::where('user_id', Auth::id())
+            ->where('notification_id', $id)
+            ->whereIn('type', ['Update', 'Urgent'])
+            ->with(['reservation.service', 'reservation.venue', 'reservation.user', 'reservation.officiant'])
+            ->firstOrFail();
+
+        // Mark as read
+        $notification->markAsRead();
+
+        // Parse notification data
+        $data = $notification->data;
+        if (is_string($data)) {
+            $data = json_decode($data, true);
+        }
+
+        return view('admin.notifications.priest-action', compact('notification', 'data'));
     }
 
     /**

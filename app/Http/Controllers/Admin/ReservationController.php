@@ -89,6 +89,12 @@ class ReservationController extends Controller
         // Get available priests (not conflicting with this schedule)
         $availablePriests = $this->getAvailablePriests($reservation->schedule_date, $reservation_id);
 
+        // Mark any unread notifications for this reservation as read
+        \App\Models\Notification::where('user_id', Auth::id())
+            ->where('reservation_id', $reservation_id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
         return view('admin.reservations.show', compact('reservation', 'availablePriests'));
     }
 

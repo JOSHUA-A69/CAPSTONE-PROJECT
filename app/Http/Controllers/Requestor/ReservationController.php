@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\Venue;
 use App\Models\User;
 use App\Services\ReservationNotificationService;
+use App\Services\CancellationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -17,11 +18,15 @@ use Illuminate\Support\Facades\Redirect;
 class ReservationController extends Controller
 {
     protected ReservationNotificationService $notificationService;
+    protected CancellationNotificationService $cancellationService;
 
-    public function __construct(ReservationNotificationService $notificationService)
-    {
+    public function __construct(
+        ReservationNotificationService $notificationService,
+        CancellationNotificationService $cancellationService
+    ) {
         $this->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':requestor']);
         $this->notificationService = $notificationService;
+        $this->cancellationService = $cancellationService;
     }
 
     public function index()
@@ -111,48 +116,63 @@ class ReservationController extends Controller
 
     /**
      * Cancel a reservation (Requestor-initiated)
+     * Requires 7 days notice before event
      */
     public function cancel(Request $request, $reservation_id)
     {
         $request->validate([
-            'reason' => 'required|string|max:1000',
+            'reason' => 'required|string|min:10|max:1000',
         ]);
 
-        $reservation = Reservation::where('user_id', Auth::id())
+        $reservation = Reservation::with(['service', 'organization.adviser', 'officiant'])
+            ->where('user_id', Auth::id())
             ->findOrFail($reservation_id);
 
-        // Only allow cancellation if not already cancelled or rejected
+        // Check if already cancelled
         if (in_array($reservation->status, ['cancelled', 'rejected'])) {
             return Redirect::back()
                 ->with('error', 'This reservation cannot be cancelled as it is already ' . $reservation->status);
         }
 
-        // Update reservation status
-        $reservation->update([
-            'status' => 'cancelled',
-            'cancellation_reason' => $request->input('reason'),
-            'cancelled_by' => Auth::id(),
+        // Check if there's already a pending cancellation request
+        $existingCancellation = \App\Models\ReservationCancellation::where('reservation_id', $reservation_id)
+            ->whereIn('status', ['pending', 'confirmed_by_staff', 'confirmed_by_admin'])
+            ->first();
+
+        if ($existingCancellation) {
+            return Redirect::back()
+                ->with('error', 'A cancellation request for this reservation is already pending.');
+        }
+
+        // Validate 7-day notice requirement
+        $daysUntilEvent = now()->diffInDays($reservation->schedule_date, false);
+        if ($daysUntilEvent < 7) {
+            return Redirect::back()
+                ->with('error', 'Cancellation is only allowed at least 7 days before the scheduled date. Your event is in ' . $daysUntilEvent . ' day(s).');
+        }
+
+        // Create cancellation request
+        $cancellation = \App\Models\ReservationCancellation::create([
+            'reservation_id' => $reservation_id,
+            'requestor_id' => Auth::id(),
+            'reason' => $request->input('reason'),
+            'status' => 'pending',
         ]);
 
         // Create history record
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'cancelled',
-            'remarks' => 'Cancelled by requestor. Reason: ' . $request->input('reason'),
+            'action' => 'cancellation_requested',
+            'remarks' => 'Requestor requested cancellation. Reason: ' . $request->input('reason'),
             'performed_at' => now(),
         ]);
 
-        // Send cancellation notifications to all involved parties
-        $cancelledBy = Auth::user()->full_name;
-        $this->notificationService->notifyCancellation(
-            $reservation,
-            $request->input('reason'),
-            $cancelledBy
-        );
+        // Send cancellation notifications to all parties
+        $this->cancellationService->notifyCancellationRequest($reservation, $cancellation);
 
         return Redirect::route('requestor.reservations.index')
-            ->with('status', 'reservation-cancelled')
-            ->with('message', 'Your reservation has been cancelled. All involved parties have been notified.');
+            ->with('status', 'cancellation-requested')
+            ->with('message', 'Your cancellation request has been submitted. All involved parties have been notified and will confirm the cancellation.');
     }
 
     /**

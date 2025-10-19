@@ -20,7 +20,7 @@
                     @else
                         <div class="space-y-3">
                             @foreach($notifications as $notification)
-                                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 {{ $notification->isUnread() ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800' }}">
+                                <div class="rounded-lg p-4 shadow-md transition-all {{ $notification->isUnread() ? 'bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-200 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600' }}">
                                     <div class="flex items-start justify-between">
                                         <div class="flex-1">
                                             <div class="flex items-center gap-2 mb-2">
@@ -37,12 +37,12 @@
                                                 </span>
                                                 @if($notification->isUnread())
                                                     <span class="inline-flex items-center">
-                                                        <span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+                                                        <span class="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></span>
                                                         <span class="ml-1 text-xs text-blue-600 dark:text-blue-400 font-medium">New</span>
                                                     </span>
                                                 @endif
                                             </div>
-                                            <p class="text-gray-900 dark:text-gray-100 mb-2">{{ $notification->message }}</p>
+                                            <p class="text-gray-900 dark:text-gray-100 mb-2 {{ $notification->isUnread() ? 'font-semibold' : 'font-normal' }}">{!! $notification->message !!}</p>
                                             <p class="text-xs text-gray-500 dark:text-gray-400">{{ $notification->sent_at->diffForHumans() }}</p>
                                         </div>
                                         <div class="ml-4">

@@ -150,6 +150,14 @@ class Reservation extends Model
         return $this->hasMany(ReservationHistory::class, 'reservation_id', 'reservation_id');
     }
 
+    /**
+     * Priest decline records for this reservation
+     */
+    public function declines()
+    {
+        return $this->hasMany(PriestDecline::class, 'reservation_id', 'reservation_id');
+    }
+
     // ===========================
     // Query Scopes
     // ===========================

@@ -250,7 +250,7 @@
                     @elseif($reservation->priest_confirmation === 'confirmed')
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6 text-gray-900 dark:text-gray-100">
-                            <div class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+                            <div class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded mb-4">
                                 <div class="flex items-center">
                                     <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
@@ -265,6 +265,22 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Cancel Confirmation Option -->
+                            @if($reservation->status === 'approved' && $reservation->schedule_date->isFuture())
+                            <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                                    <strong>Need to cancel?</strong> If you can no longer attend this service, you can cancel your confirmation and the administrator will be notified to assign another priest.
+                                </p>
+                                <button onclick="showCancelConfirmationModal()"
+                                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    Cancel My Confirmation
+                                </button>
+                            </div>
+                            @endif
                         </div>
                     </div>
                     @endif
@@ -349,6 +365,57 @@
         </div>
     </div>
 
+    <!-- Cancel Confirmation Modal -->
+    <div id="cancelConfirmationModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 items-center justify-center p-4" style="display: none;">
+        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Cancel Confirmed Reservation</h3>
+                </div>
+                <button onclick="hideCancelConfirmationModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
+                <p class="text-sm text-red-800 dark:text-red-300">
+                    ⚠️ <strong>Warning:</strong> You have already confirmed your availability for this service. Cancelling now will require the administrator to find another priest urgently.
+                </p>
+            </div>
+
+            <form method="POST" action="{{ route('priest.reservations.decline', $reservation->reservation_id) }}">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Please provide a reason for cancellation <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="reason"
+                              rows="4"
+                              required
+                              class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
+                              placeholder="e.g., Emergency, Health issue, Unavoidable conflict, etc."></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button"
+                            onclick="hideCancelConfirmationModal()"
+                            class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">
+                        Keep My Confirmation
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        Yes, Cancel Confirmation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script>
         function showDeclineModal() {
@@ -356,6 +423,12 @@
         }
         function hideDeclineModal() {
             document.getElementById('declineModal').style.display = 'none';
+        }
+        function showCancelConfirmationModal() {
+            document.getElementById('cancelConfirmationModal').style.display = 'flex';
+        }
+        function hideCancelConfirmationModal() {
+            document.getElementById('cancelConfirmationModal').style.display = 'none';
         }
     </script>
 

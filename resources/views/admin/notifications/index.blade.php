@@ -16,9 +16,9 @@
 
             <!-- Notifications List -->
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6">
+                <div class="p-6 space-y-3">
                     @forelse($notifications as $notification)
-                        <div class="border-b border-gray-200 dark:border-gray-700 py-4 {{ $notification->isUnread() ? 'bg-blue-50 dark:bg-blue-900/20' : '' }}">
+                        <div class="rounded-lg p-4 shadow-md transition-all {{ $notification->isUnread() ? 'bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-200 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600' }}">
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <div class="flex items-center mb-2">
@@ -29,29 +29,33 @@
                                                 </svg>
                                                 {{ $notification->type }}
                                             </span>
+                                        @elseif($notification->type === 'Update')
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                                {{ $notification->type }}
+                                            </span>
                                         @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-200 text-gray-800 dark:bg-gray-600 dark:text-gray-300">
                                                 {{ $notification->type }}
                                             </span>
                                         @endif
 
                                         @if($notification->isUnread())
-                                            <span class="ml-2 w-2 h-2 bg-blue-600 rounded-full"></span>
+                                            <span class="ml-2 w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></span>
                                         @endif
                                     </div>
 
-                                    <p class="text-sm text-gray-900 dark:text-gray-100 font-medium mb-1">
-                                        {{ $notification->message }}
+                                    <p class="text-sm text-gray-900 dark:text-gray-100 {{ $notification->isUnread() ? 'font-semibold' : 'font-normal' }} mb-1">
+                                        {!! $notification->message !!}
                                     </p>
 
                                     @if($notification->reservation)
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        <p class="text-xs text-gray-600 dark:text-gray-400 {{ $notification->isUnread() ? 'font-medium' : '' }}">
                                             Reservation #{{ $notification->reservation_id }} -
                                             {{ $notification->reservation->schedule_date->format('M d, Y h:i A') }}
                                         </p>
                                     @endif
 
-                                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                    <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
                                         {{ $notification->sent_at->diffForHumans() }}
                                     </p>
                                 </div>
@@ -90,6 +94,22 @@
     </div>
 
     <script>
+        // Trigger notification count update when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            // Dispatch custom event to update notification count
+            if (window.dispatchEvent) {
+                window.dispatchEvent(new Event('notification-update'));
+            }
+
+            // Also manually update if Alpine is available
+            setTimeout(function() {
+                const bellButton = parent.document.querySelector('[x-data]');
+                if (bellButton && bellButton.__x) {
+                    bellButton.__x.$data.updateCount();
+                }
+            }, 500);
+        });
+
         function markAllAsRead() {
             fetch('{{ route('admin.notifications.mark-all-read') }}', {
                 method: 'POST',

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Priest;
+namespace App\Http\Controllers\Adviser;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
@@ -11,7 +11,7 @@ class NotificationController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':priest']);
+        $this->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':adviser']);
     }
 
     /**
@@ -48,65 +48,46 @@ class NotificationController extends Controller
             $html .= '</div>';
         } else {
             foreach ($notifications as $notification) {
-                // Determine background for unread/read notifications
                 $bgColor = $notification->isUnread() ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800';
-
-                // Get notification data
+                
                 $data = $notification->data;
                 if (is_string($data)) {
                     $data = json_decode($data, true);
                 }
-                $serviceName = $data['service_name'] ?? 'Service';
+                
                 $timeAgo = $notification->sent_at->diffForHumans();
 
-                // Generate avatar initials from "Admin" or service name
-                $initials = 'AD';
+                // Determine notification icon color based on type
+                $iconColor = match($notification->type) {
+                    'Cancellation Request' => 'bg-red-500',
+                    'Update' => 'bg-green-500',
+                    'Urgent' => 'bg-orange-500',
+                    default => 'bg-blue-500',
+                };
 
-                // Random avatar colors
-                $colors = [
-                    'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500',
-                    'bg-pink-500', 'bg-indigo-500', 'bg-teal-500', 'bg-red-500'
-                ];
-                $avatarColor = $colors[array_rand($colors)];
-
-                if ($notification->type === 'Assignment') {
-                    $url = route('priest.notifications.assignment', $notification->notification_id);
-                } elseif ($notification->reservation_id) {
-                    $url = route('priest.reservations.show', $notification->reservation_id);
-                } else {
-                    $url = route('priest.notifications.index');
-                }
+                $url = route('adviser.notifications.show', $notification->notification_id);
 
                 $html .= '<div class="relative group ' . $bgColor . '">';
                 $html .= '<a href="' . $url . '" class="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">';
                 $html .= '<div class="flex items-start gap-4">';
-
-                // Avatar
+                
+                // Icon
                 $html .= '<div class="flex-shrink-0">';
-                $html .= '<div class="w-11 h-11 rounded-full ' . $avatarColor . ' flex items-center justify-center text-white font-semibold text-sm">';
-                $html .= $initials;
+                $html .= '<div class="w-11 h-11 rounded-full ' . $iconColor . ' flex items-center justify-center text-white font-semibold text-sm">';
+                $html .= '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>';
                 $html .= '</div>';
                 $html .= '</div>';
-
+                
                 // Content
                 $html .= '<div class="flex-1 min-w-0">';
-                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug truncate">'
-                    . e($notification->message)
-                    . ' <span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500 dark:text-gray-400">'
-                    . $timeAgo
-                    . '</span></p>';
+                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">'
+                    . $notification->message
+                    . '</p>';
+                $html .= '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">' . $timeAgo . '</p>';
                 $html .= '</div>';
-
+                
                 $html .= '</div>';
                 $html .= '</a>';
-
-                // Three-dot menu
-                $html .= '<button class="absolute top-4 right-5 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">';
-                $html .= '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">';
-                $html .= '<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>';
-                $html .= '</svg>';
-                $html .= '</button>';
-
                 $html .= '</div>';
             }
         }
@@ -115,7 +96,7 @@ class NotificationController extends Controller
     }
 
     /**
-     * Display all notifications
+     * Get all notifications
      */
     public function index()
     {
@@ -124,7 +105,7 @@ class NotificationController extends Controller
             ->orderBy('sent_at', 'desc')
             ->paginate(20);
 
-        return view('priest.notifications.index', compact('notifications'));
+        return view('adviser.notifications.index', compact('notifications'));
     }
 
     /**
@@ -139,34 +120,27 @@ class NotificationController extends Controller
         // Mark as read
         $notification->markAsRead();
 
-        // If it's an assignment notification, show special view
-        if ($notification->type === 'Assignment' && $notification->reservation_id) {
-            return redirect()->route('priest.notifications.assignment', $notification->notification_id);
+        // Route to appropriate view based on type
+        if ($notification->type === 'Cancellation Request') {
+            // Get cancellation_id from notification data
+            $data = $notification->data;
+            if (is_string($data)) {
+                $data = json_decode($data, true);
+            }
+            
+            $cancellationId = $data['cancellation_id'] ?? null;
+            
+            if ($cancellationId) {
+                return redirect()->route('adviser.cancellations.show', $cancellationId);
+            }
         }
 
-        // For other types, redirect to reservation
+        // For other types, redirect to reservation or show generic view
         if ($notification->reservation_id) {
-            return redirect()->route('priest.reservations.show', $notification->reservation_id);
+            return redirect()->route('adviser.reservations.show', $notification->reservation_id);
         }
 
-        return redirect()->route('priest.notifications.index');
-    }
-
-    /**
-     * Show assignment notification detail
-     */
-    public function showAssignment($id)
-    {
-        $notification = Notification::where('user_id', Auth::id())
-            ->where('notification_id', $id)
-            ->where('type', 'Assignment')
-            ->with(['reservation.service', 'reservation.venue', 'reservation.user'])
-            ->firstOrFail();
-
-        // Mark as read
-        $notification->markAsRead();
-
-        return view('priest.notifications.assignment', compact('notification'));
+        return redirect()->route('adviser.notifications.index');
     }
 
     /**

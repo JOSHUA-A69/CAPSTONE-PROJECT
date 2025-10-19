@@ -79,15 +79,74 @@
                                                 <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Reason for Declining:</p>
                                                 <p class="text-sm text-gray-700 dark:text-gray-300">{{ $decline->reason }}</p>
                                             </div>
+
+                                            @php
+                                                // Check if reservation can be undeclined
+                                                $canUndecline = false;
+                                                if ($decline->reservation) {
+                                                    // Can undecline if:
+                                                    // 1. Reservation is still pending reassignment
+                                                    // 2. No other priest has been assigned yet
+                                                    $canUndecline = in_array($decline->reservation->status, [
+                                                        'pending_priest_reassignment',
+                                                        'adviser_approved',
+                                                        'admin_approved'
+                                                    ]) && (
+                                                        !$decline->reservation->officiant_id ||
+                                                        $decline->reservation->officiant_id == Auth::id()
+                                                    );
+                                                }
+                                            @endphp
+
+                                            @if($canUndecline)
+                                                <!-- Undecline Available Notice -->
+                                                <div class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+                                                    <div class="flex items-start">
+                                                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                        <div class="flex-1">
+                                                            <p class="text-sm font-medium text-green-800 dark:text-green-300">
+                                                                This reservation has not been reassigned yet
+                                                            </p>
+                                                            <p class="text-xs text-green-700 dark:text-green-400 mt-1">
+                                                                If your schedule cleared up, you can undo your decline and accept this assignment.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
 
-                                        <!-- View Reservation Link (if still exists) -->
-                                        @if($decline->reservation)
-                                            <a href="{{ route('priest.reservations.show', $decline->reservation_id) }}"
-                                               class="ml-4 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
-                                                View Reservation
-                                            </a>
-                                        @endif
+                                        <!-- Action Buttons -->
+                                        <div class="ml-4 flex flex-col gap-2">
+                                            @if($decline->reservation)
+                                                <!-- View Reservation Button -->
+                                                <a href="{{ route('priest.reservations.show', $decline->reservation_id) }}"
+                                                   class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap text-center">
+                                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                    View Details
+                                                </a>
+
+                                                <!-- Undecline Button (if eligible) -->
+                                                @if($canUndecline)
+                                                    <form method="POST" action="{{ route('priest.reservations.undecline', $decline->reservation_id) }}"
+                                                          onsubmit="return confirm('Are you sure you want to undo your decline and accept this assignment?\n\nYou will need to confirm your availability after undoing.');">
+                                                        @csrf
+                                                        <button type="submit"
+                                                                class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
+                                                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
+                                                            </svg>
+                                                            Undo Decline
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             @endforeach

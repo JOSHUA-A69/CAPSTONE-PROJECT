@@ -23,6 +23,7 @@ use Illuminate\Notifications\Notifiable;
  *
  * @property-read string $full_name
  * @property-read string|null $name (legacy accessor, use first_name instead)
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Organization> $organizations
  */
 class User extends Authenticatable implements MustVerifyEmail
 {

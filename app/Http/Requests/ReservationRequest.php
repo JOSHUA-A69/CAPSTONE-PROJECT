@@ -5,6 +5,26 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * @property string|null $venue_id
+ * @property string|null $custom_venue
+ * @property string|null $service_id
+ * @property string|null $org_id
+ * @property string|null $officiant_id
+ * @property string|null $schedule_date
+ * @property string|null $schedule_time
+ * @property string|null $activity_name
+ * @property string|null $theme
+ * @property string|null $purpose
+ * @property string|null $details
+ * @property int|null $participants_count
+ * @property string|null $commentator
+ * @property string|null $servers
+ * @property string|null $readers
+ * @property string|null $choir
+ * @property string|null $psalmist
+ * @property string|null $prayer_leader
+ */
 class ReservationRequest extends FormRequest
 {
     public function authorize(): bool
