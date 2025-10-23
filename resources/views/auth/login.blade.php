@@ -55,4 +55,45 @@
                     </div>
                 </form>
     </div>
+
+    @push('scripts')
+    <script>
+        // Refresh CSRF token every 30 minutes to prevent 419 errors
+        setInterval(function() {
+            fetch('/refresh-csrf')
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('input[name="_token"]').value = data.token;
+                })
+                .catch(error => console.log('CSRF refresh failed:', error));
+        }, 30 * 60 * 1000); // 30 minutes
+
+        // Handle form submission and catch 419 errors
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const form = this;
+
+            // If form submission results in 419, refresh and retry
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(response => {
+                if (response.status === 419) {
+                    // Token expired, refresh and show message
+                    e.preventDefault();
+                    fetch('/refresh-csrf')
+                        .then(res => res.json())
+                        .then(data => {
+                            document.querySelector('input[name="_token"]').value = data.token;
+                            alert('Session expired. Please click Sign In again.');
+                        });
+                }
+            }).catch(error => {
+                // Let the normal form submission happen
+            });
+        });
+    </script>
+    @endpush
 </x-guest-layout>

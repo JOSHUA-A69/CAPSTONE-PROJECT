@@ -63,7 +63,7 @@
                             <x-input-error :messages="$errors->get('role')" class="mt-2" />
                         </div>
 
-                        <div class="mb-4">
+                        <div id="elevated-wrapper" class="mb-4">
                             <label for="elevated_code" class="block text-sm font-medium text-[#1b1b18]">Elevated registration code (required for high roles)</label>
                             <input id="elevated_code" name="elevated_code" type="text" value="{{ old('elevated_code') }}" class="mt-2 w-full rounded-md border border-[#e3e3e0] px-4 py-3 text-sm" />
                             <x-input-error :messages="$errors->get('elevated_code')" class="mt-2" />
@@ -81,5 +81,36 @@
                         Already registered? <a href="{{ route('login') }}" class="text-[#2ecc71] underline">Sign in</a>
                     </div>
                 </form>
+
+                @if(config('registration.allow_role_selection'))
+                <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    var roleSelect = document.getElementById('role');
+                    var elevatedWrapper = document.getElementById('elevated-wrapper');
+                    var elevatedInput = document.getElementById('elevated_code');
+                    // Elevated roles defined in config (admin, staff, adviser, priest)
+                    var elevatedRoles = {!! json_encode(config('registration.elevated_roles', [])) !!};
+
+                    function updateElevatedVisibility() {
+                        if (!roleSelect || !elevatedWrapper || !elevatedInput) return;
+                        var role = roleSelect.value || '';
+                        var shouldShow = elevatedRoles.indexOf(role) !== -1; // requestor not in elevatedRoles
+                        if (shouldShow) {
+                            elevatedWrapper.classList.remove('hidden');
+                            elevatedInput.removeAttribute('disabled');
+                        } else {
+                            elevatedWrapper.classList.add('hidden');
+                            elevatedInput.value = '';
+                            elevatedInput.setAttribute('disabled', 'disabled');
+                        }
+                    }
+
+                    updateElevatedVisibility();
+                    if (roleSelect) {
+                        roleSelect.addEventListener('change', updateElevatedVisibility);
+                    }
+                });
+                </script>
+                @endif
     </div>
 </x-guest-layout>

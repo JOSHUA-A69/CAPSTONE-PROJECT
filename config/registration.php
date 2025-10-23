@@ -2,7 +2,7 @@
 
 return [
     // Allow role selection on the public registration form. Set to true for dev/testing only.
-    'allow_role_selection' => env('ALLOW_ROLE_SELECTION', false),
+    'allow_role_selection' => env('ALLOW_ROLE_SELECTION', true),
 
     // Roles that require an elevated registration code when self-selected.
     'elevated_roles' => ['admin', 'staff', 'adviser', 'priest'],

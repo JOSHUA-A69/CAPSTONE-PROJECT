@@ -7,6 +7,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property int $id
+ * @property string $first_name
+ * @property string|null $middle_name
+ * @property string $last_name
+ * @property string $email
+ * @property string|null $phone
+ * @property string $role
+ * @property string $status
+ * @property int|null $user_role_id
+ * @property \Carbon\Carbon|null $email_verified_at
+ * @property \Carbon\Carbon $created_at
+ * @property \Carbon\Carbon $updated_at
+ *
+ * @property-read string $full_name
+ * @property-read string|null $name (legacy accessor, use first_name instead)
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Organization> $organizations
+ */
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -59,16 +77,24 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * Convenience accessor for full name if `name` is not used.
+     * Convenience accessor for full name.
      */
     public function getFullNameAttribute(): string
     {
-        if (! empty($this->name)) {
-            return $this->name;
-        }
+        $parts = array_filter([
+            $this->first_name ?? null,
+            $this->middle_name ?? null,
+            $this->last_name ?? null
+        ]);
+        return implode(' ', $parts) ?: 'Unknown User';
+    }
 
-        $parts = array_filter([$this->first_name ?? null, $this->middle_name ?? null, $this->last_name ?? null]);
-        return implode(' ', $parts);
+    /**
+     * Legacy accessor for 'name' property (returns first_name).
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->first_name;
     }
 
     /**

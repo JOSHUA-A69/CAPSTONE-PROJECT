@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | SMS Service Configuration (Semaphore)
+    |--------------------------------------------------------------------------
+    | Configure SMS notifications through Semaphore API
+    | Get your API key from https://semaphore.co/
+    */
+    'semaphore' => [
+        'enabled' => env('SMS_ENABLED', false),
+        'api_key' => env('SEMAPHORE_API_KEY'),
+        'sender_name' => env('SEMAPHORE_SENDER_NAME', 'CREaM-HNU'),
+    ],
+
 ];

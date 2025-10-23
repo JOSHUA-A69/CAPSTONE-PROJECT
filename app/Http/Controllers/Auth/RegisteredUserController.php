@@ -15,6 +15,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use App\Providers\RouteServiceProvider;
 use App\Models\UserRole;
+use Illuminate\Support\Facades\Route;
 
 class RegisteredUserController extends Controller
 {
@@ -42,6 +43,22 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:admin,staff,adviser,requestor,priest'],
         ];
+        // If role selection is disabled, force role to requestor regardless of input
+        if (!config('registration.allow_role_selection')) {
+            $request->merge(['role' => 'requestor']);
+        }
+
+        // If the chosen role is elevated, require a valid elevated code
+        $elevatedRoles = config('registration.elevated_roles', []);
+        $elevatedCodes = config('registration.elevated_codes', []);
+        if (in_array($request->input('role'), $elevatedRoles, true)) {
+            $rules['elevated_code'] = ['required', function ($attribute, $value, $fail) use ($elevatedCodes) {
+                if (empty($elevatedCodes) || !in_array(trim((string)$value), $elevatedCodes, true)) {
+                    $fail('The provided elevated registration code is invalid.');
+                }
+            }];
+        }
+
         $validated = $request->validate($rules);
 
         // Accept the chosen role from the form. Accounts will be created with
@@ -82,8 +99,17 @@ class RegisteredUserController extends Controller
             }
         }
 
-        // Send the user to the email verification notice so they must verify
-        // their email before accessing role-specific pages.
-        return redirect()->route('verification.notice');
+        // After registration, send the user to their role landing route if it exists,
+        // or fall back to the role path or application HOME. This mirrors login behavior
+        // and avoids failures when a named route is missing.
+        $routeName = RouteServiceProvider::routeNameForRole($user->role);
+        $rolePath = RouteServiceProvider::redirectTo($user->role);
+
+        if (Route::has($routeName)) {
+            return redirect()->route($routeName);
+        }
+
+        $fallback = $rolePath ?: RouteServiceProvider::HOME;
+        return redirect($fallback);
     }
 }
