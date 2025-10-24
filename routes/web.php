@@ -98,7 +98,19 @@ Route::get('/admin', fn () => view('admin.dashboard'))
     ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
     ->name('admin.dashboard');
 
-Route::get('/staff', fn () => view('staff.dashboard'))
+Route::get('/staff', function () {
+    $user = Auth::user();
+    // Fetch the latest notifications for the logged-in staff user (limit to 5 for dashboard)
+    $recentNotifications = collect();
+    if ($user) {
+        $recentNotifications = \App\Models\Notification::where('user_id', $user->id)
+            ->orderBy('sent_at', 'desc')
+            ->limit(5)
+            ->get();
+    }
+
+    return view('staff.dashboard', compact('recentNotifications'));
+})
     ->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':staff'])
     ->name('staff.dashboard');
 

@@ -78,19 +78,21 @@
                     ? (\App\Models\Organization::latest()->take(2)->get())
                     : collect();
 
-                // Be defensive: some setups use a custom notifications table without Laravel's columns
-                $recentNotifications = collect();
-                try {
-                    $canUseLaravelNotifications = class_exists('Illuminate\\Support\\Facades\\Schema')
-                        && \Illuminate\Support\Facades\Schema::hasTable('notifications')
-                        && \Illuminate\Support\Facades\Schema::hasColumns('notifications', ['notifiable_type','notifiable_id','data']);
-
-                    if ($canUseLaravelNotifications && method_exists($user, 'notifications')) {
-                        $recentNotifications = $user->notifications()->latest()->take(2)->get();
+                // Recent notifications: if not provided by the route, fall back to custom Notification model
+                if (!isset($recentNotifications) || ($recentNotifications instanceof \Illuminate\Support\Collection && $recentNotifications->isEmpty())) {
+                    try {
+                        if (class_exists('App\\Models\\Notification')) {
+                            $recentNotifications = App\Models\Notification::where('user_id', optional($user)->id)
+                                ->orderBy('sent_at', 'desc')
+                                ->take(5)
+                                ->get();
+                        } else {
+                            $recentNotifications = collect();
+                        }
+                    } catch (\Throwable $e) {
+                        // Swallow errors to avoid breaking the dashboard if schema differs
+                        $recentNotifications = collect();
                     }
-                } catch (\Throwable $e) {
-                    // Swallow errors to avoid breaking the dashboard if schema differs
-                    $recentNotifications = collect();
                 }
             @endphp
 
@@ -195,9 +197,15 @@
                         <p class="text-gray-600 dark:text-gray-400 mb-4">Recent updates and announcements</p>
 
                         @forelse($recentNotifications as $n)
+                            @php
+                                // Normalize data payload if stored as JSON string
+                                $data = is_string($n->data ?? null) ? (json_decode($n->data, true) ?: []) : ($n->data ?? []);
+                                $message = $n->message ?? ($data['title'] ?? ($n->type ?? 'Notification'));
+                                $timeAgo = $n->sent_at ? optional($n->sent_at)->diffForHumans() : optional($n->created_at)->diffForHumans();
+                            @endphp
                             <div class="mb-3 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900/40">
-                                <div class="font-medium text-gray-800 dark:text-gray-100">{{ $n->data['title'] ?? ($n->type ?? 'Notification') }}</div>
-                                <div class="text-xs text-gray-500">{{ optional($n->created_at)->diffForHumans() }}</div>
+                                <div class="font-medium text-gray-800 dark:text-gray-100">{!! $message !!}</div>
+                                <div class="text-xs text-gray-500">{{ $timeAgo }}</div>
                             </div>
                         @empty
                             <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">No notifications yet.</div>
