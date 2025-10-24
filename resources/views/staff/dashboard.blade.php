@@ -77,9 +77,21 @@
                 $organizations = class_exists('App\\Models\\Organization')
                     ? (\App\Models\Organization::latest()->take(2)->get())
                     : collect();
-                $recentNotifications = (method_exists($user, 'notifications'))
-                    ? $user->notifications()->latest()->take(2)->get()
-                    : collect();
+
+                // Be defensive: some setups use a custom notifications table without Laravel's columns
+                $recentNotifications = collect();
+                try {
+                    $canUseLaravelNotifications = class_exists('Illuminate\\Support\\Facades\\Schema')
+                        && \Illuminate\Support\Facades\Schema::hasTable('notifications')
+                        && \Illuminate\Support\Facades\Schema::hasColumns('notifications', ['notifiable_type','notifiable_id','data']);
+
+                    if ($canUseLaravelNotifications && method_exists($user, 'notifications')) {
+                        $recentNotifications = $user->notifications()->latest()->take(2)->get();
+                    }
+                } catch (\Throwable $e) {
+                    // Swallow errors to avoid breaking the dashboard if schema differs
+                    $recentNotifications = collect();
+                }
             @endphp
 
             <!-- Reference-styled Cards Grid -->
@@ -120,9 +132,9 @@
 
                         @forelse($organizations as $org)
                             <div class="mb-3 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900/40">
-                                <div class="font-medium text-gray-800 dark:text-gray-100">{{ $org->name ?? 'Organization' }}</div>
-                                @if(!empty($org->adviser_full_name ?? $org->adviser_name ?? null))
-                                    <div class="text-xs text-gray-500">Adviser: {{ $org->adviser_full_name ?? $org->adviser_name }}</div>
+                                <div class="font-medium text-gray-800 dark:text-gray-100">{{ $org->org_name ?? 'Organization' }}</div>
+                                @if($org->adviser)
+                                    <div class="text-xs text-gray-500">Adviser: {{ $org->adviser->full_name ?? $org->adviser->name ?? $org->adviser->email }}</div>
                                 @endif
                             </div>
                         @empty
@@ -191,7 +203,7 @@
                             <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">No notifications yet.</div>
                         @endforelse
 
-                        <a href="{{ route('admin.notifications.index') }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">View All</a>
+                        <a href="{{ route('staff.notifications.index') }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">View All</a>
                     </div>
                 </div>
 

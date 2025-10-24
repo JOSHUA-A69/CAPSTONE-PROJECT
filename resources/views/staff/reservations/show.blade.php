@@ -310,7 +310,6 @@
 
                             @if($reservation->status === 'adviser_approved')
                                 <!-- Step 1: After Adviser Approval - Contact & Approve -->
-                            @if($reservation->status === 'adviser_approved')
                                 @if(!$reservation->contacted_at)
                                     <!-- Step 1a: Contact Requestor -->
                                     <div class="space-y-3">
@@ -429,7 +428,8 @@
                                             Cancel Reservation
                                         </button>
                                     </div>
-                                @endif                            @elseif($reservation->status === 'pending_priest_assignment')
+                                @endif
+                            @elseif($reservation->status === 'pending_priest_assignment')
                                 <!-- This status should not occur - priest is already selected by requestor -->
                                 <div class="space-y-3">
                                     <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">

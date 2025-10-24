@@ -225,6 +225,14 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Staff\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Staff\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+
+    // Notification Routes for Staff (reuse Admin NotificationController)
+    Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/count', [\App\Http\Controllers\Admin\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
+    Route::get('/notifications/recent', [\App\Http\Controllers\Admin\NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
+    Route::get('/notifications/{id}', [\App\Http\Controllers\Admin\NotificationController::class, 'show'])->name('notifications.show');
 });
 
 // Priest Reservation Routes (specific routes BEFORE parameterized ones)

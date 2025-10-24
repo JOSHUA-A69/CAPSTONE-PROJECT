@@ -85,82 +85,145 @@
                 </div>
             </div>
 
-         <!-- Quick Actions -->
-            <div class="flex flex-wrap gap-4 justify-center">
-                <a href="{{ route('priest.reservations.index') }}"
-             class="w-full md:w-1/2 lg:w-1/4 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full mr-4">
-                            <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900 dark:text-gray-100">All Assignments</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">View all reservations</p>
-                        </div>
-                    </div>
-                </a>
+            @php
+                $pendingPreview = class_exists('App\\Models\\Reservation')
+                    ? \App\Models\Reservation::where('officiant_id', $user->id)->where('status','pending_priest_confirmation')->latest()->take(2)->get()
+                    : collect();
+                $upcomingPreview = class_exists('App\\Models\\Reservation')
+                    ? \App\Models\Reservation::where('officiant_id', $user->id)->where('priest_confirmation','confirmed')->where('schedule_date','>=', now())->orderBy('schedule_date')->take(2)->get()
+                    : collect();
+                $recentUpdates = class_exists('App\\Models\\Reservation')
+                    ? \App\Models\Reservation::where('officiant_id', $user->id)->whereDate('updated_at', now()->toDateString())->latest('updated_at')->take(2)->get()
+                    : collect();
+                $recentNotifications = class_exists('App\\Models\\Notification')
+                    ? \App\Models\Notification::where('user_id', auth()->id())->orderBy('sent_at','desc')->limit(2)->get()
+                    : collect();
+            @endphp
 
-                     <a href="{{ route('priest.reservations.calendar') }}"
-                         class="w-full md:w-1/2 lg:w-1/4 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-purple-100 dark:bg-purple-900/50 rounded-full mr-4">
-                            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                            </svg>
+            <!-- Reference-styled Cards Grid (Priest) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Pending Confirmations -->
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <h4 class="text-xl font-semibold">Pending Confirmations</h4>
                         </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900 dark:text-gray-100">Calendar View</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">See your schedule</p>
-                        </div>
-                    </div>
-                </a>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Assignments awaiting your response</p>
 
-                     <a href="{{ route('priest.reservations.index', ['time' => 'past']) }}"
-                         class="w-full md:w-1/2 lg:w-1/4 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full mr-4">
-                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900 dark:text-gray-100">Past Services</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">View history</p>
-                        </div>
-                    </div>
-                </a>
+                        @forelse($pendingPreview as $r)
+                            <div class="mb-3 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900/40">
+                                <div>
+                                    <div class="font-medium text-gray-800 dark:text-gray-100">{{ $r->service_type ?? 'Reservation' }}</div>
+                                    <div class="text-xs text-gray-500">Requested {{ optional($r->created_at)->diffForHumans() }}</div>
+                                </div>
+                                <span class="text-xs px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300">Pending</span>
+                            </div>
+                        @empty
+                            <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">No pending confirmations.</div>
+                        @endforelse
 
-                     <a href="{{ route('priest.reservations.declined') }}"
-                         class="w-full md:w-1/2 lg:w-1/4 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow border-2 border-red-200 dark:border-red-800">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-red-100 dark:bg-red-900/50 rounded-full mr-4">
-                            <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900 dark:text-gray-100">Declined Services</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">View declined history</p>
-                        </div>
+                        <a href="{{ route('priest.reservations.index', ['status' => 'pending_priest_confirmation']) }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">Review Pending</a>
                     </div>
-                </a>
-                <!-- Profile Quick Action -->
-                <a href="{{ route('profile.edit') }}"
-                   class="w-full md:w-1/2 lg:w-1/4 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <div class="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full mr-4">
-                            <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.89 0 5.558.915 7.879 2.463M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
+                </div>
+
+                <!-- Upcoming Services -->
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <h4 class="text-xl font-semibold">Upcoming Services</h4>
                         </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900 dark:text-gray-100">Your Profile</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Update details & password</p>
-                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Next confirmed services</p>
+
+                        @forelse($upcomingPreview as $r)
+                            <div class="mb-3 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900/40">
+                                <div>
+                                    <div class="font-medium text-gray-800 dark:text-gray-100">{{ $r->service_type ?? 'Reservation' }}</div>
+                                    <div class="text-xs text-gray-500">{{ optional($r->schedule_date)->format('M d, Y') }}</div>
+                                </div>
+                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            </div>
+                        @empty
+                            <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">No upcoming services.</div>
+                        @endforelse
+
+                        <a href="{{ route('priest.reservations.index', ['time' => 'upcoming']) }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">View Schedule</a>
                     </div>
-                </a>
+                </div>
+
+                <!-- Event Calendar -->
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <h4 class="text-xl font-semibold">Event Calendar</h4>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">See your upcoming schedule</p>
+                        <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">Calendar view available.</div>
+                        <a href="{{ route('priest.reservations.calendar') }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">Open Calendar</a>
+                    </div>
+                </div>
+
+                <!-- Recent Updates -->
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <h4 class="text-xl font-semibold">Recent Updates</h4>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Changes on your assignments today</p>
+
+                        @forelse($recentUpdates as $r)
+                            <div class="mb-3 flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900/40">
+                                <div>
+                                    <div class="font-medium text-gray-800 dark:text-gray-100">{{ $r->service_type ?? 'Reservation' }}</div>
+                                    <div class="text-xs text-gray-500">{{ ucfirst($r->status ?? 'updated') }} • {{ optional($r->updated_at)->diffForHumans() }}</div>
+                                </div>
+                                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </div>
+                        @empty
+                            <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">No updates yet today.</div>
+                        @endforelse
+
+                        <a href="{{ route('priest.reservations.index') }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">View All Assignments</a>
+                    </div>
+                </div>
+
+                <!-- Notifications -->
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <h4 class="text-xl font-semibold">Notifications</h4>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Recent updates & alerts</p>
+
+                        @forelse($recentNotifications as $n)
+                            <div class="mb-3 rounded-lg border border-gray-200 dark:border-gray-700 px-4 py-3 bg-gray-50 dark:bg-gray-900/40">
+                                <div class="font-medium text-gray-800 dark:text-gray-100">{!! $n->message ?? ($n->type ?? 'Notification') !!}</div>
+                                <div class="text-xs text-gray-500">{{ optional($n->sent_at ?? $n->created_at)->diffForHumans() }}</div>
+                            </div>
+                        @empty
+                            <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">No notifications yet.</div>
+                        @endforelse
+
+                        <a href="{{ route('priest.notifications.index') }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">View All</a>
+                    </div>
+                </div>
+
+                <!-- Your Profile -->
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.89 0 5.558.915 7.879 2.463M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            <h4 class="text-xl font-semibold">Your Profile</h4>
+                        </div>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">Update your account details</p>
+                        <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">Keep your information current.</div>
+                        <a href="{{ route('profile.edit') }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">Manage Profile</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

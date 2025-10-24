@@ -32,6 +32,8 @@
                         fetch('{{ route('adviser.notifications.recent') }}')
                         @elseif(auth()->user()->role === 'requestor')
                         fetch('{{ route('requestor.notifications.recent') }}')
+                        @elseif(auth()->user()->role === 'staff')
+                        fetch('{{ route('staff.notifications.recent') }}')
                         @else
                         fetch('{{ route('admin.notifications.recent') }}')
                         @endif
@@ -47,6 +49,8 @@
                         fetch('{{ route('adviser.notifications.count') }}')
                         @elseif(auth()->user()->role === 'requestor')
                         fetch('{{ route('requestor.notifications.count') }}')
+                        @elseif(auth()->user()->role === 'staff')
+                        fetch('{{ route('staff.notifications.count') }}')
                         @else
                         fetch('{{ route('admin.notifications.count') }}')
                         @endif
@@ -71,6 +75,8 @@
                             fetch('{{ route('adviser.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
                             @elseif(auth()->user()->role === 'requestor')
                             fetch('{{ route('requestor.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
+                            @elseif(auth()->user()->role === 'staff')
+                            fetch('{{ route('staff.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
                             @else
                             fetch('{{ route('admin.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
                             @endif
