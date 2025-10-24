@@ -17,16 +17,9 @@ use Illuminate\Database\Eloquent\Builder;
  * @property \Carbon\Carbon $schedule_date
  * @property string $status
  * @property string $purpose
- * @property string|null $details
  * @property int|null $participants_count
  * @property string|null $activity_name
  * @property string|null $theme
- * @property string|null $commentator
- * @property string|null $servers
- * @property string|null $readers
- * @property string|null $choir
- * @property string|null $psalmist
- * @property string|null $prayer_leader
  * @property \Carbon\Carbon|null $adviser_notified_at
  * @property \Carbon\Carbon|null $adviser_responded_at
  * @property \Carbon\Carbon|null $contacted_at
@@ -70,14 +63,7 @@ class Reservation extends Model
         'purpose',
         'activity_name',
         'theme',
-        'details',
         'participants_count',
-        'commentator',
-        'servers',
-        'readers',
-        'choir',
-        'psalmist',
-        'prayer_leader',
         'adviser_notified_at',
         'adviser_responded_at',
         'contacted_at',
@@ -150,13 +136,33 @@ class Reservation extends Model
         return $this->hasMany(ReservationHistory::class, 'reservation_id', 'reservation_id');
     }
 
+    // Note: Priest declines are tracked via assignment status/history; no separate table.
+
     /**
-     * Priest decline records for this reservation
+     * Normalized one-to-one details record (service/liturgy fields)
      */
-    public function declines()
+    public function detail()
     {
-        return $this->hasMany(PriestDecline::class, 'reservation_id', 'reservation_id');
+        return $this->hasOne(ReservationDetail::class, 'reservation_id', 'reservation_id');
     }
+
+    /**
+     * All priest assignment attempts for this reservation
+     */
+    public function assignments()
+    {
+        return $this->hasMany(ReservationAssignment::class, 'reservation_id', 'reservation_id');
+    }
+
+    /**
+     * Latest assignment attempt (if any)
+     */
+    public function latestAssignment()
+    {
+        return $this->hasOne(ReservationAssignment::class, 'reservation_id', 'reservation_id')->latestOfMany();
+    }
+
+    // Note: ministry roles are handled via existing events/event_roles/event_assignments tables.
 
     // ===========================
     // Query Scopes
@@ -315,6 +321,27 @@ class Reservation extends Model
             'declined' => 'Declined',
             default => 'Not Yet Assigned',
         };
+    }
+
+    // ===========================
+    // Accessors (Computed Attributes)
+    // ===========================
+
+    /**
+     * Backward-compatible alias for views still referencing `assignedPriest`.
+     * Returns the same relation as `officiant`.
+     */
+    public function getAssignedPriestAttribute()
+    {
+        return $this->officiant;
+    }
+
+    /**
+     * Convenience accessor to get a human-readable service type/name.
+     */
+    public function getServiceTypeAttribute(): ?string
+    {
+        return optional($this->service)->service_name;
     }
 }
 

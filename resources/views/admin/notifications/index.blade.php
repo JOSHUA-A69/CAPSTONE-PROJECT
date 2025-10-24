@@ -6,6 +6,9 @@
     </x-slot>
 
     <div class="py-12">
+        @php
+            $prefix = request()->routeIs('staff.*') ? 'staff' : 'admin';
+        @endphp
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Mark All as Read Button -->
             <div class="mb-4 flex justify-end">
@@ -62,11 +65,11 @@
 
                                 <div class="ml-4 flex-shrink-0">
                                     @if($notification->type === 'Priest Declined')
-                                        <a href="{{ route('admin.notifications.priest-declined', $notification->notification_id) }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none transition">
+                                        <a href="{{ route($prefix.'.notifications.priest-declined', $notification->notification_id) }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none transition">
                                             View Details
                                         </a>
                                     @elseif($notification->reservation_id)
-                                        <a href="{{ route('admin.reservations.show', $notification->reservation_id) }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none transition">
+                                        <a href="{{ route($prefix.'.reservations.show', $notification->reservation_id) }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none transition">
                                             View
                                         </a>
                                     @endif
@@ -111,7 +114,7 @@
         });
 
         function markAllAsRead() {
-            fetch('{{ route('admin.notifications.mark-all-read') }}', {
+            fetch("{{ route($prefix.'.notifications.mark-all-read') }}", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

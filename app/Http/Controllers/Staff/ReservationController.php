@@ -9,7 +9,7 @@ use App\Services\ReservationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Str;
+// use Illuminate\Support\Str;
 
 class ReservationController extends Controller
 {
@@ -31,7 +31,17 @@ class ReservationController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('purpose', 'like', "%{$search}%")
-                  ->orWhere('details', 'like', "%{$search}%");
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('first_name', 'like', "%{$search}%")
+                         ->orWhere('last_name', 'like', "%{$search}%")
+                         ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$search}%"]);
+                  })
+                  ->orWhereHas('organization', function ($oq) use ($search) {
+                      $oq->where('org_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('service', function ($sq) use ($search) {
+                      $sq->where('service_name', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -115,42 +125,23 @@ class ReservationController extends Controller
             return Redirect::back()->with('error', 'This reservation cannot be marked as contacted at this stage.');
         }
 
-        // Generate confirmation token
-        $token = Str::random(64);
-
-        $reservation->update([
-            'contacted_at' => now(),
-            'requestor_confirmation_token' => $token,
-        ]);
-
+        // Log history only (no token/confirmation step)
         $reservation->history()->create([
             'performed_by' => Auth::id(),
             'action' => 'contacted_requestor',
-            'remarks' => 'Staff contacted requestor to verify availability',
+            'remarks' => 'Staff contacted requestor to verify details (no confirmation required)',
             'performed_at' => now(),
         ]);
 
-        // Generate confirmation URL
-        $confirmationUrl = route('requestor.reservations.show-confirmation', [
-            'reservation_id' => $reservation->reservation_id,
-            'token' => $token
-        ]);
-
-        // TODO: Send email/notification to requestor with confirmation link
-        // $this->notificationService->notifyRequestorConfirmation($reservation, $confirmationUrl);
-
         return Redirect::back()->with('status', 'requestor-contacted')
-            ->with('message', 'Requestor has been notified. Confirmation link: ' . $confirmationUrl);
+            ->with('message', 'Requestor has been marked as contacted. No confirmation step is required.');
     }
 
     public function approve(Request $request, $reservation_id)
     {
         $reservation = Reservation::findOrFail($reservation_id);
 
-        // Check if requestor has confirmed
-        if ($reservation->status === 'adviser_approved' && !$reservation->requestor_confirmed_at) {
-            return Redirect::back()->with('error', 'Please wait for requestor confirmation before approving.');
-        }
+        // Requestor confirmation step removed (no gating by requestor_confirmed_at)
 
         // Check if priest is assigned (should be selected by requestor)
         if (!$reservation->officiant_id) {
@@ -170,8 +161,8 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // TODO: Send notification to the priest
-        // ReservationNotificationService::notifyPriestAssignment($reservation);
+    // Notify the priest of the assignment/confirmation request
+    $this->notificationService->notifyPriestAssigned($reservation);
 
         return Redirect::back()->with('status', 'reservation-approved')->with('message', 'Reservation approved and priest has been notified.');
     }
@@ -269,7 +260,10 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        return Redirect::back()
+    // Notify priest of assignment
+    $this->notificationService->notifyPriestAssigned($reservation);
+
+    return Redirect::back()
             ->with('status', 'priest-assigned')
             ->with('message', 'Priest assigned successfully. Awaiting priest confirmation.');
     }

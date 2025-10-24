@@ -23,7 +23,7 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
-                    @if($declines->isEmpty())
+                    @if($declines->total() === 0)
                         <div class="text-center py-12">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -41,7 +41,7 @@
                                         <div class="flex-1">
                                             <div class="flex items-center gap-3 mb-2">
                                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                                    {{ $decline->reservation_activity_name }}
+                                                    {{ ($decline->reservation?->activity_name) ?? ($decline->reservation?->service?->service_name) }}
                                                 </h3>
                                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200">
                                                     Declined
@@ -54,7 +54,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                     </svg>
                                                     <span class="font-medium">Original Schedule:</span>&nbsp;
-                                                    {{ \Carbon\Carbon::parse($decline->reservation_schedule_date)->format('M d, Y - g:i A') }}
+                                                    {{ optional(\Carbon\Carbon::parse($decline->reservation?->schedule_date ?? null))->format('M d, Y - g:i A') }}
                                                 </div>
 
                                                 <div class="flex items-center">
@@ -62,7 +62,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                     </svg>
-                                                    {{ $decline->reservation_venue }}
+                                                    {{ $decline->reservation?->custom_venue_name ?? $decline->reservation?->venue?->name ?? 'N/A' }}
                                                 </div>
 
                                                 <div class="flex items-center">
@@ -70,14 +70,14 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                     </svg>
                                                     <span class="font-medium">Declined:</span>&nbsp;
-                                                    {{ $decline->declined_at->format('M d, Y g:i A') }}
+                                                    {{ optional(\Carbon\Carbon::parse($decline->performed_at ?? null))->format('M d, Y g:i A') }}
                                                 </div>
                                             </div>
 
                                             <!-- Reason -->
                                             <div class="mt-3 p-3 bg-white dark:bg-gray-800 rounded border dark:border-gray-700">
                                                 <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Reason for Declining:</p>
-                                                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $decline->reason }}</p>
+                                                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $decline->remarks }}</p>
                                             </div>
 
                                             @php
@@ -172,16 +172,12 @@
 
                         <div class="p-4 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
                             <p class="text-sm text-gray-600 dark:text-gray-400">This Month</p>
-                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                                {{ $declines->where('declined_at', '>=', now()->startOfMonth())->count() }}
-                            </p>
+                            <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ $thisMonthCount }}</p>
                         </div>
 
                         <div class="p-4 bg-purple-50 dark:bg-purple-900/10 rounded-lg">
                             <p class="text-sm text-gray-600 dark:text-gray-400">This Year</p>
-                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                                {{ $declines->where('declined_at', '>=', now()->startOfYear())->count() }}
-                            </p>
+                            <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ $thisYearCount }}</p>
                         </div>
                     </div>
                 </div>

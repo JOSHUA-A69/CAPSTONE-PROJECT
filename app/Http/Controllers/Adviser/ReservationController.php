@@ -71,7 +71,10 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation is no longer pending adviser approval.');
         }
 
-        $remarks = $request->input('remarks', 'Approved by organization adviser');
+        // Ensure non-null string for remarks to satisfy notification signature
+        $remarks = $request->filled('remarks')
+            ? (string) $request->input('remarks')
+            : 'Approved by organization adviser';
 
         $reservation->update([
             'status' => 'adviser_approved',

@@ -40,10 +40,16 @@ class ReservationController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('purpose', 'like', "%{$search}%")
-                  ->orWhere('details', 'like', "%{$search}%")
                   ->orWhereHas('user', function ($userQuery) use ($search) {
                       $userQuery->where('first_name', 'like', "%{$search}%")
-                          ->orWhere('last_name', 'like', "%{$search}%");
+                          ->orWhere('last_name', 'like', "%{$search}%")
+                          ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$search}%"]);
+                  })
+                  ->orWhereHas('organization', function ($orgQuery) use ($search) {
+                      $orgQuery->where('org_name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('service', function ($svcQuery) use ($search) {
+                      $svcQuery->where('service_name', 'like', "%{$search}%");
                   });
             });
         }
@@ -52,10 +58,11 @@ class ReservationController extends Controller
             $query->where('status', $status);
         }
 
-        // Priority: adviser_approved > admin_approved > pending > others
+    // Priority: adviser_approved > pending_priest_confirmation/admin_approved > pending > others
         $reservations = $query->orderByRaw("CASE
                 WHEN status = 'adviser_approved' THEN 1
-                WHEN status = 'admin_approved' THEN 2
+        WHEN status = 'pending_priest_confirmation' THEN 2
+        WHEN status = 'admin_approved' THEN 3
                 WHEN status = 'pending' THEN 3
                 ELSE 4
             END")
@@ -63,7 +70,7 @@ class ReservationController extends Controller
             ->paginate(20)
             ->appends($request->only('q', 'status'));
 
-        $statuses = ['pending', 'adviser_approved', 'admin_approved', 'approved', 'rejected', 'cancelled'];
+    $statuses = ['pending', 'adviser_approved', 'pending_priest_assignment', 'pending_priest_confirmation', 'pending_priest_reassignment', 'admin_approved', 'approved', 'rejected', 'cancelled'];
 
         // Count pending admin approval
         $pendingCount = Reservation::where('status', 'adviser_approved')->count();
@@ -110,8 +117,8 @@ class ReservationController extends Controller
 
         $reservation = Reservation::findOrFail($reservation_id);
 
-        // Allow if status is adviser_approved OR priest_declined OR pending_priest_reassignment (reassignment)
-        if (!in_array($reservation->status, ['adviser_approved', 'priest_declined', 'pending_priest_reassignment'])) {
+        // Allow if status is adviser_approved OR pending_priest_assignment OR pending_priest_reassignment (reassignment)
+        if (!in_array($reservation->status, ['adviser_approved', 'pending_priest_assignment', 'pending_priest_reassignment'])) {
             return Redirect::back()
                 ->with('error', 'This reservation is not ready for priest assignment.');
         }

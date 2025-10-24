@@ -83,13 +83,16 @@
                 </form>
 
                 @if(config('registration.allow_role_selection'))
+                <div id="elevated-data" data-roles='@json(config('registration.elevated_roles', []))'></div>
                 <script>
                 document.addEventListener('DOMContentLoaded', function () {
                     var roleSelect = document.getElementById('role');
                     var elevatedWrapper = document.getElementById('elevated-wrapper');
                     var elevatedInput = document.getElementById('elevated_code');
                     // Elevated roles defined in config (admin, staff, adviser, priest)
-                    var elevatedRoles = {!! json_encode(config('registration.elevated_roles', [])) !!};
+                    var elevatedData = document.getElementById('elevated-data');
+                    var elevatedRoles = [];
+                    try { elevatedRoles = JSON.parse(elevatedData?.dataset?.roles || '[]'); } catch (e) { elevatedRoles = []; }
 
                     function updateElevatedVisibility() {
                         if (!roleSelect || !elevatedWrapper || !elevatedInput) return;

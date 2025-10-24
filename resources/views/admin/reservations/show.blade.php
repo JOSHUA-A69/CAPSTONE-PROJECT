@@ -192,7 +192,7 @@
                     @endif
 
                     <!-- Assign Priest Form -->
-                    @if(in_array($reservation->status, ['pending_priest_assignment', 'adviser_approved']))
+                    @if(in_array($reservation->status, ['pending_priest_assignment', 'pending_priest_reassignment', 'adviser_approved']))
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Assign Priest</h3>
@@ -208,9 +208,9 @@
                                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-purple-500 focus:ring-purple-500">
                                         <option value="">-- Select Priest --</option>
                                         @foreach($availablePriests as $priest)
-                                            <option value="{{ $priest->user_id }}"
-                                                {{ old('officiant_id') == $priest->user_id ? 'selected' : '' }}>
-                                                {{ $priest->name }}
+                                            <option value="{{ $priest->id }}"
+                                                {{ old('officiant_id') == $priest->id ? 'selected' : '' }}>
+                                                {{ $priest->name ?? ($priest->first_name . ' ' . $priest->last_name) }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -245,10 +245,10 @@
                                 @csrf
 
                                 <div class="mb-4">
-                                    <label for="admin_notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Rejection Reason (optional)
+                                    <label for="reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Rejection Reason
                                     </label>
-                                    <textarea name="admin_notes" id="admin_notes" rows="3"
+                                    <textarea name="reason" id="reason" rows="3"
                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-red-500 focus:ring-red-500"
                                               placeholder="Provide reason for rejection...">{{ old('admin_notes') }}</textarea>
                                 </div>

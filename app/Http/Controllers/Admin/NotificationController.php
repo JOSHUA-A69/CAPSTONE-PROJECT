@@ -8,6 +8,7 @@ use App\Models\Reservation;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class NotificationController extends Controller
 {
@@ -39,6 +40,10 @@ class NotificationController extends Controller
             ->orderBy('sent_at', 'desc')
             ->limit(5)
             ->get();
+
+        // Determine route prefix based on caller group (admin.* or staff.*)
+        $current = request()->route()?->getName();
+        $prefix = ($current && Str::startsWith($current, 'staff.')) ? 'staff' : 'admin';
 
         $html = '';
         if ($notifications->isEmpty()) {
@@ -78,9 +83,9 @@ class NotificationController extends Controller
                 $avatarColor = $colors[array_rand($colors)];
 
                 if ($notification->type === 'Priest Declined') {
-                    $url = route('admin.notifications.priest-declined', $notification->notification_id);
+                    $url = route($prefix . '.notifications.priest-declined', $notification->notification_id);
                 } else {
-                    $url = route('admin.notifications.show', $notification->notification_id);
+                    $url = route($prefix . '.notifications.show', $notification->notification_id);
                 }
 
                 $html .= '<div class="relative group ' . $bgColor . '">';
@@ -145,9 +150,13 @@ class NotificationController extends Controller
         // Mark as read
         $notification->markAsRead();
 
+        // Route prefix
+        $current = request()->route()?->getName();
+        $prefix = ($current && Str::startsWith($current, 'staff.')) ? 'staff' : 'admin';
+
         // If it's a priest declined notification, show special view
         if ($notification->type === 'Priest Declined' && $notification->reservation_id) {
-            return redirect()->route('admin.notifications.priest-declined', $notification->notification_id);
+            return redirect()->route($prefix . '.notifications.priest-declined', $notification->notification_id);
         }
 
         // If it's a priest confirmation/cancellation notification, show detailed view
@@ -159,16 +168,16 @@ class NotificationController extends Controller
             $action = $data['action'] ?? null;
 
             if (in_array($action, ['priest_confirmed', 'priest_cancelled_confirmation', 'priest_undeclined'])) {
-                return redirect()->route('admin.notifications.priest-action', $notification->notification_id);
+                return redirect()->route($prefix . '.notifications.priest-action', $notification->notification_id);
             }
         }
 
         // For other types, redirect to reservation
         if ($notification->reservation_id) {
-            return redirect()->route('admin.reservations.show', $notification->reservation_id);
+            return redirect()->route($prefix . '.reservations.show', $notification->reservation_id);
         }
 
-        return redirect()->route('admin.notifications.index');
+        return redirect()->route($prefix . '.notifications.index');
     }
 
     /**

@@ -152,9 +152,7 @@ Route::prefix('requestor')->name('requestor.')->middleware(['auth', 'verified', 
     Route::get('/reservations/create', [\App\Http\Controllers\Requestor\ReservationController::class, 'create'])->name('reservations.create');
     Route::post('/reservations', [\App\Http\Controllers\Requestor\ReservationController::class, 'store'])->name('reservations.store');
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Requestor\ReservationController::class, 'show'])->name('reservations.show');
-    Route::get('/reservations/{reservation_id}/confirm/{token}', [\App\Http\Controllers\Requestor\ReservationController::class, 'showConfirmation'])->name('reservations.show-confirmation');
-    Route::post('/reservations/{reservation_id}/confirm/{token}', [\App\Http\Controllers\Requestor\ReservationController::class, 'confirmReservation'])->name('reservations.confirm-reservation');
-    Route::post('/reservations/{reservation_id}/decline/{token}', [\App\Http\Controllers\Requestor\ReservationController::class, 'declineReservation'])->name('reservations.decline-reservation');
+    // Confirmation step removed: no token-based confirm/decline routes
     Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Requestor\ReservationController::class, 'cancel'])->name('reservations.cancel');
 
     // Notification Routes
@@ -231,6 +229,8 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     Route::get('/notifications/count', [\App\Http\Controllers\Admin\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
     Route::get('/notifications/recent', [\App\Http\Controllers\Admin\NotificationController::class, 'getRecent'])->name('notifications.recent');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::get('/notifications/{id}/priest-declined', [\App\Http\Controllers\Admin\NotificationController::class, 'showPriestDeclined'])->name('notifications.priest-declined');
+    Route::get('/notifications/{id}/priest-action', [\App\Http\Controllers\Admin\NotificationController::class, 'showPriestAction'])->name('notifications.priest-action');
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::get('/notifications/{id}', [\App\Http\Controllers\Admin\NotificationController::class, 'show'])->name('notifications.show');
 });

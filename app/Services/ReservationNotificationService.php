@@ -57,7 +57,7 @@ class ReservationNotificationService
             Log::warning('Failed to create requestor in-app notification (submitted): ' . $e->getMessage());
         }
 
-        // Email to organization adviser
+        // Email + in-app to organization adviser
         if ($reservation->organization && $reservation->organization->adviser) {
             $adviser = $reservation->organization->adviser;
             if ($adviser->email) {
@@ -71,6 +71,28 @@ class ReservationNotificationService
                     $adviser->phone,
                     "New reservation request from {$reservation->user->first_name} {$reservation->user->last_name} for {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . ". Please review in eReligiousServices."
                 );
+            }
+
+            // In-app notification to adviser
+            try {
+                $message = "New reservation request awaiting your review: <strong>{$reservation->service->service_name}</strong>";
+                $notificationData = [
+                    'user_id' => $adviser->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'service_name' => $reservation->service->service_name,
+                        'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
+                        'action' => 'request_submitted',
+                    ]);
+                }
+                Notification::create($notificationData);
+            } catch (\Exception $e) {
+                Log::warning('Failed to create adviser in-app notification (submitted): ' . $e->getMessage());
             }
         }
     }
@@ -124,6 +146,113 @@ class ReservationNotificationService
         } catch (\Exception $e) {
             Log::warning('Failed to create requestor in-app notification (adviser approved): ' . $e->getMessage());
         }
+
+        // In-app notification for CREaM Admin/Staff
+        try {
+            $admins = User::whereIn('role', ['admin', 'staff'])->get();
+            foreach ($admins as $admin) {
+                $notificationData = [
+                    'user_id' => $admin->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => 'Adviser approved a reservation. Proceed to contact requestor and assign a priest.',
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                if (Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'action' => 'adviser_approved',
+                        'remarks' => $remarks,
+                        'service_name' => $reservation->service->service_name,
+                        'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
+                    ]);
+                }
+                Notification::create($notificationData);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to create admin/staff in-app notification (adviser approved): ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify requestor with confirmation link after staff contact
+     */
+    public function notifyRequestorConfirmation(Reservation $reservation, string $confirmationUrl): void
+    {
+        // Email to requestor with the confirmation URL
+        if ($reservation->user && $reservation->user->email) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "The CREaM Staff has contacted you regarding your reservation.\n\n" .
+                    "Please confirm your reservation by clicking the link below:\n" .
+                    $confirmationUrl . "\n\n" .
+                    "If you did not request this, you can ignore this message.",
+                    function ($message) use ($reservation) {
+                        $message->to($reservation->user->email)
+                            ->subject('Please confirm your reservation');
+                    }
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send requestor confirmation email: ' . $e->getMessage());
+            }
+        }
+
+        // In-app notification to requestor
+        try {
+            $message = "Please confirm your reservation via the link sent to your email.";
+            Notification::create([
+                'user_id' => $reservation->user_id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => 'Action Required',
+                'sent_at' => now(),
+                'data' => json_encode([
+                    'action' => 'requestor_confirm_link_sent',
+                ])
+            ]);
+        } catch (\Exception $e) {
+            // ignore
+        }
+    }
+
+    /**
+     * Notify admins/staff that the requestor confirmed their availability
+     */
+    public function notifyRequestorConfirmed(Reservation $reservation): void
+    {
+        $admins = User::whereIn('role', ['admin', 'staff'])->get();
+
+        foreach ($admins as $admin) {
+            if ($admin->email) {
+                try {
+                    \Illuminate\Support\Facades\Mail::raw(
+                        "The requestor has confirmed availability for reservation #{$reservation->reservation_id}.\n\n" .
+                        "Service: {$reservation->service->service_name}\n" .
+                        "Schedule: " . $reservation->schedule_date->format('F d, Y h:i A') . "\n\n" .
+                        "You may proceed to assign a priest.",
+                        function ($message) use ($admin) {
+                            $message->to($admin->email)
+                                ->subject('Requestor confirmed availability');
+                        }
+                    );
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Failed to notify admin/staff of requestor confirmation: ' . $e->getMessage());
+                }
+            }
+
+            // In-app notification
+            try {
+                Notification::create([
+                    'user_id' => $admin->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => 'Requestor confirmed availability. Proceed to assign a priest.',
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                    'data' => json_encode(['action' => 'requestor_confirmed'])
+                ]);
+            } catch (\Exception $e) {
+                // ignore
+            }
+        }
     }
 
     /**
@@ -173,6 +302,29 @@ class ReservationNotificationService
             Notification::create($notificationData);
         } catch (\Exception $e) {
             Log::warning('Failed to create requestor in-app notification (adviser rejected): ' . $e->getMessage());
+        }
+
+        // In-app notification for CREaM Admin/Staff
+        try {
+            $admins = User::whereIn('role', ['admin', 'staff'])->get();
+            foreach ($admins as $admin) {
+                $notificationData = [
+                    'user_id' => $admin->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => 'Adviser rejected a reservation. No further action required unless appealed.',
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                if (Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'reason' => $reason,
+                        'action' => 'adviser_rejected',
+                    ]);
+                }
+                Notification::create($notificationData);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to create admin/staff in-app notification (adviser rejected): ' . $e->getMessage());
         }
     }
 
@@ -393,6 +545,36 @@ class ReservationNotificationService
             ]);
         } catch (\Exception $e) {
             // ignore
+        }
+
+        // In-app notifications to other parties (adviser, priest, admins/staff)
+        try {
+            $notifiableUsers = collect($recipients)
+                ->pluck('id')
+                ->filter()
+                ->unique()
+                ->reject(fn ($id) => $id == $reservation->user_id) // avoid duplicate for requestor
+                ->values();
+
+            foreach ($notifiableUsers as $uid) {
+                $notificationData = [
+                    'user_id' => $uid,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => 'A reservation you are involved with was cancelled.',
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                if (Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'reason' => $reason,
+                        'cancelled_by' => $cancelledBy,
+                        'action' => 'reservation_cancelled',
+                    ]);
+                }
+                Notification::create($notificationData);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to create in-app notifications for cancellation: ' . $e->getMessage());
         }
     }
 

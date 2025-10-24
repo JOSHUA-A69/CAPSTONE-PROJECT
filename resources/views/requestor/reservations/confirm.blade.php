@@ -100,64 +100,11 @@
                     </div>
                     @endif
 
-                    @if($reservation->details)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Additional Details</label>
-                        <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">{{ $reservation->details }}</p>
-                    </div>
-                    @endif
+                    <!-- Additional Details removed (details field dropped) -->
                 </div>
             </div>
 
-            <!-- Ministry Volunteers -->
-            @if($reservation->commentator || $reservation->servers || $reservation->readers || $reservation->choir || $reservation->psalmist || $reservation->prayer_leader)
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ministry Volunteers</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @if($reservation->commentator)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Commentator</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->commentator }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->servers)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Servers</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->servers }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->readers)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Readers</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->readers }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->choir)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Choir</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->choir }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->psalmist)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Psalmist</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->psalmist }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->prayer_leader)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Leader for Prayer of the Faithful</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->prayer_leader }}</p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @endif
+            <!-- Ministry Volunteers removed: managed via events & assignments after approval -->
         </div>
 
         <!-- Confirmation Actions -->

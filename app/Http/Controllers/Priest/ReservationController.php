@@ -73,8 +73,8 @@ class ReservationController extends Controller
 
         // Allow priests to view reservations where they are:
         // 1. Currently assigned as officiant (officiant_id = priest_id)
-        // 2. Previously declined (has a decline record)
-        // 3. Received notification for this reservation
+        // 2. Previously declined (has a reservation_history 'priest_declined' performed by this priest)
+        // 3. Received notification for this reservation (Assignment)
         $reservation = Reservation::with([
             'user',
             'service',
@@ -84,8 +84,13 @@ class ReservationController extends Controller
         ])
             ->where(function ($query) use ($priestId, $reservation_id) {
                 $query->where('officiant_id', $priestId)
-                    ->orWhereHas('declines', function ($q) use ($priestId) {
-                        $q->where('priest_id', $priestId);
+                    // previously declined: use reservation_history instead of a separate table
+                    ->orWhereExists(function ($q) use ($priestId) {
+                        $q->select(DB::raw(1))
+                            ->from('reservation_history as rh')
+                            ->whereColumn('rh.reservation_id', 'reservations.reservation_id')
+                            ->where('rh.performed_by', $priestId)
+                            ->whereIn('rh.action', ['priest_declined', 'priest_cancelled_confirmation']);
                     })
                     ->orWhereExists(function ($q) use ($priestId, $reservation_id) {
                         $q->select(DB::raw(1))
@@ -169,17 +174,6 @@ class ReservationController extends Controller
         // Store the priest ID before clearing officiant_id
         $priestId = Auth::id();
 
-        // Store decline record with reservation details
-        \App\Models\PriestDecline::create([
-            'reservation_id' => $reservation->reservation_id,
-            'priest_id' => $priestId,
-            'reason' => $reason,
-            'declined_at' => now(),
-            'reservation_activity_name' => $reservation->activity_name ?? $reservation->service->service_name,
-            'reservation_schedule_date' => $reservation->schedule_date,
-            'reservation_venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
-        ]);
-
         // Update confirmation status and revert to staff/admin for reassignment
         $reservation->update([
             'priest_confirmation' => 'declined',
@@ -227,16 +221,6 @@ class ReservationController extends Controller
         // Find the reservation
         $reservation = Reservation::findOrFail($reservation_id);
 
-        // Find the decline record
-        $decline = \App\Models\PriestDecline::where('reservation_id', $reservation_id)
-            ->where('priest_id', $priestId)
-            ->latest('declined_at')
-            ->first();
-
-        if (!$decline) {
-            return Redirect::back()->with('error', 'Decline record not found.');
-        }
-
         // Check if reservation was already reassigned to another priest
         if ($reservation->officiant_id && $reservation->officiant_id != $priestId) {
             return Redirect::route('priest.reservations.declined')
@@ -257,13 +241,11 @@ class ReservationController extends Controller
             'status' => 'pending_priest_confirmation', // Back to awaiting priest confirmation
         ]);
 
-        // Count total declines by this priest for this reservation (for admin awareness)
-        $totalDeclines = \App\Models\PriestDecline::where('reservation_id', $reservation_id)
-            ->where('priest_id', $priestId)
+        // Count total declines by this priest for this reservation (for admin awareness) using history
+        $totalDeclines = \App\Models\ReservationHistory::where('reservation_id', $reservation_id)
+            ->where('performed_by', $priestId)
+            ->where('action', 'priest_declined')
             ->count();
-
-        // Delete the decline record
-        $decline->delete();
 
         // Create history entry with decline count
         $historyRemarks = 'Priest undid their decline and is now available for this assignment.';
@@ -309,7 +291,8 @@ class ReservationController extends Controller
         }
 
         // Send email notifications to admin/staff
-        $this->notificationService->notifyPriestUndeclined($reservation, $priestId);        return Redirect::route('priest.reservations.show', $reservation_id)
+        $this->notificationService->notifyPriestUndeclined($reservation, $priestId);
+        return Redirect::route('priest.reservations.show', $reservation_id)
             ->with('status', 'reservation-undeclined')
             ->with('message', 'Success! You have undone your decline. Please confirm your availability for this service.');
     }
@@ -319,12 +302,25 @@ class ReservationController extends Controller
      */
     public function declined()
     {
-        $declines = \App\Models\PriestDecline::where('priest_id', Auth::id())
-            ->with(['reservation', 'priest'])
-            ->orderBy('declined_at', 'desc')
+        // Use reservation_history instead of a separate table
+        $declines = \App\Models\ReservationHistory::where('performed_by', Auth::id())
+            ->where('action', 'priest_declined')
+            ->with(['reservation.service', 'reservation.venue', 'reservation.user'])
+            ->orderBy('performed_at', 'desc')
             ->paginate(20);
 
-        return view('priest.reservations.declined', compact('declines'));
+        // Stats for this month/year
+        $thisMonthCount = \App\Models\ReservationHistory::where('performed_by', Auth::id())
+            ->where('action', 'priest_declined')
+            ->where('performed_at', '>=', now()->startOfMonth())
+            ->count();
+
+        $thisYearCount = \App\Models\ReservationHistory::where('performed_by', Auth::id())
+            ->where('action', 'priest_declined')
+            ->where('performed_at', '>=', now()->startOfYear())
+            ->count();
+
+        return view('priest.reservations.declined', compact('declines', 'thisMonthCount', 'thisYearCount'));
     }
 
     /**

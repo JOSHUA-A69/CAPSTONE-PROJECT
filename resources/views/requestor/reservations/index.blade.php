@@ -56,8 +56,10 @@
                         <td class="px-4 py-2">
                             @if($canCancel)
                                 <button 
-                                    onclick="showCancelModal({{ $r->reservation_id }}, '{{ $r->service->service_name }}', '{{ $r->schedule_date->format('F d, Y h:i A') }}')"
-                                    class="text-sm px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">
+                                    class="cancel-btn text-sm px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                    data-id="{{ $r->reservation_id }}"
+                                    data-service="{{ $r->service->service_name }}"
+                                    data-schedule="{{ optional($r->schedule_date)->format('F d, Y h:i A') }}">
                                     Cancel
                                 </button>
                             @elseif($r->status === 'cancelled')
@@ -163,6 +165,16 @@ document.getElementById('cancelModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
         hideCancelModal();
     }
+});
+
+// Bind cancel buttons
+document.querySelectorAll('.cancel-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        var id = this.dataset.id;
+        var service = this.dataset.service || '';
+        var schedule = this.dataset.schedule || '';
+        showCancelModal(id, service, schedule);
+    });
 });
 </script>
 @endsection
