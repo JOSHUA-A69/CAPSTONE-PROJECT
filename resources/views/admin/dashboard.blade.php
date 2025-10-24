@@ -75,9 +75,9 @@
             </div>
 
             <!-- Quick Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex flex-wrap gap-4 justify-center">
                 <a href="{{ route('admin.users.index') }}"
-                   class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                   class="w-full md:w-1/2 lg:w-1/3 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
                     <div class="flex items-center">
                         <div class="p-3 bg-green-100 dark:bg-green-900/50 rounded-full mr-4">
                             <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -91,8 +91,8 @@
                     </div>
                 </a>
 
-                <a href="{{ route('admin.notifications.index') }}"
-                   class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                     <a href="{{ route('admin.notifications.index') }}"
+                         class="w-full md:w-1/2 lg:w-1/3 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
                     <div class="flex items-center">
                         <div class="p-3 bg-yellow-100 dark:bg-yellow-900/50 rounded-full mr-4">
                             <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,8 +106,8 @@
                     </div>
                 </a>
 
-                <a href="{{ route('profile.edit') }}"
-                   class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                     <a href="{{ route('profile.edit') }}"
+                         class="w-full md:w-1/2 lg:w-1/3 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
                     <div class="flex items-center">
                         <div class="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full mr-4">
                             <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

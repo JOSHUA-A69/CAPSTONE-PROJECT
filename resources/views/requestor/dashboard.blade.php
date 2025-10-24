@@ -67,8 +67,8 @@
             </div>
 
             <!-- Quick Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <a href="{{ route('requestor.reservations.create') }}" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex flex-wrap gap-4 justify-center">
+                <a href="{{ route('requestor.reservations.create') }}" class="w-full md:w-1/2 lg:w-1/3 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
                     <div class="flex items-center">
                         <div class="p-3 bg-green-100 dark:bg-green-900/50 rounded-full mr-4">
                             <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +81,7 @@
                         </div>
                     </div>
                 </a>
-                <a href="{{ route('requestor.reservations.index') }}" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                <a href="{{ route('requestor.reservations.index') }}" class="w-full md:w-1/2 lg:w-1/3 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
                     <div class="flex items-center">
                         <div class="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full mr-4">
                             <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -94,7 +94,7 @@
                         </div>
                     </div>
                 </a>
-                <a href="{{ route('requestor.notifications.index') }}" class="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                <a href="{{ route('requestor.notifications.index') }}" class="w-full md:w-1/2 lg:w-1/3 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
                     <div class="flex items-center">
                         <div class="p-3 bg-yellow-100 dark:bg-yellow-900/50 rounded-full mr-4">
                             <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,6 +104,19 @@
                         <div>
                             <h4 class="font-semibold text-gray-900 dark:text-gray-100">Notifications</h4>
                             <p class="text-sm text-gray-600 dark:text-gray-400">Latest updates</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="{{ route('profile.edit') }}" class="w-full md:w-1/2 lg:w-1/3 block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-full mr-4">
+                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.89 0 5.558.915 7.879 2.463M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-gray-100">Your Profile</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Update details</p>
                         </div>
                     </div>
                 </a>

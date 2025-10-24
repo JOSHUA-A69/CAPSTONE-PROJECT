@@ -20,8 +20,8 @@
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <!-- Notification Bell (Admin/Staff/Priest/Adviser) -->
-                @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'staff', 'priest', 'adviser']))
+                <!-- Notification Bell (Admin/Staff/Priest/Adviser/Requestor) -->
+                @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'staff', 'priest', 'adviser', 'requestor']))
                 <div class="relative mr-4" x-data="{
                     open: false,
                     count: 0,
@@ -121,10 +121,6 @@
                     </x-slot>
 
                     <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -159,7 +155,7 @@
             </x-responsive-nav-link>
         </div>
 
-        <!-- Responsive Settings Options -->
+    <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
@@ -167,10 +163,6 @@
             </div>
 
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
-                </x-responsive-nav-link>
-
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
