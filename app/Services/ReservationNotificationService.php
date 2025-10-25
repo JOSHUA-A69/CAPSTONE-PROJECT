@@ -57,15 +57,40 @@ class ReservationNotificationService
             Log::warning('Failed to create requestor in-app notification (submitted): ' . $e->getMessage());
         }
 
-        // Email to organization adviser
+        // Email + in-app notification to organization adviser
         if ($reservation->organization && $reservation->organization->adviser) {
             $adviser = $reservation->organization->adviser;
-            if ($adviser->email) {
-                Mail::to($adviser->email)
-                    ->send(new ReservationSubmitted($reservation));
+            try {
+                if ($adviser->email) {
+                    Mail::to($adviser->email)->send(new ReservationSubmitted($reservation));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send adviser email on submission: '.$e->getMessage());
             }
 
-            // SMS to adviser
+            // In-app notification to adviser to review
+            try {
+                $message = "New reservation request to review: <strong>{$reservation->service->service_name}</strong> on " . $reservation->schedule_date->format('M d, Y h:i A');
+                $notificationData = [
+                    'user_id' => $adviser->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                if (Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'service_name' => $reservation->service->service_name,
+                        'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                        'action' => 'adviser_review_required',
+                    ]);
+                }
+                Notification::create($notificationData);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to create adviser in-app notification: '.$e->getMessage());
+            }
+
+            // SMS to adviser (optional)
             if ($adviser->phone) {
                 $this->sendSMS(
                     $adviser->phone,
@@ -377,6 +402,46 @@ class ReservationNotificationService
                     $recipient->phone,
                     "Reservation for {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y') . " has been cancelled. Reason: {$reason}"
                 );
+            }
+        }
+
+        // Create in-app notifications for all relevant recipients (except requestor handled below)
+        foreach ($recipients as $recipient) {
+            // Skip duplicate for requestor; we'll create a tailored one below
+            if ($recipient->id === $reservation->user_id) {
+                continue;
+            }
+
+            try {
+                // Tailor message per role when possible
+                $isPriest = isset($reservation->officiant_id) && $recipient->id === $reservation->officiant_id;
+                $isAdviser = ($reservation->organization->adviser_id ?? null) === $recipient->id;
+
+                if ($isPriest) {
+                    $message = "The requestor cancelled the reservation you were assigned to officiate for <strong>{$reservation->service->service_name}</strong>";
+                } elseif ($isAdviser) {
+                    $message = "<strong>{$reservation->user->first_name} {$reservation->user->last_name}</strong> cancelled their reservation for <strong>{$reservation->service->service_name}</strong>";
+                } else {
+                    $message = "Reservation cancelled by <strong>{$cancelledBy}</strong> for <strong>{$reservation->service->service_name}</strong>";
+                }
+
+                Notification::create([
+                    'user_id' => $recipient->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                    'data' => json_encode([
+                        'reason' => $reason,
+                        'cancelled_by' => $cancelledBy,
+                        'service_name' => $reservation->service->service_name,
+                        'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
+                        'action' => 'reservation_cancelled',
+                    ]),
+                ]);
+            } catch (\Exception $e) {
+                // Don't block other notifications if one fails
+                Log::warning('Failed to create in-app cancellation notification: ' . $e->getMessage());
             }
         }
 

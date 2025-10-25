@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -57,4 +58,44 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Upload profile picture
+     */
+    public function uploadPicture(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'profile_picture' => ['required', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:2048'], // Max 2MB
+        ]);
+
+        $user = $request->user();
+
+        // Delete old profile picture if exists
+        if ($user->profile_picture) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
+
+        // Store new profile picture
+        $path = $request->file('profile_picture')->store('profile-pictures', 'public');
+
+        $user->update(['profile_picture' => $path]);
+
+        return Redirect::route('profile.edit')->with('status', 'picture-uploaded');
+    }
+
+    /**
+     * Remove profile picture
+     */
+    public function removePicture(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->profile_picture) {
+            Storage::disk('public')->delete($user->profile_picture);
+            $user->update(['profile_picture' => null]);
+        }
+
+        return Redirect::route('profile.edit')->with('status', 'picture-removed');
+    }
 }
+

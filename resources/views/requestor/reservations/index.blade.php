@@ -1,77 +1,116 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-5xl mx-auto px-4 py-6">
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-semibold">My Reservations</h1>
-        <a href="{{ route('requestor.reservations.create') }}" class="btn btn-primary">New Reservation</a>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-heading">My Reservations</h1>
+            <p class="text-sm text-muted mt-1">View and manage all your spiritual activity requests</p>
+        </div>
+        <a href="{{ route('requestor.reservations.create') }}" class="btn-primary btn-mobile">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            New Reservation
+        </a>
     </div>
 
     @if(session('status'))
-        <div class="alert alert-success">{{ session('status') }}</div>
+        <div class="badge-success flex items-center gap-2 mb-6 p-4">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            {{ session('status') }}
+        </div>
     @endif
 
-    <div class="bg-white shadow rounded">
+    <div class="card overflow-hidden">
         <div class="overflow-x-auto">
             @if($reservations->isEmpty())
-            <div class="p-6 text-center text-gray-600">
-                No reservations yet.
+                <!-- Reservations Table -->
+    <div class="card">
+        <div class="overflow-x-auto">
+            @if($reservations->isEmpty())
+            <div class="p-12 text-center">
+                <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <p class="text-muted text-lg mb-4">You haven't created any reservations yet.</p>
+                <a href="{{ route('requestor.reservations.create') }}" class="btn-primary inline-flex">
+                    Create Your First Reservation
+                </a>
             </div>
             @else
-            <table class="min-w-full divide-y">
-                <thead class="bg-gray-50">
+            <div class="table-responsive">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" role="table" aria-label="My reservations">
+                <caption class="sr-only">List of all your spiritual activity reservations</caption>
+                <thead class="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                        <th class="px-4 py-2 text-left">Service</th>
-                        <th class="px-4 py-2 text-left">Venue</th>
-                        <th class="px-4 py-2 text-left">Schedule</th>
-                        <th class="px-4 py-2 text-left">Status</th>
-                        <th class="px-4 py-2 text-left">Purpose</th>
-                        <th class="px-4 py-2 text-left">Actions</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Service</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Venue</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Schedule</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Purpose</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y">
+                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                     @foreach($reservations as $r)
                     @php
                         // Calculate if cancellation is allowed (7 days before)
                         $daysUntilEvent = now()->diffInDays($r->schedule_date, false);
-                        $canCancel = $daysUntilEvent >= 7 && 
+                        $canCancel = $daysUntilEvent >= 7 &&
                                     in_array($r->status, ['pending', 'adviser_approved', 'admin_approved', 'approved']) &&
                                     !$r->cancellation_reason;
                     @endphp
-                    <tr>
-                        <td class="px-4 py-2">{{ $r->service->service_name ?? '—' }}</td>
-                        <td class="px-4 py-2">{{ $r->venue->name ?? '—' }}</td>
-                        <td class="px-4 py-2">{{ optional($r->schedule_date)->format('Y-m-d H:i') }}</td>
-                        <td class="px-4 py-2">
-                            <span class="px-2 py-1 text-xs rounded-full
-                                @if($r->status === 'approved') bg-green-100 text-green-800
-                                @elseif($r->status === 'cancelled') bg-red-100 text-red-800
-                                @elseif($r->status === 'rejected') bg-red-100 text-red-800
-                                @else bg-yellow-100 text-yellow-800
-                                @endif">
-                                {{ ucwords(str_replace('_', ' ', $r->status)) }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-2">{{ \Illuminate\Support\Str::limit($r->purpose ?? '—', 80) }}</td>
-                        <td class="px-4 py-2">
-                            @if($canCancel)
-                                <button 
-                                    onclick="showCancelModal({{ $r->reservation_id }}, '{{ $r->service->service_name }}', '{{ $r->schedule_date->format('F d, Y h:i A') }}')"
-                                    class="text-sm px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">
-                                    Cancel
-                                </button>
-                            @elseif($r->status === 'cancelled')
-                                <span class="text-sm text-gray-500">Cancelled</span>
-                            @elseif($daysUntilEvent < 7 && $daysUntilEvent >= 0)
-                                <span class="text-sm text-gray-400" title="Cannot cancel within 7 days of event">
-                                    Too late
-                                </span>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                        <td class="px-4 py-3 text-sm text-body">{{ $r->service->service_name ?? '—' }}</td>
+                        <td class="px-4 py-3 text-sm text-body">
+                            @if($r->venue)
+                                {{ $r->venue->name }}
+                            @elseif($r->custom_venue_name)
+                                <span class="text-body">{{ $r->custom_venue_name }}</span>
+                                <span class="badge-info ml-1">Custom</span>
+                            @else
+                                —
                             @endif
+                        </td>
+                        <td class="px-4 py-3 text-sm text-body">{{ optional($r->schedule_date)->format('M d, Y h:i A') }}</td>
+                        <td class="px-4 py-3">
+                            @if($r->status === 'approved' || $r->status === 'confirmed')
+                                <span class="badge-success">{{ ucwords(str_replace('_', ' ', $r->status)) }}</span>
+                            @elseif($r->status === 'cancelled' || $r->status === 'rejected')
+                                <span class="badge-danger">{{ ucwords(str_replace('_', ' ', $r->status)) }}</span>
+                            @else
+                                <span class="badge-warning">{{ ucwords(str_replace('_', ' ', $r->status)) }}</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-3 text-sm text-muted">{{ \Illuminate\Support\Str::limit($r->purpose ?? '—', 60) }}</td>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-2">
+                                <a href="{{ route('requestor.reservations.show', $r->reservation_id) }}" class="btn-ghost btn-sm">
+                                    View Details
+                                </a>
+                                @if($canCancel)
+                                    <button
+                                        onclick="showCancelModal({{ $r->reservation_id }}, '{{ $r->service->service_name }}', '{{ $r->schedule_date->format('F d, Y h:i A') }}')"
+                                        class="btn-danger btn-sm">
+                                        Cancel
+                                    </button>
+                                @elseif($r->status === 'cancelled')
+                                    <span class="text-xs text-muted">Cancelled</span>
+                                @elseif($daysUntilEvent < 7 && $daysUntilEvent >= 0)
+                                    <span class="text-xs text-muted" title="Cannot cancel within 7 days of event">
+                                        Too late
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
+            </div>
             @endif
         </div>
     </div>
@@ -82,28 +121,36 @@
 </div>
 
 <!-- Cancel Reservation Modal -->
-<div id="cancelModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white dark:bg-gray-800">
+<div id="cancelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-full max-w-md shadow-2xl rounded-lg bg-white dark:bg-gray-800">
         <div class="mt-3">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+                <h3 class="text-lg font-semibold text-heading">
                     Cancel Reservation
                 </h3>
-                <button onclick="hideCancelModal()" class="text-gray-400 hover:text-gray-600">
+                <button onclick="hideCancelModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
                 </button>
             </div>
 
-            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-4">
-                <p class="text-sm text-red-800 dark:text-red-300">
-                    <strong>⚠️ Warning:</strong> Cancelling this reservation will notify all involved parties including your adviser, the priest, and the admin staff.
-                </p>
+            <div class="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg mb-4">
+                <svg class="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <p class="text-sm font-medium text-red-800 dark:text-red-200">
+                        ⚠️ Warning: This action cannot be undone
+                    </p>
+                    <p class="text-sm text-red-700 dark:text-red-300 mt-1">
+                        All involved parties (adviser, priest, admin staff) will be notified.
+                    </p>
+                </div>
             </div>
 
-            <div class="mb-4">
-                <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+            <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <p class="text-sm text-body">
                     <strong>Service:</strong> <span id="cancelServiceName"></span><br>
                     <strong>Schedule:</strong> <span id="cancelSchedule"></span>
                 </p>
@@ -112,31 +159,34 @@
             <form id="cancelForm" method="POST" action="">
                 @csrf
                 <div class="mb-4">
-                    <label for="cancellation_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label for="cancellation_reason" class="form-label">
                         Reason for Cancellation <span class="text-red-500">*</span>
                     </label>
-                    <textarea 
-                        id="cancellation_reason" 
-                        name="reason" 
+                    <textarea
+                        id="cancellation_reason"
+                        name="reason"
                         rows="4"
                         required
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 dark:bg-gray-700 dark:text-gray-100"
+                        class="form-input mt-1"
                         placeholder="Please provide a detailed reason for cancelling this reservation..."></textarea>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p class="form-helper mt-2">
                         This reason will be shared with all parties involved.
                     </p>
                 </div>
 
                 <div class="flex gap-3 justify-end">
-                    <button 
+                    <button
                         type="button"
                         onclick="hideCancelModal()"
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        class="btn-secondary">
                         Keep Reservation
                     </button>
-                    <button 
+                    <button
                         type="submit"
-                        class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        class="btn-danger">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                         Confirm Cancellation
                     </button>
                 </div>

@@ -145,6 +145,23 @@ class NotificationController extends Controller
         // Mark as read
         $notification->markAsRead();
 
+        // If it's an Assignment notification (admin assigned as priest), redirect to service details
+        if ($notification->type === 'Assignment' && $notification->reservation_id) {
+            return redirect()->route('admin.services.show', $notification->reservation_id);
+        }
+
+        // If it's an Edit Request notification, redirect to change request details
+        if ($notification->type === 'Edit Request') {
+            $data = $notification->data;
+            if (is_string($data)) {
+                $data = json_decode($data, true);
+            }
+            $changeRequestId = $data['change_request_id'] ?? null;
+            if ($changeRequestId) {
+                return redirect()->route('admin.change-requests.show', $changeRequestId);
+            }
+        }
+
         // If it's a priest declined notification, show special view
         if ($notification->type === 'Priest Declined' && $notification->reservation_id) {
             return redirect()->route('admin.notifications.priest-declined', $notification->notification_id);

@@ -40,7 +40,8 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')],
             'phone' => ['nullable', 'string', 'max:50'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:admin,staff,adviser,requestor,priest'],
+            // Make role optional; default handled below to 'requestor'
+            'role' => ['nullable', 'in:admin,staff,adviser,requestor,priest'],
         ];
         // If role selection is disabled, force role to requestor regardless of input
         if (!config('registration.allow_role_selection')) {

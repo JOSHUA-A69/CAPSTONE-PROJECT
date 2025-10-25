@@ -38,7 +38,7 @@ class ReservationRequest extends FormRequest
             'service_id' => ['required', 'integer', Rule::exists('services', 'service_id')],
             'venue_id' => ['required'],
             'org_id' => ['nullable', 'integer', Rule::exists('organizations', 'org_id')],
-            'officiant_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', 'priest')],
+            'officiant_id' => ['required', 'integer', Rule::exists('users', 'id')->whereIn('role', ['priest', 'admin'])],
             'schedule_date' => ['required', 'date', 'after:now'],
             'schedule_time' => ['nullable', 'date_format:H:i'],
             'activity_name' => ['required', 'string', 'max:255'],

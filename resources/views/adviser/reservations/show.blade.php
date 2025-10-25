@@ -131,8 +131,8 @@
             </div>
             @endif
 
-            <!-- Action Buttons (only show if pending) -->
-            @if($reservation->status === 'pending')
+            <!-- Action Buttons (show if not rejected/cancelled) -->
+            @if(!in_array($reservation->status, ['rejected', 'cancelled']))
             <div class="border-t pt-6 mt-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Adviser Actions</h2>
                 <div class="flex flex-col sm:flex-row gap-3">
@@ -161,7 +161,7 @@
             @else
             <div class="border-t pt-6 mt-6">
                 <div class="p-4 bg-gray-50 rounded text-sm text-gray-600">
-                    This reservation is <strong>{{ ucfirst(str_replace('_',' ', $reservation->status)) }}</strong>. Adviser actions (approve/reject) are only available while status is <strong>pending</strong>.
+                    This reservation is <strong>{{ ucfirst(str_replace('_',' ', $reservation->status)) }}</strong>. Adviser actions are no longer available.
                 </div>
             </div>
             @endif

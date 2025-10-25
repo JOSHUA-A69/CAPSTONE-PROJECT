@@ -157,7 +157,8 @@ class ReservationController extends Controller
             return Redirect::back()->with('error', 'No priest assigned to this reservation.');
         }
 
-        // Update status to pending priest confirmation and notify priest
+        // Update status to pending priest confirmation and (if not yet) notify priest
+        $alreadyNotified = !is_null($reservation->priest_notified_at);
         $reservation->update([
             'status' => 'pending_priest_confirmation',
             'priest_notified_at' => now(),
@@ -170,8 +171,10 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // TODO: Send notification to the priest
-        // ReservationNotificationService::notifyPriestAssignment($reservation);
+        // Send notification to the priest (only if not already notified)
+        if (!$alreadyNotified) {
+            $this->notificationService->notifyPriestAssigned($reservation->fresh());
+        }
 
         return Redirect::back()->with('status', 'reservation-approved')->with('message', 'Reservation approved and priest has been notified.');
     }
@@ -253,6 +256,7 @@ class ReservationController extends Controller
         }
 
         // Assign priest and update status
+        $alreadyNotified = !is_null($reservation->priest_notified_at);
         $reservation->update([
             'officiant_id' => $priest->id,
             'status' => 'pending_priest_confirmation',
@@ -269,9 +273,14 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
+        // Send notification to the priest (only if not already notified)
+        if (!$alreadyNotified) {
+            $this->notificationService->notifyPriestAssigned($reservation->fresh());
+        }
+
         return Redirect::back()
             ->with('status', 'priest-assigned')
-            ->with('message', 'Priest assigned successfully. Awaiting priest confirmation.');
+            ->with('message', 'Priest assigned successfully and has been notified. Awaiting priest confirmation.');
     }
 
     public function cancel(Request $request, $reservation_id)

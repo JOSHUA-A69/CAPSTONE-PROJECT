@@ -30,7 +30,7 @@ class LoginRequest extends FormRequest
         return [
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
-            'role' => ['required', 'string', 'in:admin,staff,adviser,requestor,priest'],
+            // Role is no longer required for login - users authenticate with email/password only
         ];
     }
 
@@ -43,12 +43,9 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        // Include role in the credentials so authentication only succeeds
-        // when email, password and role all match.
+        // Find user by email only (role is determined by their account, not login input)
         // Prevent suspended accounts from attempting to login.
-        $user = User::where('email', $this->string('email'))
-            ->where('role', $this->string('role'))
-            ->first();
+        $user = User::where('email', $this->string('email'))->first();
 
         if ($user && ($user->status ?? 'active') === 'suspended') {
             throw ValidationException::withMessages([
@@ -56,7 +53,8 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if (! Auth::attempt($this->only('email', 'password', 'role'), $this->boolean('remember'))) {
+        // Authenticate with email and password only (no role matching)
+        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ChatController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
@@ -83,6 +84,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/picture', [ProfileController::class, 'uploadPicture'])->name('profile.picture.upload');
+    Route::delete('/profile/picture', [ProfileController::class, 'removePicture'])->name('profile.picture.remove');
+});
+
+// ==========================
+// Chat Routes (Requestor & Admin)
+// ==========================
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('/chat/{userId}', [ChatController::class, 'show'])->name('chat.show');
+    Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
+    Route::get('/chat/messages/{userId}', [ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::get('/chat/unread/count', [ChatController::class, 'unreadCount'])->name('chat.unread.count');
+    Route::post('/chat/mark-read/{userId}', [ChatController::class, 'markAsRead'])->name('chat.mark-read');
 });
 
 // Authentication routes (Laravel Breeze/Jetstream/etc.)
@@ -152,6 +167,8 @@ Route::prefix('requestor')->name('requestor.')->middleware(['auth', 'verified', 
     Route::get('/reservations/create', [\App\Http\Controllers\Requestor\ReservationController::class, 'create'])->name('reservations.create');
     Route::post('/reservations', [\App\Http\Controllers\Requestor\ReservationController::class, 'store'])->name('reservations.store');
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Requestor\ReservationController::class, 'show'])->name('reservations.show');
+    Route::get('/reservations/{reservation_id}/edit', [\App\Http\Controllers\Requestor\ReservationController::class, 'edit'])->name('reservations.edit');
+    Route::post('/reservations/{reservation_id}/update', [\App\Http\Controllers\Requestor\ReservationController::class, 'update'])->name('reservations.update');
     Route::get('/reservations/{reservation_id}/confirm/{token}', [\App\Http\Controllers\Requestor\ReservationController::class, 'showConfirmation'])->name('reservations.show-confirmation');
     Route::post('/reservations/{reservation_id}/confirm/{token}', [\App\Http\Controllers\Requestor\ReservationController::class, 'confirmReservation'])->name('reservations.confirm-reservation');
     Route::post('/reservations/{reservation_id}/decline/{token}', [\App\Http\Controllers\Requestor\ReservationController::class, 'declineReservation'])->name('reservations.decline-reservation');
@@ -194,9 +211,23 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/reservations/{reservation_id}/assign-priest', [\App\Http\Controllers\Admin\ReservationController::class, 'assignPriest'])->name('reservations.assign-priest');
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Admin\ReservationController::class, 'reject'])->name('reservations.reject');
 
+    // Admin Service Routes (when admin is assigned as priest)
+    Route::get('/services', [\App\Http\Controllers\Admin\ServiceController::class, 'index'])->name('services.index');
+    Route::get('/services/calendar', [\App\Http\Controllers\Admin\ServiceController::class, 'calendar'])->name('services.calendar');
+    Route::get('/services/declined', [\App\Http\Controllers\Admin\ServiceController::class, 'declined'])->name('services.declined');
+    Route::post('/services/{reservation_id}/confirm', [\App\Http\Controllers\Admin\ServiceController::class, 'confirm'])->name('services.confirm');
+    Route::post('/services/{reservation_id}/decline', [\App\Http\Controllers\Admin\ServiceController::class, 'decline'])->name('services.decline');
+    Route::get('/services/{reservation_id}', [\App\Http\Controllers\Admin\ServiceController::class, 'show'])->name('services.show');
+
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Admin\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Admin\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+
+    // Change Request Routes (for reservation edits)
+    Route::get('/change-requests', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'index'])->name('change-requests.index');
+    Route::get('/change-requests/{id}', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'show'])->name('change-requests.show');
+    Route::post('/change-requests/{id}/approve', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'approve'])->name('change-requests.approve');
+    Route::post('/change-requests/{id}/reject', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'reject'])->name('change-requests.reject');
 
     // Notification Routes (specific routes first, then parameterized)
     Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');

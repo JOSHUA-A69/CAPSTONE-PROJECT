@@ -45,6 +45,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'status',
         'user_role_id',
+        'profile_picture',
     ];
 
     /**
@@ -112,4 +113,31 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(Organization::class, 'adviser_id', 'id');
     }
+
+    /**
+     * Get the profile picture URL with default fallback
+     */
+    public function getProfilePictureUrlAttribute(): string
+    {
+        if ($this->profile_picture && file_exists(public_path('storage/' . $this->profile_picture))) {
+            return asset('storage/' . $this->profile_picture);
+        }
+
+        // Generate default avatar with initials using UI Avatars service
+        $name = urlencode($this->full_name);
+        return "https://ui-avatars.com/api/?name={$name}&size=200&background=4F46E5&color=ffffff&bold=true";
+    }
+
+    /**
+     * Get user initials for avatar
+     */
+    public function getInitialsAttribute(): string
+    {
+        $parts = explode(' ', $this->full_name);
+        if (count($parts) >= 2) {
+            return strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
+        }
+        return strtoupper(substr($this->full_name, 0, 2));
+    }
 }
+

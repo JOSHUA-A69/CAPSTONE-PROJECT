@@ -49,12 +49,12 @@ class NotificationController extends Controller
         } else {
             foreach ($notifications as $notification) {
                 $bgColor = $notification->isUnread() ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800';
-                
+
                 $data = $notification->data;
                 if (is_string($data)) {
                     $data = json_decode($data, true);
                 }
-                
+
                 $timeAgo = $notification->sent_at->diffForHumans();
 
                 // Determine notification icon color based on type
@@ -70,14 +70,14 @@ class NotificationController extends Controller
                 $html .= '<div class="relative group ' . $bgColor . '">';
                 $html .= '<a href="' . $url . '" class="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">';
                 $html .= '<div class="flex items-start gap-4">';
-                
+
                 // Icon
                 $html .= '<div class="flex-shrink-0">';
                 $html .= '<div class="w-11 h-11 rounded-full ' . $iconColor . ' flex items-center justify-center text-white font-semibold text-sm">';
                 $html .= '<svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"></path></svg>';
                 $html .= '</div>';
                 $html .= '</div>';
-                
+
                 // Content
                 $html .= '<div class="flex-1 min-w-0">';
                 $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">'
@@ -85,7 +85,7 @@ class NotificationController extends Controller
                     . '</p>';
                 $html .= '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">' . $timeAgo . '</p>';
                 $html .= '</div>';
-                
+
                 $html .= '</div>';
                 $html .= '</a>';
                 $html .= '</div>';
@@ -127,9 +127,9 @@ class NotificationController extends Controller
             if (is_string($data)) {
                 $data = json_decode($data, true);
             }
-            
+
             $cancellationId = $data['cancellation_id'] ?? null;
-            
+
             if ($cancellationId) {
                 return redirect()->route('adviser.cancellations.show', $cancellationId);
             }

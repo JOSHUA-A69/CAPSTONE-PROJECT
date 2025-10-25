@@ -2,41 +2,449 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom design tokens and small utilities to match the project's hero design */
+/* ========================================
+   DESIGN TOKENS - Professional System
+   ======================================== */
 @layer base {
 	:root {
-		--er-green: #2ecc71; /* primary green */
-		--er-dark: #1b1b18;  /* heading dark */
-		--er-muted: #706f6c; /* muted text */
+		/* Brand Colors */
+		--er-primary: #4F46E5;      /* Indigo-600 - Primary actions */
+		--er-primary-hover: #4338CA; /* Indigo-700 - Hover states */
+		--er-primary-light: #EEF2FF; /* Indigo-50 - Backgrounds */
+
+		--er-secondary: #6B7280;     /* Gray-600 - Secondary actions */
+		--er-secondary-hover: #4B5563; /* Gray-700 */
+
+		--er-success: #16A34A;       /* Green-600 */
+		--er-success-light: #F0FDF4; /* Green-50 */
+
+		--er-warning: #CA8A04;       /* Yellow-600 */
+		--er-warning-light: #FEFCE8; /* Yellow-50 */
+
+		--er-danger: #DC2626;        /* Red-600 */
+		--er-danger-light: #FEF2F2;  /* Red-50 */
+
+		--er-info: #2563EB;          /* Blue-600 */
+		--er-info-light: #EFF6FF;    /* Blue-50 */
+
+		/* Typography Colors */
+		--er-text-primary: #111827;   /* Gray-900 - Main text */
+		--er-text-secondary: #374151; /* Gray-700 - Secondary text */
+		--er-text-muted: #6B7280;     /* Gray-500 - Muted text */
+		--er-text-disabled: #9CA3AF;  /* Gray-400 - Disabled */
+
+		/* Dark Mode Typography */
+		--er-text-primary-dark: #F9FAFB;   /* Gray-50 */
+		--er-text-secondary-dark: #E5E7EB; /* Gray-200 */
+		--er-text-muted-dark: #9CA3AF;     /* Gray-400 */
+
+		/* Borders & Surfaces */
+		--er-border: #E5E7EB;        /* Gray-200 */
+		--er-border-dark: #374151;   /* Gray-700 */
+
+		--er-surface: #FFFFFF;       /* White */
+		--er-surface-hover: #F9FAFB; /* Gray-50 */
+		--er-surface-dark: #1F2937;  /* Gray-800 */
+
+		/* Spacing Scale */
+		--space-xs: 0.25rem;   /* 4px */
+		--space-sm: 0.5rem;    /* 8px */
+		--space-md: 1rem;      /* 16px */
+		--space-lg: 1.5rem;    /* 24px */
+		--space-xl: 2rem;      /* 32px */
+		--space-2xl: 3rem;     /* 48px */
+
+		/* Border Radius */
+		--radius-sm: 0.5rem;   /* 8px - buttons, badges */
+		--radius-md: 0.75rem;  /* 12px - cards, inputs */
+		--radius-lg: 1rem;     /* 16px - large containers */
+		--radius-full: 9999px; /* Pills, avatars */
+
+		/* Shadows */
+		--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+		--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+		--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+		--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+		/* Transitions */
+		--transition-fast: 150ms ease-in-out;
+		--transition-base: 200ms ease-in-out;
+		--transition-slow: 300ms ease-in-out;
 	}
 
 	body {
-		font-family: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+		font-family: 'Figtree', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
 	}
 }
 
 @layer components {
+	/* ========================================
+	   BUTTON COMPONENTS - Consistent Styling
+	   ======================================== */
+	.btn-primary {
+		@apply inline-flex items-center justify-center px-6 py-3
+		       bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+		       text-white font-semibold text-sm
+		       rounded-lg shadow-sm hover:shadow-md
+		       transition-all duration-200
+		       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+		       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600;
+	}
+
+	.btn-secondary {
+		@apply inline-flex items-center justify-center px-6 py-3
+		       bg-white hover:bg-gray-50 active:bg-gray-100
+		       text-gray-700 font-semibold text-sm
+		       border border-gray-300 rounded-lg shadow-sm hover:shadow
+		       transition-all duration-200
+		       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+		       disabled:opacity-50 disabled:cursor-not-allowed
+		       dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 dark:border-gray-600;
+	}
+
+	.btn-danger {
+		@apply inline-flex items-center justify-center px-6 py-3
+		       bg-red-600 hover:bg-red-700 active:bg-red-800
+		       text-white font-semibold text-sm
+		       rounded-lg shadow-sm hover:shadow-md
+		       transition-all duration-200
+		       focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+		       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-600;
+	}
+
+	.btn-success {
+		@apply inline-flex items-center justify-center px-6 py-3
+		       bg-green-600 hover:bg-green-700 active:bg-green-800
+		       text-white font-semibold text-sm
+		       rounded-lg shadow-sm hover:shadow-md
+		       transition-all duration-200
+		       focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+		       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600;
+	}
+
+	.btn-ghost {
+		@apply inline-flex items-center justify-center px-6 py-3
+		       bg-transparent hover:bg-gray-100 active:bg-gray-200
+		       text-gray-700 font-semibold text-sm
+		       rounded-lg transition-all duration-200
+		       focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+		       disabled:opacity-50 disabled:cursor-not-allowed
+		       dark:hover:bg-gray-800 dark:text-gray-200;
+	}
+
+	.btn-sm {
+		@apply px-4 py-2 text-xs;
+	}
+
+	.btn-lg {
+		@apply px-8 py-4 text-base;
+	}
+
+	/* Mobile-optimized button (full-width on small screens) */
+	.btn-mobile {
+		@apply w-full sm:w-auto;
+	}
+
+	/* ========================================
+	   CARD COMPONENTS
+	   ======================================== */
+	.card {
+		@apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-shadow duration-200;
+	}
+
+	.card-hover {
+		@apply card hover:shadow-md;
+	}
+
+	.card-body {
+		@apply p-6;
+	}
+
+	.card-header {
+		@apply px-6 py-4 border-b border-gray-200 dark:border-gray-700;
+	}
+
+	.card-footer {
+		@apply px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50;
+	}
+
+	/* ========================================
+	   FORM COMPONENTS
+	   ======================================== */
+	.form-input {
+		@apply w-full px-4 py-3
+		       border border-gray-300 dark:border-gray-600
+		       bg-white dark:bg-gray-900
+		       text-gray-900 dark:text-gray-100
+		       rounded-lg shadow-sm
+		       focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
+		       transition-colors duration-200
+		       disabled:bg-gray-100 disabled:cursor-not-allowed dark:disabled:bg-gray-800;
+	}
+
+	.form-label {
+		@apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
+	}
+
+	.form-error {
+		@apply flex items-start gap-2 mt-2 p-3
+		       bg-red-50 dark:bg-red-900/20
+		       border border-red-200 dark:border-red-800
+		       rounded-lg text-sm text-red-800 dark:text-red-200;
+	}
+
+	.form-success {
+		@apply flex items-start gap-2 mt-2 p-3
+		       bg-green-50 dark:bg-green-900/20
+		       border border-green-200 dark:border-green-800
+		       rounded-lg text-sm text-green-800 dark:text-green-200;
+	}
+
+	.form-helper {
+		@apply mt-2 text-sm text-gray-600 dark:text-gray-400;
+	}
+
+	/* ========================================
+	   BADGE COMPONENTS
+	   ======================================== */
+	.badge {
+		@apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+	}
+
+	.badge-primary {
+		@apply badge bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300;
+	}
+
+	.badge-success {
+		@apply badge bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300;
+	}
+
+	.badge-warning {
+		@apply badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300;
+	}
+
+	.badge-danger {
+		@apply badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300;
+	}
+
+	.badge-info {
+		@apply badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300;
+	}
+
+	.badge-secondary {
+		@apply badge bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300;
+	}
+
+	/* ========================================
+	   TYPOGRAPHY COMPONENTS
+	   ======================================== */
+	.text-heading {
+		@apply text-gray-900 dark:text-gray-100 font-bold;
+	}
+
+	.text-body {
+		@apply text-gray-700 dark:text-gray-300;
+	}
+
+	.text-muted {
+		@apply text-gray-600 dark:text-gray-400;
+	}
+
+	.text-disabled {
+		@apply text-gray-400 dark:text-gray-500;
+	}
+
+	/* ========================================
+	   LOADING COMPONENTS
+	   ======================================== */
+	.spinner {
+		@apply inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin;
+	}
+
+	.spinner-lg {
+		@apply w-8 h-8 border-4;
+	}
+
+	.skeleton {
+		@apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+	}
+
+	/* Legacy hero components (keeping for backward compatibility) */
 	.er-hero-title {
-		@apply font-extrabold; /* weight */
-		color: var(--er-dark);
+		@apply font-extrabold text-gray-900 dark:text-gray-100;
 	}
 
 	.er-cta-primary {
-		@apply inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--er-green)] text-white shadow-lg;
+		@apply btn-primary gap-2 px-5 py-3 rounded-full shadow-lg;
 	}
 
 	.er-cta-ghost {
-		@apply inline-flex items-center gap-2 px-5 py-3 rounded-full border bg-white text-[var(--er-dark)];
+		@apply btn-secondary gap-2 px-5 py-3 rounded-full;
 	}
 
 	.er-stat-card {
-		@apply bg-white dark:bg-gray-800 rounded-2xl shadow p-6 text-center;
+		@apply card text-center;
 	}
 }
 
 @layer utilities {
-	.text-hero-4xl { font-size: 3.25rem; line-height: 1; }
-	@media (min-width: 768px) { .text-hero-4xl { font-size: 4rem; } }
+	/* ========================================
+	   RESPONSIVE UTILITIES - Mobile First
+	   ======================================== */
+
+	/* Mobile Typography Optimizations */
+	.text-mobile-sm { font-size: 0.875rem; line-height: 1.25rem; }
+	.text-mobile-base { font-size: 1rem; line-height: 1.5rem; }
+	.text-mobile-lg { font-size: 1.125rem; line-height: 1.75rem; }
+
+	/* Touch Target Optimization - Minimum 44x44px */
+	.touch-target {
+		@apply min-h-[44px] min-w-[44px];
+	}
+
+	/* Mobile-optimized Spacing */
+	.mobile-px { padding-left: 1rem; padding-right: 1rem; }
+	.mobile-py { padding-top: 1rem; padding-bottom: 1rem; }
+	.mobile-p { padding: 1rem; }
+
+	/* Responsive Container Widths */
+	.container-responsive {
+		@apply w-full px-4 sm:px-6 lg:px-8 mx-auto;
+		max-width: 1280px;
+	}
+
+	/* Mobile Table Responsiveness */
+	.table-responsive {
+		@apply block overflow-x-auto -mx-4 sm:mx-0;
+	}
+
+	@media (max-width: 640px) {
+		.table-responsive table {
+			min-width: 600px;
+		}
+	}
+
+	/* Stack on Mobile */
+	.stack-mobile {
+		@apply flex flex-col gap-3;
+	}
+
+	@media (min-width: 640px) {
+		.stack-mobile {
+			@apply flex-row items-center;
+		}
+	}
+
+	/* Hide on Mobile */
+	.hide-mobile {
+		@apply hidden sm:block;
+	}
+
+	/* Show only on Mobile */
+	.show-mobile {
+		@apply block sm:hidden;
+	}
+
+	/* Typography Scale */
+	.text-hero-4xl {
+		font-size: 3.25rem;
+		line-height: 1;
+	}
+
+	@media (min-width: 768px) {
+		.text-hero-4xl {
+			font-size: 4rem;
+		}
+	}
+
+	/* Focus Visible Utilities */
+	.focus-ring {
+		@apply focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2;
+	}
+
+	/* Transition Utilities */
+	.transition-fast {
+		transition: all 150ms ease-in-out;
+	}
+
+	.transition-base {
+		transition: all 200ms ease-in-out;
+	}
+
+	.transition-slow {
+		transition: all 300ms ease-in-out;
+	}
+
+	/* Safe Area Padding for Mobile Devices */
+	.safe-top {
+		padding-top: env(safe-area-inset-top);
+	}
+
+	.safe-bottom {
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+
+	/* Mobile-Friendly Scrolling */
+	.scroll-smooth-mobile {
+		-webkit-overflow-scrolling: touch;
+		scroll-behavior: smooth;
+	}
+
+	/* ========================================
+	   ACCESSIBILITY UTILITIES - Phase 5
+	   ======================================== */
+
+	/* Screen Reader Only - Hide visually but keep for screen readers */
+	.sr-only {
+		@apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+		clip: rect(0, 0, 0, 0);
+	}
+
+	/* Screen Reader Only - Remove when focused */
+	.focus\:not-sr-only:focus {
+		@apply static w-auto h-auto p-auto m-auto overflow-visible whitespace-normal;
+		clip: auto;
+	}
+
+	/* Enhanced Focus Indicators */
+	.focus-ring {
+		@apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-shadow duration-150;
+	}
+
+	.focus-ring-inset {
+		@apply focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-shadow duration-150;
+	}
+
+	/* Skip Navigation Link */
+	.skip-link {
+		@apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50
+		       focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg
+		       focus:shadow-lg focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+	}
+
+	/* Reduced Motion Support */
+	@media (prefers-reduced-motion: reduce) {
+		*, *::before, *::after {
+			animation-duration: 0.01ms !important;
+			animation-iteration-count: 1 !important;
+			transition-duration: 0.01ms !important;
+			scroll-behavior: auto !important;
+		}
+	}
+
+	/* High Contrast Mode Support */
+	@media (prefers-contrast: high) {
+		.btn-primary, .btn-secondary, .btn-success, .btn-danger, .btn-warning {
+			border: 2px solid currentColor;
+		}
+	}
+
+	/* Focus Visible Only (for mouse users) */
+	.focus-visible\:ring-2:focus-visible {
+		@apply ring-2 ring-indigo-500 ring-offset-2;
+	}
 }
 
 @layer components {

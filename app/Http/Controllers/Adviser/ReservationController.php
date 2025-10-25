@@ -65,10 +65,10 @@ class ReservationController extends Controller
             abort(403, 'You are not the adviser for this organization.');
         }
 
-        // Only approve if status is pending
-        if ($reservation->status !== 'pending') {
+        // Allow approval if pending or approved (adviser can confirm availability later)
+        if (!in_array($reservation->status, ['pending', 'approved', 'adviser_approved', 'admin_approved'])) {
             return Redirect::back()
-                ->with('error', 'This reservation is no longer pending adviser approval.');
+                ->with('error', 'This reservation cannot be approved at this time.');
         }
 
         $remarks = $request->input('remarks', 'Approved by organization adviser');
@@ -107,10 +107,10 @@ class ReservationController extends Controller
             abort(403, 'You are not the adviser for this organization.');
         }
 
-        // Only reject if status is pending
-        if ($reservation->status !== 'pending') {
+        // Allow rejection if not already rejected or cancelled
+        if (in_array($reservation->status, ['rejected', 'cancelled'])) {
             return Redirect::back()
-                ->with('error', 'This reservation is no longer pending adviser approval.');
+                ->with('error', 'This reservation has already been rejected or cancelled.');
         }
 
         $reason = $request->input('reason');
