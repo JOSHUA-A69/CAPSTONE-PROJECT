@@ -74,7 +74,7 @@
                         if (class_exists('App\\Models\\Notification')) {
                             $recentNotifications = App\Models\Notification::where('user_id', optional($user)->id)
                                 ->orderBy('sent_at', 'desc')
-                                ->take(5)
+                                ->take(2)
                                 ->get();
                         } else {
                             $recentNotifications = collect();
@@ -186,7 +186,8 @@
                         </div>
                         <p class="text-gray-600 dark:text-gray-400 mb-4">Recent updates and announcements</p>
 
-                        @forelse($recentNotifications as $n)
+                        @php $notificationsToShow = ($recentNotifications ?? collect())->take(2); @endphp
+                        @forelse($notificationsToShow as $n)
                             @php
                                 // Normalize data payload if stored as JSON string
                                 $data = is_string($n->data ?? null) ? (json_decode($n->data, true) ?: []) : ($n->data ?? []);

@@ -22,7 +22,7 @@
 
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 items-start">
-                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 overflow-hidden shadow-sm sm:rounded-lg border border-yellow-200 dark:border-yellow-800 h-full min-h-[160px]">
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 overflow-hidden shadow-sm sm:rounded-lg border border-yellow-200 dark:border-yellow-800">
                     <div class="p-6">
                         <div class="flex items-center justify-between">
                             <div>
@@ -196,14 +196,15 @@
                     </div>
                 </div>
 
-                <!-- My Profile (last card) -->
+                <!-- Your Profile (last card) -->
                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6">
                         <div class="flex items-center gap-2 mb-2">
                             <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            <h4 class="text-xl font-semibold">My Profile</h4>
+                            <h4 class="text-xl font-semibold">Your Profile</h4>
                         </div>
                         <p class="text-gray-600 dark:text-gray-400 mb-4">Update your information and password.</p>
+                        <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500">Keep your details up to date.</div>
                         <a href="{{ route('profile.edit') }}" class="mt-4 inline-flex w-full justify-center items-center rounded-md bg-[var(--er-green)] text-white py-2.5 font-semibold hover:opacity-95">Manage Profile</a>
                     </div>
                 </div>
