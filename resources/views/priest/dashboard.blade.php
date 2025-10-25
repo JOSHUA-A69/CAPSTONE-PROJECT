@@ -46,9 +46,7 @@
                                 </svg>
                             </div>
                         </div>
-                        @if($pendingCount === 0)
-                        <p class="mt-4 text-sm text-yellow-700 dark:text-yellow-300">No pending confirmations</p>
-                        @endif
+                        
                     </div>
                 </div>
 
