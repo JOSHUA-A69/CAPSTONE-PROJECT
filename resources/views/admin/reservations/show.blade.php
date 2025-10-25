@@ -237,6 +237,39 @@
                     </div>
                     @endif
 
+                    <!-- Reschedule -->
+                    @if(!in_array($reservation->status, ['cancelled','rejected','completed']))
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Reschedule</h3>
+
+                            <form action="{{ route('admin.reservations.reschedule', $reservation->reservation_id) }}" method="POST"
+                                  onsubmit="return confirm('Reschedule this reservation? The assigned priest will be asked to confirm again.');">
+                                @csrf
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="schedule_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">New Date & Time</label>
+                                        <input type="datetime-local" id="schedule_date" name="schedule_date" required
+                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                               value="">
+                                    </div>
+                                    <div>
+                                        <label for="remarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Remarks (optional)</label>
+                                        <input type="text" id="remarks" name="remarks"
+                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                               placeholder="Reason for reschedule">
+                                    </div>
+                                </div>
+                                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">If a priest is assigned, conflicts will be checked and they’ll be asked to confirm again.</p>
+                                <button type="submit"
+                                        class="mt-4 w-full px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition">
+                                    Reschedule Reservation
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Reject Button -->
                     @if($reservation->status === 'pending_priest_assignment' || $reservation->status === 'adviser_approved')
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">

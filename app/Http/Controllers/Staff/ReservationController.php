@@ -227,6 +227,69 @@ class ReservationController extends Controller
         return Redirect::back()->with('status', 'reservation-completed');
     }
 
+    /**
+     * Reschedule a reservation (Staff)
+     */
+    public function reschedule(Request $request, $reservation_id)
+    {
+        $request->validate([
+            'schedule_date' => 'required|date|after:now',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        $reservation = Reservation::with(['officiant'])->findOrFail($reservation_id);
+
+        if (in_array($reservation->status, ['cancelled', 'rejected', 'completed'])) {
+            return Redirect::back()->with('error', 'This reservation cannot be rescheduled.');
+        }
+
+        $oldDate = clone $reservation->schedule_date;
+        $newDate = \Carbon\Carbon::parse($request->input('schedule_date'));
+
+        // If a priest is assigned, ensure no conflict at the new time
+        if ($reservation->officiant_id) {
+            $minutes = (int) config('reservations.conflict_minutes', 120);
+            $windowStart = (clone $newDate)->subMinutes($minutes);
+            $windowEnd = (clone $newDate)->addMinutes($minutes);
+
+            $conflict = Reservation::where('officiant_id', $reservation->officiant_id)
+                ->whereBetween('schedule_date', [$windowStart, $windowEnd])
+                ->whereNotIn('status', ['cancelled', 'rejected'])
+                ->where('reservation_id', '!=', $reservation_id)
+                ->exists();
+
+            if ($conflict) {
+                return Redirect::back()->with('error', 'The assigned priest has a conflict at the new schedule. Choose another time or reassign the priest.');
+            }
+        }
+
+        // Update schedule and reset priest confirmation if assigned
+        $reservation->schedule_date = $newDate;
+        if ($reservation->officiant_id) {
+            $reservation->priest_confirmation = 'pending';
+            $reservation->status = 'pending_priest_confirmation';
+            $reservation->priest_notified_at = now();
+        }
+        $reservation->save();
+
+        // History
+        $reservation->history()->create([
+            'performed_by' => Auth::id(),
+            'action' => 'status_updated',
+            'remarks' => 'Rescheduled to ' . $newDate->format('M d, Y h:i A') . '. ' . ($request->input('remarks') ?? ''),
+            'performed_at' => now(),
+        ]);
+
+        // Notifications
+        $this->notificationService->notifyReservationRescheduled($reservation, $oldDate, $request->input('remarks', ''));
+        if ($reservation->officiant_id) {
+            // Re-notify priest to confirm
+            $this->notificationService->notifyPriestAssigned($reservation);
+        }
+
+        return Redirect::back()->with('status', 'reservation-rescheduled')->with('message', 'Reservation rescheduled successfully.');
+    }
+
     public function assignPriest(Request $request, $reservation_id)
     {
         $request->validate([

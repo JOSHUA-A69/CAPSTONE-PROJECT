@@ -24,3 +24,9 @@ Schedule::command('reservations:check-cancellations --since=24')
     ->dailyAt('10:00')
     ->emailOutputOnFailure(config('mail.from.address'))
     ->description('Send daily digest for recent cancellations to Admin/Staff');
+
+// Daily priest confirmation reminders and escalation
+Schedule::command('reservations:remind-priest-confirmations --remind-hours=24 --escalate-hours=48')
+    ->dailyAt('11:00')
+    ->emailOutputOnFailure(config('mail.from.address'))
+    ->description('Remind priests to confirm assignments and escalate older pending confirmations');

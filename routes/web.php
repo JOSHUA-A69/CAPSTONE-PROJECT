@@ -203,6 +203,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Admin\ReservationController::class, 'show'])->name('reservations.show');
     Route::post('/reservations/{reservation_id}/assign-priest', [\App\Http\Controllers\Admin\ReservationController::class, 'assignPriest'])->name('reservations.assign-priest');
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Admin\ReservationController::class, 'reject'])->name('reservations.reject');
+    Route::post('/reservations/{reservation_id}/reschedule', [\App\Http\Controllers\Admin\ReservationController::class, 'reschedule'])->name('reservations.reschedule');
 
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Admin\CancellationController::class, 'show'])->name('cancellations.show');
@@ -229,6 +230,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/reservations/{reservation_id}/not-available', [\App\Http\Controllers\Staff\ReservationController::class, 'notAvailable'])->name('reservations.not-available');
     Route::post('/reservations/{reservation_id}/finalize', [\App\Http\Controllers\Staff\ReservationController::class, 'finalize'])->name('reservations.finalize');
     Route::post('/reservations/{reservation_id}/assign-priest', [\App\Http\Controllers\Staff\ReservationController::class, 'assignPriest'])->name('reservations.assign-priest');
+    Route::post('/reservations/{reservation_id}/reschedule', [\App\Http\Controllers\Staff\ReservationController::class, 'reschedule'])->name('reservations.reschedule');
     Route::post('/reservations/{reservation_id}/follow-up', [\App\Http\Controllers\Staff\ReservationController::class, 'sendFollowUp'])->name('reservations.follow-up');
     Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Staff\ReservationController::class, 'cancel'])->name('reservations.cancel');
 

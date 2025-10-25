@@ -930,4 +930,46 @@ class ReservationNotificationService
 
         return '+' . $phone;
     }
+
+    /**
+     * Notify all relevant parties that a reservation was rescheduled
+     */
+    public function notifyReservationRescheduled(Reservation $reservation, \Carbon\Carbon $oldDate, string $remarks = ''): void
+    {
+        try {
+            $old = $oldDate->format('M d, Y h:i A');
+            $new = optional($reservation->schedule_date)->format('M d, Y h:i A');
+
+            $message = "Reservation schedule changed from <strong>{$old}</strong> to <strong>{$new}</strong>.";
+
+            $allRecipients = collect();
+            // Requestor
+            if ($reservation->user) { $allRecipients->push($reservation->user); }
+            // Adviser
+            if ($reservation->organization && $reservation->organization->adviser) { $allRecipients->push($reservation->organization->adviser); }
+            // Priest (if assigned)
+            if ($reservation->officiant) { $allRecipients->push($reservation->officiant); }
+            // Admin/Staff
+            $admins = User::whereIn('role', ['admin', 'staff'])->get();
+            $allRecipients = $allRecipients->merge($admins)->unique('id');
+
+            foreach ($allRecipients as $recipient) {
+                Notification::create([
+                    'user_id' => $recipient->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                    'data' => json_encode([
+                        'action' => 'rescheduled',
+                        'old' => $oldDate->toDateTimeString(),
+                        'new' => optional($reservation->schedule_date)?->toDateTimeString(),
+                        'remarks' => $remarks,
+                    ]),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to send reschedule notifications: ' . $e->getMessage());
+        }
+    }
 }

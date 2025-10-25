@@ -474,6 +474,26 @@
                                         </svg>
                                         Cancel Reservation
                                     </button>
+
+                                    <!-- Reschedule -->
+                                    <div class="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded">
+                                        <h4 class="text-sm font-semibold mb-2">Reschedule</h4>
+                                        <form method="POST" action="{{ route('staff.reservations.reschedule', $reservation->reservation_id) }}"
+                                              onsubmit="return confirm('Reschedule this reservation? The assigned priest will be asked to confirm again.');">
+                                            @csrf
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <input type="datetime-local" name="schedule_date" required
+                                                       class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                <input type="text" name="remarks" placeholder="Remarks (optional)"
+                                                       class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                            </div>
+                                            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">Conflicts with the assigned priest will be checked.</p>
+                                            <button type="submit"
+                                                    class="mt-3 w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition">
+                                                Reschedule
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
 
                             @elseif($reservation->status === 'pending_priest_reassignment')
