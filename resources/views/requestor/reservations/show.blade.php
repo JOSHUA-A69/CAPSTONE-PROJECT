@@ -106,18 +106,14 @@
                 <span class="ml-3 text-sm {{ $currentColors['text'] }}">
                     @if($reservation->status === 'pending')
                         Waiting for organization adviser approval
-                    @elseif($reservation->status === 'adviser_approved' && !$reservation->contacted_at)
-                        Approved by adviser - Waiting for CREaM staff contact
-                    @elseif($reservation->status === 'adviser_approved' && $reservation->contacted_at && !$reservation->requestor_confirmed_at)
-                        CREaM staff has contacted you - Please confirm your reservation
-                    @elseif($reservation->status === 'adviser_approved' && $reservation->requestor_confirmed_at)
-                        You have confirmed - Waiting for staff approval
+                    @elseif($reservation->status === 'adviser_approved')
+                        Adviser approved — awaiting admin assignment and priest confirmation
                     @elseif($reservation->status === 'pending_priest_assignment')
-                        Approved - Waiting for priest assignment
+                        Approved — waiting for priest assignment
                     @elseif($reservation->status === 'pending_priest_confirmation')
-                        Priest assigned - Waiting for priest confirmation
-                    @elseif($reservation->status === 'confirmed')
-                        Confirmed - Event scheduled
+                        Priest assigned — waiting for priest confirmation
+                    @elseif($reservation->status === 'approved' || $reservation->status === 'confirmed')
+                        Confirmed — event scheduled
                     @elseif($reservation->status === 'completed')
                         Event completed successfully
                     @elseif($reservation->status === 'cancelled')
@@ -222,33 +218,48 @@
             </div>
 
             <!-- Actions Card (if applicable) -->
-            @if($reservation->status !== 'cancelled' && $reservation->status !== 'rejected' && $reservation->status !== 'completed')
+            @php
+                $isTerminal = in_array($reservation->status, ['cancelled','rejected','completed']);
+                $isPast = optional($reservation->schedule_date)->isPast();
+                // Allow Requestor to cancel for any non-terminal, future-dated reservation
+                $canCancel = !$isTerminal && !$isPast;
+            @endphp
+
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
                     <h3 class="text-lg font-semibold mb-4">Actions</h3>
 
-                    @if($reservation->status === 'pending' || ($reservation->status === 'adviser_approved' && !$reservation->contacted_at))
-                    <button onclick="document.getElementById('cancelForm').classList.toggle('hidden')"
-                            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 transition">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                        Cancel Reservation
-                    </button>
+                    @if($canCancel)
+                        <button onclick="document.getElementById('cancelForm').classList.toggle('hidden')"
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 transition">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Cancel Reservation
+                        </button>
 
-                    <form id="cancelForm" method="POST" action="{{ route('requestor.reservations.cancel', $reservation->reservation_id) }}" class="hidden mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                        @csrf
-                        <label class="block text-sm font-medium mb-2">Reason for Cancellation</label>
-                        <textarea name="reason" rows="3" required class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" placeholder="Please provide a reason..."></textarea>
-                        <div class="mt-3 flex gap-2">
-                            <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Confirm Cancellation</button>
-                            <button type="button" onclick="document.getElementById('cancelForm').classList.add('hidden')" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition">Cancel</button>
+                        <form id="cancelForm" method="POST" action="{{ route('requestor.reservations.cancel', $reservation->reservation_id) }}" class="hidden mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                            @csrf
+                            <label class="block text-sm font-medium mb-2">Reason for Cancellation</label>
+                            <textarea name="reason" rows="3" required class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100" placeholder="Please provide a reason..."></textarea>
+                            <div class="mt-3 flex gap-2">
+                                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition">Confirm Cancellation</button>
+                                <button type="button" onclick="document.getElementById('cancelForm').classList.add('hidden')" class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500 transition">Cancel</button>
+                            </div>
+                        </form>
+                    @else
+                        <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-600 dark:text-gray-300">
+                            @if($isTerminal)
+                                This reservation is already {{ ucfirst($reservation->status) }}. No further actions are available.
+                            @elseif($isPast)
+                                This reservation is in the past ({{ optional($reservation->schedule_date)->format('M d, Y g:i A') }}). No further actions are available.
+                            @else
+                                No actions are available at this stage.
+                            @endif
                         </div>
-                    </form>
                     @endif
                 </div>
             </div>
-            @endif
         </div>
     </div>
 </div>

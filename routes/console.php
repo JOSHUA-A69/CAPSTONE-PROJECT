@@ -18,3 +18,9 @@ Schedule::command('reservations:check-unnoticed --send-notifications')
     ->dailyAt('09:00')
     ->emailOutputOnFailure(config('mail.from.address'))
     ->description('Check for unnoticed reservation requests and send follow-ups');
+
+// Daily digest of recent cancellations to ensure staff awareness
+Schedule::command('reservations:check-cancellations --since=24')
+    ->dailyAt('10:00')
+    ->emailOutputOnFailure(config('mail.from.address'))
+    ->description('Send daily digest for recent cancellations to Admin/Staff');

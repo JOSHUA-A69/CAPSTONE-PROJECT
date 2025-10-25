@@ -506,12 +506,17 @@
                                                     required
                                                     class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                                 <option value="">-- Select a priest --</option>
-                                                @foreach($priests as $priest)
+                                                @forelse($availablePriests as $priest)
                                                     <option value="{{ $priest->id }}">
                                                         {{ $priest->full_name }} ({{ $priest->email }})
                                                     </option>
-                                                @endforeach
+                                                @empty
+                                                    <option value="" disabled>No available priests for this schedule</option>
+                                                @endforelse
                                             </select>
+                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                Only priests without conflicts in the next {{ config('reservations.conflict_minutes') }} minutes window are shown.
+                                            </p>
                                         </div>
 
                                         <button type="submit"

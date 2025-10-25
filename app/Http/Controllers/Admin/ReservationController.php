@@ -128,9 +128,13 @@ class ReservationController extends Controller
             ->where('role', 'priest')
             ->firstOrFail();
 
-        // Check for scheduling conflicts
+        // Check for scheduling conflicts using +/- configured window
+        $minutes = (int) config('reservations.conflict_minutes', 120);
+        $windowStart = (clone $reservation->schedule_date)->subMinutes($minutes);
+        $windowEnd = (clone $reservation->schedule_date)->addMinutes($minutes);
+
         $conflict = Reservation::where('officiant_id', $priest->id)
-            ->where('schedule_date', $reservation->schedule_date)
+            ->whereBetween('schedule_date', [$windowStart, $windowEnd])
             ->whereNotIn('status', ['cancelled', 'rejected'])
             ->where('reservation_id', '!=', $reservation_id)
             ->exists();
@@ -210,25 +214,24 @@ class ReservationController extends Controller
      */
     private function getAvailablePriests($scheduleDate, $excludeReservationId = null)
     {
-        // Get all priests
-        $allPriests = User::where('role', 'priest')
+        $minutes = (int) config('reservations.conflict_minutes', 120);
+        $windowStart = (clone $scheduleDate)->subMinutes($minutes);
+        $windowEnd = (clone $scheduleDate)->addMinutes($minutes);
+
+        // Return only priests with no conflicting reservations within the time window
+        return User::where('role', 'priest')
             ->where('status', 'active')
+            ->whereNotExists(function ($q) use ($windowStart, $windowEnd, $excludeReservationId) {
+                $q->from('reservations as r')
+                    ->selectRaw('1')
+                    ->whereColumn('r.officiant_id', 'users.id')
+                    ->whereBetween('r.schedule_date', [$windowStart, $windowEnd])
+                    ->whereNotIn('r.status', ['cancelled', 'rejected']);
+                if ($excludeReservationId) {
+                    $q->where('r.reservation_id', '!=', $excludeReservationId);
+                }
+            })
             ->orderBy('first_name')
             ->get();
-
-        // Get priests already assigned at this time
-        $assignedPriestIds = Reservation::where('schedule_date', $scheduleDate)
-            ->whereNotIn('status', ['cancelled', 'rejected'])
-            ->when($excludeReservationId, function ($q) use ($excludeReservationId) {
-                $q->where('reservation_id', '!=', $excludeReservationId);
-            })
-            ->pluck('officiant_id')
-            ->toArray();
-
-        // Mark availability
-        return $allPriests->map(function ($priest) use ($assignedPriestIds) {
-            $priest->is_available = !in_array($priest->id, $assignedPriestIds);
-            return $priest;
-        });
     }
 }

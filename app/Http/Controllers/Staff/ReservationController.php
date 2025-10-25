@@ -64,9 +64,25 @@ class ReservationController extends Controller
         $reservation = Reservation::with(['user', 'service', 'venue', 'organization', 'officiant', 'history.performedBy'])
             ->findOrFail($reservation_id);
 
-        $priests = User::where('role', 'priest')->orderBy('first_name')->get();
+        // Compute available priests using +/- configured window
+        $minutes = (int) config('reservations.conflict_minutes', 120);
+        $windowStart = (clone $reservation->schedule_date)->subMinutes($minutes);
+        $windowEnd = (clone $reservation->schedule_date)->addMinutes($minutes);
 
-        return view('staff.reservations.show', compact('reservation', 'priests'));
+        $availablePriests = User::where('role', 'priest')
+            ->where('status', 'active')
+            ->whereNotExists(function ($q) use ($windowStart, $windowEnd, $reservation_id) {
+                $q->from('reservations as r')
+                    ->selectRaw('1')
+                    ->whereColumn('r.officiant_id', 'users.id')
+                    ->whereBetween('r.schedule_date', [$windowStart, $windowEnd])
+                    ->whereNotIn('r.status', ['cancelled', 'rejected'])
+                    ->where('r.reservation_id', '!=', $reservation_id);
+            })
+            ->orderBy('first_name')
+            ->get();
+
+        return view('staff.reservations.show', compact('reservation', 'availablePriests'));
     }
 
     /**
@@ -231,9 +247,13 @@ class ReservationController extends Controller
             ->where('role', 'priest')
             ->firstOrFail();
 
-        // Check for scheduling conflicts
+        // Check for scheduling conflicts using +/- configured window
+        $minutes = (int) config('reservations.conflict_minutes', 120);
+        $windowStart = (clone $reservation->schedule_date)->subMinutes($minutes);
+        $windowEnd = (clone $reservation->schedule_date)->addMinutes($minutes);
+
         $conflict = Reservation::where('officiant_id', $priest->id)
-            ->where('schedule_date', $reservation->schedule_date)
+            ->whereBetween('schedule_date', [$windowStart, $windowEnd])
             ->whereNotIn('status', ['cancelled', 'rejected'])
             ->where('reservation_id', '!=', $reservation_id)
             ->exists();
