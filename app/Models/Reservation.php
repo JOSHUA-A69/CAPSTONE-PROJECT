@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @property string|null $custom_venue_name
  * @property int $service_id
  * @property int|null $officiant_id
+ * @property int|null $preferred_officiant_id
  * @property \Carbon\Carbon $schedule_date
  * @property string $status
  * @property string $purpose
@@ -58,6 +59,7 @@ class Reservation extends Model
         'custom_venue_name',
         'service_id',
         'officiant_id',
+        'preferred_officiant_id',
         'schedule_date',
         'status',
         'purpose',
@@ -121,6 +123,14 @@ class Reservation extends Model
     public function officiant()
     {
         return $this->belongsTo(User::class, 'officiant_id');
+    }
+
+    /**
+     * The priest preferred by the requestor (not an assignment)
+     */
+    public function preferredOfficiant()
+    {
+        return $this->belongsTo(User::class, 'preferred_officiant_id');
     }
 
     /**

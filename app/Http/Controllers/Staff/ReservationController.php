@@ -157,30 +157,18 @@ class ReservationController extends Controller
     {
         $reservation = Reservation::findOrFail($reservation_id);
 
-        // Requestor confirmation step removed (no gating by requestor_confirmed_at)
+        // Policy update: Staff do not assign or notify priests.
+        // Staff approval records that details were verified and forwards to Admin for priest assignment.
 
-        // Check if priest is assigned (should be selected by requestor)
-        if (!$reservation->officiant_id) {
-            return Redirect::back()->with('error', 'No priest assigned to this reservation.');
-        }
-
-        // Update status to pending priest confirmation and notify priest
-        $reservation->update([
-            'status' => 'pending_priest_confirmation',
-            'priest_notified_at' => now(),
-        ]);
-
+        // Keep status as adviser_approved and log the action
         $reservation->history()->create([
             'performed_by' => Auth::id(),
             'action' => 'approved_by_staff',
-            'remarks' => $request->input('remarks', 'Approved by staff - priest notified for confirmation'),
+            'remarks' => $request->input('remarks', 'Reviewed by staff and forwarded to Admin for priest assignment'),
             'performed_at' => now(),
         ]);
 
-    // Notify the priest of the assignment/confirmation request
-    $this->notificationService->notifyPriestAssigned($reservation);
-
-        return Redirect::back()->with('status', 'reservation-approved')->with('message', 'Reservation approved and priest has been notified.');
+        return Redirect::back()->with('status', 'reservation-reviewed')->with('message', 'Details reviewed. Admin will assign the priest based on requestor\'s choice.');
     }
 
     public function notAvailable(Request $request, $reservation_id)
@@ -292,63 +280,8 @@ class ReservationController extends Controller
 
     public function assignPriest(Request $request, $reservation_id)
     {
-        $request->validate([
-            'officiant_id' => 'required|exists:users,id',
-            'remarks' => 'nullable|string|max:500',
-        ]);
-
-        $reservation = Reservation::findOrFail($reservation_id);
-
-        // Allow if status is either adviser_approved or pending_priest_assignment
-        if (!in_array($reservation->status, ['adviser_approved', 'pending_priest_assignment'])) {
-            return Redirect::back()
-                ->with('error', 'This reservation is not ready for priest assignment.');
-        }
-
-        // Verify selected user is a priest
-        $priest = User::where('id', $request->input('officiant_id'))
-            ->where('role', 'priest')
-            ->firstOrFail();
-
-        // Check for scheduling conflicts using +/- configured window
-        $minutes = (int) config('reservations.conflict_minutes', 120);
-        $windowStart = (clone $reservation->schedule_date)->subMinutes($minutes);
-        $windowEnd = (clone $reservation->schedule_date)->addMinutes($minutes);
-
-        $conflict = Reservation::where('officiant_id', $priest->id)
-            ->whereBetween('schedule_date', [$windowStart, $windowEnd])
-            ->whereNotIn('status', ['cancelled', 'rejected'])
-            ->where('reservation_id', '!=', $reservation_id)
-            ->exists();
-
-        if ($conflict) {
-            return Redirect::back()
-                ->with('error', 'This priest already has an assignment at this date and time.');
-        }
-
-        // Assign priest and update status
-        $reservation->update([
-            'officiant_id' => $priest->id,
-            'status' => 'pending_priest_confirmation',
-            'priest_notified_at' => now(),
-            'priest_confirmation' => 'pending',
-        ]);
-
-        // Create history
-        $remarks = $request->input('remarks', 'Priest assigned by staff');
-        $reservation->history()->create([
-            'performed_by' => Auth::id(),
-            'action' => 'priest_assigned',
-            'remarks' => $remarks . ' - Assigned to: ' . $priest->full_name,
-            'performed_at' => now(),
-        ]);
-
-    // Notify priest of assignment
-    $this->notificationService->notifyPriestAssigned($reservation);
-
-    return Redirect::back()
-            ->with('status', 'priest-assigned')
-            ->with('message', 'Priest assigned successfully. Awaiting priest confirmation.');
+        // Policy: Staff cannot assign or reassign priests. Admin handles assignment based on requestor's choice.
+        return Redirect::back()->with('error', 'Policy update: Staff cannot assign priests. Please coordinate with the Admin for priest assignment.');
     }
 
     public function cancel(Request $request, $reservation_id)

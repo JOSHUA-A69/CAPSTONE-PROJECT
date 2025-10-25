@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
  * @property string|null $service_id
  * @property string|null $org_id
  * @property string|null $officiant_id
+ * @property string|null $preferred_officiant_id
  * @property string|null $schedule_date
  * @property string|null $activity_name
  * @property string|null $theme
@@ -31,6 +32,7 @@ class ReservationRequest extends FormRequest
             'venue_id' => ['required'],
             'org_id' => ['nullable', 'integer', Rule::exists('organizations', 'org_id')],
             'officiant_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', 'priest')],
+            'preferred_officiant_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', 'priest')],
             'schedule_date' => ['required', 'date', 'after:now'],
             'activity_name' => ['required', 'string', 'max:255'],
             'theme' => ['nullable', 'string', 'max:1000'],

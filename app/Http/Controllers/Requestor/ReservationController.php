@@ -40,8 +40,9 @@ class ReservationController extends Controller
         $services = Service::orderBy('service_name')->get();
         $venues = Venue::orderBy('name')->get();
         $organizations = Organization::with('adviser')->orderBy('org_name')->get();
+        $priests = User::where('role', 'priest')->where('status','active')->orderBy('first_name')->get();
 
-        return view('requestor.reservations.create', compact('services', 'venues', 'organizations'));
+        return view('requestor.reservations.create', compact('services', 'venues', 'organizations', 'priests'));
     }
 
     public function store(ReservationRequest $request)
@@ -64,14 +65,17 @@ class ReservationController extends Controller
             $data['custom_venue_name'] = null;
         }
 
-        $reservation = Reservation::create($data);
+    // Enforce policy: requestor can only indicate a preference; do not assign officiant here
+    unset($data['officiant_id']);
+
+    $reservation = Reservation::create($data);
 
         // Create history record
         $reservation->history()->create([
             'performed_by' => Auth::id(),
             'action' => 'submitted',
             'remarks' => 'Reservation request submitted by requestor' .
-                        (!empty($data['officiant_id']) ? ' - Priest notified for confirmation' : ''),
+                        (!empty($data['preferred_officiant_id']) ? ' - Preferred priest selected' : ''),
             'performed_at' => now(),
         ]);
 

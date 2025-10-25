@@ -121,6 +121,13 @@
                                 </div>
                                 @endif
 
+                                @if($reservation->preferredOfficiant)
+                                <div class="col-span-2">
+                                    <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Requestor's Preferred Priest</label>
+                                    <p class="mt-1 text-base font-semibold">{{ $reservation->preferredOfficiant->full_name }} <span class="text-xs text-gray-500">(preference)</span></p>
+                                </div>
+                                @endif
+
                                 @if($reservation->details)
                                 <div class="col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Additional Details</label>
@@ -209,7 +216,7 @@
                                         <option value="">-- Select Priest --</option>
                                         @foreach($availablePriests as $priest)
                                             <option value="{{ $priest->id }}"
-                                                {{ old('officiant_id') == $priest->id ? 'selected' : '' }}>
+                                                {{ old('officiant_id', $reservation->preferred_officiant_id) == $priest->id ? 'selected' : '' }}>
                                                 {{ $priest->name ?? ($priest->first_name . ' ' . $priest->last_name) }}
                                             </option>
                                         @endforeach

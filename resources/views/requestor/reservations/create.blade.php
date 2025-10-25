@@ -104,7 +104,22 @@
                 @error('custom_venue_name') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
             </div>
 
-            <!-- Preferred Presider selection removed; CREaM staff will assign an officiant after approvals -->
+            <!-- Preferred Priest (Requestor picks) -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Preferred Priest <span class="text-gray-500 text-xs">(Admin will assign based on your choice)</span>
+                </label>
+                <select name="preferred_officiant_id" class="form-select w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100">
+                    <option value="">-- No preference --</option>
+                    @foreach($priests as $p)
+                        <option value="{{ $p->id }}" @if(old('preferred_officiant_id')==$p->id) selected @endif>
+                            {{ $p->full_name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('preferred_officiant_id') <p class="text-red-600 text-sm mt-1">{{ $message }}</p> @enderror
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">We’ll do our best to assign your preferred priest, subject to availability and schedule conflicts.</p>
+            </div>
         </div>
 
         <!-- Requesting Office/Group Section -->

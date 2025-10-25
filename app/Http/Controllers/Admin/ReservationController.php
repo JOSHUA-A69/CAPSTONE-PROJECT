@@ -89,6 +89,7 @@ class ReservationController extends Controller
             'venue',
             'organization.adviser',
             'officiant',
+            'preferredOfficiant',
             'history.performedBy',
             'cancelledByUser'
         ])->findOrFail($reservation_id);

@@ -229,7 +229,8 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/reservations/{reservation_id}/approve', [\App\Http\Controllers\Staff\ReservationController::class, 'approve'])->name('reservations.approve');
     Route::post('/reservations/{reservation_id}/not-available', [\App\Http\Controllers\Staff\ReservationController::class, 'notAvailable'])->name('reservations.not-available');
     Route::post('/reservations/{reservation_id}/finalize', [\App\Http\Controllers\Staff\ReservationController::class, 'finalize'])->name('reservations.finalize');
-    Route::post('/reservations/{reservation_id}/assign-priest', [\App\Http\Controllers\Staff\ReservationController::class, 'assignPriest'])->name('reservations.assign-priest');
+    // Policy: Staff cannot assign or reassign priests (handled by Admin based on requestor's choice)
+    // Route::post('/reservations/{reservation_id}/assign-priest', [\App\Http\Controllers\Staff\ReservationController::class, 'assignPriest'])->name('reservations.assign-priest');
     Route::post('/reservations/{reservation_id}/reschedule', [\App\Http\Controllers\Staff\ReservationController::class, 'reschedule'])->name('reservations.reschedule');
     Route::post('/reservations/{reservation_id}/follow-up', [\App\Http\Controllers\Staff\ReservationController::class, 'sendFollowUp'])->name('reservations.follow-up');
     Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Staff\ReservationController::class, 'cancel'])->name('reservations.cancel');

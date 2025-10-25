@@ -188,6 +188,7 @@
                                 <option value="">-- Select a Priest --</option>
                                 @foreach($availablePriests as $priest)
                                     <option value="{{ $priest->id }}"
+                                            @if(old('officiant_id', $notification->reservation->preferred_officiant_id ?? null) == $priest->id) selected @endif
                                             @if(!$priest->is_available) disabled @endif
                                             class="{{ $priest->is_available ? 'text-gray-900' : 'text-gray-400' }}">
                                         {{ $priest->first_name }} {{ $priest->last_name }}

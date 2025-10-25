@@ -383,9 +383,10 @@ class ReservationNotificationService
 
         // SMS to priest
         if ($reservation->officiant && $reservation->officiant->phone) {
+            $venueName = $reservation->custom_venue_name ?? ($reservation->venue->name ?? 'the selected venue');
             $this->sendSMS(
                 $reservation->officiant->phone,
-                "You have been assigned to officiate {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . " at {$reservation->venue->name}. Please confirm your availability in eReligiousServices."
+                "You have been assigned to officiate {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . " at {$venueName}. Please confirm your availability in eReligiousServices."
             );
         }
 

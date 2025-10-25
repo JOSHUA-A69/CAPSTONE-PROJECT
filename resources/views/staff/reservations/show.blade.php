@@ -430,11 +430,11 @@
                                     </div>
                                 @endif
                             @elseif($reservation->status === 'pending_priest_assignment')
-                                <!-- This status should not occur - priest is already selected by requestor -->
+                                <!-- Admin will handle assignment per policy -->
                                 <div class="space-y-3">
-                                    <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
-                                        <p class="text-sm text-yellow-800 dark:text-yellow-300">
-                                            ⚠️ Unexpected state: Priest should already be assigned by requestor. Contact system administrator.
+                                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
+                                        <p class="text-sm text-blue-800 dark:text-blue-300">
+                                            Awaiting Admin to assign a priest based on the requestor's choice.
                                         </p>
                                     </div>
                                 </div>
@@ -497,7 +497,7 @@
                                 </div>
 
                             @elseif($reservation->status === 'pending_priest_reassignment')
-                                <!-- Priest Declined - Reassign New Priest -->
+                                <!-- Priest Declined - Admin will reassign per policy -->
                                 <div class="space-y-3">
                                     <div class="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded">
                                         <div class="flex items-center">
@@ -509,44 +509,11 @@
                                                     Priest Declined Assignment
                                                 </h4>
                                                 <p class="text-sm text-orange-800 dark:text-orange-300">
-                                                    Please assign a different priest to this reservation.
+                                                    Admin will reassign a priest based on the requestor's preference and availability.
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
-
-                                    <form method="POST" action="{{ route('staff.reservations.assign-priest', $reservation->reservation_id) }}">
-                                        @csrf
-                                        <div class="mb-4">
-                                            <label for="officiant_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                Assign New Priest <span class="text-red-500">*</span>
-                                            </label>
-                                            <select id="officiant_id"
-                                                    name="officiant_id"
-                                                    required
-                                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                                <option value="">-- Select a priest --</option>
-                                                @forelse($availablePriests as $priest)
-                                                    <option value="{{ $priest->id }}">
-                                                        {{ $priest->full_name }} ({{ $priest->email }})
-                                                    </option>
-                                                @empty
-                                                    <option value="" disabled>No available priests for this schedule</option>
-                                                @endforelse
-                                            </select>
-                                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                                Only priests without conflicts in the next {{ config('reservations.conflict_minutes') }} minutes window are shown.
-                                            </p>
-                                        </div>
-
-                                        <button type="submit"
-                                                class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-purple-700 active:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-                                            </svg>
-                                            Reassign Priest
-                                        </button>
-                                    </form>
 
                                     <!-- Cancel Button -->
                                     <button onclick="showCancelModal()"
