@@ -35,12 +35,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <a href="{{ route('requestor.reservations.index', ['status' => 'pending']) }}" class="mt-4 inline-flex items-center text-sm font-semibold text-yellow-700 dark:text-yellow-300 hover:underline">
-                            View Pending
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
+                        
                     </div>
                 </div>
                 <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 overflow-hidden shadow-sm sm:rounded-lg border border-green-200 dark:border-green-800 h-full min-h-[160px]">
@@ -56,12 +51,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <a href="{{ route('requestor.reservations.index', ['time' => 'upcoming']) }}" class="mt-4 inline-flex items-center text-sm font-semibold text-green-700 dark:text-green-300 hover:underline">
-                            View Schedule
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
+                        
                     </div>
                 </div>
             </div>

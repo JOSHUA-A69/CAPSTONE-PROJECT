@@ -46,15 +46,7 @@
                                 </svg>
                             </div>
                         </div>
-                        @if($pendingCount > 0)
-                        <a href="{{ route('priest.reservations.index', ['status' => 'pending_priest_confirmation']) }}"
-                           class="mt-4 inline-flex items-center text-sm font-semibold text-yellow-700 dark:text-yellow-300 hover:underline">
-                            View Pending Assignments
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
-                        @else
+                        @if($pendingCount === 0)
                         <p class="mt-4 text-sm text-yellow-700 dark:text-yellow-300">No pending confirmations</p>
                         @endif
                     </div>
@@ -74,13 +66,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <a href="{{ route('priest.reservations.index', ['time' => 'upcoming']) }}"
-                           class="mt-4 inline-flex items-center text-sm font-semibold text-green-700 dark:text-green-300 hover:underline">
-                            View Schedule
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
+                        
                     </div>
                 </div>
             </div>

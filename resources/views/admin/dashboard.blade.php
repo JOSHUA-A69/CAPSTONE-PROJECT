@@ -39,13 +39,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <a href="{{ route('admin.notifications.index') }}"
-                           class="mt-4 inline-flex items-center text-sm font-semibold text-yellow-700 dark:text-yellow-300 hover:underline">
-                            Review Notifications
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
+                        
                     </div>
                 </div>
 
@@ -63,13 +57,7 @@
                                 </svg>
                             </div>
                         </div>
-                        <a href="{{ route('admin.users.index') }}"
-                           class="mt-4 inline-flex items-center text-sm font-semibold text-indigo-700 dark:text-indigo-300 hover:underline">
-                            Manage Users
-                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                            </svg>
-                        </a>
+                        
                     </div>
                 </div>
             </div>

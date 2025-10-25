@@ -53,15 +53,10 @@
                         Experience seamless booking for liturgical services, retreats, and religious events. Join our vibrant faith community and discover opportunities for spiritual formation and service.
                     </p>
 
-                    <div class="mt-8 flex gap-4 flex-wrap justify-center">
-                        <a href="#" class="er-cta-primary"> 
+                    <div class="mt-8 flex justify-center">
+                        <a href="#" class="er-cta-primary">
                             <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                             View Calendar
-                        </a>
-
-                        <a href="#" class="er-cta-ghost">
-                            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M12 11v6M8 15h8"/></svg>
-                            Organizations
                         </a>
                     </div>
                 </div>
