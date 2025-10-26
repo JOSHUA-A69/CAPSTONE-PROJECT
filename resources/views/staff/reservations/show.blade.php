@@ -315,13 +315,13 @@
                                     <div class="space-y-3">
                                         <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
                                             <p class="text-sm text-blue-800 dark:text-blue-300">
-                                                <strong>Next Step:</strong> Contact the requestor via phone or email to verify their availability and confirm details.
+                                                <strong>Next Step:</strong> Contact the requestor via phone or email to verify availability and details; no confirmation step is required.
                                             </p>
                                         </div>
 
                                         <!-- Mark as Contacted Button -->
-                                        <form method="POST" action="{{ route('staff.reservations.mark-contacted', $reservation->reservation_id) }}"
-                                              onsubmit="return confirm('Have you contacted the requestor? This will send them a confirmation request.');">
+                            <form method="POST" action="{{ route('staff.reservations.mark-contacted', $reservation->reservation_id) }}"
+                                onsubmit="if(!confirm('Have you contacted the requestor and verified details?')){return false;} this.querySelector('button[type=submit]')?.setAttribute('disabled','disabled'); this.querySelector('button[type=submit]')?.classList.add('opacity-70','cursor-not-allowed'); return true;">
                                             @csrf
                                             <button type="submit"
                                                     class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 active:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
@@ -351,8 +351,8 @@
                                         </button>
                                     </div>
 
-                                @elseif(!$reservation->requestor_confirmed_at)
-                                    <!-- Step 1b: Waiting for Requestor Confirmation -->
+                                @elseif($reservation->contacted_at)
+                                    <!-- Step 1b: Contacted - Waiting for Admin Assignment -->
                                     <div class="space-y-3">
                                         <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                                             <div class="flex items-start">
@@ -361,13 +361,13 @@
                                                 </svg>
                                                 <div class="flex-1">
                                                     <h4 class="text-sm font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
-                                                        Awaiting Requestor Confirmation
+                                                        Contacted Requestor
                                                     </h4>
                                                     <p class="text-sm text-yellow-800 dark:text-yellow-300 mb-2">
-                                                        Contacted on {{ $reservation->contacted_at->format('M d, Y \a\t g:i A') }}
+                                                        Contacted on {{ $reservation->contacted_at->format('M d, Y \\a\\t g:i A') }}
                                                     </p>
                                                     <p class="text-xs text-yellow-700 dark:text-yellow-400">
-                                                        A confirmation request has been sent to the requestor. Once they confirm, you can proceed to approve and assign a priest.
+                                                        Awaiting Admin to assign a priest based on the requestor's choice.
                                                     </p>
                                                 </div>
                                             </div>
@@ -383,51 +383,6 @@
                                         </button>
                                     </div>
 
-                                @else
-                                    <!-- Step 1c: Requestor Confirmed - Ready to Approve -->
-                                    <div class="space-y-3">
-                                        <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4">
-                                            <div class="flex items-start">
-                                                <svg class="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                                </svg>
-                                                <div class="flex-1">
-                                                    <h4 class="text-sm font-semibold text-green-900 dark:text-green-200 mb-1">
-                                                        Requestor Confirmed!
-                                                    </h4>
-                                                    <p class="text-sm text-green-800 dark:text-green-300">
-                                                        Confirmed on {{ $reservation->requestor_confirmed_at->format('M d, Y \a\t g:i A') }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                            The requestor has confirmed their reservation. You can now approve and proceed to priest assignment.
-                                        </p>
-
-                                        <!-- Approve Button -->
-                                        <form method="POST" action="{{ route('staff.reservations.approve', $reservation->reservation_id) }}"
-                                              onsubmit="return confirm('Approve this reservation for priest assignment?');">
-                                            @csrf
-                                            <button type="submit"
-                                                    class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                </svg>
-                                                Approve Reservation
-                                            </button>
-                                        </form>
-
-                                        <!-- Cancel Button -->
-                                        <button onclick="showCancelModal()"
-                                                class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                            Cancel Reservation
-                                        </button>
-                                    </div>
                                 @endif
                             @elseif($reservation->status === 'pending_priest_assignment')
                                 <!-- Admin will handle assignment per policy -->
@@ -448,7 +403,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                             </svg>
                                             <p class="text-sm text-blue-700 dark:text-blue-300">
-                                                Waiting for priest confirmation. The assigned priest has been notified.
+                                                Waiting for priest confirmation. The assigned priest has been notified by the Admin.
                                             </p>
                                         </div>
                                     </div>

@@ -224,6 +224,11 @@
                                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                         Showing priests without conflicts in the next {{ config('reservations.conflict_minutes') }} minutes window.
                                     </p>
+                                    @if($reservation->preferred_officiant_id && !$availablePriests->contains('id', $reservation->preferred_officiant_id))
+                                        <p class="mt-1 text-xs text-yellow-700 dark:text-yellow-400">
+                                            The requestor's preferred priest isn't available for this schedule. You may select a different priest.
+                                        </p>
+                                    @endif
                                     @error('officiant_id')
                                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                                     @enderror

@@ -12,4 +12,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
+# Configure timezone for PHP (Asia/Manila)
+RUN echo "date.timezone=Asia/Manila" > /usr/local/etc/php/conf.d/timezone.ini
+
 WORKDIR /var/www

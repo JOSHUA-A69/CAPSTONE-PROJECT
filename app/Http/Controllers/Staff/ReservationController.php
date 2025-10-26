@@ -141,7 +141,18 @@ class ReservationController extends Controller
             return Redirect::back()->with('error', 'This reservation cannot be marked as contacted at this stage.');
         }
 
-        // Log history only (no token/confirmation step)
+        // Idempotency guard: if already contacted, do not duplicate history entries
+        if (!empty($reservation->contacted_at)) {
+            return Redirect::back()
+                ->with('status', 'requestor-already-contacted')
+                ->with('message', 'Requestor was already marked as contacted.');
+        }
+
+        // Stamp contacted_at and log history (no token/confirmation step)
+        $reservation->update([
+            'contacted_at' => now(),
+        ]);
+
         $reservation->history()->create([
             'performed_by' => Auth::id(),
             'action' => 'contacted_requestor',

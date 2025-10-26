@@ -15,18 +15,18 @@ Artisan::command('inspire', function () {
  * Runs daily at 9:00 AM to send follow-up notifications to advisers
  */
 Schedule::command('reservations:check-unnoticed --send-notifications')
-    ->dailyAt('09:00')
+    ->dailyAt('09:00')->timezone(config('app.timezone'))
     ->emailOutputOnFailure(config('mail.from.address'))
     ->description('Check for unnoticed reservation requests and send follow-ups');
 
 // Daily digest of recent cancellations to ensure staff awareness
 Schedule::command('reservations:check-cancellations --since=24')
-    ->dailyAt('10:00')
+    ->dailyAt('10:00')->timezone(config('app.timezone'))
     ->emailOutputOnFailure(config('mail.from.address'))
     ->description('Send daily digest for recent cancellations to Admin/Staff');
 
 // Daily priest confirmation reminders and escalation
 Schedule::command('reservations:remind-priest-confirmations --remind-hours=24 --escalate-hours=48')
-    ->dailyAt('11:00')
+    ->dailyAt('11:00')->timezone(config('app.timezone'))
     ->emailOutputOnFailure(config('mail.from.address'))
     ->description('Remind priests to confirm assignments and escalate older pending confirmations');

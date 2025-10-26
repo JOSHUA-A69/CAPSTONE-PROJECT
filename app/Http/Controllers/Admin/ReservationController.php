@@ -148,10 +148,10 @@ class ReservationController extends Controller
         // Determine if this is a reassignment or initial assignment
         $isReassignment = in_array($reservation->status, ['priest_declined', 'pending_priest_reassignment']);
 
-        // Assign priest and update status
+        // Assign priest and update status (awaiting priest confirmation)
         $reservation->update([
             'officiant_id' => $priest->id,
-            'status' => 'admin_approved',
+            'status' => 'pending_priest_confirmation',
             'priest_notified_at' => now(),
             'priest_confirmation' => 'pending',
         ]);

@@ -176,6 +176,13 @@ Route::prefix('requestor')->name('requestor.')->middleware(['auth', 'verified', 
     Route::get('/notifications/{id}', [\App\Http\Controllers\Requestor\NotificationController::class, 'show'])->name('notifications.show');
 });
 
+// --- Legacy requestor confirmation path (deprecated) ---
+// If users open old email links like /requestor/reservations/{id}/confirm/{token},
+// show a friendly notice that confirmation is no longer required.
+Route::get('/requestor/reservations/{reservation_id}/confirm/{token?}', function () {
+    return view('requestor.reservations.confirm');
+})->name('requestor.reservations.legacy-confirm');
+
 // Adviser Reservation Routes
 Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])->group(function () {
     // Notification Routes

@@ -121,7 +121,7 @@ class ReservationNotificationService
         if ($reservation->user->phone) {
             $this->sendSMS(
                 $reservation->user->phone,
-                "Good news! Your reservation for {$reservation->service->service_name} has been approved by your organization adviser. Awaiting final CREaM approval."
+                "Good news! Your {$reservation->service->service_name} request was approved by your adviser. CREaM will contact you; Admin will assign a priest; then the priest will confirm."
             );
         }
 
@@ -154,7 +154,7 @@ class ReservationNotificationService
                 $notificationData = [
                     'user_id' => $admin->id,
                     'reservation_id' => $reservation->reservation_id,
-                    'message' => 'Adviser approved a reservation. Proceed to contact requestor and assign a priest.',
+                    'message' => 'Adviser approved a reservation. Staff: contact the requestor; Admin: assign priest based on requestor\'s choice.',
                     'type' => 'Update',
                     'sent_at' => now(),
                 ];
@@ -175,6 +175,9 @@ class ReservationNotificationService
 
     /**
      * Notify requestor with confirmation link after staff contact
+     *
+     * @deprecated Confirmation step removed on 2025-10-25. No longer used.
+     *             Left in place to avoid hard breaks if referenced in docs or legacy code.
      */
     public function notifyRequestorConfirmation(Reservation $reservation, string $confirmationUrl): void
     {
@@ -216,6 +219,8 @@ class ReservationNotificationService
 
     /**
      * Notify admins/staff that the requestor confirmed their availability
+     *
+     * @deprecated Confirmation step removed on 2025-10-25. No longer used.
      */
     public function notifyRequestorConfirmed(Reservation $reservation): void
     {
@@ -655,7 +660,7 @@ class ReservationNotificationService
 
             // Create in-app notification for each admin
             try {
-                $message = "<strong>{$priestName}</strong> approved the reservation from <strong>{$requestorName}</strong>";
+                $message = "<strong>{$priestName}</strong> confirmed availability for the reservation from <strong>{$requestorName}</strong>";
 
                 $notificationData = [
                     'user_id' => $admin->id,
