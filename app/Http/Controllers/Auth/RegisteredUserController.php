@@ -38,7 +38,7 @@ class RegisteredUserController extends Controller
             'middle_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')],
-            'phone' => ['nullable', 'string', 'max:50'],
+            'phone' => ['required', 'string', 'max:50'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             // Make role optional; default handled below to 'requestor'
             'role' => ['nullable', 'in:admin,staff,adviser,requestor,priest'],
@@ -70,7 +70,7 @@ class RegisteredUserController extends Controller
             'middle_name' => $validated['middle_name'] ?? null,
             'last_name' => $validated['last_name'],
             'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
+            'phone' => $validated['phone'],
             'role' => $chosenRole,
             'status' => 'pending',
             'password' => Hash::make($validated['password']),

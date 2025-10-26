@@ -30,11 +30,10 @@
         </div>
     </x-slot>
 
-    <div class="py-6 bg-gray-100 dark:bg-gray-950 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-gray-100 dark:bg-gray-950" style="height: calc(100vh - 73px);">
+        <div class="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <!-- Modern Chat Container with Solid Background -->
-            <div class="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col"
-                 style="height: calc(100vh - 200px);"
+            <div class="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-700 flex flex-col h-full"
                  x-data="chatApp({{ $otherUser->id }}, {{ auth()->id() }})"
                  x-init="init()">
 

@@ -24,10 +24,6 @@
         </div>
     @endif
 
-    <div class="card overflow-hidden">
-        <div class="overflow-x-auto">
-            @if($reservations->isEmpty())
-                <!-- Reservations Table -->
     <div class="card">
         <div class="overflow-x-auto">
             @if($reservations->isEmpty())

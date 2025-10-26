@@ -23,7 +23,7 @@ class RouteServiceProvider extends BaseProvider
             'staff'     => '/staff',
             'adviser'   => '/adviser',
             'priest'    => '/priest',
-            default     => '/requestor/reservations/create',
+            default     => '/requestor',
         };
     }
 
@@ -37,7 +37,7 @@ class RouteServiceProvider extends BaseProvider
             'staff'   => 'staff.dashboard',
             'adviser' => 'adviser.dashboard',
             'priest'  => 'priest.dashboard',
-            default   => 'requestor.reservations.create',
+            default   => 'requestor.dashboard',
         };
     }
 

@@ -36,7 +36,11 @@ class ReservationController extends Controller
         $query = Reservation::with(['user', 'service', 'venue', 'organization'])
             ->forPriest(Auth::id());
 
-        if ($status) {
+        // Status filter - special handling for pending_priest_confirmation
+        if ($status === 'pending_priest_confirmation') {
+            // Show all reservations awaiting priest confirmation (admin_approved with pending confirmation)
+            $query->awaitingPriestConfirmation();
+        } elseif ($status) {
             $query->where('status', $status);
         }
 

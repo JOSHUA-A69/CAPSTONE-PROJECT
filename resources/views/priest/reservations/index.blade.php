@@ -113,9 +113,6 @@
                                             @if($reservation->custom_venue_name)
                                                 <span class="text-body">{{ $reservation->custom_venue_name }}</span>
                                                 <span class="badge-info ml-2">Custom</span>
-                                            @if($reservation->custom_venue_name)
-                                                <span class="text-body">{{ $reservation->custom_venue_name }}</span>
-                                                <span class="badge-info ml-2">Custom</span>
                                             @else
                                                 <span class="text-body">{{ $reservation->venue->name }}</span>
                                             @endif
@@ -146,67 +143,105 @@
                                             View Full Details
                                         </a>
 
-                                        @if($reservation->status === 'pending_priest_confirmation')
-                                            <form method="POST" action="{{ route('priest.reservations.confirm', $reservation->reservation_id) }}" class="flex-1">
-                                                @csrf
-                                                <button type="submit"
-                                                        onclick="return confirm('Are you sure you want to confirm your availability for this service?')"
-                                                        class="btn-success w-full justify-center">
-                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                    </svg>
-                                                    Confirm Availability
-                                                </button>
-                                            </form>
+                                        @if(in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved']) &&
+                                            (!$reservation->priest_confirmation || $reservation->priest_confirmation === 'pending'))
+                                            <!-- Action Buttons -->
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                                                <form method="POST" action="{{ route('priest.reservations.confirm', $reservation->reservation_id) }}">
+                                                    @csrf
+                                                    <button type="submit"
+                                                            onclick="return confirm('Are you sure you want to confirm your availability for this service?')"
+                                                            class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center">
+                                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                        </svg>
+                                                        Confirm Availability
+                                                    </button>
+                                                </form>
 
-                                            <button onclick="showDeclineModal{{ $reservation->reservation_id }}()"
-                                                    class="btn-danger flex-1 justify-center">
-                                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                </svg>
-                                                Decline
-                                            </button>
+                                                <button onclick="showDeclineModal{{ $reservation->reservation_id }}()"
+                                                        class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center">
+                                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                    Decline
+                                                </button>
+                                            </div>
                                         @endif
                                     </div>
 
-                                    @if($reservation->status === 'pending_priest_confirmation')
+                                    @if(in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved']) &&
+                                        (!$reservation->priest_confirmation || $reservation->priest_confirmation === 'pending'))
                                         <!-- Decline Modal -->
-                                        <div id="declineModal{{ $reservation->reservation_id }}" style="display: none; position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); z-index: 50; align-items: center; justify-content: center;">
-                                            <div class="card max-w-md w-full mx-4" onclick="event.stopPropagation()">
-                                                <div class="card-header">
-                                                    <h3>Decline Assignment</h3>
+                                        <div id="declineModal{{ $reservation->reservation_id }}"
+                                             class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 items-center justify-center p-4"
+                                             onclick="hideDeclineModal{{ $reservation->reservation_id }}()">
+                                            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full transform transition-all"
+                                                 onclick="event.stopPropagation()">
+                                                <!-- Modal Header -->
+                                                <div class="bg-red-50 dark:bg-red-900/20 px-6 py-4 border-b border-red-100 dark:border-red-800 rounded-t-xl">
+                                                    <div class="flex items-center justify-between">
+                                                        <h3 class="text-lg font-semibold text-red-900 dark:text-red-100 flex items-center">
+                                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                            </svg>
+                                                            Decline Assignment
+                                                        </h3>
+                                                        <button type="button"
+                                                                onclick="hideDeclineModal{{ $reservation->reservation_id }}()"
+                                                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                            </svg>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div class="card-body">
-                                                    <form method="POST" action="{{ route('priest.reservations.decline', $reservation->reservation_id) }}">
-                                                        @csrf
-                                                        <div class="mb-4">
-                                                            <label class="form-label">Reason for declining</label>
-                                                            <textarea name="reason" required rows="3"
-                                                                      class="form-input"
-                                                                      placeholder="e.g., Schedule conflict, already committed to another event..."></textarea>
-                                                        </div>
-                                                        <div class="flex gap-2">
-                                                            <button type="button"
-                                                                    onclick="hideDeclineModal{{ $reservation->reservation_id }}()"
-                                                                    class="btn-secondary flex-1">
-                                                                Cancel
-                                                            </button>
-                                                            <button type="submit"
-                                                                    class="btn-danger flex-1">
-                                                                Decline Assignment
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
+
+                                                <!-- Modal Body -->
+                                                <form method="POST" action="{{ route('priest.reservations.decline', ['reservation_id' => $reservation->reservation_id]) }}" class="p-6">
+                                                    @csrf
+                                                    <div class="mb-6">
+                                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                            Reason for declining <span class="text-red-500">*</span>
+                                                        </label>
+                                                        <textarea name="reason"
+                                                                  required
+                                                                  rows="4"
+                                                                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-all"
+                                                                  placeholder="Please provide a reason for declining (e.g., schedule conflict, prior commitment, health reasons...)"></textarea>
+                                                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                                            This information will be shared with the admin for reassignment.
+                                                        </p>
+                                                    </div>
+
+                                                    <!-- Action Buttons -->
+                                                    <div class="flex gap-3">
+                                                        <button type="button"
+                                                                onclick="hideDeclineModal{{ $reservation->reservation_id }}()"
+                                                                class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors">
+                                                            Cancel
+                                                        </button>
+                                                        <button type="submit"
+                                                                class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-lg hover:shadow-xl transform hover:scale-105">
+                                                            Decline Assignment
+                                                        </button>
+                                                    </div>
+                                                </form>
                                             </div>
                                         </div>
 
                                         <script>
                                             function showDeclineModal{{ $reservation->reservation_id }}() {
-                                                document.getElementById('declineModal{{ $reservation->reservation_id }}').style.display = 'flex';
+                                                const modal = document.getElementById('declineModal{{ $reservation->reservation_id }}');
+                                                modal.classList.remove('hidden');
+                                                modal.classList.add('flex');
+                                                document.body.style.overflow = 'hidden';
                                             }
                                             function hideDeclineModal{{ $reservation->reservation_id }}() {
-                                                document.getElementById('declineModal{{ $reservation->reservation_id }}').style.display = 'none';
+                                                const modal = document.getElementById('declineModal{{ $reservation->reservation_id }}');
+                                                modal.classList.add('hidden');
+                                                modal.classList.remove('flex');
+                                                document.body.style.overflow = 'auto';
                                             }
                                         </script>
                                     @endif

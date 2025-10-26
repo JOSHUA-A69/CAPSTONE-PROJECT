@@ -71,7 +71,7 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation cannot be approved at this time.');
         }
 
-        $remarks = $request->input('remarks', 'Approved by organization adviser');
+        $remarks = $request->input('remarks') ?? 'Approved by organization adviser';
 
         $reservation->update([
             'status' => 'adviser_approved',
@@ -87,7 +87,7 @@ class ReservationController extends Controller
         ]);
 
         // Send notifications to requestor and CREaM admin/staff
-        $this->notificationService->notifyAdviserApproved($reservation, $remarks);
+        $this->notificationService->notifyAdviserApproved($reservation, $remarks ?? '');
 
         return Redirect::back()
             ->with('status', 'reservation-approved')
