@@ -19,8 +19,8 @@ Short, practical instructions to get this Laravel app running on another machine
 
 git clone https://github.com/JOSHUA-A69/CAPSTONE-PROJECT 
 # For Docker + MySQL:
-copy .env.docker.example .env
-# Or copy default and edit DB settings manually (see below)
+# copy .env.docker.example .env
+# Or copy default and edit DB settings manually 
 # copy .env.example .env
 
 2. Start containers and install deps:
