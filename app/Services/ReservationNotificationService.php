@@ -940,7 +940,7 @@ class ReservationNotificationService
     /**
      * Notify all relevant parties that a reservation was rescheduled
      */
-    public function notifyReservationRescheduled(Reservation $reservation, \Carbon\Carbon $oldDate, string $remarks = ''): void
+    public function notifyReservationRescheduled(Reservation $reservation, \Carbon\Carbon $oldDate, ?string $remarks = ''): void
     {
         try {
             $old = $oldDate->format('M d, Y h:i A');
@@ -970,7 +970,7 @@ class ReservationNotificationService
                         'action' => 'rescheduled',
                         'old' => $oldDate->toDateTimeString(),
                         'new' => optional($reservation->schedule_date)?->toDateTimeString(),
-                        'remarks' => $remarks,
+                        'remarks' => $remarks ?? '',
                     ]),
                 ]);
             }

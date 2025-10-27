@@ -226,8 +226,9 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // Notifications
-        $this->notificationService->notifyReservationRescheduled($reservation, $oldDate, $request->input('remarks', ''));
+    // Notifications
+    $remarks = (string) ($request->input('remarks') ?? '');
+    $this->notificationService->notifyReservationRescheduled($reservation, $oldDate, $remarks);
         if ($reservation->officiant_id) {
             // Re-notify priest to confirm
             $this->notificationService->notifyPriestAssigned($reservation);

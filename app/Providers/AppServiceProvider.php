@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Reservation;
+use App\Observers\ReservationObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,6 +33,13 @@ class AppServiceProvider extends ServiceProvider
             }
         } catch (\Throwable $e) {
             Log::warning('Failed to set DB session time_zone: '.$e->getMessage());
+        }
+
+        // Register observers
+        try {
+            Reservation::observe(ReservationObserver::class);
+        } catch (\Throwable $e) {
+            // Non-fatal if models are not ready in some contexts
         }
     }
 }

@@ -208,14 +208,14 @@
                                 <p class="text-gray-500 text-sm">No activity recorded yet.</p>
                             @else
                                 <div class="space-y-4">
-                                    @foreach($reservation->history->sortByDesc('created_at') as $h)
+                                    @foreach($reservation->history->sortByDesc(function($item){ return $item->performed_at ?? $item->created_at; }) as $h)
                                     <div class="flex">
                                         <div class="flex-shrink-0 w-2 bg-blue-500 rounded-full mr-4"></div>
                                         <div class="flex-1 pb-4">
                                             <p class="text-sm font-semibold">{{ ucfirst(str_replace('_', ' ', $h->action)) }}</p>
                                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                                 by {{ $h->performedBy?->full_name ?? $h->performedBy?->email ?? 'System' }}
-                                                • {{ $h->created_at->format('M d, Y h:i A') }}
+                                                • {{ optional($h->performed_at ?? $h->created_at)->format('M d, Y h:i A') ?? '—' }}
                                             </p>
                                             @if($h->remarks)
                                             <p class="text-sm text-gray-700 dark:text-gray-300 mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded">
@@ -510,7 +510,7 @@
                                     @else
                                     <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
                                         <p class="text-sm text-yellow-700 dark:text-yellow-300">
-                                            ⏰ Event scheduled for {{ $reservation->schedule_date->format('M d, Y') }}.
+                                            ⏰ Event scheduled for {{ optional($reservation->schedule_date)->format('M d, Y') ?? 'TBD' }}.
                                             Finalize option will be available after the event date.
                                         </p>
                                     </div>
