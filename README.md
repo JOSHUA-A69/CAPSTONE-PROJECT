@@ -40,17 +40,20 @@ docker compose exec app php artisan storage:link
 
 4. If migrations fail with a SQLite error, ensure your .env is configured for MySQL when using Docker:
 
-env
+```env
 DB_CONNECTION=mysql
 DB_HOST=db
 DB_PORT=3306
 DB_DATABASE=ereligious_db
 DB_USERNAME=laravel
 DB_PASSWORD=laravel
+```
 
 Then rerun:
 
+```powershell
 docker compose exec app php artisan migrate --seed
+```
 
 ## Manual (no Docker) — minimal
 
