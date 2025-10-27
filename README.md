@@ -43,7 +43,7 @@ docker compose exec app php artisan storage:link
 - phpMyAdmin: http://localhost:8080
 
 
-# 4. If migrations fail with a SQLite error, ensure your .env is configured for MySQL when using Docker:
+ 4. If migrations fail with a SQLite error, ensure your .env is configured for MySQL when using Docker:
 
 ```env
 DB_CONNECTION=mysql
@@ -101,13 +101,13 @@ For any extra documentation (PowerShell scripts, expanded dependency file, or do
 docker compose exec app sh -c "npm ci --silent && npm run build --silent"
 ```
 
-# 7. Open the app in your browser:
+ 7. Open the app in your browser:
 
 - Application: http://localhost:8000
 - MailHog (dev SMTP UI): http://localhost:8025 (if Mailhog service is running)
 - phpMyAdmin: http://localhost:8080 (if enabled in compose)
 
-# 8. Helpful commands (stop, restart, logs):
+ 8. Helpful commands (stop, restart, logs):
 
 ```powershell
 # stop and remove containers and network
