@@ -17,28 +17,40 @@ Short, practical instructions to get this Laravel app running on another machine
 
 1. Clone and create env:
 
-```powershell
-git clone <repo-url> eReligiousServices
-cd eReligiousServices
-copy .env.example .env
-```
+git clone https://github.com/JOSHUA-A69/CAPSTONE-PROJECT 
+# For Docker + MySQL:
+copy .env.docker.example .env
+# Or copy default and edit DB settings manually (see below)
+# copy .env.example .env
 
 2. Start containers and install deps:
 
-```powershell
 docker compose up -d --build
 docker compose exec app composer install --no-interaction --prefer-dist
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate --seed
 docker compose exec app sh -c "npm ci --silent && npm run build --silent"
 docker compose exec app php artisan storage:link
-```
 
 3. Open:
 
 - App: http://localhost:8000
 - MailHog: http://localhost:8025
 - phpMyAdmin: http://localhost:8080
+
+4. If migrations fail with a SQLite error, ensure your .env is configured for MySQL when using Docker:
+
+env
+DB_CONNECTION=mysql
+DB_HOST=db
+DB_PORT=3306
+DB_DATABASE=ereligious_db
+DB_USERNAME=laravel
+DB_PASSWORD=laravel
+
+Then rerun:
+
+docker compose exec app php artisan migrate --seed
 
 ## Manual (no Docker) — minimal
 
