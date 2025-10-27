@@ -142,7 +142,3 @@
         </form>
     </div>
 </section>
-            @endif
-        </div>
-    </form>
-</section>

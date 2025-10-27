@@ -37,7 +37,7 @@ class ReservationRequest extends FormRequest
         $rules = [
             'service_id' => ['required', 'integer', Rule::exists('services', 'service_id')],
             'venue_id' => ['required'],
-            'org_id' => ['nullable', 'integer', Rule::exists('organizations', 'org_id')],
+            'org_id' => ['required', 'integer', Rule::exists('organizations', 'org_id')],
             'officiant_id' => ['required', 'integer', Rule::exists('users', 'id')->whereIn('role', ['priest', 'admin'])],
             'schedule_date' => ['required', 'date', 'after:now'],
             'schedule_time' => ['nullable', 'date_format:H:i'],
@@ -63,6 +63,17 @@ class ReservationRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    /**
+     * Custom error messages
+     */
+    public function messages(): array
+    {
+        return [
+            'org_id.required' => 'Please select your organization. This is required so the organization adviser can review your reservation.',
+            'org_id.exists' => 'The selected organization is invalid.',
+        ];
     }
 
     /**

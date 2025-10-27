@@ -101,17 +101,6 @@
                         open = !open;
                         if (open) {
                             loadNotifications();
-                            // Mark all as read on open to stop repeat popups
-                            @if(auth()->user()->role === 'priest')
-                            fetch('{{ route('priest.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
-                            @elseif(auth()->user()->role === 'adviser')
-                            fetch('{{ route('adviser.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
-                            @elseif(auth()->user()->role === 'requestor')
-                            fetch('{{ route('requestor.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
-                            @else
-                            fetch('{{ route('admin.notifications.mark-all-read') }}', {method: 'POST', headers: {'X-CSRF-TOKEN': '{{ csrf_token() }}'}})
-                            @endif
-                                .then(() => { this.count = 0; window.dispatchEvent(new Event('notification-update')); });
                         }
                     " class="relative p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 focus:outline-none">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,6 +127,27 @@
                             <div id="notification-list" class="max-h-[560px] overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900">
                                 <!-- Notifications will be loaded here -->
                                 <div class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">Loading...</div>
+                            </div>
+
+                            <!-- Footer with View All Link -->
+                            <div class="px-6 py-3 bg-gray-100 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+                                @if(auth()->user()->role === 'priest')
+                                <a href="{{ route('priest.notifications.index') }}" class="block text-center text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                    View All Notifications →
+                                </a>
+                                @elseif(auth()->user()->role === 'adviser')
+                                <a href="{{ route('adviser.notifications.index') }}" class="block text-center text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                    View All Notifications →
+                                </a>
+                                @elseif(auth()->user()->role === 'requestor')
+                                <a href="{{ route('requestor.notifications.index') }}" class="block text-center text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                    View All Notifications →
+                                </a>
+                                @else
+                                <a href="{{ route('admin.notifications.index') }}" class="block text-center text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                    View All Notifications →
+                                </a>
+                                @endif
                             </div>
                         </div>
                     </div>

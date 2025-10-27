@@ -15,6 +15,7 @@ use App\Services\CancellationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Log;
 
 class ReservationController extends Controller
 {
@@ -86,19 +87,19 @@ class ReservationController extends Controller
         ]);
 
         // Send notifications to requestor and organization adviser
-        $this->notificationService->notifyReservationSubmitted($reservation);
-
-        // If priest is assigned, also notify the priest
-        if (!empty($data['officiant_id'])) {
-            // TODO: Send notification to priest
-            // $this->notificationService->notifyPriestAssignment($reservation);
+        try {
+            $this->notificationService->notifyReservationSubmitted($reservation);
+            Log::info('Notification sent for reservation: ' . $reservation->reservation_id);
+        } catch (\Exception $e) {
+            Log::error('Failed to send submission notifications: ' . $e->getMessage());
         }
 
-        $message = 'Your reservation request has been submitted and the organization adviser has been notified.';
+        // Note: Priest is NOT notified at submission - only after adviser approves
+        // This follows the workflow: Requestor → Adviser Review → Priest Notification
 
         return Redirect::route('requestor.reservations.index')
-            ->with('status', 'reservation-submitted')
-            ->with('message', $message);
+            ->with('success', 'Reservation Added Successfully!')
+            ->with('message', 'Your reservation request has been submitted and the organization adviser has been notified.');
     }
 
     public function show($reservation_id)

@@ -15,6 +15,44 @@
         </a>
     </div>
 
+    <!-- Enhanced Success Message -->
+    @if(session('success'))
+        <div class="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-l-4 border-green-500 rounded-lg shadow-md overflow-hidden animate-fade-in">
+            <div class="p-4 sm:p-5">
+                <div class="flex items-start gap-4">
+                    <!-- Success Icon -->
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-500 rounded-full flex items-center justify-center animate-scale-in">
+                            <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Success Message Content -->
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg sm:text-xl font-bold text-green-800 dark:text-green-300 mb-1">
+                            {{ session('success') }}
+                        </h3>
+                        @if(session('message'))
+                            <p class="text-sm sm:text-base text-green-700 dark:text-green-400 leading-relaxed">
+                                {{ session('message') }}
+                            </p>
+                        @endif
+                    </div>
+
+                    <!-- Close Button -->
+                    <button type="button" onclick="this.closest('div[class*=&quot;bg-gradient&quot;]').remove()" class="flex-shrink-0 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded p-1" aria-label="Dismiss notification">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Keep existing status message for backward compatibility -->
     @if(session('status'))
         <div class="badge-success flex items-center gap-2 mb-6 p-4">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

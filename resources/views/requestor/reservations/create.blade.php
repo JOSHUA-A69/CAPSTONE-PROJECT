@@ -681,19 +681,20 @@
                 <!-- Requesting Office/Group (full width) -->
                 <td colspan="2">
                     <label>
-                        Requesting Office/Group
+                        Requesting Office/Group <span style="color: red;">*</span>
                         <span class="tooltip help-icon">
                             ?
-                            <span class="tooltiptext">Select your organization if applicable, or leave as "None / Individual" for personal requests</span>
+                            <span class="tooltiptext">Select your organization - required for reservation approval</span>
                         </span>
                     </label>
                     <select
                         name="org_id"
                         id="org_id"
+                        required
                         @if($organizations->isEmpty()) disabled @endif
                         class="@error('org_id') is-invalid @enderror"
                     >
-                        <option value="">-- None / Individual --</option>
+                        <option value="">-- Select Organization --</option>
                         @foreach($organizations as $o)
                             <option value="{{ $o->org_id }}" @if(old('org_id')==$o->org_id) selected @endif>{{ $o->org_name }}</option>
                         @endforeach

@@ -60,9 +60,12 @@ class ReservationNotificationService
         // Email + in-app notification to organization adviser
         if ($reservation->organization && $reservation->organization->adviser) {
             $adviser = $reservation->organization->adviser;
+            Log::info('Notifying adviser: ' . $adviser->first_name . ' ' . $adviser->last_name . ' (ID: ' . $adviser->id . ') for reservation #' . $reservation->reservation_id);
+
             try {
                 if ($adviser->email) {
                     Mail::to($adviser->email)->send(new ReservationSubmitted($reservation));
+                    Log::info('Email sent to adviser: ' . $adviser->email);
                 }
             } catch (\Throwable $e) {
                 Log::warning('Failed to send adviser email on submission: '.$e->getMessage());
@@ -85,9 +88,11 @@ class ReservationNotificationService
                         'action' => 'adviser_review_required',
                     ]);
                 }
-                Notification::create($notificationData);
+                $notification = Notification::create($notificationData);
+                Log::info('In-app notification created for adviser (ID: ' . $notification->id . ')');
             } catch (\Throwable $e) {
-                Log::warning('Failed to create adviser in-app notification: '.$e->getMessage());
+                Log::error('Failed to create adviser in-app notification: '.$e->getMessage());
+                Log::error($e->getTraceAsString());
             }
 
             // SMS to adviser (optional)
@@ -97,6 +102,8 @@ class ReservationNotificationService
                     "New reservation request from {$reservation->user->first_name} {$reservation->user->last_name} for {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . ". Please review in eReligiousServices."
                 );
             }
+        } else {
+            Log::warning('No organization or adviser found for reservation #' . $reservation->reservation_id . ' (org_id: ' . ($reservation->org_id ?? 'NULL') . ')');
         }
     }
 
@@ -117,6 +124,45 @@ class ReservationNotificationService
             if ($admin->email) {
                 Mail::to($admin->email)
                     ->send(new ReservationAdviserApproved($reservation, $remarks));
+            }
+        }
+
+        // Notify assigned priest (if any)
+        if ($reservation->officiant_id && $reservation->officiant) {
+            try {
+                // Email to priest
+                if ($reservation->officiant->email) {
+                    Mail::to($reservation->officiant->email)
+                        ->send(new ReservationPriestAssigned($reservation));
+                }
+
+                // In-app notification to priest
+                $message = "You have been assigned to a new reservation: <strong>{$reservation->service->service_name}</strong> on " . $reservation->schedule_date->format('M d, Y h:i A');
+                $notificationData = [
+                    'user_id' => $reservation->officiant_id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                if (Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'service_name' => $reservation->service->service_name,
+                        'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
+                        'action' => 'priest_assignment',
+                    ]);
+                }
+                Notification::create($notificationData);
+
+                // SMS to priest
+                if ($reservation->officiant->phone) {
+                    $this->sendSMS(
+                        $reservation->officiant->phone,
+                        "New service assignment: {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . ". Please confirm in eReligiousServices."
+                    );
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to notify priest on adviser approval: ' . $e->getMessage());
             }
         }
 
