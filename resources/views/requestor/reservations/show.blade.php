@@ -220,9 +220,10 @@
             <!-- Actions Card (if applicable) -->
             @php
                 $isTerminal = in_array($reservation->status, ['cancelled','rejected','completed']);
-                $isPast = optional($reservation->schedule_date)->isPast();
-                // Allow Requestor to cancel for any non-terminal, future-dated reservation
-                $canCancel = !$isTerminal && !$isPast;
+                $isPast = $reservation->schedule_date ? $reservation->schedule_date->isPast() : false;
+                // Align with controller policy: allow cancellation only if event is >= 7 days away and not terminal
+                $daysUntilEvent = now()->diffInDays($reservation->schedule_date, false);
+                $canCancel = !$isTerminal && !$isPast && $daysUntilEvent >= 7;
             @endphp
 
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -253,6 +254,8 @@
                                 This reservation is already {{ ucfirst($reservation->status) }}. No further actions are available.
                             @elseif($isPast)
                                 This reservation is in the past ({{ optional($reservation->schedule_date)->format('M d, Y g:i A') }}). No further actions are available.
+                            @elseif(isset($daysUntilEvent) && $daysUntilEvent < 7 && $daysUntilEvent >= 0)
+                                You can no longer cancel within 7 days of the event ({{ $daysUntilEvent }} day(s) left).
                             @else
                                 No actions are available at this stage.
                             @endif
