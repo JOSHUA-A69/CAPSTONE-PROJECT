@@ -12,12 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reservations', function (Blueprint $table) {
-            // Add activity name and theme columns that were missing
-            $table->string('activity_name')->nullable()->after('schedule_date')
-                ->comment('Name/title of the spiritual activity or event');
+            // Add columns only if they do not already exist (idempotent / safe re-run)
+            if (!Schema::hasColumn('reservations', 'activity_name')) {
+                $table->string('activity_name')->nullable()->after('schedule_date')
+                    ->comment('Name/title of the spiritual activity or event');
+            }
 
-            $table->text('theme')->nullable()->after('activity_name')
-                ->comment('Theme or spiritual message of the activity');
+            if (!Schema::hasColumn('reservations', 'theme')) {
+                $table->text('theme')->nullable()->after('activity_name')
+                    ->comment('Theme or spiritual message of the activity');
+            }
         });
     }
 
@@ -27,7 +31,13 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('reservations', function (Blueprint $table) {
-            $table->dropColumn(['activity_name', 'theme']);
+            // Drop columns only if they exist
+            if (Schema::hasColumn('reservations', 'activity_name')) {
+                $table->dropColumn('activity_name');
+            }
+            if (Schema::hasColumn('reservations', 'theme')) {
+                $table->dropColumn('theme');
+            }
         });
     }
 };
