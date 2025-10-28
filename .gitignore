@@ -22,6 +22,10 @@ yarn-error.log
 /.vscode
 /.zed
 
+# Local notes (ignore case variations)
+ZzNotes/
+zznotes/
+
 # Local notes folders (ignore both case variants)
 /ZzNotes/
 /zznotes/
