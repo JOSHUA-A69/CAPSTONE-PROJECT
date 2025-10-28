@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Local notes folders (ignore both case variants)
+/ZzNotes/
+/zznotes/
+**/ZzNotes/
+**/zznotes/
