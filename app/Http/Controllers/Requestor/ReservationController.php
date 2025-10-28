@@ -227,7 +227,7 @@ class ReservationController extends Controller
         // Create history record
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'confirmed_by_requestor',
+            'action' => 'requestor_confirmed',
             'remarks' => 'Requestor confirmed availability and reservation details',
             'performed_at' => now(),
         ]);
@@ -271,7 +271,7 @@ class ReservationController extends Controller
         // Create history record
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'declined_by_requestor',
+            'action' => 'cancelled',
             'remarks' => 'Requestor declined reservation after being contacted by staff',
             'performed_at' => now(),
         ]);
@@ -409,7 +409,7 @@ class ReservationController extends Controller
         // Create history record
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'change_requested',
+            'action' => 'updated',
             'remarks' => 'Requestor submitted change request (pending admin approval)',
             'performed_at' => now(),
         ]);

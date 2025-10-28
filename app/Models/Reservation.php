@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @property int $service_id
  * @property int|null $officiant_id
  * @property \Carbon\Carbon $schedule_date
+ * @property string $schedule_time
  * @property string $status
  * @property string $purpose
  * @property string|null $details

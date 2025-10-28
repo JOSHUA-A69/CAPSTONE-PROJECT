@@ -31,7 +31,10 @@ class Message extends Model
     public function getAttachmentUrlAttribute()
     {
         if ($this->attachment_path) {
-            return asset('storage/' . $this->attachment_path);
+            // Add a cache-busting query param based on last update to avoid stale caches
+            $url = asset('storage/' . $this->attachment_path);
+            $version = optional($this->updated_at)->timestamp ?? time();
+            return $url . '?v=' . $version;
         }
         return null;
     }

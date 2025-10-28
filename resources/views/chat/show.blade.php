@@ -539,9 +539,12 @@
                         const response = await fetch(`/chat/messages/${this.otherUserId}`);
                         const data = await response.json();
 
-                        if (data.messages.length > this.messages.length) {
-                            const newMessages = data.messages.slice(this.messages.length);
-                            this.messages.push(...newMessages);
+                        // Determine the last known message ID/time
+                        const lastId = this.messages.length ? this.messages[this.messages.length - 1].id : 0;
+                        const incoming = data.messages.filter(m => m.id > lastId);
+
+                        if (incoming.length) {
+                            this.messages.push(...incoming);
                             this.$nextTick(() => this.scrollToBottom());
                             await this.markAsRead();
                         }

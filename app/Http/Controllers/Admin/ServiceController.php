@@ -9,10 +9,11 @@ use App\Services\ReservationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Admin Service Controller
- * 
+ *
  * Handles admin's own service assignments when they are assigned as a priest
  */
 class ServiceController extends Controller
@@ -91,11 +92,13 @@ class ServiceController extends Controller
 
     /**
      * Confirm admin's availability for a service
+     *
+     * When admin confirms, we skip self-notification but notify requestor and adviser
      */
     public function confirm($reservation_id)
     {
         $reservation = Reservation::findOrFail($reservation_id);
-        
+
         // Verify admin is the assigned priest
         if ($reservation->officiant_id != Auth::id()) {
             return redirect()->back()->with('error', 'You are not assigned to this reservation.');
@@ -112,21 +115,21 @@ class ServiceController extends Controller
             // Update priest confirmation
             $reservation->priest_confirmation = 'confirmed';
             $reservation->priest_confirmed_at = now();
-            
+
             // Update status to confirmed (final step)
             $reservation->status = 'confirmed';
             $reservation->save();
 
-            // Add history record
+            // Add history record (use enum-safe action)
             $reservation->history()->create([
-                'action' => 'Priest Confirmed',
-                'status_before' => 'pending_priest_confirmation',
-                'status_after' => 'confirmed',
                 'performed_by' => Auth::id(),
-                'details' => 'Admin confirmed their availability for this service'
+                'action' => 'priest_confirmed',
+                'remarks' => 'Admin confirmed their own availability for this service',
+                'performed_at' => now(),
             ]);
 
-            // Send notification to requestor (NO notification to admin themselves)
+            // Send notifications (NO self-notification to admin)
+            // Notify requestor
             $this->notificationService->notifyRequestorPriestConfirmed($reservation, Auth::user());
 
             // If there's an adviser, notify them too
@@ -134,24 +137,35 @@ class ServiceController extends Controller
                 $this->notificationService->notifyAdviserPriestConfirmed($reservation, Auth::user());
             }
 
+            // Notify OTHER admin/staff members (the notifyPriestConfirmed method now excludes self)
+            $this->notificationService->notifyPriestConfirmed($reservation, Auth::id());
+
             DB::commit();
 
+            $message = 'Reservation approved successfully. The requestor has been notified.';
+            if (request()->expectsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
             return redirect()->route('admin.services.show', $reservation_id)
-                ->with('success', 'You have successfully confirmed this service assignment.');
+                ->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Admin service confirmation failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to confirm service: ' . $e->getMessage());
         }
     }
 
     /**
      * Decline a service assignment and reassign to another priest
+     *
+     * When admin declines, NO self-notification is sent
+     * Only notify the newly assigned priest, requestor, and adviser
      */
     public function decline(Request $request, $reservation_id)
     {
         $reservation = Reservation::findOrFail($reservation_id);
-        
+
         // Verify admin is the assigned priest
         if ($reservation->officiant_id != Auth::id()) {
             return redirect()->back()->with('error', 'You are not assigned to this reservation.');
@@ -167,7 +181,7 @@ class ServiceController extends Controller
 
         // Verify new priest exists and has priest role
         $newPriest = User::findOrFail($newPriestId);
-        if ($newPriest->role !== 'priest' && $newPriest->role !== 'admin') {
+        if (!in_array($newPriest->role, ['priest', 'admin'])) {
             return redirect()->back()->with('error', 'Selected user is not a priest.');
         }
 
@@ -189,16 +203,16 @@ class ServiceController extends Controller
             $reservation->status = 'pending_priest_confirmation';
             $reservation->save();
 
-            // Add history
+            // Add history (enum-safe action)
             $reservation->history()->create([
-                'action' => 'Admin Declined & Reassigned',
-                'status_before' => $reservation->status,
-                'status_after' => 'pending_priest_confirmation',
                 'performed_by' => Auth::id(),
-                'details' => "Admin declined and assigned to {$newPriest->full_name}. Reason: {$reason}"
+                'action' => 'priest_reassigned',
+                'remarks' => "Admin declined and assigned to {$newPriest->full_name}. Reason: {$reason}",
+                'performed_at' => now(),
             ]);
 
-            // Send notification to NEW priest (NO notification to admin)
+            // Send notifications (NO self-notification to admin)
+            // Notify NEW priest about assignment
             $this->notificationService->notifyPriestAssignment($reservation, $newPriest);
 
             // Notify requestor about priest change
@@ -211,16 +225,26 @@ class ServiceController extends Controller
 
             DB::commit();
 
+            Log::info('Admin declined and reassigned service', [
+                'admin_id' => Auth::id(),
+                'reservation_id' => $reservation_id,
+                'new_priest_id' => $newPriestId,
+                'reason' => $reason,
+            ]);
+
+            $message = 'Reservation rejected successfully. The requestor has been notified.';
+            if (request()->expectsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
             return redirect()->route('admin.services.index')
-                ->with('success', "Service declined and reassigned to {$newPriest->full_name}.");
+                ->with('success', $message);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Admin service decline failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to decline and reassign: ' . $e->getMessage());
         }
-    }
-
-    /**
+    }    /**
      * Show calendar view of admin's services
      */
     public function calendar()

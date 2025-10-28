@@ -548,6 +548,8 @@ class ReservationNotificationService
     /**
      * Send notification when priest confirms their assignment
      * Notifies admin/staff that priest has confirmed availability
+     *
+     * Note: If priest IS an admin, we skip notifying them to avoid self-notification
      */
     public function notifyPriestConfirmed(Reservation $reservation, $priestId): void
     {
@@ -556,9 +558,22 @@ class ReservationNotificationService
         $priestName = $priest ? 'Fr. ' . $priest->first_name . ' ' . $priest->last_name : 'A priest';
         $requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
 
-        // Email to CREaM Admin/Staff
-        $admins = User::whereIn('role', ['admin', 'staff'])->get();
+        // Get admins/staff but EXCLUDE the priest if they are admin
+        $admins = User::whereIn('role', ['admin', 'staff'])
+            ->where('id', '!=', $priestId) // Skip self-notification
+            ->get();
+
+        // Only proceed if there are OTHER admins to notify
+        if ($admins->isEmpty()) {
+            Log::info('No admins to notify (priest is admin themselves)', [
+                'priest_id' => $priestId,
+                'reservation_id' => $reservation->reservation_id,
+            ]);
+            return;
+        }
+
         foreach ($admins as $admin) {
+            // Email notification
             if ($admin->email) {
                 // Create simple email notification
                 Mail::raw(
@@ -859,4 +874,286 @@ class ReservationNotificationService
 
         return '+' . $phone;
     }
+
+    /**
+     * Send notification to requestor when priest confirms
+     * (Simplified version for priest confirmation)
+     */
+    public function notifyRequestorPriestConfirmed(Reservation $reservation, User $priest): void
+    {
+        $priestName = 'Fr. ' . $priest->first_name . ' ' . $priest->last_name;
+
+        // Email to requestor
+        if ($reservation->user->email) {
+            Mail::raw(
+                "Good news!\n\n" .
+                "{$priestName} has confirmed their availability for your reservation:\n\n" .
+                "Service: {$reservation->service->service_name}\n" .
+                "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
+                "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n\n" .
+                "Your reservation is now confirmed! We look forward to serving you.\n\n" .
+                "---\n" .
+                "CREaM - eReligiousServices Management System\n" .
+                "Holy Name University",
+                function ($message) use ($reservation, $priestName) {
+                    $message->to($reservation->user->email)
+                        ->subject("✓ Priest Confirmed - Your Reservation #{$reservation->reservation_id}");
+                }
+            );
+        }
+
+        // In-app notification
+        try {
+            $message = "<strong>{$priestName}</strong> has confirmed your reservation for <strong>{$reservation->service->service_name}</strong>";
+
+            $notificationData = [
+                'user_id' => $reservation->user_id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => 'Approved',
+                'sent_at' => now(),
+            ];
+
+            if (Schema::hasColumn('notifications', 'data')) {
+                $notificationData['data'] = json_encode([
+                    'priest_name' => $priest->first_name . ' ' . $priest->last_name,
+                    'service_name' => $reservation->service->service_name,
+                    'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
+                    'action' => 'priest_confirmed',
+                ]);
+            }
+
+            Notification::create($notificationData);
+        } catch (\Exception $e) {
+            Log::error('Failed to create requestor confirmation notification: ' . $e->getMessage());
+        }
+
+        // SMS to requestor
+        if ($reservation->user->phone) {
+            $this->sendSMS(
+                $reservation->user->phone,
+                "{$priestName} confirmed your {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A')
+            );
+        }
+    }
+
+    /**
+     * Send notification to adviser when priest confirms
+     */
+    public function notifyAdviserPriestConfirmed(Reservation $reservation, User $priest): void
+    {
+        if (!$reservation->organization || !$reservation->organization->adviser) {
+            return;
+        }
+
+        $adviser = $reservation->organization->adviser;
+        $priestName = 'Fr. ' . $priest->first_name . ' ' . $priest->last_name;
+
+        // Email to adviser
+        if ($adviser->email) {
+            Mail::raw(
+                "Hello,\n\n" .
+                "{$priestName} has confirmed availability for a reservation from your organization:\n\n" .
+                "Organization: {$reservation->organization->org_name}\n" .
+                "Service: {$reservation->service->service_name}\n" .
+                "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
+                "Requestor: {$reservation->user->first_name} {$reservation->user->last_name}\n\n" .
+                "The reservation is now confirmed.\n\n" .
+                "---\n" .
+                "CREaM - eReligiousServices Management System\n" .
+                "Holy Name University",
+                function ($message) use ($adviser, $reservation, $priestName) {
+                    $message->to($adviser->email)
+                        ->subject("✓ {$priestName} Confirmed - Reservation #{$reservation->reservation_id}");
+                }
+            );
+        }
+
+        // In-app notification
+        try {
+            $message = "<strong>{$priestName}</strong> confirmed the reservation from <strong>{$reservation->organization->org_name}</strong>";
+
+            $notificationData = [
+                'user_id' => $adviser->id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => 'Update',
+                'sent_at' => now(),
+            ];
+
+            if (Schema::hasColumn('notifications', 'data')) {
+                $notificationData['data'] = json_encode([
+                    'priest_name' => $priest->first_name . ' ' . $priest->last_name,
+                    'organization' => $reservation->organization->org_name,
+                    'service_name' => $reservation->service->service_name,
+                    'action' => 'priest_confirmed',
+                ]);
+            }
+
+            Notification::create($notificationData);
+        } catch (\Exception $e) {
+            Log::error('Failed to create adviser confirmation notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send notification to requestor when priest is reassigned
+     */
+    public function notifyRequestorPriestReassigned(Reservation $reservation, User $oldPriest, User $newPriest): void
+    {
+        $oldPriestName = 'Fr. ' . $oldPriest->first_name . ' ' . $oldPriest->last_name;
+        $newPriestName = 'Fr. ' . $newPriest->first_name . ' ' . $newPriest->last_name;
+
+        // Email to requestor
+        if ($reservation->user->email) {
+            Mail::raw(
+                "Hello,\n\n" .
+                "There has been a change in priest assignment for your reservation:\n\n" .
+                "Service: {$reservation->service->service_name}\n" .
+                "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n\n" .
+                "Previous Priest: {$oldPriestName}\n" .
+                "New Priest: {$newPriestName}\n\n" .
+                "The new priest will confirm their availability soon.\n\n" .
+                "---\n" .
+                "CREaM - eReligiousServices Management System\n" .
+                "Holy Name University",
+                function ($message) use ($reservation) {
+                    $message->to($reservation->user->email)
+                        ->subject("Priest Reassignment - Reservation #{$reservation->reservation_id}");
+                }
+            );
+        }
+
+        // In-app notification
+        try {
+            $message = "Priest reassigned: <strong>{$newPriestName}</strong> will now handle your <strong>{$reservation->service->service_name}</strong> reservation";
+
+            $notificationData = [
+                'user_id' => $reservation->user_id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => 'Update',
+                'sent_at' => now(),
+            ];
+
+            if (Schema::hasColumn('notifications', 'data')) {
+                $notificationData['data'] = json_encode([
+                    'old_priest' => $oldPriest->first_name . ' ' . $oldPriest->last_name,
+                    'new_priest' => $newPriest->first_name . ' ' . $newPriest->last_name,
+                    'action' => 'priest_reassigned',
+                ]);
+            }
+
+            Notification::create($notificationData);
+        } catch (\Exception $e) {
+            Log::error('Failed to create requestor reassignment notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send notification to adviser when priest is reassigned
+     */
+    public function notifyAdviserPriestReassigned(Reservation $reservation, User $oldPriest, User $newPriest): void
+    {
+        if (!$reservation->organization || !$reservation->organization->adviser) {
+            return;
+        }
+
+        $adviser = $reservation->organization->adviser;
+        $oldPriestName = 'Fr. ' . $oldPriest->first_name . ' ' . $oldPriest->last_name;
+        $newPriestName = 'Fr. ' . $newPriest->first_name . ' ' . $newPriest->last_name;
+
+        // In-app notification
+        try {
+            $message = "Priest reassigned from <strong>{$oldPriestName}</strong> to <strong>{$newPriestName}</strong> for {$reservation->organization->org_name} reservation";
+
+            $notificationData = [
+                'user_id' => $adviser->id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => 'Update',
+                'sent_at' => now(),
+            ];
+
+            if (Schema::hasColumn('notifications', 'data')) {
+                $notificationData['data'] = json_encode([
+                    'old_priest' => $oldPriest->first_name . ' ' . $oldPriest->last_name,
+                    'new_priest' => $newPriest->first_name . ' ' . $newPriest->last_name,
+                    'organization' => $reservation->organization->org_name,
+                    'action' => 'priest_reassigned',
+                ]);
+            }
+
+            Notification::create($notificationData);
+        } catch (\Exception $e) {
+            Log::error('Failed to create adviser reassignment notification: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send notification to new priest about assignment
+     * (Wrapper for notifyPriestAssigned but includes logging)
+     */
+    public function notifyPriestAssignment(Reservation $reservation, User $priest): void
+    {
+        $priestName = 'Fr. ' . $priest->first_name . ' ' . $priest->last_name;
+
+        // Email to priest
+        if ($priest->email) {
+            Mail::raw(
+                "Hello {$priestName},\n\n" .
+                "You have been assigned to officiate a service:\n\n" .
+                "Service: {$reservation->service->service_name}\n" .
+                "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
+                "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n" .
+                "Requestor: {$reservation->user->first_name} {$reservation->user->last_name}\n\n" .
+                "Please log in to eReligiousServices to confirm your availability.\n\n" .
+                "---\n" .
+                "CREaM - eReligiousServices Management System\n" .
+                "Holy Name University",
+                function ($message) use ($priest, $reservation) {
+                    $message->to($priest->email)
+                        ->subject("New Service Assignment - Reservation #{$reservation->reservation_id}");
+                }
+            );
+        }
+
+        // In-app notification
+        try {
+            $message = "You have been assigned to <strong>{$reservation->service->service_name}</strong> on " . $reservation->schedule_date->format('M d, Y h:i A');
+
+            $notificationData = [
+                'user_id' => $priest->id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => 'Assignment',
+                'sent_at' => now(),
+            ];
+
+            if (Schema::hasColumn('notifications', 'data')) {
+                $notificationData['data'] = json_encode([
+                    'service_name' => $reservation->service->service_name,
+                    'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
+                    'action' => 'priest_assignment',
+                ]);
+            }
+
+            Notification::create($notificationData);
+            Log::info('Priest assignment notification created', [
+                'priest_id' => $priest->id,
+                'reservation_id' => $reservation->reservation_id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create priest assignment notification: ' . $e->getMessage());
+        }
+
+        // SMS to priest
+        if ($priest->phone) {
+            $this->sendSMS(
+                $priest->phone,
+                "New service assignment: {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . ". Please confirm in eReligiousServices."
+            );
+        }
+    }
 }
+

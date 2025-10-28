@@ -148,7 +148,7 @@ class ReservationController extends Controller
         $remarks = $request->input('remarks', $isReassignment ? 'Priest reassigned after decline' : 'Priest assigned by admin');
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => $isReassignment ? 'priest_reassigned' : 'priest_assigned',
+            'action' => $isReassignment ? 'priest_reassigned' : 'admin_approved',
             'remarks' => $remarks . ' - Assigned to: ' . $priest->full_name,
             'performed_at' => now(),
         ]);
@@ -156,9 +156,13 @@ class ReservationController extends Controller
         // Send notifications to priest and requestor
         $this->notificationService->notifyPriestAssigned($reservation);
 
+        $message = 'Reservation approved successfully. The requestor has been notified.';
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
         return Redirect::back()
             ->with('status', 'priest-assigned')
-            ->with('message', 'Priest assigned successfully. Awaiting priest confirmation.');
+            ->with('message', $message);
     }
 
     /**
@@ -193,9 +197,13 @@ class ReservationController extends Controller
         // Send notifications
         $this->notificationService->notifyAdviserRejected($reservation, $reason);
 
+        $message = 'Reservation rejected successfully. The requestor has been notified.';
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
         return Redirect::back()
             ->with('status', 'reservation-rejected')
-            ->with('message', 'Reservation rejected. Requestor has been notified.');
+            ->with('message', $message);
     }
 
     /**

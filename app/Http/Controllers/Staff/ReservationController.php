@@ -194,7 +194,7 @@ class ReservationController extends Controller
 
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'marked_not_available',
+            'action' => 'rejected',
             'remarks' => 'Marked as not available by staff: ' . $reason,
             'performed_at' => now(),
         ]);
@@ -215,7 +215,7 @@ class ReservationController extends Controller
 
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'completed',
+            'action' => 'status_updated',
             'remarks' => $request->input('remarks', 'Reservation finalized by staff after successful event'),
             'performed_at' => now(),
         ]);
@@ -268,7 +268,7 @@ class ReservationController extends Controller
         $remarks = $request->input('remarks', 'Priest assigned by staff');
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'priest_assigned',
+            'action' => 'status_updated',
             'remarks' => $remarks . ' - Assigned to: ' . $priest->full_name,
             'performed_at' => now(),
         ]);
