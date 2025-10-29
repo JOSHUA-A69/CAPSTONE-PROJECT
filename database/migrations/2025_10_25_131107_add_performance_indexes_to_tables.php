@@ -41,32 +41,32 @@ return new class extends Migration
         // Reservations table indexes
         Schema::table('reservations', function (Blueprint $table) {
             // Index for status queries (frequently filtered)
-            if (!Schema::hasColumn('reservations', 'status') || !$this->indexExists('reservations', 'idx_reservations_status')) {
+            if (Schema::hasColumn('reservations', 'status') && !$this->indexExists('reservations', 'idx_reservations_status')) {
                 $table->index('status', 'idx_reservations_status');
             }
 
             // Index for user lookups
-            if (!Schema::hasColumn('reservations', 'user_id') || !$this->indexExists('reservations', 'idx_reservations_user_id')) {
+            if (Schema::hasColumn('reservations', 'user_id') && !$this->indexExists('reservations', 'idx_reservations_user_id')) {
                 $table->index('user_id', 'idx_reservations_user_id');
             }
 
             // Index for priest/officiant lookups
-            if (!Schema::hasColumn('reservations', 'officiant_id') || !$this->indexExists('reservations', 'idx_reservations_officiant_id')) {
+            if (Schema::hasColumn('reservations', 'officiant_id') && !$this->indexExists('reservations', 'idx_reservations_officiant_id')) {
                 $table->index('officiant_id', 'idx_reservations_officiant_id');
             }
 
             // Index for organization lookups
-            if (!Schema::hasColumn('reservations', 'org_id') || !$this->indexExists('reservations', 'idx_reservations_org_id')) {
+            if (Schema::hasColumn('reservations', 'org_id') && !$this->indexExists('reservations', 'idx_reservations_org_id')) {
                 $table->index('org_id', 'idx_reservations_org_id');
             }
 
             // Index for schedule date queries (date range searches)
-            if (!Schema::hasColumn('reservations', 'schedule_date') || !$this->indexExists('reservations', 'idx_reservations_schedule_date')) {
+            if (Schema::hasColumn('reservations', 'schedule_date') && !$this->indexExists('reservations', 'idx_reservations_schedule_date')) {
                 $table->index('schedule_date', 'idx_reservations_schedule_date');
             }
 
             // Composite index for common queries
-            if (!Schema::hasColumn('reservations', 'status') || !Schema::hasColumn('reservations', 'schedule_date') || !$this->indexExists('reservations', 'idx_reservations_status_date')) {
+            if (Schema::hasColumn('reservations', 'status') && Schema::hasColumn('reservations', 'schedule_date') && !$this->indexExists('reservations', 'idx_reservations_status_date')) {
                 $table->index(['status', 'schedule_date'], 'idx_reservations_status_date');
             }
         });
@@ -92,7 +92,7 @@ return new class extends Migration
         // Organizations table indexes
         Schema::table('organizations', function (Blueprint $table) {
             // Index for adviser lookups
-            if (!Schema::hasColumn('organizations', 'adviser_id') || !$this->indexExists('organizations', 'idx_organizations_adviser_id')) {
+            if (Schema::hasColumn('organizations', 'adviser_id') && !$this->indexExists('organizations', 'idx_organizations_adviser_id')) {
                 $table->index('adviser_id', 'idx_organizations_adviser_id');
             }
         });
@@ -100,12 +100,12 @@ return new class extends Migration
         // Notifications table indexes
         Schema::table('notifications', function (Blueprint $table) {
             // Index for user notifications
-            if (!Schema::hasColumn('notifications', 'user_id') || !$this->indexExists('notifications', 'idx_notifications_user_id')) {
+            if (Schema::hasColumn('notifications', 'user_id') && !$this->indexExists('notifications', 'idx_notifications_user_id')) {
                 $table->index('user_id', 'idx_notifications_user_id');
             }
 
             // Index for read_at (used to determine unread when NULL)
-            if (!Schema::hasColumn('notifications', 'read_at') || !$this->indexExists('notifications', 'idx_notifications_read_at')) {
+            if (Schema::hasColumn('notifications', 'read_at') && !$this->indexExists('notifications', 'idx_notifications_read_at')) {
                 $table->index('read_at', 'idx_notifications_read_at');
             }
 
@@ -115,7 +115,7 @@ return new class extends Migration
             }
 
             // Index for created_at (for ordering)
-            if (!Schema::hasColumn('notifications', 'created_at') || !$this->indexExists('notifications', 'idx_notifications_created_at')) {
+            if (Schema::hasColumn('notifications', 'created_at') && !$this->indexExists('notifications', 'idx_notifications_created_at')) {
                 $table->index('created_at', 'idx_notifications_created_at');
             }
         });
@@ -123,12 +123,12 @@ return new class extends Migration
         // Chat messages table indexes
         Schema::table('chat_messages', function (Blueprint $table) {
             // Index for sender lookups
-            if (!Schema::hasColumn('chat_messages', 'sender_id') || !$this->indexExists('chat_messages', 'idx_chat_messages_sender_id')) {
+            if (Schema::hasColumn('chat_messages', 'sender_id') && !$this->indexExists('chat_messages', 'idx_chat_messages_sender_id')) {
                 $table->index('sender_id', 'idx_chat_messages_sender_id');
             }
 
             // Index for timestamp ordering
-            if (!Schema::hasColumn('chat_messages', 'created_at') || !$this->indexExists('chat_messages', 'idx_chat_messages_created_at')) {
+            if (Schema::hasColumn('chat_messages', 'created_at') && !$this->indexExists('chat_messages', 'idx_chat_messages_created_at')) {
                 $table->index('created_at', 'idx_chat_messages_created_at');
             }
         });
@@ -159,45 +159,65 @@ return new class extends Migration
     {
         // Reservations table
         Schema::table('reservations', function (Blueprint $table) {
-            $table->dropIndex('idx_reservations_status');
-            $table->dropIndex('idx_reservations_user_id');
-            $table->dropIndex('idx_reservations_officiant_id');
-            $table->dropIndex('idx_reservations_org_id');
-            $table->dropIndex('idx_reservations_schedule_date');
-            $table->dropIndex('idx_reservations_status_date');
+            foreach ([
+                'idx_reservations_status',
+                'idx_reservations_user_id',
+                'idx_reservations_officiant_id',
+                'idx_reservations_org_id',
+                'idx_reservations_schedule_date',
+                'idx_reservations_status_date',
+            ] as $index) {
+                try { $table->dropIndex($index); } catch (\Throwable $e) {}
+            }
         });
 
         // Users table
         Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex('idx_users_role');
-            $table->dropIndex('idx_users_status');
-            $table->dropIndex('idx_users_role_status');
+            foreach ([
+                'idx_users_role',
+                'idx_users_status',
+                'idx_users_role_status',
+            ] as $index) {
+                try { $table->dropIndex($index); } catch (\Throwable $e) {}
+            }
         });
 
         // Organizations table
         Schema::table('organizations', function (Blueprint $table) {
-            $table->dropIndex('idx_organizations_adviser_id');
+            try { $table->dropIndex('idx_organizations_adviser_id'); } catch (\Throwable $e) {}
         });
 
         // Notifications table
         Schema::table('notifications', function (Blueprint $table) {
-            $table->dropIndex('idx_notifications_user_id');
-            $table->dropIndex('idx_notifications_read_at');
-            $table->dropIndex('idx_notifications_user_read_at');
-            $table->dropIndex('idx_notifications_created_at');
+            foreach ([
+                'idx_notifications_user_id',
+                'idx_notifications_read_at',
+                'idx_notifications_user_read_at',
+                'idx_notifications_created_at',
+            ] as $index) {
+                try { $table->dropIndex($index); } catch (\Throwable $e) {}
+            }
         });
 
         // Chat messages table
         Schema::table('chat_messages', function (Blueprint $table) {
-            $table->dropIndex('idx_chat_messages_sender_id');
-            $table->dropIndex('idx_chat_messages_created_at');
+            foreach ([
+                'idx_chat_messages_sender_id',
+                'idx_chat_messages_created_at',
+            ] as $index) {
+                try { $table->dropIndex($index); } catch (\Throwable $e) {}
+            }
         });
 
         // Reservation history table
         Schema::table('reservation_history', function (Blueprint $table) {
-            $table->dropIndex('idx_reservation_history_res_id');
-            $table->dropIndex('idx_reservation_history_performed_by');
-            $table->dropIndex('idx_reservation_history_created_at');
+            foreach ([
+                'idx_reservation_history_res_id',
+                'idx_reservation_history_performed_by',
+                'idx_reservation_history_created_at',
+            ] as $index) {
+                try { $table->dropIndex($index); } catch (\Throwable $e) {}
+            }
         });
     }
 };
