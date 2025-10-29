@@ -35,7 +35,7 @@ class NotificationController extends Controller
     {
         $notifications = Notification::where('user_id', Auth::id())
             ->unread()
-            ->with('reservation')
+            ->with(['reservation.priest'])
             ->orderBy('sent_at', 'desc')
             ->limit(5)
             ->get();
@@ -58,7 +58,17 @@ class NotificationController extends Controller
                 if (is_string($data)) {
                     $data = json_decode($data, true);
                 }
-                $priestName = $data['priest_name'] ?? 'Unknown';
+                
+                // Get priest from reservation or data
+                $priest = null;
+                $priestId = $data['priest_id'] ?? null;
+                if ($priestId) {
+                    $priest = \App\Models\User::find($priestId);
+                } elseif ($notification->reservation && $notification->reservation->priest) {
+                    $priest = $notification->reservation->priest;
+                }
+                
+                $priestName = $data['priest_name'] ?? ($priest ? $priest->full_name : 'Unknown');
                 $timeAgo = $notification->sent_at->diffForHumans();
 
                 // Generate avatar initials
@@ -87,16 +97,21 @@ class NotificationController extends Controller
                 $html .= '<a href="' . $url . '" class="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">';
                 $html .= '<div class="flex items-start gap-4">';
 
-                // Avatar
+                // Avatar - Show profile picture if available
                 $html .= '<div class="flex-shrink-0">';
-                $html .= '<div class="w-11 h-11 rounded-full ' . $avatarColor . ' flex items-center justify-center text-white font-semibold text-sm">';
-                $html .= $initials;
-                $html .= '</div>';
+                if ($priest && $priest->profile_picture) {
+                    $profilePicUrl = asset('storage/' . $priest->profile_picture);
+                    $html .= '<img src="' . $profilePicUrl . '" alt="' . e($priestName) . '" class="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-sm">';
+                } else {
+                    $html .= '<div class="w-11 h-11 rounded-full ' . $avatarColor . ' flex items-center justify-center text-white font-semibold text-sm">';
+                    $html .= $initials;
+                    $html .= '</div>';
+                }
                 $html .= '</div>';
 
                 // Content
                 $html .= '<div class="flex-1 min-w-0">';
-                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug truncate">'
+                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">'
                     . $notification->message
                     . ' <span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500 dark:text-gray-400">'
                     . $timeAgo

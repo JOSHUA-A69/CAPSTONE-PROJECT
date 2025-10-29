@@ -13,80 +13,42 @@ return new class extends Migration
     {
         // Reservations table indexes
         Schema::table('reservations', function (Blueprint $table) {
-            // Index for status queries (frequently filtered)
-            $table->index('status', 'idx_reservations_status');
-
-            // Index for user lookups
-            $table->index('user_id', 'idx_reservations_user_id');
-
-            // Index for priest/officiant lookups
-            $table->index('officiant_id', 'idx_reservations_officiant_id');
-
-            // Index for organization lookups
-            $table->index('org_id', 'idx_reservations_org_id');
-
-            // Index for schedule date queries (date range searches)
-            $table->index('schedule_date', 'idx_reservations_schedule_date');
-
-            // Composite index for common queries
-            $table->index(['status', 'schedule_date'], 'idx_reservations_status_date');
+            try { $table->index('status', 'idx_reservations_status'); } catch (\Exception $e) {}
+            try { $table->index('user_id', 'idx_reservations_user_id'); } catch (\Exception $e) {}
+            try { $table->index('officiant_id', 'idx_reservations_officiant_id'); } catch (\Exception $e) {}
+            try { $table->index('org_id', 'idx_reservations_org_id'); } catch (\Exception $e) {}
+            try { $table->index('schedule_date', 'idx_reservations_schedule_date'); } catch (\Exception $e) {}
+            try { $table->index(['status', 'schedule_date'], 'idx_reservations_status_date'); } catch (\Exception $e) {}
         });
 
         // Users table indexes
         Schema::table('users', function (Blueprint $table) {
-            // Index for role-based queries
-            $table->index('role', 'idx_users_role');
-
-            // Index for account status
-            $table->index('account_status', 'idx_users_account_status');
-
-            // Composite index for active users by role
-            $table->index(['role', 'account_status'], 'idx_users_role_status');
+            try { $table->index('role', 'idx_users_role'); } catch (\Exception $e) {}
+            try { $table->index('account_status', 'idx_users_account_status'); } catch (\Exception $e) {}
+            try { $table->index(['role', 'account_status'], 'idx_users_role_status'); } catch (\Exception $e) {}
         });
 
         // Organizations table indexes
         Schema::table('organizations', function (Blueprint $table) {
-            // Index for adviser lookups
-            $table->index('adviser_id', 'idx_organizations_adviser_id');
+            try { $table->index('adviser_id', 'idx_organizations_adviser_id'); } catch (\Exception $e) {}
         });
 
         // Notifications table indexes
         Schema::table('notifications', function (Blueprint $table) {
-            // Index for user notifications
-            $table->index('user_id', 'idx_notifications_user_id');
-
-            // Index for unread notifications
-            $table->index('is_read', 'idx_notifications_is_read');
-
-            // Composite index for user's unread notifications
-            $table->index(['user_id', 'is_read'], 'idx_notifications_user_unread');
-
-            // Index for created_at (for ordering)
-            $table->index('created_at', 'idx_notifications_created_at');
+            try { $table->index('user_id', 'idx_notifications_user_id'); } catch (\Exception $e) {}
+            try { $table->index('is_read', 'idx_notifications_is_read'); } catch (\Exception $e) {}
+            try { $table->index(['user_id', 'is_read'], 'idx_notifications_user_unread'); } catch (\Exception $e) {}
+            try { $table->index('created_at', 'idx_notifications_created_at'); } catch (\Exception $e) {}
         });
 
-        // Chat messages table indexes
-        Schema::table('chat_messages', function (Blueprint $table) {
-            // Index for conversation lookups
-            $table->index('chat_conversation_id', 'idx_chat_messages_conversation_id');
-
-            // Index for sender lookups
-            $table->index('sender_id', 'idx_chat_messages_sender_id');
-
-            // Index for timestamp ordering
-            $table->index('created_at', 'idx_chat_messages_created_at');
-        });
+        // Note: chat_messages table removed - using 'messages' table instead
+        // Messages table already has indexes in its creation migration
 
         // Reservation history table indexes
         Schema::table('reservation_history', function (Blueprint $table) {
-            // Index for reservation lookups
-            $table->index('reservation_id', 'idx_reservation_history_res_id');
-
-            // Index for user activity
-            $table->index('performed_by', 'idx_reservation_history_performed_by');
-
-            // Index for timestamp
-            $table->index('created_at', 'idx_reservation_history_created_at');
+            try { $table->index('reservation_id', 'idx_reservation_history_res_id'); } catch (\Exception $e) {}
+            try { $table->index('performed_by', 'idx_reservation_history_performed_by'); } catch (\Exception $e) {}
+            try { $table->index('created_at', 'idx_reservation_history_created_at'); } catch (\Exception $e) {}
         });
     }
 
@@ -125,12 +87,7 @@ return new class extends Migration
             $table->dropIndex('idx_notifications_created_at');
         });
 
-        // Chat messages table
-        Schema::table('chat_messages', function (Blueprint $table) {
-            $table->dropIndex('idx_chat_messages_conversation_id');
-            $table->dropIndex('idx_chat_messages_sender_id');
-            $table->dropIndex('idx_chat_messages_created_at');
-        });
+        // Note: chat_messages table removed - no indexes to drop
 
         // Reservation history table
         Schema::table('reservation_history', function (Blueprint $table) {

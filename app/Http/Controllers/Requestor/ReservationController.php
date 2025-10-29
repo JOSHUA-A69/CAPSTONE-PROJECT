@@ -31,14 +31,29 @@ class ReservationController extends Controller
         $this->cancellationService = $cancellationService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $reservations = Reservation::with(['service', 'venue', 'organization', 'officiant'])
-            ->where('user_id', Auth::id())
-            ->orderByDesc('created_at')
-            ->paginate(15);
+        $query = Reservation::with(['service', 'venue', 'organization', 'officiant'])
+            ->where('user_id', Auth::id());
 
-        return view('requestor.reservations.index', compact('reservations'));
+        // Apply status filter if provided
+        $statusFilter = $request->get('status');
+        
+        if ($statusFilter === 'pending') {
+            // Show pending and adviser_approved (waiting for admin approval)
+            $query->whereIn('status', ['pending', 'adviser_approved']);
+        } elseif ($statusFilter === 'approved') {
+            // Show admin_approved, approved, and confirmed (admin has given final approval)
+            $query->whereIn('status', ['admin_approved', 'approved', 'confirmed']);
+        } elseif ($statusFilter === 'upcoming') {
+            // Show upcoming approved reservations
+            $query->whereIn('status', ['admin_approved', 'approved', 'confirmed'])
+                  ->where('schedule_date', '>=', now());
+        }
+
+        $reservations = $query->orderByDesc('created_at')->paginate(15);
+
+        return view('requestor.reservations.index', compact('reservations', 'statusFilter'));
     }
 
     public function create()
@@ -61,8 +76,7 @@ class ReservationController extends Controller
         $data = $request->validated();
         $data['user_id'] = Auth::id();
 
-        // Always start at adviser approval so advisers can approve/reject
-        // Officiant selection may be provided but priest is not notified yet.
+        // Always start at pending status for adviser approval
         $data['status'] = 'pending';
         $data['adviser_notified_at'] = now(); // Adviser is notified immediately (email + in-app)
 
@@ -76,17 +90,34 @@ class ReservationController extends Controller
             $data['custom_venue_name'] = null;
         }
 
+        // Handle priest selection based on type
+        if ($data['priest_selection_type'] === 'any_available') {
+            // Remove officiant_id - admin will assign later
+            $data['officiant_id'] = null;
+        } elseif ($data['priest_selection_type'] === 'external') {
+            // Remove officiant_id for external priest
+            $data['officiant_id'] = null;
+        }
+        // For 'specific' type, officiant_id is already in the data from validation
+
         $reservation = Reservation::create($data);
 
-        // Create history record
+        // Create history record with appropriate message
+        $historyRemarks = 'Reservation request submitted by requestor - pending adviser review';
+        if ($data['priest_selection_type'] === 'any_available') {
+            $historyRemarks .= ' (Admin will assign priest)';
+        } elseif ($data['priest_selection_type'] === 'external') {
+            $historyRemarks .= ' (External priest: ' . ($data['external_priest_name'] ?? 'N/A') . ')';
+        }
+
         $reservation->history()->create([
             'performed_by' => Auth::id(),
             'action' => 'submitted',
-            'remarks' => 'Reservation request submitted by requestor - pending adviser review',
+            'remarks' => $historyRemarks,
             'performed_at' => now(),
         ]);
 
-        // Send notifications to requestor and organization adviser
+        // Send notifications based on priest selection type
         try {
             $this->notificationService->notifyReservationSubmitted($reservation);
             Log::info('Notification sent for reservation: ' . $reservation->reservation_id);
@@ -94,12 +125,19 @@ class ReservationController extends Controller
             Log::error('Failed to send submission notifications: ' . $e->getMessage());
         }
 
-        // Note: Priest is NOT notified at submission - only after adviser approves
-        // This follows the workflow: Requestor → Adviser Review → Priest Notification
+        // Set success message based on selection type
+        $message = 'Reservation submitted successfully. ';
+        if ($data['priest_selection_type'] === 'specific') {
+            $message .= 'The adviser and priest have been notified for review.';
+        } elseif ($data['priest_selection_type'] === 'any_available') {
+            $message .= 'The admin will assign an available priest and notify you.';
+        } elseif ($data['priest_selection_type'] === 'external') {
+            $message .= 'The admin will review your reservation with the external priest details.';
+        }
 
         return Redirect::route('requestor.reservations.index')
             ->with('success', 'Reservation Added Successfully!')
-            ->with('message', 'Your reservation request has been submitted and the organization adviser has been notified.');
+            ->with('message', $message);
     }
 
     public function show($reservation_id)

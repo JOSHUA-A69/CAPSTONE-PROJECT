@@ -6,6 +6,28 @@
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-heading">My Reservations</h1>
             <p class="text-sm text-muted mt-1">View and manage all your spiritual activity requests</p>
+            
+            @if(isset($statusFilter))
+                @php
+                    $filterColors = [
+                        'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+                        'approved' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+                        'upcoming' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                    ];
+                    $colorClass = $filterColors[$statusFilter] ?? '';
+                @endphp
+                <div class="mt-2 inline-flex items-center">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $colorClass }}">
+                        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
+                        </svg>
+                        Filtered: {{ ucfirst($statusFilter) }}
+                    </span>
+                    <a href="{{ route('requestor.reservations.index') }}" class="ml-2 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline">
+                        Clear filter
+                    </a>
+                </div>
+            @endif
         </div>
         <a href="{{ route('requestor.reservations.create') }}" class="btn-primary btn-mobile">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,10 +133,18 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-body">{{ optional($r->schedule_date)->format('M d, Y h:i A') }}</td>
                         <td class="px-4 py-3">
-                            @if($r->status === 'approved' || $r->status === 'confirmed')
-                                <span class="badge-success">{{ ucwords(str_replace('_', ' ', $r->status)) }}</span>
+                            @if($r->status === 'admin_approved')
+                                <span class="badge-success">Approved</span>
+                            @elseif($r->status === 'approved' || $r->status === 'confirmed')
+                                <span class="badge-success">Approved</span>
+                            @elseif($r->status === 'completed')
+                                <span class="badge-info">Completed</span>
                             @elseif($r->status === 'cancelled' || $r->status === 'rejected')
                                 <span class="badge-danger">{{ ucwords(str_replace('_', ' ', $r->status)) }}</span>
+                            @elseif($r->status === 'adviser_approved')
+                                <span class="badge-warning">Awaiting Admin</span>
+                            @elseif($r->status === 'pending')
+                                <span class="badge-warning">Awaiting Adviser</span>
                             @else
                                 <span class="badge-warning">{{ ucwords(str_replace('_', ' ', $r->status)) }}</span>
                             @endif

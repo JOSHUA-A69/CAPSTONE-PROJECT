@@ -40,16 +40,16 @@
                        class="px-4 py-2 rounded-lg transition-colors duration-150 {{ request('time') === 'past' ? 'bg-gray-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                         Past Services
                     </a>
+                    <a href="{{ route('priest.reservations.declined') }}"
+                       class="px-4 py-2 rounded-lg transition-colors duration-150 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <span class="flex items-center gap-1">
+                            Declined Services
+                            @if($declinedCount > 0)
+                                <span class="badge-secondary ml-1">{{ $declinedCount }}</span>
+                            @endif
+                        </span>
+                    </a>
                 </div>
-
-                <!-- Declined Services Link -->
-                <a href="{{ route('priest.reservations.declined') }}"
-                   class="btn-danger">
-                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Declined Services
-                </a>
             </div>
 
             <!-- Reservations List -->
@@ -84,7 +84,9 @@
                                         </h3>
 
                                         <!-- Status Badge -->
-                                        @if($reservation->status === 'pending_priest_confirmation')
+                                        @if($reservation->status === 'pending')
+                                            <span class="badge-warning">New Assignment - Pending Review</span>
+                                        @elseif($reservation->status === 'pending_priest_confirmation')
                                             <span class="badge-warning">Awaiting Confirmation</span>
                                         @elseif($reservation->status === 'admin_approved')
                                             <span class="badge-info">New Assignment</span>
@@ -133,44 +135,50 @@
                                     @endif
 
                                     <!-- Action Buttons -->
-                                    <div class="flex flex-col sm:flex-row gap-2 pt-3 border-t dark:border-gray-700">
-                                        <a href="{{ route('priest.reservations.show', $reservation->reservation_id) }}"
-                                           class="btn-primary flex-1 justify-center">
-                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                            </svg>
-                                            View Full Details
-                                        </a>
+                                    @if(in_array($reservation->status, ['pending', 'pending_priest_confirmation', 'admin_approved']) &&
+                                        (!$reservation->priest_confirmation || $reservation->priest_confirmation === 'pending'))
+                                        <!-- Pending Confirmation Actions -->
+                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t dark:border-gray-700">
+                                            <a href="{{ route('priest.reservations.show', $reservation) }}" class="btn-secondary text-center">
+                                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                                View Full Details
+                                            </a>
 
-                                        @if(in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved']) &&
-                                            (!$reservation->priest_confirmation || $reservation->priest_confirmation === 'pending'))
-                                            <!-- Action Buttons -->
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-                                                <form method="POST" action="{{ route('priest.reservations.confirm', $reservation->reservation_id) }}">
-                                                    @csrf
-                                                    <button type="submit"
-                                                            onclick="return confirm('Are you sure you want to confirm your availability for this service?')"
-                                                            class="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center">
-                                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                                        </svg>
-                                                        Confirm Availability
-                                                    </button>
-                                                </form>
-
-                                                <button onclick="showDeclineModal{{ $reservation->reservation_id }}()"
-                                                        class="w-full px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all shadow-md hover:shadow-lg transform hover:scale-105 flex items-center justify-center">
-                                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            <form action="{{ route('priest.reservations.confirm', $reservation) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" onclick="return confirm('Are you sure you want to CONFIRM this reservation?\n\nService: {{ $reservation->activity_name ?? $reservation->service->service_name }}\nDate: {{ $reservation->schedule_date->format('M d, Y - g:i A') }}\nVenue: {{ $reservation->custom_venue_name ?? $reservation->venue->name }}\n\nBy confirming, you are committing to officiate this service. The requestor and administrators will be notified of your confirmation.')" class="btn-primary w-full">
+                                                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                                     </svg>
-                                                    Decline
+                                                    Confirm Availability
                                                 </button>
-                                            </div>
-                                        @endif
-                                    </div>
+                                            </form>
 
-                                    @if(in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved']) &&
+                                            <button onclick="openDeclineModal({{ $reservation->reservation_id }})"
+                                                    class="btn-danger">
+                                                <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                                Decline
+                                            </button>
+                                        </div>
+                                    @else
+                                        <!-- View Details Only -->
+                                        <div class="pt-4 border-t dark:border-gray-700">
+                                            <a href="{{ route('priest.reservations.show', $reservation) }}" class="btn-secondary block text-center">
+                                                <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                </svg>
+                                                View Full Details
+                                            </a>
+                                        </div>
+                                    @endif
+
+                                    @if(in_array($reservation->status, ['pending', 'pending_priest_confirmation', 'admin_approved']) &&
                                         (!$reservation->priest_confirmation || $reservation->priest_confirmation === 'pending'))
                                         <!-- Decline Modal -->
                                         <div id="declineModal{{ $reservation->reservation_id }}"
@@ -198,7 +206,10 @@
                                                 </div>
 
                                                 <!-- Modal Body -->
-                                                <form method="POST" action="{{ route('priest.reservations.decline', ['reservation_id' => $reservation->reservation_id]) }}" class="p-6">
+                                                <form method="POST" 
+                                                      action="{{ route('priest.reservations.decline', ['reservation_id' => $reservation->reservation_id]) }}" 
+                                                      onsubmit="return confirm('Are you sure you want to DECLINE this reservation?\n\nService: {{ $reservation->service->service_name }}\nDate: {{ $reservation->schedule_date->format('M d, Y - g:i A') }}\n\nBy declining, administrators will be notified to assign another priest for this reservation.')"
+                                                      class="p-6">
                                                     @csrf
                                                     <div class="mb-6">
                                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

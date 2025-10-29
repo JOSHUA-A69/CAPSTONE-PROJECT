@@ -48,17 +48,17 @@
             <!-- Statistics Cards -->
             @php
                 $totalReservations = \App\Models\Reservation::where('user_id', auth()->id())->count();
-                $pendingCount = \App\Models\Reservation::where('user_id', auth()->id())->whereIn('status', ['pending', 'adviser_approved', 'admin_approved'])->count();
-                $approvedCount = \App\Models\Reservation::where('user_id', auth()->id())->where('status', 'confirmed')->count();
+                $pendingCount = \App\Models\Reservation::where('user_id', auth()->id())->whereIn('status', ['pending', 'adviser_approved'])->count();
+                $approvedCount = \App\Models\Reservation::where('user_id', auth()->id())->whereIn('status', ['admin_approved', 'approved', 'confirmed'])->count();
                 $upcomingCount = \App\Models\Reservation::where('user_id', auth()->id())
-                    ->whereIn('status', ['approved', 'confirmed'])
+                    ->whereIn('status', ['admin_approved', 'approved', 'confirmed'])
                     ->where('schedule_date', '>=', now())
                     ->count();
             @endphp
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
                 <!-- Total Requests -->
-                <div class="card-hover border-l-4 border-indigo-500">
+                <a href="{{ route('requestor.reservations.index') }}" class="card-hover border-l-4 border-indigo-500 transition-transform hover:scale-105 cursor-pointer">
                     <div class="card-body">
                         <div class="flex items-center justify-between">
                             <div>
@@ -72,10 +72,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
 
                 <!-- Pending Approval -->
-                <div class="card-hover border-l-4 border-yellow-500">
+                <a href="{{ route('requestor.reservations.index', ['status' => 'pending']) }}" class="card-hover border-l-4 border-yellow-500 transition-transform hover:scale-105 cursor-pointer">
                     <div class="card-body">
                         <div class="flex items-center justify-between">
                             <div>
@@ -89,10 +89,10 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </a>
 
                 <!-- Approved -->
-                <div class="card-hover border-l-4 border-green-500">
+                <a href="{{ route('requestor.reservations.index', ['status' => 'approved']) }}" class="card-hover border-l-4 border-green-500 transition-transform hover:scale-105 cursor-pointer">
                     <div class="card-body">
                     <div class="flex items-center justify-between">
                         <div>
@@ -106,10 +106,10 @@
                         </div>
                     </div>
                     </div>
-                </div>
+                </a>
 
                 <!-- Upcoming Events -->
-                <div class="card-hover border-l-4 border-purple-500">
+                <a href="{{ route('requestor.reservations.index', ['status' => 'upcoming']) }}" class="card-hover border-l-4 border-purple-500 transition-transform hover:scale-105 cursor-pointer">
                     <div class="card-body">
                     <div class="flex items-center justify-between">
                         <div>
@@ -123,7 +123,7 @@
                         </div>
                     </div>
                     </div>
-                </div>
+                </a>
             </div>
 
             <!-- Main Content Grid -->
