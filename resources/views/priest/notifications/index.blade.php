@@ -43,7 +43,7 @@
                                                 @endif
                                             </div>
                                             <p class="text-gray-900 dark:text-gray-100 mb-2 {{ $notification->isUnread() ? 'font-semibold' : 'font-normal' }}">{!! $notification->message !!}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ $notification->sent_at->diffForHumans() }}</p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">{{ optional($notification->sent_at)->diffForHumans() ?? optional($notification->created_at)->diffForHumans() ?? '' }}</p>
                                         </div>
                                         <div class="ml-4">
                                             @if($notification->type === 'Assignment' && $notification->reservation_id)

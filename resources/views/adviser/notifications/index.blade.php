@@ -52,7 +52,7 @@
                                     @endif
                                 </div>
                                 <div class="mt-1 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                                    <span>{{ $notification->sent_at->diffForHumans() }}</span>
+                                    <span>{{ optional($notification->sent_at)->diffForHumans() ?? optional($notification->created_at)->diffForHumans() ?? '' }}</span>
                                     <span class="px-2 py-1 rounded-full {{ $notification->type === 'Cancellation Request' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
                                         {{ $notification->type }}
                                     </span>

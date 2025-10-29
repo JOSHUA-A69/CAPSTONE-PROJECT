@@ -56,7 +56,7 @@
                                     @endif
 
                                     <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                                        {{ $notification->sent_at->diffForHumans() }}
+                                        {{ optional($notification->sent_at)->diffForHumans() ?? optional($notification->created_at)->diffForHumans() ?? '' }}
                                     </p>
                                 </div>
 

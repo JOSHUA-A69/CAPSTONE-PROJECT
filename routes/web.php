@@ -228,7 +228,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::get('/change-requests/{id}', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'show'])->name('change-requests.show');
     Route::post('/change-requests/{id}/approve', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'approve'])->name('change-requests.approve');
     Route::post('/change-requests/{id}/reject', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'reject'])->name('change-requests.reject');
+});
 
+// Shared Notification Routes for Admin and Staff (same controller, broader access)
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':admin,staff'])->group(function () {
     // Notification Routes (specific routes first, then parameterized)
     Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/count', [\App\Http\Controllers\Admin\NotificationController::class, 'getUnreadCount'])->name('notifications.count');

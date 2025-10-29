@@ -59,7 +59,7 @@ class NotificationController extends Controller
                     $data = json_decode($data, true);
                 }
                 $priestName = $data['priest_name'] ?? 'Unknown';
-                $timeAgo = $notification->sent_at->diffForHumans();
+                $timeAgo = optional($notification->sent_at)->diffForHumans() ?? optional($notification->created_at)->diffForHumans() ?? '';
 
                 // Generate avatar initials
                 $nameParts = explode(' ', str_replace('Fr. ', '', $priestName));

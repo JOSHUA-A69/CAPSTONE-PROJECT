@@ -222,8 +222,8 @@
                                             class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-purple-500 focus:ring-purple-500">
                                         <option value="">-- Select Priest --</option>
                                         @foreach($availablePriests as $priest)
-                                            <option value="{{ $priest->user_id }}"
-                                                {{ old('officiant_id') == $priest->user_id ? 'selected' : '' }}>
+                                            <option value="{{ $priest->id }}"
+                                                {{ old('officiant_id') == $priest->id ? 'selected' : '' }}>
                                                 {{ $priest->name }}
                                             </option>
                                         @endforeach
