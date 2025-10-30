@@ -127,6 +127,33 @@ class ReservationNotificationService
             }
         }
 
+        // Create in-app notifications for Admin/Staff to proceed with priest assignment
+        try {
+            $adminsAndStaff = User::whereIn('role', ['admin', 'staff'])->where('status', 'active')->get();
+            foreach ($adminsAndStaff as $user) {
+                $message = "Adviser approved reservation for <strong>{$reservation->service->service_name}</strong>. Please assign a priest.";
+                $notificationData = [
+                    'user_id' => $user->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'action' => 'adviser_approved',
+                        'service_name' => $reservation->service->service_name,
+                        'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
+                        'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                        'organization' => optional($reservation->organization)->org_name,
+                    ]);
+                }
+                Notification::create($notificationData);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create admin/staff notification on adviser approval: ' . $e->getMessage());
+        }
+
         // Notify assigned priest (if any)
         if ($reservation->officiant_id && $reservation->officiant) {
             try {
@@ -174,7 +201,7 @@ class ReservationNotificationService
             );
         }
 
-        // In-app notification for requestor
+    // In-app notification for requestor
         try {
             $message = "Your reservation was approved by your adviser";
             $notificationData = [
