@@ -259,12 +259,15 @@
                                 @csrf
 
                                 <div class="mb-4">
-                                    <label for="admin_notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        Rejection Reason (optional)
+                                    <label for="reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Rejection Reason (required)
                                     </label>
-                                    <textarea name="admin_notes" id="admin_notes" rows="3"
+                                    <textarea name="reason" id="reason" rows="3"
                                               class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-red-500 focus:ring-red-500"
-                                              placeholder="Provide reason for rejection...">{{ old('admin_notes') }}</textarea>
+                                              placeholder="Provide reason for rejection...">{{ old('reason') }}</textarea>
+                                    @error('reason')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <button type="submit"
