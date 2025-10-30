@@ -8,6 +8,29 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
 
+                    @if(session('status'))
+                        <div class="mb-4 p-3 rounded bg-green-50 text-green-700 border border-green-200">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    @if ($errors->any())
+                        <div class="mb-4 p-3 rounded bg-yellow-50 text-yellow-800 border border-yellow-200">
+                            <div class="font-semibold mb-1">Please fix the following:</div>
+                            <ul class="list-disc ml-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('admin.users.update', $user->id) }}">
                         @csrf
                         @method('PUT')
@@ -15,27 +38,32 @@
                         <div class="grid grid-cols-1 gap-4">
                             <div>
                                 <label>First name</label>
-                                <input name="first_name" value="{{ old('first_name', $user->first_name) }}" class="w-full" />
+                                <input type="text" name="first_name" value="{{ old('first_name', $user->first_name) }}" class="w-full" />
+                                @error('first_name')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
                                 <label>Middle name</label>
-                                <input name="middle_name" value="{{ old('middle_name', $user->middle_name) }}" class="w-full" />
+                                <input type="text" name="middle_name" value="{{ old('middle_name', $user->middle_name) }}" class="w-full" />
+                                @error('middle_name')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
                                 <label>Last name</label>
-                                <input name="last_name" value="{{ old('last_name', $user->last_name) }}" class="w-full" />
+                                <input type="text" name="last_name" value="{{ old('last_name', $user->last_name) }}" class="w-full" />
+                                @error('last_name')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
                                 <label>Email</label>
-                                <input name="email" value="{{ old('email', $user->email) }}" class="w-full" />
+                                <input type="email" name="email" value="{{ old('email', $user->email) }}" class="w-full" />
+                                @error('email')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
                                 <label>Phone</label>
-                                <input name="phone" value="{{ old('phone', $user->phone) }}" class="w-full" />
+                                <input type="text" name="phone" value="{{ old('phone', $user->phone) }}" class="w-full" />
+                                @error('phone')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
@@ -47,6 +75,7 @@
                                     <option value="priest" {{ old('role', $user->role)==='priest' ? 'selected' : '' }}>Priest</option>
                                     <option value="requestor" {{ old('role', $user->role)==='requestor' ? 'selected' : '' }}>Requestor</option>
                                 </select>
+                                @error('role')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
@@ -57,6 +86,7 @@
                                         <option value="{{ $r->user_role_id }}" {{ (int)old('user_role_id', $user->user_role_id) === (int)$r->user_role_id ? 'selected' : '' }}>{{ $r->role_name }}</option>
                                     @endforeach
                                 </select>
+                                @error('user_role_id')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
                             <div>
                                 <label>Status</label>
@@ -65,11 +95,13 @@
                                     <option value="pending" {{ old('status', $user->status)==='pending' ? 'selected' : '' }}>Pending</option>
                                     <option value="suspended" {{ old('status', $user->status)==='suspended' ? 'selected' : '' }}>Suspended</option>
                                 </select>
+                                @error('status')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>
                                 <label>New Password (leave blank to keep current)</label>
                                 <input type="password" name="password" class="w-full" />
+                                @error('password')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
                             </div>
 
                             <div>

@@ -117,6 +117,7 @@ class UserManagementController extends Controller
 
         $user->update($data);
 
-        return Redirect::route('admin.users.index')->with('status', 'user-updated');
+        // Redirect back to edit page so changes are immediately visible
+        return Redirect::route('admin.users.edit', $user->id)->with('status', 'User updated successfully.');
     }
 }
