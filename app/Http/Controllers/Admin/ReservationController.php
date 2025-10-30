@@ -190,12 +190,58 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // Send notifications
-        $this->notificationService->notifyAdviserRejected($reservation, $reason);
+    // Send notifications with correct admin wording
+    $this->notificationService->notifyAdminRejected($reservation, $reason, Auth::user());
 
         return Redirect::back()
             ->with('status', 'reservation-rejected')
             ->with('message', 'Reservation rejected. Requestor has been notified.');
+    }
+
+    /**
+     * Cancel a reservation (Admin-initiated)
+     */
+    public function cancel(Request $request, $reservation_id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $reservation = Reservation::findOrFail($reservation_id);
+
+        // Disallow if already terminal state
+        if (in_array($reservation->status, ['cancelled', 'rejected'])) {
+            return Redirect::back()
+                ->with('error', 'This reservation cannot be cancelled as it is already ' . $reservation->status . '.');
+        }
+
+        $reason = $request->input('reason');
+
+        // Update reservation status and audit fields
+        $reservation->update([
+            'status' => 'cancelled',
+            'cancellation_reason' => $reason,
+            'cancelled_by' => Auth::id(),
+        ]);
+
+        // History entry
+        $reservation->history()->create([
+            'performed_by' => Auth::id(),
+            'action' => 'cancelled',
+            'remarks' => 'Cancelled by admin: ' . $reason,
+            'performed_at' => now(),
+        ]);
+
+        // Notifications (email/SMS/in-app)
+        $this->notificationService->notifyCancellation(
+            $reservation->fresh(['user','service','organization.adviser','officiant']),
+            $reason,
+            Auth::user()->full_name
+        );
+
+        return Redirect::back()
+            ->with('status', 'reservation-cancelled')
+            ->with('message', 'Reservation cancelled and all parties have been notified.');
     }
 
     /**

@@ -275,6 +275,77 @@ class ReservationNotificationService
     }
 
     /**
+     * Send notification when admin rejects a reservation
+     */
+    public function notifyAdminRejected(Reservation $reservation, string $reason, ?User $actor = null): void
+    {
+        $adminName = $actor ? ($actor->first_name . ' ' . $actor->last_name) : 'an administrator';
+
+        // Email to requestor (simple raw notification to avoid incorrect adviser wording)
+        if ($reservation->user && $reservation->user->email) {
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "Your reservation for {$reservation->service->service_name} was not approved by {$adminName}.\nReason: {$reason}",
+                    function ($message) use ($reservation) {
+                        $message->to($reservation->user->email)
+                            ->subject('Reservation Not Approved by Admin');
+                    }
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send admin reject email to requestor: ' . $e->getMessage());
+            }
+        }
+
+        // In-app notification for requestor
+        try {
+            $message = "Your reservation was rejected by admin";
+            $notificationData = [
+                'user_id' => $reservation->user_id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => 'Update',
+                'sent_at' => now(),
+            ];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'data')) {
+                $notificationData['data'] = json_encode([
+                    'reason' => $reason,
+                    'action' => 'admin_rejected',
+                    'admin_name' => $adminName,
+                ]);
+            }
+            Notification::create($notificationData);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create requestor in-app notification (admin rejected): ' . $e->getMessage());
+        }
+
+        // Optional: notify admins/staff for audit trail
+        try {
+            $adminsAndStaff = User::whereIn('role', ['admin', 'staff'])->where('status', 'active')->get();
+            foreach ($adminsAndStaff as $user) {
+                $message = "Reservation rejected by <strong>{$adminName}</strong>";
+                $notificationData = [
+                    'user_id' => $user->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'reason' => $reason,
+                        'action' => 'admin_rejected',
+                        'service_name' => $reservation->service->service_name,
+                        'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                    ]);
+                }
+                Notification::create($notificationData);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create admin/staff in-app notification (admin rejected): ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Send notification when priest is assigned
      */
     public function notifyPriestAssigned(Reservation $reservation): void

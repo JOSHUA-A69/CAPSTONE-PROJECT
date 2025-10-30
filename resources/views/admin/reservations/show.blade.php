@@ -279,6 +279,37 @@
                     </div>
                     @endif
 
+                    <!-- Cancel Reservation -->
+                    @if(!in_array($reservation->status, ['cancelled','rejected']))
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Cancel Reservation</h3>
+
+                            <form action="{{ route('admin.reservations.cancel', $reservation->reservation_id) }}" method="POST"
+                                  onsubmit="return confirm('Are you sure you want to cancel this reservation?');">
+                                @csrf
+
+                                <div class="mb-4">
+                                    <label for="cancel_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Reason for Cancellation (required)
+                                    </label>
+                                    <textarea name="reason" id="cancel_reason" rows="3" required
+                                              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-red-500 focus:ring-red-500"
+                                              placeholder="Provide reason for cancellation...">{{ old('reason') }}</textarea>
+                                    @error('reason')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <button type="submit"
+                                        class="w-full px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 transition">
+                                    Cancel Reservation
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
+
                 </div>
             </div>
         </div>

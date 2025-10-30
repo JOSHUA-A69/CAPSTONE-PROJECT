@@ -259,13 +259,19 @@
             </div>
 
             <!-- Actions Card (if applicable) -->
+            @php
+                $daysUntilEvent = $reservation->schedule_date ? now()->diffInDays($reservation->schedule_date, false) : -9999;
+                $canCancel = $daysUntilEvent >= 7
+                    && in_array($reservation->status, ['pending', 'adviser_approved', 'admin_approved', 'pending_priest_confirmation', 'approved'])
+                    && !$reservation->cancellation_reason;
+            @endphp
             @if($reservation->status !== 'cancelled' && $reservation->status !== 'rejected' && $reservation->status !== 'completed')
             <div class="card">
                 <div class="card-header">
                     <h3 class="text-lg font-semibold">Actions</h3>
                 </div>
                 <div class="card-body">
-                    @if($reservation->status === 'pending' || ($reservation->status === 'adviser_approved' && !$reservation->contacted_at))
+                    @if($canCancel)
                     <button onclick="document.getElementById('cancelForm').classList.toggle('hidden')" class="btn-danger">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -287,6 +293,8 @@
                             <button type="button" onclick="document.getElementById('cancelForm').classList.add('hidden')" class="btn-secondary">Cancel</button>
                         </div>
                     </form>
+                    @elseif($daysUntilEvent < 7 && $daysUntilEvent >= 0)
+                        <div class="mt-2 text-sm text-muted">Cannot cancel within 7 days of the event.</div>
                     @endif
                 </div>
             </div>
