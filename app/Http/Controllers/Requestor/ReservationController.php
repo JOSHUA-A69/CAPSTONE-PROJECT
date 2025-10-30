@@ -428,6 +428,7 @@ class ReservationController extends Controller
                     'change_request_id' => $changeRequest->change_id,
                     'requestor_name' => Auth::user()->full_name,
                 ]),
+                'sent_at' => now(),
                 'is_read' => false,
             ]);
         }

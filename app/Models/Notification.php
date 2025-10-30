@@ -28,6 +28,16 @@ class Notification extends Model
         'data' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Notification $model) {
+            // Ensure sent_at is set for proper ordering and display
+            if (empty($model->sent_at)) {
+                $model->sent_at = now();
+            }
+        });
+    }
+
     /**
      * Get the user that owns the notification
      */

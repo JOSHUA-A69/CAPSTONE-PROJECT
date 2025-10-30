@@ -36,7 +36,7 @@ class NotificationController extends Controller
         $notifications = Notification::where('user_id', Auth::id())
             ->unread()
             ->with('reservation')
-            ->orderBy('sent_at', 'desc')
+            ->orderByRaw('COALESCE(sent_at, created_at) DESC')
             ->limit(5)
             ->get();
 
@@ -127,7 +127,7 @@ class NotificationController extends Controller
     {
         $notifications = Notification::where('user_id', Auth::id())
             ->with('reservation')
-            ->orderBy('sent_at', 'desc')
+            ->orderByRaw('COALESCE(sent_at, created_at) DESC')
             ->paginate(20);
 
         return view('admin.notifications.index', compact('notifications'));
