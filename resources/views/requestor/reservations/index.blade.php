@@ -62,6 +62,15 @@
         </div>
     @endif
 
+    @if ($errors->any())
+        <div class="badge-danger flex items-center gap-2 mb-6 p-4">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            {{ $errors->first() }}
+        </div>
+    @endif
+
     <div class="card">
         <div class="overflow-x-auto">
             @if($reservations->isEmpty())
@@ -201,8 +210,12 @@
                         name="reason"
                         rows="4"
                         required
+                        minlength="10"
                         class="form-input mt-1"
-                        placeholder="Please provide a detailed reason for cancelling this reservation..."></textarea>
+                        placeholder="Please provide a detailed reason for cancelling this reservation...">{{ old('reason') }}</textarea>
+                    @error('reason')
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
                     <p class="form-helper mt-2">
                         This reason will be shared with all parties involved.
                     </p>

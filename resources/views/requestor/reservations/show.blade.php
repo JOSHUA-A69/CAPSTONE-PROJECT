@@ -282,7 +282,10 @@
                     <form id="cancelForm" method="POST" action="{{ route('requestor.reservations.cancel', $reservation->reservation_id) }}" class="hidden mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                         @csrf
                         <label class="form-label mb-2">Reason for Cancellation</label>
-                        <textarea name="reason" rows="3" required class="form-input" placeholder="Please provide a reason..."></textarea>
+                        <textarea name="reason" rows="3" required minlength="10" class="form-input" placeholder="Please provide a reason...">{{ old('reason') }}</textarea>
+                        @error('reason')
+                            <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
                         <div class="mt-3 flex flex-wrap gap-2">
                             <button type="submit" class="btn-danger">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,3 +306,15 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // If there was a validation error for the cancellation reason, unhide the cancel form
+    @if ($errors->has('reason'))
+        document.addEventListener('DOMContentLoaded', function () {
+            var el = document.getElementById('cancelForm');
+            if (el) el.classList.remove('hidden');
+        });
+    @endif
+</script>
+@endpush
