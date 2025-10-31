@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use App\Support\Notifications as NotificationHelper;
 
 /**
  * ReservationNotificationService
@@ -42,7 +43,7 @@ class ReservationNotificationService
                 'user_id' => $reservation->user_id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => $message,
-                'type' => 'Update',
+                'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
             ];
             if (Schema::hasColumn('notifications', 'data')) {
@@ -52,7 +53,7 @@ class ReservationNotificationService
                     'action' => 'request_submitted',
                 ]);
             }
-            Notification::create($notificationData);
+            NotificationHelper::make($notificationData);
         } catch (\Exception $e) {
             Log::warning('Failed to create requestor in-app notification (submitted): ' . $e->getMessage());
         }
@@ -78,7 +79,7 @@ class ReservationNotificationService
                     'user_id' => $adviser->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Update',
+                    'type' => NotificationHelper::TYPE_UPDATE,
                     'sent_at' => now(),
                 ];
                 if (Schema::hasColumn('notifications', 'data')) {
@@ -88,7 +89,7 @@ class ReservationNotificationService
                         'action' => 'adviser_review_required',
                     ]);
                 }
-                $notification = Notification::create($notificationData);
+                $notification = NotificationHelper::make($notificationData);
                 Log::info('In-app notification created for adviser (ID: ' . $notification->id . ')');
             } catch (\Throwable $e) {
                 Log::error('Failed to create adviser in-app notification: '.$e->getMessage());
@@ -136,7 +137,7 @@ class ReservationNotificationService
                     'user_id' => $user->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Update',
+                    'type' => NotificationHelper::TYPE_UPDATE,
                     'sent_at' => now(),
                 ];
                 if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'data')) {
@@ -148,7 +149,7 @@ class ReservationNotificationService
                         'organization' => optional($reservation->organization)->org_name,
                     ]);
                 }
-                Notification::create($notificationData);
+                NotificationHelper::make($notificationData);
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create admin/staff notification on adviser approval: ' . $e->getMessage());
@@ -169,7 +170,7 @@ class ReservationNotificationService
                     'user_id' => $reservation->officiant_id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Update',
+                    'type' => NotificationHelper::TYPE_ASSIGNMENT,
                     'sent_at' => now(),
                 ];
                 if (Schema::hasColumn('notifications', 'data')) {
@@ -179,7 +180,7 @@ class ReservationNotificationService
                         'action' => 'priest_assignment',
                     ]);
                 }
-                Notification::create($notificationData);
+                NotificationHelper::make($notificationData);
 
                 // SMS to priest
                 if ($reservation->officiant->phone) {
@@ -208,17 +209,17 @@ class ReservationNotificationService
                 'user_id' => $reservation->user_id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => $message,
-                'type' => 'Update',
+                'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
             ];
             if (Schema::hasColumn('notifications', 'data')) {
-                $notificationData['data'] = json_encode([
+                $notificationData['data'] = [
                     'service_name' => $reservation->service->service_name,
                     'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
                     'action' => 'adviser_approved',
-                ]);
+                ];
             }
-            Notification::create($notificationData);
+            NotificationHelper::make($notificationData);
         } catch (\Exception $e) {
             Log::warning('Failed to create requestor in-app notification (adviser approved): ' . $e->getMessage());
         }
@@ -259,16 +260,16 @@ class ReservationNotificationService
                 'user_id' => $reservation->user_id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => $message,
-                'type' => 'Update',
+                'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
             ];
             if (Schema::hasColumn('notifications', 'data')) {
-                $notificationData['data'] = json_encode([
+                $notificationData['data'] = [
                     'reason' => $reason,
                     'action' => 'adviser_rejected',
-                ]);
+                ];
             }
-            Notification::create($notificationData);
+            NotificationHelper::make($notificationData);
         } catch (\Exception $e) {
             Log::warning('Failed to create requestor in-app notification (adviser rejected): ' . $e->getMessage());
         }
@@ -303,17 +304,17 @@ class ReservationNotificationService
                 'user_id' => $reservation->user_id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => $message,
-                'type' => 'Update',
+                'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
             ];
             if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'data')) {
-                $notificationData['data'] = json_encode([
+                $notificationData['data'] = [
                     'reason' => $reason,
                     'action' => 'admin_rejected',
                     'admin_name' => $adminName,
-                ]);
+                ];
             }
-            Notification::create($notificationData);
+            NotificationHelper::make($notificationData);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create requestor in-app notification (admin rejected): ' . $e->getMessage());
         }
@@ -327,18 +328,18 @@ class ReservationNotificationService
                     'user_id' => $user->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Update',
+                    'type' => NotificationHelper::TYPE_UPDATE,
                     'sent_at' => now(),
                 ];
                 if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'data')) {
-                    $notificationData['data'] = json_encode([
+                    $notificationData['data'] = [
                         'reason' => $reason,
                         'action' => 'admin_rejected',
                         'service_name' => $reservation->service->service_name,
                         'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
-                    ]);
+                    ];
                 }
-                Notification::create($notificationData);
+                NotificationHelper::make($notificationData);
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('Failed to create admin/staff in-app notification (admin rejected): ' . $e->getMessage());
@@ -361,14 +362,14 @@ class ReservationNotificationService
                     'user_id' => $reservation->officiant_id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Assignment',
+                    'type' => NotificationHelper::TYPE_ASSIGNMENT,
                     'sent_at' => now(),
                 ];
 
                 // Add data field if column exists
                 try {
                     if (Schema::hasColumn('notifications', 'data')) {
-                        $notificationData['data'] = json_encode([
+                        $notificationData['data'] = [
                             'service_name' => $reservation->service->service_name,
                             'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
                             'schedule_date' => $reservation->schedule_date->toDateTimeString(),
@@ -378,14 +379,14 @@ class ReservationNotificationService
                                 ->orWhere('action', 'priest_assigned')
                                 ->latest()
                                 ->value('remarks'),
-                        ]);
+                        ];
                     }
                 } catch (\Exception $e) {
                     // Column doesn't exist or error, skip data field
                     Log::warning('Could not add data to priest assignment notification: ' . $e->getMessage());
                 }
 
-                Notification::create($notificationData);
+                NotificationHelper::make($notificationData);
                 Log::info("In-app notification created for priest (ID: {$reservation->officiant_id}) for reservation {$reservation->reservation_id}");
             } catch (\Exception $e) {
                 Log::error('Failed to create in-app notification for priest assignment: ' . $e->getMessage());
@@ -448,14 +449,14 @@ class ReservationNotificationService
                     'user_id' => $admin->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Priest Declined',
+                    'type' => NotificationHelper::TYPE_PRIEST_DECLINED,
                     'sent_at' => now(),
                 ];
 
                 // Add data field if column exists (for future use)
                 try {
                     if (Schema::hasColumn('notifications', 'data')) {
-                        $notificationData['data'] = json_encode([
+                        $notificationData['data'] = [
                             'reason' => $reason,
                             'priest_name' => $declinedPriest ? $declinedPriest->first_name . ' ' . $declinedPriest->last_name : 'Unknown',
                             'priest_id' => $declinedPriest ? $declinedPriest->id : null,
@@ -463,18 +464,18 @@ class ReservationNotificationService
                             'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
                             'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
                             'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
-                        ]);
+                        ];
                     }
                 } catch (\Exception $e) {
                     // Data column doesn't exist, that's okay
                     Log::info('Data column check failed: ' . $e->getMessage());
                 }
 
-                $createdNotification = Notification::create($notificationData);
+                $createdNotification = NotificationHelper::make($notificationData);
                 Log::info('Notification created successfully', [
                     'notification_id' => $createdNotification->notification_id,
                     'user_id' => $admin->id,
-                    'type' => 'Priest Declined',
+                    'type' => NotificationHelper::TYPE_PRIEST_DECLINED,
                     'priest_name' => $priestName,
                     'message' => $message
                 ]);
@@ -569,19 +570,19 @@ class ReservationNotificationService
                     $message = "Reservation cancelled by <strong>{$cancelledBy}</strong> for <strong>{$reservation->service->service_name}</strong>";
                 }
 
-                Notification::create([
+                NotificationHelper::make([
                     'user_id' => $recipient->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Update',
+                    'type' => NotificationHelper::TYPE_UPDATE,
                     'sent_at' => now(),
-                    'data' => json_encode([
+                    'data' => [
                         'reason' => $reason,
                         'cancelled_by' => $cancelledBy,
                         'service_name' => $reservation->service->service_name,
                         'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
                         'action' => 'reservation_cancelled',
-                    ]),
+                    ],
                 ]);
             } catch (\Exception $e) {
                 // Don't block other notifications if one fails
@@ -592,13 +593,13 @@ class ReservationNotificationService
         // In-app notification to requestor
         try {
             $message = "Your reservation was cancelled";
-            Notification::create([
+            NotificationHelper::make([
                 'user_id' => $reservation->user_id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => $message,
-                'type' => 'Update',
+                'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
-                'data' => json_encode(['reason' => $reason, 'cancelled_by' => $cancelledBy])
+                'data' => ['reason' => $reason, 'cancelled_by' => $cancelledBy]
             ]);
         } catch (\Exception $e) {
             // ignore
@@ -687,14 +688,14 @@ class ReservationNotificationService
                     'user_id' => $admin->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Update',
+                    'type' => NotificationHelper::TYPE_UPDATE,
                     'sent_at' => now(),
                 ];
 
                 // Add data field if column exists
                 try {
                     if (Schema::hasColumn('notifications', 'data')) {
-                        $notificationData['data'] = json_encode([
+                        $notificationData['data'] = [
                             'priest_name' => $priest ? $priest->first_name . ' ' . $priest->last_name : 'Unknown',
                             'priest_id' => $priestId,
                             'service_name' => $reservation->service->service_name,
@@ -702,13 +703,13 @@ class ReservationNotificationService
                             'requestor_name' => $requestorName,
                             'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
                             'action' => 'priest_confirmed',
-                        ]);
+                        ];
                     }
                 } catch (\Exception $e) {
                     Log::info('Data column check failed: ' . $e->getMessage());
                 }
 
-                Notification::create($notificationData);
+                NotificationHelper::make($notificationData);
                 Log::info('Confirmation notification created for admin', [
                     'admin_id' => $admin->id,
                     'reservation_id' => $reservation->reservation_id,
@@ -737,16 +738,16 @@ class ReservationNotificationService
                 'user_id' => $reservation->user_id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => $message,
-                'type' => 'Update',
+                'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
             ];
             if (Schema::hasColumn('notifications', 'data')) {
-                $notificationData['data'] = json_encode([
+                $notificationData['data'] = [
                     'priest_id' => $priestId,
                     'action' => 'priest_confirmed',
-                ]);
+                ];
             }
-            Notification::create($notificationData);
+            NotificationHelper::make($notificationData);
         } catch (\Exception $e) {
             Log::warning('Failed to create requestor in-app notification (priest confirmed): ' . $e->getMessage());
         }
@@ -803,11 +804,11 @@ class ReservationNotificationService
         // Requestor in-app
         try {
             $message = "A priest restored their availability for your reservation";
-            Notification::create([
+            NotificationHelper::make([
                 'user_id' => $reservation->user_id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => $message,
-                'type' => 'Update',
+                'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
             ]);
         } catch (\Exception $e) {
@@ -861,14 +862,14 @@ class ReservationNotificationService
                     'user_id' => $admin->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $message,
-                    'type' => 'Urgent',
+                    'type' => NotificationHelper::TYPE_URGENT,
                     'sent_at' => now(),
                 ];
 
                 // Add data field if column exists
                 try {
                     if (Schema::hasColumn('notifications', 'data')) {
-                        $notificationData['data'] = json_encode([
+                        $notificationData['data'] = [
                             'reason' => $reason,
                             'priest_name' => $priest ? $priest->first_name . ' ' . $priest->last_name : 'Unknown',
                             'priest_id' => $priestId,
@@ -877,13 +878,13 @@ class ReservationNotificationService
                             'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
                             'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
                             'action' => 'cancelled_confirmation',
-                        ]);
+                        ];
                     }
                 } catch (\Exception $e) {
                     Log::info('Data column check failed: ' . $e->getMessage());
                 }
 
-                Notification::create($notificationData);
+                NotificationHelper::make($notificationData);
                 Log::info('Cancellation notification created for admin', [
                     'admin_id' => $admin->id,
                     'reservation_id' => $reservation->reservation_id,

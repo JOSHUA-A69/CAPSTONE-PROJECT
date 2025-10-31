@@ -142,6 +142,7 @@ class ReservationController extends Controller
             'status' => 'admin_approved',
             'priest_notified_at' => now(),
             'priest_confirmation' => 'pending',
+            'approved_by' => Auth::id(),
         ]);
 
         // Create history
@@ -181,6 +182,7 @@ class ReservationController extends Controller
 
         $reservation->update([
             'status' => 'rejected',
+            'rejected_by' => Auth::id(),
         ]);
 
         $reservation->history()->create([

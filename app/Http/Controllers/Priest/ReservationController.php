@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use App\Support\Notifications as NotificationHelper;
 
 /**
  * Priest Reservation Controller
@@ -293,13 +294,13 @@ class ReservationController extends Controller
         }
 
         foreach ($admins as $admin) {
-            \App\Models\Notification::create([
+            NotificationHelper::make([
                 'user_id' => $admin->id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => '<strong>' . $priestName . '</strong> restored their previously declined reservation' . $indecisionWarning,
-                'type' => 'Update',
+                'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
-                'data' => json_encode([
+                'data' => [
                     'priest_name' => $priestName,
                     'priest_id' => $priestId,
                     'service_name' => $reservation->service->service_name,
@@ -308,12 +309,14 @@ class ReservationController extends Controller
                     'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
                     'action' => 'undecline',
                     'decline_count' => $totalDeclines,
-                ]),
+                ],
             ]);
         }
 
-        // Send email notifications to admin/staff
-        $this->notificationService->notifyPriestUndeclined($reservation, $priestId);        return Redirect::route('priest.reservations.show', $reservation_id)
+    // Send email notifications to admin/staff
+    $this->notificationService->notifyPriestUndeclined($reservation, $priestId);
+
+    return Redirect::route('priest.reservations.show', $reservation_id)
             ->with('status', 'reservation-undeclined')
             ->with('message', 'Success! You have undone your decline. Please confirm your availability for this service.');
     }
@@ -340,22 +343,9 @@ class ReservationController extends Controller
         $reservations = Reservation::with(['service', 'venue', 'organization'])
             ->forPriest(Auth::id())
             ->where('priest_confirmation', 'confirmed')
-            ->upcoming()
-            ->orderBy('schedule_date')
+            ->orderBy('schedule_date', 'asc')
             ->get();
 
-        // Format for calendar display
-        $events = $reservations->map(function ($reservation) {
-            return [
-                'id' => $reservation->reservation_id,
-                'title' => $reservation->service->service_name,
-                'start' => $reservation->schedule_date->toIso8601String(),
-                'venue' => $reservation->venue->name,
-                'organization' => $reservation->organization->org_name ?? 'N/A',
-                'purpose' => $reservation->purpose,
-            ];
-        });
-
-        return view('priest.reservations.calendar', compact('events', 'reservations'));
+        return view('priest.reservations.calendar', compact('reservations'));
     }
 }

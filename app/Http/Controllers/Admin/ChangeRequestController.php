@@ -9,6 +9,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Support\Notifications as NotificationHelper;
 
 class ChangeRequestController extends Controller
 {
@@ -86,16 +87,16 @@ class ChangeRequestController extends Controller
             ]);
 
             // Notify requestor that changes were approved
-            Notification::create([
+            NotificationHelper::make([
                 'user_id' => $changeRequest->requested_by,
-                'type' => 'Edit Approved',
+                'type' => NotificationHelper::TYPE_EDIT_APPROVED,
                 'title' => 'Reservation Changes Approved',
                 'message' => 'Your requested changes to reservation #' . $reservation->reservation_id . ' have been approved and applied.',
                 'reservation_id' => $reservation->reservation_id,
-                'data' => json_encode([
+                'data' => [
                     'action' => 'changes_approved',
                     'approved_by' => Auth::user()->full_name,
-                ]),
+                ],
                 'is_read' => false,
             ]);
         });
@@ -137,17 +138,17 @@ class ChangeRequestController extends Controller
             ]);
 
             // Notify requestor that changes were rejected
-            Notification::create([
+            NotificationHelper::make([
                 'user_id' => $changeRequest->requested_by,
-                'type' => 'Edit Rejected',
+                'type' => NotificationHelper::TYPE_EDIT_REJECTED,
                 'title' => 'Reservation Changes Rejected',
                 'message' => 'Your requested changes to reservation #' . $changeRequest->reservation->reservation_id . ' have been rejected.',
                 'reservation_id' => $changeRequest->reservation->reservation_id,
-                'data' => json_encode([
+                'data' => [
                     'action' => 'changes_rejected',
                     'rejected_by' => Auth::user()->full_name,
                     'reason' => $request->rejection_reason,
-                ]),
+                ],
                 'is_read' => false,
             ]);
         });

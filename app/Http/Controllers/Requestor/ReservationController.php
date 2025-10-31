@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
+use App\Support\Notifications as NotificationHelper;
 
 class ReservationController extends Controller
 {
@@ -141,22 +142,22 @@ class ReservationController extends Controller
                 ->with('error', 'A cancellation request for this reservation is already pending.');
         }
 
-        // Validate 7-day notice requirement
+        // Validate 7-day notice requirement (policy). We allow request but staff can enforce policy.
         $daysUntilEvent = now()->diffInDays($reservation->schedule_date, false);
         if ($daysUntilEvent < 7) {
-            return Redirect::back()
-                ->with('error', 'Cancellation is only allowed at least 7 days before the scheduled date. Your event is in ' . $daysUntilEvent . ' day(s).');
+            // Optionally add a warning flash; proceed with request submission.
+            session()->flash('warning', 'Note: Cancellation requested within 7 days of the event. Staff will review.');
         }
 
-        // Create cancellation request
+        // Create cancellation request record
         $cancellation = \App\Models\ReservationCancellation::create([
-            'reservation_id' => $reservation_id,
+            'reservation_id' => $reservation->reservation_id,
             'requestor_id' => Auth::id(),
             'reason' => $request->input('reason'),
             'status' => 'pending',
         ]);
 
-        // Create history record
+        // Create history entry
         $reservation->history()->create([
             'performed_by' => Auth::id(),
             'action' => 'cancellation_requested',

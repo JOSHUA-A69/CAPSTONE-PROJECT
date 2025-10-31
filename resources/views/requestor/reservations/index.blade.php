@@ -136,7 +136,7 @@
                                 </a>
                                 @if($canCancel)
                                     <button
-                                        onclick="showCancelModal({{ $r->reservation_id }}, '{{ $r->service->service_name }}', '{{ $r->schedule_date->format('F d, Y h:i A') }}')"
+                                        onclick='showCancelModal({{ $r->reservation_id }}, @json($r->service->service_name), @json(optional($r->schedule_date)->format("F d, Y h:i A")))'
                                         class="btn-danger btn-sm">
                                         Cancel
                                     </button>
@@ -164,11 +164,11 @@
 </div>
 
 <!-- Cancel Reservation Modal -->
-<div id="cancelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50">
+<div id="cancelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 overflow-y-auto h-full w-full z-50" role="dialog" aria-modal="true" aria-labelledby="cancelModalTitle">
     <div class="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-full max-w-md shadow-2xl rounded-lg bg-white dark:bg-gray-800">
         <div class="mt-3">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-heading">
+                <h3 id="cancelModalTitle" class="text-lg font-semibold text-heading">
                     Cancel Reservation
                 </h3>
                 <button onclick="hideCancelModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">

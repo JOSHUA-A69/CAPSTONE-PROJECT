@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use App\Support\Notifications as NotificationHelper;
 
 class CancellationNotificationService
 {
@@ -67,13 +68,13 @@ class CancellationNotificationService
             }
 
             // Create in-app notification
-            Notification::create([
+            NotificationHelper::make([
                 'user_id' => $user->id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => "<strong>{$requestorName}</strong> requested to cancel their reservation for <strong>{$serviceName}</strong>",
-                'type' => 'Cancellation Request',
+                'type' => NotificationHelper::TYPE_CANCELLATION_REQUEST,
                 'sent_at' => now(),
-                'data' => json_encode([
+                'data' => [
                     'cancellation_id' => $cancellation->cancellation_id,
                     'requestor_name' => $requestorName,
                     'service_name' => $serviceName,
@@ -81,7 +82,7 @@ class CancellationNotificationService
                     'reason' => $cancellation->reason,
                     'action' => 'cancellation_requested',
                     'requires_confirmation' => true,
-                ]),
+                ],
             ]);
         }
     }
@@ -120,13 +121,13 @@ class CancellationNotificationService
         }
 
         // Create in-app notification
-        Notification::create([
+        NotificationHelper::make([
             'user_id' => $adviser->id,
             'reservation_id' => $reservation->reservation_id,
             'message' => "<strong>{$requestorName}</strong> from your organization requested to cancel their reservation for <strong>{$serviceName}</strong>",
-            'type' => 'Cancellation Request',
+            'type' => NotificationHelper::TYPE_CANCELLATION_REQUEST,
             'sent_at' => now(),
-            'data' => json_encode([
+            'data' => [
                 'cancellation_id' => $cancellation->cancellation_id,
                 'requestor_name' => $requestorName,
                 'service_name' => $serviceName,
@@ -135,7 +136,7 @@ class CancellationNotificationService
                 'action' => 'cancellation_requested',
                 'requires_confirmation' => true,
                 'role' => 'adviser',
-            ]),
+            ],
         ]);
     }
 
@@ -173,13 +174,13 @@ class CancellationNotificationService
         }
 
         // Create in-app notification
-        Notification::create([
+        NotificationHelper::make([
             'user_id' => $priest->id,
             'reservation_id' => $reservation->reservation_id,
             'message' => "<strong>{$requestorName}</strong> requested to cancel the reservation you were assigned to officiate",
-            'type' => 'Cancellation Request',
+            'type' => NotificationHelper::TYPE_CANCELLATION_REQUEST,
             'sent_at' => now(),
-            'data' => json_encode([
+            'data' => [
                 'cancellation_id' => $cancellation->cancellation_id,
                 'requestor_name' => $requestorName,
                 'service_name' => $serviceName,
@@ -188,7 +189,7 @@ class CancellationNotificationService
                 'action' => 'cancellation_requested',
                 'requires_confirmation' => true,
                 'role' => 'priest',
-            ]),
+            ],
         ]);
     }
 
@@ -248,20 +249,20 @@ class CancellationNotificationService
             }
 
             // Create in-app notification with contact info
-            Notification::create([
+            NotificationHelper::make([
                 'user_id' => $staffMember->id,
                 'reservation_id' => $reservation->reservation_id,
                 'message' => "⚠️ <strong>{$contactInfo['name']}</strong> has not responded to cancellation request - Follow-up required",
-                'type' => 'Urgent',
+                'type' => NotificationHelper::TYPE_URGENT,
                 'sent_at' => now(),
-                'data' => json_encode([
+                'data' => [
                     'cancellation_id' => $cancellation->cancellation_id,
                     'action' => 'escalation_to_staff',
                     'unresponsive_role' => $role,
                     'contact_info' => $contactInfo,
                     'service_name' => $reservation->service->service_name,
                     'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
-                ]),
+                ],
             ]);
         }
 
@@ -303,17 +304,35 @@ class CancellationNotificationService
         }
 
         // Notify requestor in-app
-        Notification::create([
+        NotificationHelper::make([
             'user_id' => $requestor->id,
             'reservation_id' => $reservation->reservation_id,
             'message' => "Your cancellation request for <strong>{$reservation->service->service_name}</strong> has been confirmed",
-            'type' => 'Update',
+            'type' => NotificationHelper::TYPE_UPDATE,
             'sent_at' => now(),
-            'data' => json_encode([
+            'data' => [
                 'cancellation_id' => $cancellation->cancellation_id,
                 'action' => 'cancellation_completed',
                 'service_name' => $reservation->service->service_name,
-            ]),
+            ],
         ]);
+
+        // Also notify staff/admin that cancellation was completed (audit/awareness)
+        $staffAndAdmin = User::whereIn('role', ['staff', 'admin'])->where('status', 'active')->get();
+        foreach ($staffAndAdmin as $user) {
+            NotificationHelper::make([
+                'user_id' => $user->id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => "Cancellation completed for <strong>{$reservation->service->service_name}</strong> by <strong>{$requestorName}</strong>",
+                'type' => NotificationHelper::TYPE_UPDATE,
+                'sent_at' => now(),
+                'data' => [
+                    'cancellation_id' => $cancellation->cancellation_id,
+                    'action' => 'cancellation_completed',
+                    'service_name' => $reservation->service->service_name,
+                    'requestor_name' => $requestorName,
+                ],
+            ]);
+        }
     }
 }

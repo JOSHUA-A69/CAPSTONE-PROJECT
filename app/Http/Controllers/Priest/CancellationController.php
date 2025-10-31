@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Priest;
 use App\Http\Controllers\Controller;
 use App\Models\ReservationCancellation;
 use App\Models\ReservationHistory;
+use App\Services\CancellationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CancellationController extends Controller
 {
-    public function __construct()
+    protected CancellationNotificationService $cancellationService;
+
+    public function __construct(CancellationNotificationService $cancellationService)
     {
         $this->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':priest']);
+        $this->cancellationService = $cancellationService;
     }
 
     /**
@@ -102,7 +106,7 @@ class CancellationController extends Controller
             'performed_by' => Auth::id(),
         ]);
 
-        // TODO: Send notification to requestor
-        // Will be implemented with CancellationNotificationService->notifyCancellationCompleted()
+        // Send completion notifications
+        $this->cancellationService->notifyCancellationCompleted($cancellation->reservation, $cancellation);
     }
 }
