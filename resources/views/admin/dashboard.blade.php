@@ -15,13 +15,25 @@
                         $displayName = $user->first_name ?? $user->name ?? $user->email ?? 'User';
 
                         // Get admin's service assignments (as a priest)
+                        // Count all services where admin is assigned as priest and awaiting their confirmation
                         $pendingServicesCount = \App\Models\Reservation::where('officiant_id', $user->id)
-                            ->where('status', 'pending_priest_confirmation')
+                            ->whereIn('status', ['pending_priest_confirmation', 'admin_approved', 'pending_adviser_approval'])
+                            ->where(function($query) {
+                                $query->whereNull('priest_confirmation')
+                                      ->orWhere('priest_confirmation', '!=', 'confirmed');
+                            })
                             ->count();
 
+                        // Count upcoming confirmed services
                         $upcomingServicesCount = \App\Models\Reservation::where('officiant_id', $user->id)
                             ->where('priest_confirmation', 'confirmed')
+                            ->where('status', 'confirmed')
                             ->where('schedule_date', '>=', now())
+                            ->count();
+
+                        // Get total assigned services (for display when no pending)
+                        $totalAssignedServices = \App\Models\Reservation::where('officiant_id', $user->id)
+                            ->whereNotIn('status', ['cancelled', 'declined'])
                             ->count();
                     @endphp
 
@@ -52,7 +64,7 @@
                     </div>
                 </a>
 
-                <!-- Service Assignments (Admin as Priest) -->
+                <!-- Service Assignments (Admin as Priest) - REPOSITIONED TO SECOND -->
                 <a href="{{ route('admin.services.index') }}" class="card-hover group">
                     <div class="card-body">
                         <div class="flex items-start gap-4">
@@ -71,8 +83,10 @@
                                 <p class="text-sm text-muted">
                                     @if($pendingServicesCount > 0)
                                         {{ $pendingServicesCount }} pending confirmation
-                                    @else
+                                    @elseif($upcomingServicesCount > 0)
                                         {{ $upcomingServicesCount }} upcoming services
+                                    @else
+                                        {{ $totalAssignedServices }} assigned services
                                     @endif
                                 </p>
                             </div>

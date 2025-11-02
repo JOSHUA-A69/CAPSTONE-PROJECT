@@ -8,6 +8,8 @@ use App\Models\ReservationHistory;
 use App\Services\CancellationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class CancellationController extends Controller
 {
@@ -78,25 +80,26 @@ class CancellationController extends Controller
      */
     private function completeCancellation(ReservationCancellation $cancellation)
     {
+        $reservation = $cancellation->reservation;
+        
         // Update cancellation status
         $cancellation->update([
             'status' => 'completed',
         ]);
 
         // Update reservation status
-        $cancellation->reservation->update([
+        $reservation->update([
             'status' => 'cancelled',
         ]);
 
         // Add to history
         ReservationHistory::create([
-            'reservation_id' => $cancellation->reservation_id,
+            'reservation_id' => $reservation->reservation_id,
             'action' => 'cancellation_completed',
             'details' => 'Reservation cancelled - all parties confirmed',
             'performed_by' => Auth::id(),
         ]);
-
-        // Send completion notifications
+        // Send completion notifications via centralized service
         $this->cancellationService->notifyCancellationCompleted($cancellation->reservation, $cancellation);
     }
 }

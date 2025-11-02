@@ -210,7 +210,7 @@
 </div>
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50 flex items-center justify-center">
+<div id="rejectModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50">
     <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
         <div class="px-6 py-4 border-b">
             <h3 class="text-xl font-semibold text-gray-900">Reject Reservation</h3>
@@ -236,11 +236,15 @@
 
 <script>
 function showRejectModal() {
-    document.getElementById('rejectModal').classList.remove('hidden');
+    const m = document.getElementById('rejectModal');
+    m.classList.remove('hidden');
+    m.classList.add('flex');
 }
 
 function hideRejectModal() {
-    document.getElementById('rejectModal').classList.add('hidden');
+    const m = document.getElementById('rejectModal');
+    m.classList.add('hidden');
+    m.classList.remove('flex');
 }
 
 // Close modal on ESC key

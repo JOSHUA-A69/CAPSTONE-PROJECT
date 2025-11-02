@@ -122,7 +122,7 @@ class ReservationController extends Controller
 
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'adviser_rejected',
+            'action' => 'rejected',
             'remarks' => 'Rejected by adviser: ' . $reason,
             'performed_at' => now(),
         ]);

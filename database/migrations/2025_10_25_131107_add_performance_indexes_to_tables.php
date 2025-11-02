@@ -74,7 +74,7 @@ return new class extends Migration
         // Users table indexes
         Schema::table('users', function (Blueprint $table) {
             // Index for role-based queries
-            if (!Schema::hasColumn('users', 'role') || !$this->indexExists('users', 'idx_users_role')) {
+            if (Schema::hasColumn('users', 'role') && !$this->indexExists('users', 'idx_users_role')) {
                 $table->index('role', 'idx_users_role');
             }
 
@@ -120,33 +120,20 @@ return new class extends Migration
             }
         });
 
-        // Chat messages table indexes
-        Schema::table('chat_messages', function (Blueprint $table) {
-            // Index for sender lookups
-            if (Schema::hasColumn('chat_messages', 'sender_id') && !$this->indexExists('chat_messages', 'idx_chat_messages_sender_id')) {
-                $table->index('sender_id', 'idx_chat_messages_sender_id');
-            }
-
-            // Index for timestamp ordering
-            if (Schema::hasColumn('chat_messages', 'created_at') && !$this->indexExists('chat_messages', 'idx_chat_messages_created_at')) {
-                $table->index('created_at', 'idx_chat_messages_created_at');
-            }
-        });
-
         // Reservation history table indexes
         Schema::table('reservation_history', function (Blueprint $table) {
             // Index for reservation lookups
-            if (!Schema::hasColumn('reservation_history', 'reservation_id') || !$this->indexExists('reservation_history', 'idx_reservation_history_res_id')) {
+            if (Schema::hasColumn('reservation_history', 'reservation_id') && !$this->indexExists('reservation_history', 'idx_reservation_history_res_id')) {
                 $table->index('reservation_id', 'idx_reservation_history_res_id');
             }
 
             // Index for user activity
-            if (!Schema::hasColumn('reservation_history', 'performed_by') || !$this->indexExists('reservation_history', 'idx_reservation_history_performed_by')) {
+            if (Schema::hasColumn('reservation_history', 'performed_by') && !$this->indexExists('reservation_history', 'idx_reservation_history_performed_by')) {
                 $table->index('performed_by', 'idx_reservation_history_performed_by');
             }
 
             // Index for timestamp
-            if (!Schema::hasColumn('reservation_history', 'created_at') || !$this->indexExists('reservation_history', 'idx_reservation_history_created_at')) {
+            if (Schema::hasColumn('reservation_history', 'created_at') && !$this->indexExists('reservation_history', 'idx_reservation_history_created_at')) {
                 $table->index('created_at', 'idx_reservation_history_created_at');
             }
         });
@@ -199,15 +186,7 @@ return new class extends Migration
             }
         });
 
-        // Chat messages table
-        Schema::table('chat_messages', function (Blueprint $table) {
-            foreach ([
-                'idx_chat_messages_sender_id',
-                'idx_chat_messages_created_at',
-            ] as $index) {
-                try { $table->dropIndex($index); } catch (\Throwable $e) {}
-            }
-        });
+        // Note: chat_messages table removed - no indexes to drop
 
         // Reservation history table
         Schema::table('reservation_history', function (Blueprint $table) {

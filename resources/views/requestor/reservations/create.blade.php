@@ -760,23 +760,96 @@
                         Officiant/Priest<span class="required-indicator">*</span>
                         <span class="tooltip help-icon">
                             ?
-                            <span class="tooltiptext">Select the priest or presider you prefer for your spiritual activity</span>
+                            <span class="tooltiptext">Select how you want to choose a priest for your spiritual activity</span>
                         </span>
                     </label>
+                    
+                    <!-- Priest Selection Type -->
                     <select
-                        name="officiant_id"
-                        id="officiant_id"
+                        name="priest_selection_type"
+                        id="priest_selection_type"
                         required
-                        class="@error('officiant_id') is-invalid @enderror"
+                        class="@error('priest_selection_type') is-invalid @enderror"
+                        onchange="togglePriestOptions()"
                     >
-                        <option value="">-- Select Priest/Presider --</option>
-                        @foreach($priests as $priest)
-                            <option value="{{ $priest->id }}" @if(old('officiant_id')==$priest->id) selected @endif>{{ $priest->full_name }}</option>
-                        @endforeach
+                        <option value="">-- Select Option --</option>
+                        <option value="specific" @if(old('priest_selection_type')=='specific') selected @endif>Select from SVD Priests</option>
+                        <option value="any_available" @if(old('priest_selection_type')=='any_available') selected @endif>Any Available Priest (Admin will assign)</option>
+                        <option value="external" @if(old('priest_selection_type')=='external') selected @endif>Already Have a Priest (External)</option>
                     </select>
-                    @error('officiant_id')
+                    @error('priest_selection_type')
                         <div class="error-message">⚠️ {{ $message }}</div>
                     @enderror
+
+                    <!-- Specific Priest Selection (shown when "Select from SVD Priests" is chosen) -->
+                    <div id="specific_priest_div" style="display: none; margin-top: 10px;">
+                        <label>
+                            Choose Priest<span class="required-indicator">*</span>
+                        </label>
+                        <select
+                            name="officiant_id"
+                            id="officiant_id"
+                            class="@error('officiant_id') is-invalid @enderror"
+                        >
+                            <option value="">-- Select Priest/Presider --</option>
+                            @foreach($priests as $priest)
+                                <option value="{{ $priest->id }}" @if(old('officiant_id')==$priest->id) selected @endif>{{ $priest->full_name }}</option>
+                            @endforeach
+                        </select>
+                        @error('officiant_id')
+                            <div class="error-message">⚠️ {{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- External Priest Details (shown when "Already Have a Priest" is chosen) -->
+                    <div id="external_priest_div" style="display: none; margin-top: 10px;">
+                        <div style="margin-bottom: 8px;">
+                            <label>
+                                Priest Name<span class="required-indicator">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="external_priest_name"
+                                id="external_priest_name"
+                                value="{{ old('external_priest_name') }}"
+                                placeholder="Enter priest's full name"
+                                class="@error('external_priest_name') is-invalid @enderror"
+                            />
+                            @error('external_priest_name')
+                                <div class="error-message">⚠️ {{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div>
+                            <label>
+                                Priest Contact (Optional)
+                            </label>
+                            <input
+                                type="text"
+                                name="external_priest_contact"
+                                id="external_priest_contact"
+                                value="{{ old('external_priest_contact') }}"
+                                placeholder="Phone number or email"
+                                class="@error('external_priest_contact') is-invalid @enderror"
+                            />
+                            @error('external_priest_contact')
+                                <div class="error-message">⚠️ {{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <!-- Any Available Priest Info -->
+                    <div id="any_available_info" style="display: none; margin-top: 10px; padding: 10px; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 4px;">
+                        <p style="margin: 0; font-size: 13px; color: #1e40af;">
+                            <strong>ℹ️ Note:</strong> The admin will assign an available priest to your reservation and notify you once assigned.
+                        </p>
+                    </div>
+
+                    <!-- External Priest Info -->
+                    <div id="external_priest_info" style="display: none; margin-top: 10px; padding: 10px; background: #f0fdf4; border-left: 3px solid #16a34a; border-radius: 4px;">
+                        <p style="margin: 0; font-size: 13px; color: #15803d;">
+                            <strong>ℹ️ Note:</strong> Your reservation will be submitted for admin review. Please provide details of your external priest.
+                        </p>
+                    </div>
                 </td>
             </tr>
 
@@ -1177,6 +1250,45 @@
             });
         }
         */
+    });
+
+    // Toggle priest selection options
+    function togglePriestOptions() {
+        const selectionType = document.getElementById('priest_selection_type').value;
+        const specificDiv = document.getElementById('specific_priest_div');
+        const externalDiv = document.getElementById('external_priest_div');
+        const anyAvailableInfo = document.getElementById('any_available_info');
+        const externalInfo = document.getElementById('external_priest_info');
+        const officiantSelect = document.getElementById('officiant_id');
+        const externalNameInput = document.getElementById('external_priest_name');
+
+        // Hide all sections first
+        specificDiv.style.display = 'none';
+        externalDiv.style.display = 'none';
+        anyAvailableInfo.style.display = 'none';
+        externalInfo.style.display = 'none';
+
+        // Remove required attributes
+        officiantSelect.removeAttribute('required');
+        externalNameInput.removeAttribute('required');
+
+        // Show appropriate section based on selection
+        if (selectionType === 'specific') {
+            specificDiv.style.display = 'block';
+            officiantSelect.setAttribute('required', 'required');
+        } else if (selectionType === 'any_available') {
+            anyAvailableInfo.style.display = 'block';
+            // No officiant needed - admin will assign
+        } else if (selectionType === 'external') {
+            externalDiv.style.display = 'block';
+            externalInfo.style.display = 'block';
+            externalNameInput.setAttribute('required', 'required');
+        }
+    }
+
+    // Call on page load to handle old values
+    document.addEventListener('DOMContentLoaded', function() {
+        togglePriestOptions();
     });
 </script>
 

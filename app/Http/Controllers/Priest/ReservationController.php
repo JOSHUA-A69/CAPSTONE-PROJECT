@@ -66,7 +66,10 @@ class ReservationController extends Controller
             ->where('priest_confirmation', 'confirmed')
             ->count();
 
-        return view('priest.reservations.index', compact('reservations', 'status', 'timeFilter', 'pendingConfirmationCount', 'upcomingCount'));
+        $declinedCount = \App\Models\PriestDecline::where('priest_id', Auth::id())
+            ->count();
+
+        return view('priest.reservations.index', compact('reservations', 'status', 'timeFilter', 'pendingConfirmationCount', 'upcomingCount', 'declinedCount'));
     }
 
     /**
@@ -113,8 +116,8 @@ class ReservationController extends Controller
         $reservation = Reservation::where('officiant_id', Auth::id())
             ->findOrFail($reservation_id);
 
-        // Only confirm if status is pending_priest_confirmation or admin_approved (reassignment) and not yet confirmed
-        if (!in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved'])) {
+        // Only confirm if status is pending, pending_priest_confirmation or admin_approved (reassignment) and not yet confirmed
+        if (!in_array($reservation->status, ['pending', 'pending_priest_confirmation', 'admin_approved'])) {
             return Redirect::back()
                 ->with('error', 'This reservation is not ready for confirmation.');
         }
@@ -140,12 +143,12 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // Send notification to admin/staff
+        // Send notification to admin/staff and requestor
         $this->notificationService->notifyPriestConfirmed($reservation, Auth::id());
 
         return Redirect::back()
             ->with('status', 'reservation-confirmed')
-            ->with('message', 'You have confirmed your availability for this service. All parties have been notified.');
+            ->with('message', 'Reservation confirmed successfully! The requestor and administrators have been notified.');
     }
 
     /**
@@ -163,8 +166,8 @@ class ReservationController extends Controller
         // Check if this is a cancellation of already confirmed reservation
         $isCancellation = ($reservation->priest_confirmation === 'confirmed');
 
-        // Allow decline for: pending_priest_confirmation, admin_approved, OR approved (confirmed)
-        if (!in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved', 'approved'])) {
+        // Allow decline for: pending, pending_priest_confirmation, admin_approved, OR approved (confirmed)
+        if (!in_array($reservation->status, ['pending', 'pending_priest_confirmation', 'admin_approved', 'approved'])) {
             return Redirect::back()
                 ->with('error', 'This reservation cannot be declined at this stage.');
         }
@@ -214,8 +217,8 @@ class ReservationController extends Controller
         }
 
         $message = $isCancellation
-            ? 'You have cancelled your confirmation. CREaM administrators have been notified to assign another priest.'
-            : 'You have declined this assignment. CREaM administrators have been notified to assign another priest.';
+            ? 'Reservation cancelled successfully. The administrators and requestor have been notified, and another priest will be assigned.'
+            : 'Decline notification sent successfully. The administrators have been notified to assign another priest.';
 
         return Redirect::route('priest.reservations.index')
             ->with('status', 'reservation-declined')

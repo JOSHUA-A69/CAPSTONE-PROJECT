@@ -15,9 +15,10 @@
                         $user = auth()->user();
                         $displayName = $user->first_name ?? $user->name ?? $user->email ?? 'User';
 
-                        // Get pending confirmations count - include admin_approved status (newly assigned) and pending_priest_confirmation
+                        // Get pending confirmations count - include all statuses where priest needs to review/confirm
+                        // This includes: pending (just submitted), pending_priest_confirmation, admin_approved
                         $pendingCount = \App\Models\Reservation::where('officiant_id', $user->id)
-                            ->whereIn('status', ['pending_priest_confirmation', 'admin_approved'])
+                            ->whereIn('status', ['pending', 'pending_priest_confirmation', 'admin_approved'])
                             ->where(function($q) {
                                 $q->where('priest_confirmation', '!=', 'confirmed')
                                   ->orWhereNull('priest_confirmation')

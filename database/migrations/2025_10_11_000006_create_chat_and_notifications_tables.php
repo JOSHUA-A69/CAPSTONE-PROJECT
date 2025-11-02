@@ -11,19 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('chat_messages')) {
-            Schema::create('chat_messages', function (Blueprint $table) {
-                $table->id('message_id');
-                $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
-                $table->foreignId('receiver_id')->constrained('users')->onDelete('cascade');
-                $table->unsignedBigInteger('reservation_id')->nullable();
-                $table->foreign('reservation_id')->references('reservation_id')->on('reservations')->onDelete('set null');
-                $table->text('message_content');
-                $table->dateTime('sent_at')->nullable();
-                $table->enum('status', ['sent', 'delivered', 'read'])->default('sent');
-                $table->timestamps();
-            });
-        }
+        // Note: chat_messages table removed - using 'messages' table instead
+        // See migration: 2025_10_24_133542_create_messages_table.php
 
         if (!Schema::hasTable('notifications')) {
             Schema::create('notifications', function (Blueprint $table) {
@@ -46,6 +35,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('notifications');
-        Schema::dropIfExists('chat_messages');
     }
 };

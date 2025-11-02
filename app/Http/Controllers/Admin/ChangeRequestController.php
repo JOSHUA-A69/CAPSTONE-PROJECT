@@ -81,7 +81,7 @@ class ChangeRequestController extends Controller
             // Create history record
             $reservation->history()->create([
                 'performed_by' => Auth::id(),
-                'action' => 'changes_approved',
+                'action' => 'updated',
                 'remarks' => 'Admin approved changes requested by ' . $changeRequest->requestor->full_name,
                 'performed_at' => now(),
             ]);
@@ -132,7 +132,7 @@ class ChangeRequestController extends Controller
             // Create history record
             $changeRequest->reservation->history()->create([
                 'performed_by' => Auth::id(),
-                'action' => 'changes_rejected',
+                'action' => 'updated',
                 'remarks' => 'Admin rejected changes: ' . $request->rejection_reason,
                 'performed_at' => now(),
             ]);

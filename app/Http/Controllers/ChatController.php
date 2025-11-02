@@ -164,8 +164,9 @@ class ChatController extends Controller
                     'created_at' => $message->created_at->toISOString(),
                     'read_at' => $message->read_at,
                 ];
-            })
-        ]);
+                        })
+                ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->header('Pragma', 'no-cache');
     }
 
     /**

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @property int $service_id
  * @property int|null $officiant_id
  * @property \Carbon\Carbon $schedule_date
+ * @property string $schedule_time
  * @property string $status
  * @property string $purpose
  * @property string|null $details
@@ -65,6 +66,9 @@ class Reservation extends Model
         'custom_venue_name',
         'service_id',
         'officiant_id',
+        'priest_selection_type',
+        'external_priest_name',
+        'external_priest_contact',
         'schedule_date',
         'status',
         'purpose',
@@ -180,10 +184,11 @@ class Reservation extends Model
 
     /**
      * Scope: Waiting for priest confirmation
+     * Includes: pending (just submitted), admin_approved (after admin approval)
      */
     public function scopeAwaitingPriestConfirmation(Builder $query): Builder
     {
-        return $query->where('status', 'admin_approved')
+        return $query->whereIn('status', ['pending', 'admin_approved'])
             ->where(function ($q) {
                 $q->whereNull('priest_confirmation')
                     ->orWhere('priest_confirmation', 'pending');

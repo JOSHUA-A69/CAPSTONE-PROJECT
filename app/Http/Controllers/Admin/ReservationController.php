@@ -9,7 +9,9 @@ use App\Services\ReservationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Admin Reservation Controller
@@ -149,7 +151,7 @@ class ReservationController extends Controller
         $remarks = $request->input('remarks', $isReassignment ? 'Priest reassigned after decline' : 'Priest assigned by admin');
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => $isReassignment ? 'priest_reassigned' : 'priest_assigned',
+            'action' => $isReassignment ? 'priest_reassigned' : 'admin_approved',
             'remarks' => $remarks . ' - Assigned to: ' . $priest->full_name,
             'performed_at' => now(),
         ]);
@@ -157,9 +159,13 @@ class ReservationController extends Controller
         // Send notifications to priest and requestor
         $this->notificationService->notifyPriestAssigned($reservation);
 
+        $message = 'Reservation approved successfully. The requestor has been notified.';
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
         return Redirect::back()
             ->with('status', 'priest-assigned')
-            ->with('message', 'Priest assigned successfully. Awaiting priest confirmation.');
+            ->with('message', $message);
     }
 
     /**
@@ -195,9 +201,134 @@ class ReservationController extends Controller
     // Send notifications with correct admin wording
     $this->notificationService->notifyAdminRejected($reservation, $reason, Auth::user());
 
+        $message = 'Reservation rejected successfully. The requestor has been notified.';
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
         return Redirect::back()
             ->with('status', 'reservation-rejected')
-            ->with('message', 'Reservation rejected. Requestor has been notified.');
+            ->with('message', $message);
+    }
+
+    /**
+     * Confirm external priest reservation (Admin approves external priest)
+     */
+    public function confirmExternal(Request $request, $reservation_id)
+    {
+        $request->validate([
+            'admin_notes' => 'nullable|string|max:500',
+        ]);
+
+        $reservation = Reservation::findOrFail($reservation_id);
+
+        // Verify this is an external priest reservation
+        if ($reservation->priest_selection_type !== 'external') {
+            return Redirect::back()
+                ->with('error', 'This reservation does not have an external priest.');
+        }
+
+        // Allow if status is pending or adviser_approved
+        if (!in_array($reservation->status, ['pending', 'adviser_approved'])) {
+            return Redirect::back()
+                ->with('error', 'This reservation cannot be confirmed at this stage.');
+        }
+
+        // Update reservation status to admin_approved (since external priest doesn't need further confirmation)
+        $reservation->update([
+            'status' => 'admin_approved',
+        ]);
+
+        // Create history
+        $notes = $request->input('admin_notes', '');
+        $remarks = 'External priest reservation confirmed by admin';
+        if (!empty($notes)) {
+            $remarks .= ' - Notes: ' . $notes;
+        }
+        $remarks .= ' - External Priest: ' . $reservation->external_priest_name;
+
+        $reservation->history()->create([
+            'performed_by' => Auth::id(),
+            'action' => 'admin_approved',
+            'remarks' => $remarks,
+            'performed_at' => now(),
+        ]);
+
+        // Send notification to requestor
+        try {
+            $this->notifyExternalPriestConfirmed($reservation);
+        } catch (\Exception $e) {
+            Log::error('Failed to send external priest confirmation notification: ' . $e->getMessage());
+        }
+
+        $message = 'External priest reservation confirmed successfully. The requestor has been notified.';
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true, 'message' => $message]);
+        }
+        return Redirect::back()
+            ->with('status', 'external-priest-confirmed')
+            ->with('message', $message);
+    }
+
+    /**
+     * Send notification when admin confirms external priest reservation
+     */
+    private function notifyExternalPriestConfirmed(Reservation $reservation): void
+    {
+        // In-app notification to requestor
+        try {
+            $message = "Your reservation for <strong>{$reservation->service->service_name}</strong> has been approved by the admin. Your reservation with {$reservation->external_priest_name} is confirmed for " . $reservation->schedule_date->format('M d, Y h:i A');
+            
+            $notificationData = [
+                'user_id' => $reservation->user_id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => 'Update',
+                'sent_at' => now(),
+            ];
+            
+            if (Schema::hasColumn('notifications', 'data')) {
+                $notificationData['data'] = json_encode([
+                    'service_name' => $reservation->service->service_name,
+                    'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
+                    'external_priest_name' => $reservation->external_priest_name,
+                    'action' => 'external_priest_confirmed',
+                ]);
+            }
+            
+            \App\Models\Notification::create($notificationData);
+            Log::info('External priest confirmation notification sent to requestor (ID: ' . $reservation->user_id . ')');
+        } catch (\Exception $e) {
+            Log::error('Failed to create external priest confirmation notification: ' . $e->getMessage());
+        }
+
+        // In-app notification to adviser
+        if ($reservation->organization && $reservation->organization->adviser) {
+            try {
+                $adviser = $reservation->organization->adviser;
+                $message = "Reservation for <strong>{$reservation->service->service_name}</strong> with external priest has been confirmed by admin.";
+                
+                $notificationData = [
+                    'user_id' => $adviser->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => 'Update',
+                    'sent_at' => now(),
+                ];
+                
+                if (Schema::hasColumn('notifications', 'data')) {
+                    $notificationData['data'] = json_encode([
+                        'service_name' => $reservation->service->service_name,
+                        'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
+                        'action' => 'external_priest_confirmed',
+                    ]);
+                }
+                
+                \App\Models\Notification::create($notificationData);
+                Log::info('External priest confirmation notification sent to adviser (ID: ' . $adviser->id . ')');
+            } catch (\Exception $e) {
+                Log::error('Failed to create adviser notification for external priest confirmation: ' . $e->getMessage());
+            }
+        }
     }
 
     /**
