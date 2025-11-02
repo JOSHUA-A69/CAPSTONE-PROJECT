@@ -15,6 +15,16 @@
     <link rel="icon" href="/images/ers-logo.png" />
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- Dark Mode Initialization Script -->
+    <script>
+        // Initialize dark mode from localStorage before page renders
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     </head>
     <body class="font-sans antialiased text-base lg:text-[18px]">
         <!-- Skip to main content link for keyboard users -->
@@ -51,5 +61,29 @@
 
         <!-- Screen reader announcements for dynamic content -->
         <div id="sr-announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+        
+        <!-- Dark Mode Toggle Script -->
+        <script>
+            function toggleDarkMode(button) {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                updateDarkModeText();
+            }
+            
+            function updateDarkModeText() {
+                const isDark = document.documentElement.classList.contains('dark');
+                const toggleButton = document.getElementById('darkModeToggle');
+                if (toggleButton) {
+                    const textSpan = toggleButton.querySelector('.dark-mode-text');
+                    if (textSpan) {
+                        textSpan.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+                    }
+                }
+            }
+            
+            // Update text on page load
+            document.addEventListener('DOMContentLoaded', updateDarkModeText);
+        </script>
     </body>
 </html>

@@ -2,6 +2,9 @@ import './bootstrap';
 
 import Alpine from 'alpinejs';
 
+// Import calendar functionality
+import './calendar';
+
 window.Alpine = Alpine;
 
 Alpine.start();

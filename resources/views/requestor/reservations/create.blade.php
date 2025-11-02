@@ -11,8 +11,13 @@
         margin: 2rem auto;
         background: #ffffff;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
-        border-radius: 2px;
+        border-radius: 8px;
         overflow: hidden;
+    }
+
+    .dark .form-container {
+        background: #1f2937;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     /* Validation States */
@@ -23,11 +28,25 @@
         border-bottom: 2px solid #dc2626 !important;
     }
 
+    .dark .form-table input.is-invalid,
+    .dark .form-table select.is-invalid,
+    .dark .form-table textarea.is-invalid {
+        background: #7f1d1d;
+        border-bottom: 2px solid #ef4444 !important;
+    }
+
     .form-table input.is-valid,
     .form-table select.is-valid,
     .form-table textarea.is-valid {
         background: #f0fdf4;
         border-bottom: 2px solid #16a34a !important;
+    }
+
+    .dark .form-table input.is-valid,
+    .dark .form-table select.is-valid,
+    .dark .form-table textarea.is-valid {
+        background: #14532d;
+        border-bottom: 2px solid #22c55e !important;
     }
 
     .error-message {
@@ -169,6 +188,11 @@
         border-bottom: 3px solid #1e40af;
     }
 
+    .dark .form-header {
+        background: linear-gradient(135deg, #312e81 0%, #3730a3 100%);
+        border-bottom: 3px solid #4f46e5;
+    }
+
     .form-table {
         border-collapse: collapse;
         width: 100%;
@@ -184,12 +208,21 @@
         background: #ffffff;
     }
 
+    .dark .form-table td {
+        border: 1px solid #374151;
+        background: #1f2937;
+    }
+
     .form-table label {
         font-weight: 600;
         display: inline;
         margin-right: 6px;
         color: #374151;
         font-size: 13px;
+    }
+
+    .dark .form-table label {
+        color: #e5e7eb;
     }
 
     .form-table input[type="text"],
@@ -209,6 +242,28 @@
         transition: background-color 0.15s ease;
     }
 
+    .dark .form-table input[type="text"],
+    .dark .form-table input[type="date"],
+    .dark .form-table input[type="time"],
+    .dark .form-table input[type="number"],
+    .dark .form-table select,
+    .dark .form-table textarea {
+        color: #f3f4f6;
+    }
+
+    /* Dark mode calendar and clock icons */
+    .dark .form-table input[type="date"]::-webkit-calendar-picker-indicator,
+    .dark .form-table input[type="time"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+    }
+
+    /* For Firefox */
+    .dark .form-table input[type="date"],
+    .dark .form-table input[type="time"] {
+        color-scheme: dark;
+    }
+
     .form-table input[type="text"]:focus,
     .form-table input[type="date"]:focus,
     .form-table input[type="time"]:focus,
@@ -216,6 +271,16 @@
     .form-table select:focus,
     .form-table textarea:focus {
         background: #f9fafb;
+        border-radius: 2px;
+    }
+
+    .dark .form-table input[type="text"]:focus,
+    .dark .form-table input[type="date"]:focus,
+    .dark .form-table input[type="time"]:focus,
+    .dark .form-table input[type="number"]:focus,
+    .dark .form-table select:focus,
+    .dark .form-table textarea:focus {
+        background: #374151;
         border-radius: 2px;
     }
 
@@ -245,6 +310,11 @@
         padding: 12px !important;
     }
 
+    .dark .ministry-header {
+        background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+        color: #f3f4f6;
+    }
+
     .form-note {
         font-style: italic;
         font-size: 12px;
@@ -252,6 +322,12 @@
         background: #fefce8;
         border-top: 2px solid #fde047;
         color: #854d0e;
+    }
+
+    .dark .form-note {
+        background: #713f12;
+        border-top: 2px solid #a16207;
+        color: #fef3c7;
     }
 
     .form-actions {
@@ -263,12 +339,21 @@
         align-items: center;
     }
 
+    .dark .form-actions {
+        background: #111827;
+        border-top: 1px solid #374151;
+    }
+
     .form-actions .office-label {
         font-size: 11px;
         color: #6b7280;
         font-weight: 500;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+    }
+
+    .dark .form-actions .office-label {
+        color: #9ca3af;
     }
 
     .btn-group {
@@ -551,6 +636,19 @@
                 </div>
             </details>
         </div>
+
+        <style>
+            .dark .no-print {
+                background: #1e3a8a !important;
+                border-bottom: 1px solid #3b82f6 !important;
+            }
+            .dark .no-print summary {
+                color: #93c5fd !important;
+            }
+            .dark .no-print div {
+                color: #dbeafe !important;
+            }
+        </style>
 
         <!-- Form Table -->
         <table class="form-table">

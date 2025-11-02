@@ -59,6 +59,15 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'name',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -95,7 +104,13 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getNameAttribute(): ?string
     {
-        return $this->first_name;
+        $nameParts = array_filter([
+            $this->first_name,
+            $this->middle_name,
+            $this->last_name,
+        ]);
+        
+        return implode(' ', $nameParts) ?: null;
     }
 
     /**

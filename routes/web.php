@@ -22,6 +22,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Public Calendar Route (accessible to everyone)
+Route::get('/calendar', [\App\Http\Controllers\PublicCalendarController::class, 'index'])->name('calendar.public');
+Route::get('/calendar/schedules', [\App\Http\Controllers\PublicCalendarController::class, 'getSchedules'])->name('calendar.public.schedules');
+
 // Development helper: allow a logged-in pending user to mark their email
 // as verified so they can reach role-specific pages during local testing.
 // This route is only registered when the application environment is 'local'.
@@ -125,6 +129,13 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', \App\Http\Middleware
     Route::get('/organizations/{org_id}/edit', [\App\Http\Controllers\Staff\OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::put('/organizations/{org_id}', [\App\Http\Controllers\Staff\OrganizationController::class, 'update'])->name('organizations.update');
     Route::delete('/organizations/{org_id}', [\App\Http\Controllers\Staff\OrganizationController::class, 'destroy'])->name('organizations.destroy');
+    
+    // Calendar Management Routes
+    Route::get('/calendar', [\App\Http\Controllers\Staff\CalendarController::class, 'index'])->name('calendar.index');
+    Route::get('/calendar/schedules', [\App\Http\Controllers\Staff\CalendarController::class, 'getSchedules'])->name('calendar.schedules');
+    Route::post('/calendar', [\App\Http\Controllers\Staff\CalendarController::class, 'store'])->name('calendar.store');
+    Route::put('/calendar/{id}', [\App\Http\Controllers\Staff\CalendarController::class, 'update'])->name('calendar.update');
+    Route::delete('/calendar/{id}', [\App\Http\Controllers\Staff\CalendarController::class, 'destroy'])->name('calendar.destroy');
 });
 
 Route::get('/adviser', fn () => view('adviser.dashboard'))
@@ -216,6 +227,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::get('/services', [\App\Http\Controllers\Admin\ServiceController::class, 'index'])->name('services.index');
     Route::get('/services/calendar', [\App\Http\Controllers\Admin\ServiceController::class, 'calendar'])->name('services.calendar');
     Route::get('/services/declined', [\App\Http\Controllers\Admin\ServiceController::class, 'declined'])->name('services.declined');
+    
+    // Service Management Routes (MUST be before parameterized routes)
+    Route::get('/services/manage', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'index'])->name('services.manage');
+    Route::post('/services/manage', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'store'])->name('services.manage.store');
+    Route::put('/services/manage/{id}', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'update'])->name('services.manage.update');
+    Route::delete('/services/manage/{id}', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'destroy'])->name('services.manage.destroy');
+    
+    // Parameterized service routes (MUST be after specific routes)
     Route::post('/services/{reservation_id}/confirm', [\App\Http\Controllers\Admin\ServiceController::class, 'confirm'])->name('services.confirm');
     Route::post('/services/{reservation_id}/decline', [\App\Http\Controllers\Admin\ServiceController::class, 'decline'])->name('services.decline');
     Route::get('/services/{reservation_id}', [\App\Http\Controllers\Admin\ServiceController::class, 'show'])->name('services.show');
@@ -284,4 +303,9 @@ Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\H
     Route::post('/reservations/{reservation_id}/undecline', [\App\Http\Controllers\Priest\ReservationController::class, 'undecline'])->name('reservations.undecline');
     // GET route for individual reservation (must be last among /reservations/* routes)
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Priest\ReservationController::class, 'show'])->name('reservations.show');
+});
+
+// Admin Venue Management
+Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('venues', \App\Http\Controllers\Admin\VenueController::class);
 });

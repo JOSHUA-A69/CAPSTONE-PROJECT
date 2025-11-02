@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,12 +34,17 @@ class NotificationController extends Controller
      */
     public function getRecent()
     {
-        $notifications = Notification::where('user_id', Auth::id())
-            ->unread()
-            ->with(['reservation.priest'])
-            ->orderBy('sent_at', 'desc')
-            ->limit(5)
-            ->get();
+        try {
+            $notifications = Notification::where('user_id', Auth::id())
+                ->unread()
+                ->with(['reservation.priest'])
+                ->orderBy('sent_at', 'desc')
+                ->limit(5)
+                ->get();
+        } catch (\Exception $e) {
+            Log::error('Failed to load notifications: ' . $e->getMessage());
+            return response()->json(['html' => '<div class="px-5 py-12 text-center bg-white dark:bg-gray-800"><p class="text-red-600">Error loading notifications. Please refresh.</p></div>']);
+        }
 
         $html = '';
         if ($notifications->isEmpty()) {
@@ -50,16 +56,11 @@ class NotificationController extends Controller
             $html .= '</div>';
         } else {
             foreach ($notifications as $notification) {
-                // Determine background for unread/read notifications
                 $bgColor = $notification->isUnread() ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800';
-
-                // Get priest data from notification
                 $data = $notification->data;
                 if (is_string($data)) {
                     $data = json_decode($data, true);
                 }
-                
-                // Get priest from reservation or data
                 $priest = null;
                 $priestId = $data['priest_id'] ?? null;
                 if ($priestId) {
@@ -67,11 +68,8 @@ class NotificationController extends Controller
                 } elseif ($notification->reservation && $notification->reservation->priest) {
                     $priest = $notification->reservation->priest;
                 }
-                
                 $priestName = $data['priest_name'] ?? ($priest ? $priest->full_name : 'Unknown');
                 $timeAgo = $notification->sent_at->diffForHumans();
-
-                // Generate avatar initials
                 $nameParts = explode(' ', str_replace('Fr. ', '', $priestName));
                 $initials = '';
                 if (count($nameParts) >= 2) {
@@ -79,61 +77,18 @@ class NotificationController extends Controller
                 } else {
                     $initials = strtoupper(substr($priestName, 0, 2));
                 }
-
-                // Random avatar colors for variety
-                $colors = [
-                    'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500',
-                    'bg-pink-500', 'bg-indigo-500', 'bg-teal-500', 'bg-red-500'
-                ];
-                $avatarColor = $colors[array_rand($colors)];
-
-                if ($notification->type === 'Priest Declined') {
-                    $url = route('admin.notifications.priest-declined', $notification->notification_id);
-                } else {
-                    $url = route('admin.notifications.show', $notification->notification_id);
-                }
-
-                $html .= '<div class="relative group ' . $bgColor . '">';
-                $html .= '<a href="' . $url . '" class="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">';
-                $html .= '<div class="flex items-start gap-4">';
-
-                // Avatar - Show profile picture if available
-                $html .= '<div class="flex-shrink-0">';
-                if ($priest && $priest->profile_picture) {
-                    $profilePicUrl = asset('storage/' . $priest->profile_picture);
-                    $html .= '<img src="' . $profilePicUrl . '" alt="' . e($priestName) . '" class="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-gray-700 shadow-sm">';
-                } else {
-                    $html .= '<div class="w-11 h-11 rounded-full ' . $avatarColor . ' flex items-center justify-center text-white font-semibold text-sm">';
-                    $html .= $initials;
-                    $html .= '</div>';
-                }
-                $html .= '</div>';
-
-                // Content
+                $html .= '<div class="' . $bgColor . ' px-6 py-4 flex items-center gap-4 border-b">';
+                $html .= '<div class="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">' . $initials . '</div>';
                 $html .= '<div class="flex-1 min-w-0">';
-                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">'
-                    . $notification->message
-                    . ' <span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500 dark:text-gray-400">'
-                    . $timeAgo
-                    . '</span></p>';
+                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">' . $notification->message . ' <span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500 dark:text-gray-400">' . $timeAgo . '</span></p>';
                 $html .= '</div>';
-
-                $html .= '</div>';
-                $html .= '</a>';
-
-                // Three-dot menu
-                $html .= '<button class="absolute top-4 right-5 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">';
-                $html .= '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">';
-                $html .= '<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>';
-                $html .= '</svg>';
-                $html .= '</button>';
-
                 $html .= '</div>';
             }
         }
-
         return response()->json(['html' => $html]);
     }
+
+
 
     /**
      * Get recent notifications
