@@ -19,13 +19,17 @@ class RegistrationTest extends TestCase
     public function test_new_users_can_register(): void
     {
         $response = $this->post('/register', [
-            'name' => 'Test User',
+            'first_name' => 'Test',
+            'middle_name' => null,
+            'last_name' => 'User',
+            'phone' => '09123456789',
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+    $this->assertAuthenticated();
+    // Registration redirects to verification notice in this app
+    $response->assertRedirect(route('verification.notice', absolute: false));
     }
 }
