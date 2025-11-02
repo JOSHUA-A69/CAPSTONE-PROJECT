@@ -398,4 +398,145 @@ class SystemSmokeTest extends TestCase
         $this->assertEquals('pending_priest_reassignment', $reservation2->status);
         $this->assertNull($reservation2->officiant_id);
     }
+
+    public function test_requestor_token_confirm_and_decline(): void
+    {
+        $requestor = $this->makeUser('requestor');
+        $adviser = $this->makeUser('adviser');
+
+        $service = Service::create([
+            'service_name' => 'Noon Mass',
+            'service_category' => 'Daily Noon Mass',
+            'description' => null,
+            'duration' => 45,
+        ]);
+        $venue = Venue::create([
+            'name' => 'Small Chapel',
+            'capacity' => 40,
+            'location' => 'South Wing',
+        ]);
+        $org = Organization::create([
+            'adviser_id' => $adviser->id,
+            'org_name' => 'QA Org Tokens',
+            'org_desc' => null,
+        ]);
+
+        $reservation = Reservation::create([
+            'user_id' => $requestor->id,
+            'org_id' => $org->org_id,
+            'venue_id' => $venue->venue_id,
+            'service_id' => $service->service_id,
+            'schedule_date' => now()->addDays(5)->setTime(12, 0),
+            'status' => 'adviser_approved',
+            'purpose' => 'Worship',
+            'activity_name' => 'Noon Mass',
+            'requestor_confirmation_token' => 'tok123',
+            'contacted_at' => now(),
+        ]);
+
+        // Show confirmation page
+        $this->actingAs($requestor)
+            ->get(route('requestor.reservations.show-confirmation', [$reservation->reservation_id, 'tok123']))
+            ->assertOk();
+
+        // Confirm
+        $this->actingAs($requestor)
+            ->post(route('requestor.reservations.confirm-reservation', [$reservation->reservation_id, 'tok123']))
+            ->assertSessionHas('status', 'reservation-confirmed');
+
+        $reservation->refresh();
+        $this->assertNotNull($reservation->requestor_confirmed_at);
+
+        // Create another reservation to test decline path
+        $reservation2 = Reservation::create([
+            'user_id' => $requestor->id,
+            'org_id' => $org->org_id,
+            'venue_id' => $venue->venue_id,
+            'service_id' => $service->service_id,
+            'schedule_date' => now()->addDays(6)->setTime(12, 0),
+            'status' => 'adviser_approved',
+            'purpose' => 'Worship',
+            'activity_name' => 'Noon Mass 2',
+            'requestor_confirmation_token' => 'tok456',
+            'contacted_at' => now(),
+        ]);
+
+        $this->actingAs($requestor)
+            ->post(route('requestor.reservations.decline-reservation', [$reservation2->reservation_id, 'tok456']))
+            ->assertSessionHas('status', 'reservation-declined');
+
+        $reservation2->refresh();
+        $this->assertEquals('cancelled', $reservation2->status);
+        $this->assertEquals('Declined by requestor after staff contact', $reservation2->cancellation_reason);
+    }
+
+    public function test_cancellation_flow_requestor_and_all_confirmers(): void
+    {
+        $requestor = $this->makeUser('requestor');
+        $adviser = $this->makeUser('adviser');
+        $staff = $this->makeUser('staff');
+        $admin = $this->makeUser('admin');
+        $priest = $this->makeUser('priest');
+
+        $service = Service::create([
+            'service_name' => 'Catechetical',
+            'service_category' => 'Catechetical Activities',
+            'description' => null,
+            'duration' => 90,
+        ]);
+        $venue = Venue::create([
+            'name' => 'Hall A',
+            'capacity' => 80,
+            'location' => 'East',
+        ]);
+        $org = Organization::create([
+            'adviser_id' => $adviser->id,
+            'org_name' => 'QA Org Cancel',
+            'org_desc' => null,
+        ]);
+
+        $reservation = Reservation::create([
+            'user_id' => $requestor->id,
+            'org_id' => $org->org_id,
+            'venue_id' => $venue->venue_id,
+            'service_id' => $service->service_id,
+            'schedule_date' => now()->addDays(10)->setTime(13, 0),
+            'status' => 'approved',
+            'purpose' => 'Teaching',
+            'activity_name' => 'Catechism',
+            'officiant_id' => $priest->id,
+        ]);
+
+        // Requestor initiates cancellation
+        $this->actingAs($requestor)
+            ->post(route('requestor.reservations.cancel', $reservation->reservation_id), [
+                'reason' => 'Scheduling conflict due to exams',
+            ])
+            ->assertSessionHas('status', 'cancellation-requested');
+
+        $cancel = \App\Models\ReservationCancellation::where('reservation_id', $reservation->reservation_id)
+            ->latest('created_at')
+            ->first();
+        $this->assertNotNull($cancel);
+
+        // Adviser confirms
+        $this->actingAs($adviser)
+            ->post(route('adviser.cancellations.confirm', $cancel->cancellation_id))
+            ->assertSessionHas('success');
+
+        // Priest confirms
+        $this->actingAs($priest)
+            ->post(route('priest.cancellations.confirm', $cancel->cancellation_id))
+            ->assertSessionHas('success');
+
+        // Staff confirms (completes cancellation per business rule: staff OR admin completes)
+        $this->actingAs($staff)
+            ->post(route('staff.cancellations.confirm', $cancel->cancellation_id))
+            ->assertSessionHas('success');
+
+        $cancel->refresh();
+        $reservation->refresh();
+        $this->assertEquals('completed', $cancel->status);
+        $this->assertEquals('cancelled', $reservation->status);
+    }
 }
