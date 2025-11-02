@@ -47,7 +47,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('staff.organizations.index') }}" class="card-hover group">
+                                <a href="{{ route('staff.organizations.index') }}" class="card-hover group">
                     <div class="card-body">
                         <div class="flex items-start gap-4">
                             <div class="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -67,6 +67,30 @@
                         </div>
                     </div>
                 </a>
+
+                <!-- Calendar Management Card -->
+                <a href="{{ route('staff.calendar.index') }}" class="card-hover group">
+                    <div class="card-body">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6 text-teal-600 dark:text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-lg text-heading mb-1">Manage Calendar</h4>
+                                <p class="text-sm text-muted">
+                                    Schedule and manage liturgical events, masses, and parish activities for public viewing.
+                                </p>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-teal-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+
+                {{-- Commented Services Card
 
                 {{-- Services management route not yet implemented
                 <a href="{{ route('staff.services.index') }}" class="card-hover group">

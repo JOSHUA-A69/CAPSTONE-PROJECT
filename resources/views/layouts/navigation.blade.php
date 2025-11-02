@@ -63,19 +63,27 @@
                     open: false,
                     count: 0,
                     loadNotifications() {
+                        let url = '';
                         @if(auth()->user()->role === 'priest')
-                        fetch('{{ route('priest.notifications.recent') }}')
+                        url = '{{ route('priest.notifications.recent') }}';
                         @elseif(auth()->user()->role === 'adviser')
-                        fetch('{{ route('adviser.notifications.recent') }}')
+                        url = '{{ route('adviser.notifications.recent') }}';
                         @elseif(auth()->user()->role === 'requestor')
-                        fetch('{{ route('requestor.notifications.recent') }}')
+                        url = '{{ route('requestor.notifications.recent') }}';
                         @else
-                        fetch('{{ route('admin.notifications.recent') }}')
+                        url = '{{ route('admin.notifications.recent') }}';
                         @endif
+                        document.getElementById('notification-list').innerHTML = '<div class=\'px-6 py-4 text-sm text-gray-500 dark:text-gray-400\'>Loading...</div>';
+                        fetch(url)
                             .then(response => response.json())
                             .then(data => {
                                 document.getElementById('notification-list').innerHTML = data.html;
+                            })
+                            .catch(() => {
+                                document.getElementById('notification-list').innerHTML = '<div class=\'px-6 py-4 text-red-600\'>Error loading notifications. Please refresh.</div>';
                             });
+                        // Also update badge count instantly
+                        this.updateCount();
                     },
                     updateCount() {
                         @if(auth()->user()->role === 'priest')
@@ -169,6 +177,10 @@
                     </x-slot>
 
                     <x-slot name="content">
+                        <!-- Dark Mode Toggle -->
+                        <button id="darkModeToggle" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-900 transition" onclick="toggleDarkMode(this)">
+                            <span class="dark-mode-text">Dark Mode</span>
+                        </button>
                         <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
                         </x-dropdown-link>

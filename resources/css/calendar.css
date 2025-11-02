@@ -1,0 +1,434 @@
+/* Custom Calendar Styling */
+
+/* Critical FullCalendar Base Styles */
+.fc {
+    display: block;
+    font-family: inherit;
+}
+
+.fc-view-harness {
+    flex-grow: 1;
+    position: relative;
+}
+
+.fc-daygrid-body {
+    width: 100%;
+}
+
+.fc-scrollgrid {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+}
+
+.fc-scrollgrid-section table {
+    width: 100%;
+}
+
+.fc-daygrid-day-frame {
+    position: relative;
+    min-height: 100px;
+}
+
+.fc-daygrid-day-events {
+    margin-top: 0;
+    position: relative;
+}
+
+.fc-daygrid-event-harness {
+    position: relative;
+}
+
+.fc-daygrid-event {
+    position: relative;
+    white-space: nowrap;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+.fc-event {
+    display: block;
+    font-size: 0.85em;
+    line-height: 1.3;
+    border-radius: 3px;
+    border: 1px solid #3788d8;
+}
+
+.fc-h-event {
+    display: block;
+    border: 1px solid #3788d8;
+    background-color: #3788d8;
+}
+
+.fc-event-main {
+    color: #fff;
+    height: 100%;
+    padding: 2px;
+}
+
+.fc-event-title {
+    display: inline-block;
+    vertical-align: top;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+}
+
+.fc-daygrid-block-event .fc-event-time,
+.fc-daygrid-block-event .fc-event-title {
+    padding: 1px;
+}
+
+/* Success Alert Animation */
+@keyframes slide-in-down {
+    from {
+        opacity: 0;
+        transform: translateY(-1rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-in-down {
+    animation: slide-in-down 0.3s ease-out;
+}
+
+.fc {
+    font-family: inherit;
+}
+
+.fc .fc-toolbar-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.dark .fc .fc-toolbar-title {
+    color: #f3f4f6;
+}
+
+.fc .fc-button {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+    color: white;
+    text-transform: capitalize;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+}
+
+.fc .fc-button:hover {
+    background-color: #4338ca;
+    border-color: #4338ca;
+}
+
+.fc .fc-button:disabled {
+    background-color: #9ca3af;
+    border-color: #9ca3af;
+    opacity: 0.5;
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+    background-color: #4338ca;
+    border-color: #4338ca;
+}
+
+/* Dark Mode Calendar Background */
+.dark .fc {
+    background-color: #1f2937;
+}
+
+.dark .fc-theme-standard td,
+.dark .fc-theme-standard th {
+    border-color: #374151;
+}
+
+.dark .fc-theme-standard .fc-scrollgrid {
+    border-color: #374151;
+}
+
+.dark .fc-col-header-cell {
+    background-color: #374151;
+}
+
+.dark .fc-daygrid-day-number,
+.dark .fc-col-header-cell-cushion {
+    color: #f3f4f6;
+}
+
+.dark .fc-day-today {
+    background-color: #312e81 !important;
+}
+
+.dark .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Event Styling */
+.fc-event {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 3px 5px !important;
+    margin-bottom: 2px !important;
+    font-size: 0.75rem !important;
+    transition: all 0.2s;
+    border: 1px solid rgba(0,0,0,0.1) !important;
+}
+
+.fc-event:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    opacity: 0.9;
+}
+
+/* Event content customization */
+.fc-event-main-custom {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+    line-height: 1.3 !important;
+}
+
+.fc-event-title {
+    font-weight: 500;
+}
+
+.fc-event-time {
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+/* Day cell styling to show more events */
+.fc-daygrid-day-frame {
+    min-height: 180px !important;
+}
+
+.fc-daygrid-day-events {
+    margin-bottom: 0 !important;
+}
+
+.fc-daygrid-event-harness {
+    margin-bottom: 2px;
+}
+
+/* Month view specific */
+.fc-dayGridMonth-view .fc-daygrid-day-frame {
+    min-height: 200px;
+}
+
+/* Increase overall calendar height */
+.fc .fc-view-harness {
+    min-height: 800px;
+}
+
+.fc-daygrid-day-top {
+    padding: 4px;
+}
+
+.fc-daygrid-day-number {
+    padding: 4px;
+    font-weight: 600;
+}
+
+/* Tooltip Styling */
+.fc-tooltip {
+    font-weight: 500;
+    z-index: 10000;
+}
+
+.dark .fc-tooltip {
+    background-color: #374151;
+    border-color: #4b5563;
+    color: #f3f4f6;
+}
+
+/* List View Styling */
+.dark .fc-list-event:hover td {
+    background-color: #374151;
+}
+
+.dark .fc-list-day-cushion {
+    background-color: #374151;
+    color: #f3f4f6;
+}
+
+.dark .fc-list-event-time,
+.dark .fc-list-event-title {
+    color: #f3f4f6;
+}
+
+/* Time Grid Styling */
+.dark .fc-timegrid-slot {
+    border-color: #374151;
+}
+
+.dark .fc-timegrid-slot-label {
+    color: #9ca3af;
+}
+
+/* Popover/Tooltip Styling */
+.fc-popover {
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .fc-popover {
+    background-color: #374151;
+    border-color: #4b5563;
+}
+
+.dark .fc-popover-title {
+    background-color: #4b5563;
+    color: #f3f4f6;
+}
+
+.dark .fc-popover-body {
+    color: #f3f4f6;
+}
+
+/* More Link Styling */
+.fc-more-link {
+    color: #4f46e5;
+    font-weight: 600;
+}
+
+.dark .fc-more-link {
+    color: #818cf8;
+}
+
+/* Day Grid Styling - removed duplicate */
+.fc-daygrid-day-frame {
+    min-height: 100px;
+}
+
+.fc-daygrid-day:hover {
+    background-color: rgba(79, 70, 229, 0.05);
+    cursor: pointer;
+}
+
+.dark .fc-daygrid-day:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .fc .fc-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .fc .fc-toolbar-chunk {
+        display: flex;
+        justify-content: center;
+    }
+    
+    .fc .fc-toolbar-title {
+        font-size: 1.25rem;
+        margin: 0.5rem 0;
+    }
+}
+
+/* Calendar Container */
+#fullcalendar {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    min-height: 600px;
+}
+
+.dark #fullcalendar {
+    background-color: #1f2937;
+}
+
+/* Enhanced calendar table */
+.fc-scrollgrid {
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
+.fc-daygrid-body {
+    height: auto !important;
+}
+
+/* Make cells taller to show more events */
+.fc .fc-daygrid-day {
+    height: 140px !important;
+    min-height: 140px !important;
+}
+
+.fc .fc-daygrid-day-frame {
+    min-height: 140px !important;
+    height: 100% !important;
+}
+
+.fc .fc-daygrid-day-events {
+    min-height: auto !important;
+}
+
+/* Better spacing for events in cells */
+.fc-daygrid-event {
+    margin-bottom: 3px !important;
+    white-space: normal !important;
+    align-items: flex-start !important;
+}
+
+.fc-daygrid-block-event .fc-event-main {
+    padding: 2px 4px !important;
+}
+
+/* Loading State */
+.fc-loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Event Type Colors (matching JS) */
+.event-mass { background-color: #8B5CF6 !important; border-color: #8B5CF6 !important; }
+.event-confession { background-color: #3B82F6 !important; border-color: #3B82F6 !important; }
+.event-adoration { background-color: #F59E0B !important; border-color: #F59E0B !important; }
+.event-retreat { background-color: #10B981 !important; border-color: #10B981 !important; }
+.event-seminar { background-color: #EF4444 !important; border-color: #EF4444 !important; }
+.event-meeting { background-color: #6366F1 !important; border-color: #6366F1 !important; }
+.event-celebration { background-color: #EC4899 !important; border-color: #EC4899 !important; }
+.event-other { background-color: #6B7280 !important; border-color: #6B7280 !important; }
+
+/* Custom Scrollbar for Schedules List */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.5);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.8);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.5);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.8);
+}
+
+/* Larger Calendar Height */
+.fc .fc-view-harness {
+    min-height: 700px !important;
+}

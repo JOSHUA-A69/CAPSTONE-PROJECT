@@ -11,16 +11,51 @@
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
+        
+        <style>
+            .hero-gradient {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            
+            .card-hover:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            }
+            
+            @keyframes float {
+                0%, 100% { transform: translateY(0px); }
+                50% { transform: translateY(-20px); }
+            }
+            
+            .float-animation {
+                animation: float 6s ease-in-out infinite;
+            }
+            
+            .gradient-text {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+        </style>
     </head>
-    <body class="antialiased bg-[#FDFDFC] dark:bg-[#0a0a0a] text-[#1b1b18]">
-        <header class="border-b bg-white dark:bg-gray-900">
+    <body class="antialiased bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-[#1b1b18]">
+        <!-- Header -->
+        <header class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div class="flex h-16 items-center justify-between">
-                    <a href="{{ url('/') }}" class="flex items-center gap-3">
-                        <img src="/images/ers-logo.png" alt="eReligiousServices logo" class="w-12 h-12 object-contain" />
+                <div class="flex h-20 items-center justify-between">
+                    <a href="{{ url('/') }}" class="flex items-center gap-3 group">
+                        <div class="relative">
+                            <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                            <img src="/images/ers-logo.png" alt="eReligiousServices logo" class="relative w-14 h-14 object-contain transform group-hover:scale-110 transition-transform duration-300" />
+                        </div>
                         <div class="hidden sm:block">
-                            <div class="font-semibold text-lg">eReligiousServices</div>
-                            <div class="text-xs text-gray-500">Center for Religious Education and Mission</div>
+                            <div class="font-bold text-xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">eReligiousServices</div>
+                            <div class="text-xs text-gray-600 dark:text-gray-400">Center for Religious Education and Mission</div>
                         </div>
                     </a>
 
@@ -28,32 +63,33 @@
                         @guest
                             <!-- Sign In Button -->
                             <a href="{{ route('login') }}"
-                               class="group relative inline-flex items-center justify-center gap-2 px-5 py-3 text-base font-extrabold text-gray-900 bg-white border-3 border-gray-900 rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-200 shadow-md hover:shadow-xl">
-                                <svg class="w-5 h-5 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                               class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-300 shadow-sm hover:shadow-md">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                 </svg>
-                                <span class="text-base font-extrabold tracking-wide">SIGN IN</span>
+                                <span class="tracking-wide">SIGN IN</span>
                             </a>
 
                             <!-- Register Button -->
                             <a href="{{ route('register') }}"
-                               class="group relative inline-flex items-center justify-center gap-2 px-5 py-3 text-base font-extrabold text-white bg-[#2ecc71] border-3 border-[#2ecc71] rounded-lg hover:bg-[#27ae60] hover:border-[#27ae60] transition-all duration-200 shadow-md hover:shadow-xl hover:scale-105">
-                                <svg class="w-5 h-5 font-bold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                               class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 overflow-hidden">
+                                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                                <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                                 </svg>
-                                <span class="text-base font-extrabold tracking-wide">REGISTER</span>
-                                <span class="absolute -top-1.5 -right-1.5 flex h-5 w-5">
+                                <span class="tracking-wide relative z-10">REGISTER</span>
+                                <span class="absolute -top-1 -right-1 flex h-6 w-6">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-300 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-5 w-5 bg-yellow-300 shadow-lg"></span>
+                                    <span class="relative inline-flex rounded-full h-6 w-6 bg-yellow-300 shadow-lg items-center justify-center text-xs font-bold text-purple-900">!</span>
                                 </span>
                             </a>
                         @else
                             <a href="{{ route('dashboard') }}"
-                               class="inline-flex items-center justify-center gap-2 px-5 py-3 text-base font-extrabold text-gray-900 bg-white border-3 border-gray-900 rounded-lg hover:bg-gray-900 hover:text-white transition-all duration-200 shadow-md hover:shadow-xl">
+                               class="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                                 </svg>
-                                <span class="text-base font-extrabold tracking-wide">DASHBOARD</span>
+                                <span class="tracking-wide">DASHBOARD</span>
                             </a>
                         @endguest
                     </div>
@@ -61,50 +97,132 @@
             </div>
         </header>
 
-        <main class="mt-12">
-            <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-                <div class="py-12 text-center">
-                    <h1 class="er-hero-title text-hero-4xl mx-auto">
-                        <span class="text-[#1b1b18]">Faith.</span>
-                        <span class="text-[var(--er-green)]"> Community.</span>
-                        <span class="text-[#1b1b18]"> Service.</span>
+        <!-- Hero Section -->
+        <main class="relative overflow-hidden">
+            <!-- Background Decoration -->
+            <div class="absolute inset-0 overflow-hidden pointer-events-none">
+                <div class="absolute top-20 right-0 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+                <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+            </div>
+
+            <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+                <!-- Hero Content -->
+                <div class="text-center mb-16">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-full text-sm font-semibold text-purple-700 dark:text-purple-300 mb-8">
+                        <span class="relative flex h-3 w-3">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                        </span>
+                        Welcome to HNU Center for Religious Education
+                    </div>
+                    
+                    <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8">
+                        <span class="block text-gray-900 dark:text-white">Faith.</span>
+                        <span class="block gradient-text">Community.</span>
+                        <span class="block text-gray-900 dark:text-white">Service.</span>
                     </h1>
 
-                    <p class="mt-6 text-[#706f6c] dark:text-[#A1A09A] max-w-prose mx-auto text-lg">
-                        Welcome to eReligiousServices your gateway to spiritual growth and community engagement at Holy Name University's Center for Religious Education and Mission.
+                    <p class="mt-8 text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+                        Your gateway to spiritual growth and community engagement at <span class="font-semibold text-purple-600 dark:text-purple-400">Holy Name University</span>
                     </p>
 
-                    <p class="mt-4 text-[#706f6c] dark:text-[#A1A09A] max-w-prose mx-auto">
-                        Experience seamless booking for liturgical services, retreats, and religious events. Join our vibrant faith community and discover opportunities for spiritual formation and service.
+                    <p class="mt-4 text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+                        Experience seamless booking for liturgical services, retreats, and religious events. Join our vibrant faith community today.
                     </p>
 
-                    <div class="mt-8 flex gap-4 flex-wrap justify-center">
-                        <a href="#" class="group er-cta-primary inline-flex items-center gap-2 px-6 py-3 transition-all duration-300 hover:scale-105 transform">
-                            <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            View Calendar
+                    <!-- CTA Buttons -->
+                    <div class="mt-12 flex gap-6 flex-wrap justify-center">
+                        <a href="{{ route('calendar.public') }}" 
+                           class="group relative inline-flex items-center gap-3 px-8 py-4 text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-2xl hover:shadow-purple-500/50 hover:scale-105 transform">
+                            <svg class="w-6 h-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span>View Calendar</span>
+                            <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
                         </a>
 
-                        <a href="#" class="group er-cta-ghost inline-flex items-center gap-2 px-6 py-3 transition-all duration-300 hover:scale-105 transform">
-                            <svg class="w-5 h-5 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                            Organizations
+                        <a href="#services" 
+                           class="group inline-flex items-center gap-3 px-8 py-4 text-lg font-bold text-purple-700 dark:text-purple-300 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 rounded-2xl hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform">
+                            <svg class="w-6 h-6 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <span>Explore Services</span>
                         </a>
                     </div>
                 </div>
 
-                <div class="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div class="er-stat-card">
-                        <div class="text-2xl font-extrabold text-[var(--er-green)]">6+</div>
-                        <div class="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">Student Organizations</div>
+                <!-- Stats Section -->
+                <div class="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-8">
+                    <div class="card-hover relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
+                        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400 to-indigo-400 rounded-bl-full opacity-10"></div>
+                        <div class="relative">
+                            <div class="text-5xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3">6+</div>
+                            <div class="text-gray-600 dark:text-gray-300 font-semibold">Student Organizations</div>
+                            <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Active faith communities</div>
+                        </div>
                     </div>
 
-                    <div class="er-stat-card">
-                        <div class="text-2xl font-extrabold text-[var(--er-green)]">Daily</div>
-                        <div class="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">Noon Mass</div>
+                    <div class="card-hover relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
+                        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400 to-teal-400 rounded-bl-full opacity-10"></div>
+                        <div class="relative">
+                            <div class="text-5xl font-extrabold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent mb-3">Daily</div>
+                            <div class="text-gray-600 dark:text-gray-300 font-semibold">Noon Mass</div>
+                            <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Join us for worship</div>
+                        </div>
                     </div>
 
-                    <div class="er-stat-card">
-                        <div class="text-2xl font-extrabold text-[var(--er-green)]">24/7</div>
-                        <div class="mt-2 text-sm text-[#706f6c] dark:text-[#A1A09A]">Online Booking</div>
+                    <div class="card-hover relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
+                        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-bl-full opacity-10"></div>
+                        <div class="relative">
+                            <div class="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-3">24/7</div>
+                            <div class="text-gray-600 dark:text-gray-300 font-semibold">Online Booking</div>
+                            <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Reserve services anytime</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Featured Services Section -->
+                <div id="services" class="mt-32">
+                    <div class="text-center mb-12">
+                        <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">Our Services</h2>
+                        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Discover the various ways we serve our community</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Mass Reservations -->
+                        <div class="card-hover group bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400">
+                            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Mass Reservations</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Book your spot for daily mass, special celebrations, and liturgical events</p>
+                        </div>
+
+                        <!-- Retreats -->
+                        <div class="card-hover group bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-400">
+                            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Spiritual Retreats</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Join immersive retreat experiences for spiritual renewal and growth</p>
+                        </div>
+
+                        <!-- Community Events -->
+                        <div class="card-hover group bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400">
+                            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">Community Events</h3>
+                            <p class="text-gray-600 dark:text-gray-300">Participate in faith-based activities and community gatherings</p>
+                        </div>
                     </div>
                 </div>
             </div>
