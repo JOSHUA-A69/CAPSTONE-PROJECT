@@ -47,8 +47,8 @@ class PriestSeeder extends Seeder
                     'password' => Hash::make($priestData['password']),
                     'role' => $priestData['role'],
                     'email_verified_at' => now(),
-                    'status' => 'verified',
-                    'account_status' => 'active',
+                    // Our schema uses a single 'status' column to denote account state
+                    'status' => 'active',
                 ]
             );
         }
