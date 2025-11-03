@@ -84,6 +84,10 @@
                 <input id="homeFilterEnd" type="date" class="w-full rounded-xl border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100" />
             </div>
             <div class="flex gap-3 md:justify-end">
+                <a href="{{ route('calendar.public') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-sm font-semibold" aria-label="View public calendar">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>View public calendar</span>
+                </a>
                 <button id="homeFilterClear" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-300 text-sm font-semibold">Clear filters</button>
             </div>
         </div>
