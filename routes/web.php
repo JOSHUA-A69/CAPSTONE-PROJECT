@@ -278,6 +278,10 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Staff\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Staff\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+
+    // Services Management (Staff can edit only; no add/delete)
+    Route::get('/services/manage', [\App\Http\Controllers\Staff\ServiceManagementController::class, 'index'])->name('services.manage');
+    Route::put('/services/manage/{id}', [\App\Http\Controllers\Staff\ServiceManagementController::class, 'update'])->name('services.manage.update');
 });
 
 // Priest Reservation Routes (specific routes BEFORE parameterized ones)

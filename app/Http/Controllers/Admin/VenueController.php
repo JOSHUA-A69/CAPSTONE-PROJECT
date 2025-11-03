@@ -30,8 +30,10 @@ class VenueController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255|unique:venues,name',
+            'capacity' => 'nullable|integer|min:0',
+            'location' => 'nullable|string|max:100',
         ]);
-        Venue::create(['name' => $request->name]);
+        Venue::create($request->only(['name','capacity','location']));
         return Redirect::route('admin.venues.index')->with('success', 'Venue added successfully!');
     }
 
@@ -46,8 +48,10 @@ class VenueController extends Controller
         $venue = Venue::findOrFail($venue_id);
         $request->validate([
             'name' => 'required|string|max:255|unique:venues,name,' . $venue_id . ',venue_id',
+            'capacity' => 'nullable|integer|min:0',
+            'location' => 'nullable|string|max:100',
         ]);
-        $venue->update(['name' => $request->name]);
+        $venue->update($request->only(['name','capacity','location']));
         return Redirect::route('admin.venues.index')->with('success', 'Venue updated successfully!');
     }
 

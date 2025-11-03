@@ -13,6 +13,8 @@
             <thead class="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
                     <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">Venue Name</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">Capacity</th>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">Location</th>
                     <th class="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">Actions</th>
                 </tr>
             </thead>
@@ -20,6 +22,8 @@
                 @foreach($venues as $venue)
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
                     <td class="px-6 py-4 text-gray-900 dark:text-gray-100">{{ $venue->name }}</td>
+                    <td class="px-6 py-4 text-gray-900 dark:text-gray-100">{{ $venue->capacity ?? '—' }}</td>
+                    <td class="px-6 py-4 text-gray-900 dark:text-gray-100">{{ $venue->location ?? '—' }}</td>
                     <td class="px-6 py-4 text-right space-x-2">
                         <a href="{{ route('admin.venues.edit', $venue->venue_id) }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition">Edit</a>
                         <form action="{{ route('admin.venues.destroy', $venue->venue_id) }}" method="POST" class="inline-block">

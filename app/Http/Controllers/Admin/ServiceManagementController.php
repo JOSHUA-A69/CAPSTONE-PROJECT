@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 
 class ServiceManagementController extends Controller
 {
@@ -14,10 +16,26 @@ class ServiceManagementController extends Controller
      */
     public function index()
     {
-        \Log::info('ServiceManagementController index method called');
+    Log::info('ServiceManagementController index method called');
         $services = Service::orderBy('service_name', 'asc')->get();
-        \Log::info('Services count: ' . $services->count());
-        return view('admin.services.manage', compact('services'));
+    Log::info('Services count: ' . $services->count());
+        $categories = $this->getCategories();
+        return view('admin.services.manage', compact('services', 'categories'));
+    }
+
+    /**
+     * Central list of allowed service categories (keep in sync with ServiceRequest)
+     */
+    protected function getCategories(): array
+    {
+        return [
+            'Liturgical Celebrations',
+            'Retreats and Recollections',
+            'Prayer Services',
+            'Outreach Activities',
+            'Daily Noon Mass',
+            'Catechetical Activities',
+        ];
     }
 
     /**
@@ -27,7 +45,9 @@ class ServiceManagementController extends Controller
     {
         $validated = $request->validate([
             'service_name' => 'required|string|max:255|unique:services,service_name',
+            'service_category' => ['nullable', 'string', Rule::in($this->getCategories())],
             'description' => 'nullable|string|max:500',
+            'duration' => 'nullable|integer|min:0|max:10080',
         ]);
 
         Service::create($validated);
@@ -45,7 +65,9 @@ class ServiceManagementController extends Controller
 
         $validated = $request->validate([
             'service_name' => 'required|string|max:255|unique:services,service_name,' . $id . ',service_id',
+            'service_category' => ['nullable', 'string', Rule::in($this->getCategories())],
             'description' => 'nullable|string|max:500',
+            'duration' => 'nullable|integer|min:0|max:10080',
         ]);
 
         $service->update($validated);

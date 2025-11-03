@@ -14,6 +14,22 @@
                     <div class="form-error">{{ $message }}</div>
                 @enderror
             </div>
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="capacity" class="form-label">Capacity</label>
+                    <input type="number" name="capacity" id="capacity" class="form-input" value="{{ old('capacity') }}" min="0" step="1" placeholder="e.g., 200">
+                    @error('capacity')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div>
+                    <label for="location" class="form-label">Location</label>
+                    <input type="text" name="location" id="location" class="form-input" value="{{ old('location') }}" maxlength="100" placeholder="e.g., University Chapel">
+                    @error('location')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
             <div class="flex gap-3">
                 <button type="submit" class="btn-primary">Add Venue</button>
                 <a href="{{ route('admin.venues.index') }}" class="btn-secondary">Cancel</a>

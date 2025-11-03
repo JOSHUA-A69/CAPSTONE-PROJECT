@@ -6,14 +6,9 @@
     <div class="mb-6 flex items-center justify-between">
         <div>
             <h1 class="text-heading text-3xl font-bold text-gray-900 dark:text-white mb-2">Manage Services</h1>
-            <p class="text-muted dark:text-gray-400">Add, edit, or delete service types available for reservations</p>
+            <p class="text-muted dark:text-gray-400">Staff can update existing service definitions</p>
         </div>
-        <button onclick="openAddModal()" class="btn-primary">
-            <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Add New Service
-        </button>
+        <!-- No Add button for staff -->
     </div>
 
     <!-- Flash Messages -->
@@ -37,7 +32,7 @@
                 <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
                 </svg>
-                <p class="text-muted dark:text-gray-400 text-lg">No services found. Add your first service!</p>
+                <p class="text-muted dark:text-gray-400 text-lg">No services found.</p>
             </div>
             @else
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -75,12 +70,7 @@
                                 class="btn-edit-service text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">
                                 Edit
                             </button>
-                            <button 
-                                data-name="{{ e($service->service_name) }}"
-                                data-id="{{ $service->service_id }}"
-                                class="btn-delete-service text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">
-                                Delete
-                            </button>
+                            <!-- No Delete for staff -->
                         </td>
                     </tr>
                     @endforeach
@@ -91,51 +81,7 @@
     </div>
 </div>
 
-<!-- Add Service Modal -->
-<div id="addModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md" onclick="event.stopPropagation()">
-        <div class="px-6 py-4 border-b dark:border-gray-700">
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Add New Service</h3>
-        </div>
-        <form method="POST" action="{{ route('admin.services.manage.store') }}">
-            @csrf
-            <div class="px-6 py-4 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Name <span class="text-red-600">*</span></label>
-                    <input type="text" name="service_name" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="e.g., Wedding, Baptism, Mass">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Category</label>
-                    <select name="service_category" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">— Select category —</option>
-                        @foreach(($categories ?? []) as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration (minutes)</label>
-                    <input type="number" name="duration" min="0" step="5" placeholder="e.g., 60" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional. Total duration of the service in minutes.</p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description (Optional)</label>
-                    <textarea name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="Brief description of the service"></textarea>
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex gap-3">
-                <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200">
-                    Add Service
-                </button>
-                <button type="button" onclick="closeAddModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-md transition duration-200">
-                    Cancel
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Edit Service Modal -->
+<!-- Edit Service Modal (Staff only updates) -->
 <div id="editModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md" onclick="event.stopPropagation()">
         <div class="px-6 py-4 border-b dark:border-gray-700">
@@ -177,48 +123,17 @@
             </div>
         </form>
     </div>
-</div>
-
-<!-- Delete Form (hidden) -->
-<form id="deleteForm" method="POST" style="display: none;">
-    @csrf
-    @method('DELETE')
-</form>
+    </div>
 
 <script>
-function openEditModalFrom(el, id) {
-    const name = el.dataset.name || '';
-    const description = el.dataset.description || '';
-    const category = el.dataset.category || '';
-    const duration = el.dataset.duration || '';
-    openEditModal(id, name, description, category, duration);
-}
-
-function confirmDeleteFrom(el, id) {
-    const name = el.dataset.name || '';
-    confirmDelete(id, name);
-}
-
-function openAddModal() {
-    document.getElementById('addModal').classList.remove('hidden');
-}
-
-function closeAddModal() {
-    document.getElementById('addModal').classList.add('hidden');
-}
-
 function openEditModal(id, name, description, category, duration) {
-    document.getElementById('edit_service_name').value = name;
-    document.getElementById('edit_description').value = description;
+    document.getElementById('edit_service_name').value = name || '';
+    document.getElementById('edit_description').value = description || '';
     const catSelect = document.getElementById('edit_service_category');
-    if (catSelect) {
-        catSelect.value = category || '';
-    }
+    if (catSelect) catSelect.value = category || '';
     const durInput = document.getElementById('edit_duration');
-    if (durInput) {
-        durInput.value = duration || '';
-    }
-    document.getElementById('editForm').action = '{{ route("admin.services.manage.update", ":id") }}'.replace(':id', id);
+    if (durInput) durInput.value = duration || '';
+    document.getElementById('editForm').action = '{{ route("staff.services.manage.update", ":id") }}'.replace(':id', id);
     document.getElementById('editModal').classList.remove('hidden');
 }
 
@@ -226,36 +141,19 @@ function closeEditModal() {
     document.getElementById('editModal').classList.add('hidden');
 }
 
-function confirmDelete(id, name) {
-    if (confirm('Are you sure you want to delete "' + name + '"?\n\nThis action cannot be undone. The service will only be deleted if it is not being used in any reservations.')) {
-        const form = document.getElementById('deleteForm');
-        form.action = '{{ route("admin.services.manage.destroy", ":id") }}'.replace(':id', id);
-        form.submit();
-    }
-}
-
-// Close modals on ESC key
+// ESC to close
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeAddModal();
-        closeEditModal();
-    }
+    if (e.key === 'Escape') closeEditModal();
 });
 
-// Close modals on outside click
-document.getElementById('addModal').addEventListener('click', closeAddModal);
+// Close on outside click
 document.getElementById('editModal').addEventListener('click', closeEditModal);
 
-// Bind action buttons (no inline JS to avoid quoting issues)
+// Bind edit buttons
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-edit-service').forEach(btn => {
         btn.addEventListener('click', function() {
-            openEditModalFrom(this, this.dataset.id);
-        });
-    });
-    document.querySelectorAll('.btn-delete-service').forEach(btn => {
-        btn.addEventListener('click', function() {
-            confirmDeleteFrom(this, this.dataset.id);
+            openEditModal(this.dataset.id, this.dataset.name, this.dataset.description, this.dataset.category, this.dataset.duration);
         });
     });
 });
