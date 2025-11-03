@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reservation;
+use App\Models\Service;
+use App\Models\Venue;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -29,6 +31,10 @@ class WelcomeController extends Controller
             $currentMonth = Carbon::now();
         }
 
-        return view('welcome', compact('upcomingReservations', 'currentMonth'));
+        // Filter options: all services and all venues (db)
+        $services = Service::orderBy('service_name')->get(['service_id','service_name']);
+        $venues = Venue::orderBy('name')->get(['venue_id','name']);
+
+        return view('welcome', compact('upcomingReservations', 'currentMonth', 'services', 'venues'));
     }
 }

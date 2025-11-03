@@ -181,8 +181,8 @@
                 @include('partials.home-calendar')
 
                 <!-- Featured Services Section -->
-                <div id="services" class="mt-32">
-                    <div class="text-center mb-12">
+                <div id="services" class="mt-8">
+                    <div class="text-center mb-8">
                         <h2 class="text-4xl font-extrabold text-gray-900 dark:text-white mb-4">Our Services</h2>
                         <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Discover the various ways we serve our community</p>
                     </div>

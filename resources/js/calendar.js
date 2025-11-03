@@ -314,3 +314,16 @@ window.initPublicCalendar = function(schedules) {
 
 // Export for use in blade templates
 window.getEventColor = getEventColor;
+
+// Programmatically navigate the public calendar to a given date (YYYY-MM-DD or Date)
+window.publicCalendarSetDate = function(dateStrOrObj) {
+    if (!window.publicCalendarInstance) return;
+    try {
+        window.publicCalendarInstance.gotoDate(dateStrOrObj);
+    } catch (e) {
+        const d = new Date(dateStrOrObj);
+        if (!isNaN(d)) {
+            window.publicCalendarInstance.gotoDate(d);
+        }
+    }
+};
