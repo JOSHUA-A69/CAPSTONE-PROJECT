@@ -18,9 +18,7 @@ Route::get('/refresh-csrf', function () {
     return response()->json(['token' => csrf_token()]);
 });
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [\App\Http\Controllers\WelcomeController::class, 'index']);
 
 // Public Calendar Route (accessible to everyone)
 Route::get('/calendar', [\App\Http\Controllers\PublicCalendarController::class, 'index'])->name('calendar.public');

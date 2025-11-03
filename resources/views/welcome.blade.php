@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
     <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,7 +14,7 @@
         
         <style>
             .hero-gradient {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: linear-gradient(135deg, #10b981 0%, #047857 100%);
             }
             
             .card-hover {
@@ -35,12 +35,7 @@
                 animation: float 6s ease-in-out infinite;
             }
             
-            .gradient-text {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                background-clip: text;
-            }
+            /* Removed gradient-text; using solid colors instead of text transparency */
         </style>
     </head>
     <body class="antialiased bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-[#1b1b18]">
@@ -50,11 +45,11 @@
                 <div class="flex h-20 items-center justify-between">
                     <a href="{{ url('/') }}" class="flex items-center gap-3 group">
                         <div class="relative">
-                            <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                            <div class="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
                             <img src="/images/ers-logo.png" alt="eReligiousServices logo" class="relative w-14 h-14 object-contain transform group-hover:scale-110 transition-transform duration-300" />
                         </div>
                         <div class="hidden sm:block">
-                            <div class="font-bold text-xl bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">eReligiousServices</div>
+                            <div class="font-bold text-xl text-emerald-600 dark:text-emerald-400">eReligiousServices</div>
                             <div class="text-xs text-gray-600 dark:text-gray-400">Center for Religious Education and Mission</div>
                         </div>
                     </a>
@@ -62,8 +57,8 @@
                     <div class="flex items-center gap-3">
                         @guest
                             <!-- Sign In Button -->
-                            <a href="{{ route('login') }}"
-                               class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-xl hover:border-purple-500 dark:hover:border-purple-400 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-300 shadow-sm hover:shadow-md">
+                                     <a href="{{ route('login') }}"
+                                         class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-200 bg-white dark:bg-gray-800 border-2 border-emerald-300 dark:border-emerald-600 rounded-xl hover:border-emerald-500 dark:hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300 shadow-sm hover:shadow-md">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                 </svg>
@@ -71,21 +66,20 @@
                             </a>
 
                             <!-- Register Button -->
-                            <a href="{{ route('register') }}"
-                               class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 overflow-hidden">
-                                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                                     <a href="{{ route('register') }}"
+                                         class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 overflow-hidden">
                                 <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                                 </svg>
                                 <span class="tracking-wide relative z-10">REGISTER</span>
                                 <span class="absolute -top-1 -right-1 flex h-6 w-6">
                                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-300 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-6 w-6 bg-yellow-300 shadow-lg items-center justify-center text-xs font-bold text-purple-900">!</span>
+                                    <span class="relative inline-flex rounded-full h-6 w-6 bg-yellow-300 shadow-lg items-center justify-center text-xs font-bold text-green-900">!</span>
                                 </span>
                             </a>
                         @else
-                            <a href="{{ route('dashboard') }}"
-                               class="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                                     <a href="{{ route('dashboard') }}"
+                                         class="inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                                 </svg>
@@ -101,29 +95,29 @@
         <main class="relative overflow-hidden">
             <!-- Background Decoration -->
             <div class="absolute inset-0 overflow-hidden pointer-events-none">
-                <div class="absolute top-20 right-0 w-96 h-96 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-                <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+                <div class="absolute top-20 right-0 w-96 h-96 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+                <div class="absolute bottom-0 left-0 w-96 h-96 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
             </div>
 
             <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
                 <!-- Hero Content -->
                 <div class="text-center mb-16">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 rounded-full text-sm font-semibold text-purple-700 dark:text-purple-300 mb-8">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 rounded-full text-sm font-semibold text-green-700 dark:text-green-300 mb-8">
                         <span class="relative flex h-3 w-3">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                         </span>
                         Welcome to HNU Center for Religious Education
                     </div>
                     
                     <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight mb-8">
                         <span class="block text-gray-900 dark:text-white">Faith.</span>
-                        <span class="block gradient-text">Community.</span>
+                        <span class="block text-emerald-600 dark:text-emerald-400">Community.</span>
                         <span class="block text-gray-900 dark:text-white">Service.</span>
                     </h1>
 
                     <p class="mt-8 text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                        Your gateway to spiritual growth and community engagement at <span class="font-semibold text-purple-600 dark:text-purple-400">Holy Name University</span>
+                        Your gateway to spiritual growth and community engagement at <span class="font-semibold text-green-600 dark:text-green-400">Holy Name University</span>
                     </p>
 
                     <p class="mt-4 text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
@@ -132,8 +126,8 @@
 
                     <!-- CTA Buttons -->
                     <div class="mt-12 flex gap-6 flex-wrap justify-center">
-                        <a href="{{ route('calendar.public') }}" 
-                           class="group relative inline-flex items-center gap-3 px-8 py-4 text-lg font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 shadow-2xl hover:shadow-purple-500/50 hover:scale-105 transform">
+                                <a href="#home-calendar" 
+                                    class="group relative inline-flex items-center gap-3 px-8 py-4 text-lg font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-2xl transition-all duration-300 shadow-2xl hover:shadow-emerald-500/50 hover:scale-105 transform">
                             <svg class="w-6 h-6 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
@@ -143,8 +137,8 @@
                             </svg>
                         </a>
 
-                        <a href="#services" 
-                           class="group inline-flex items-center gap-3 px-8 py-4 text-lg font-bold text-purple-700 dark:text-purple-300 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 rounded-2xl hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:border-purple-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform">
+                                <a href="#services" 
+                                    class="group inline-flex items-center gap-3 px-8 py-4 text-lg font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-gray-800 border-2 border-emerald-300 dark:border-emerald-700 rounded-2xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-500 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform">
                             <svg class="w-6 h-6 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
@@ -156,9 +150,9 @@
                 <!-- Stats Section -->
                 <div class="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-8">
                     <div class="card-hover relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
-                        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-400 to-indigo-400 rounded-bl-full opacity-10"></div>
+                        <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-400 rounded-bl-full opacity-10"></div>
                         <div class="relative">
-                            <div class="text-5xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3">6+</div>
+                            <div class="text-5xl font-extrabold text-emerald-600 dark:text-emerald-400 mb-3">6+</div>
                             <div class="text-gray-600 dark:text-gray-300 font-semibold">Student Organizations</div>
                             <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Active faith communities</div>
                         </div>
@@ -167,7 +161,7 @@
                     <div class="card-hover relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
                         <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-400 to-teal-400 rounded-bl-full opacity-10"></div>
                         <div class="relative">
-                            <div class="text-5xl font-extrabold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent mb-3">Daily</div>
+                            <div class="text-5xl font-extrabold text-emerald-600 dark:text-emerald-400 mb-3">Daily</div>
                             <div class="text-gray-600 dark:text-gray-300 font-semibold">Noon Mass</div>
                             <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Join us for worship</div>
                         </div>
@@ -176,12 +170,15 @@
                     <div class="card-hover relative bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700">
                         <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-bl-full opacity-10"></div>
                         <div class="relative">
-                            <div class="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-3">24/7</div>
+                            <div class="text-5xl font-extrabold text-cyan-600 dark:text-cyan-400 mb-3">24/7</div>
                             <div class="text-gray-600 dark:text-gray-300 font-semibold">Online Booking</div>
                             <div class="mt-2 text-sm text-gray-500 dark:text-gray-400">Reserve services anytime</div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Upcoming Reservations Calendar Section (just before Explore Services) -->
+                @include('partials.home-calendar')
 
                 <!-- Featured Services Section -->
                 <div id="services" class="mt-32">
@@ -192,8 +189,8 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         <!-- Mass Reservations -->
-                        <div class="card-hover group bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-400">
-                            <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <div class="card-hover group bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-400">
+                            <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                                 <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                 </svg>
