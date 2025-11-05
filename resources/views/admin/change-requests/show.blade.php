@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-heading font-semibold text-xl leading-tight">
-            ✏️ Review Change Request #{{ $changeRequest->id }}
+            ✏️ Review Change Request #{{ $changeRequest->change_id }}
         </h2>
     </x-slot>
 
@@ -74,12 +74,12 @@
 
                     @if($changeRequest->status === 'pending')
                         <div class="mt-6 flex flex-col sm:flex-row gap-3">
-                            <form action="{{ route('admin.change-requests.approve', $changeRequest->id) }}" method="POST">
+                            <form action="{{ route('admin.change-requests.approve', $changeRequest->change_id) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg">Approve Changes</button>
                             </form>
 
-                            <form action="{{ route('admin.change-requests.reject', $changeRequest->id) }}" method="POST" class="flex-1">
+                            <form action="{{ route('admin.change-requests.reject', $changeRequest->change_id) }}" method="POST" class="flex-1">
                                 @csrf
                                 <div class="flex items-center gap-3">
                                     <input type="text" name="rejection_reason" placeholder="Reason for rejection" class="w-full rounded-lg border-gray-300" required minlength="10" maxlength="1000" />

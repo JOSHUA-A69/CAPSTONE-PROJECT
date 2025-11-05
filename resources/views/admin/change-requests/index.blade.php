@@ -38,7 +38,7 @@
                                 <tbody>
                                     @foreach($changeRequests as $cr)
                                         <tr class="border-b last:border-0">
-                                            <td class="py-3 pr-4 font-semibold text-heading">#{{ $cr->id }}</td>
+                                            <td class="py-3 pr-4 font-semibold text-heading">#{{ $cr->change_id }}</td>
                                             <td class="py-3 pr-4">#{{ $cr->reservation->reservation_id ?? '—' }} — {{ optional($cr->reservation)->service->service_name ?? 'Service' }}</td>
                                             <td class="py-3 pr-4">{{ $cr->requestor->full_name ?? $cr->requestor->name ?? 'Requestor' }}</td>
                                             <td class="py-3 pr-4">
@@ -48,7 +48,7 @@
                                             </td>
                                             <td class="py-3 pr-4">{{ \Carbon\Carbon::parse($cr->requested_at)->diffForHumans() }}</td>
                                             <td class="py-3 pr-4 text-right">
-                                                <a href="{{ route('admin.change-requests.show', $cr->id) }}" class="inline-flex items-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg">Review</a>
+                                                <a href="{{ route('admin.change-requests.show', $cr->change_id) }}" class="inline-flex items-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg">Review</a>
                                             </td>
                                         </tr>
                                     @endforeach
