@@ -958,6 +958,143 @@ class ReservationNotificationService
     }
 
     /**
+     * Send notification to requestor with a confirmation link after staff contact
+     * Also logs an in-app notification for future reference.
+     */
+    public function notifyRequestorConfirmation(Reservation $reservation, string $confirmationUrl): void
+    {
+        // Email to requestor with confirmation link
+        try {
+            if ($reservation->user && $reservation->user->email) {
+                Mail::raw(
+                    "Hello {$reservation->user->first_name},\n\n" .
+                    "Please confirm your availability for the following reservation:\n\n" .
+                    "Service: {$reservation->service->service_name}\n" .
+                    "Date & Time: " . optional($reservation->schedule_date)->format('F d, Y - h:i A') . "\n" .
+                    "Venue: " . ($reservation->custom_venue_name ?? optional($reservation->venue)->name ?? 'N/A') . "\n\n" .
+                    "Click the link below to confirm or decline:\n" .
+                    $confirmationUrl . "\n\n" .
+                    "Thank you.\n\n---\nCREaM - eReligiousServices Management System\nHoly Name University",
+                    function ($message) use ($reservation) {
+                        $message->to($reservation->user->email)
+                            ->subject('Please Confirm Your Reservation');
+                    }
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send requestor confirmation email: ' . $e->getMessage());
+        }
+
+        // Optional SMS to requestor
+        try {
+            if ($reservation->user && $reservation->user->phone) {
+                $this->sendSMS(
+                    $reservation->user->phone,
+                    'Please confirm your reservation for ' . $reservation->service->service_name . ' on ' . optional($reservation->schedule_date)->format('M d, Y h:i A') . ': ' . $confirmationUrl
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::info('Could not send SMS for requestor confirmation: ' . $e->getMessage());
+        }
+
+        // In-app notification to requestor
+        try {
+            $message = 'Please confirm your reservation: <strong>' . $reservation->service->service_name . '</strong>';
+            $data = [
+                'service_name' => $reservation->service->service_name,
+                'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
+                'action' => 'requestor_confirmation_required',
+                'confirmation_url' => $confirmationUrl,
+            ];
+            $payload = [
+                'user_id' => $reservation->user_id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => NotificationHelper::TYPE_UPDATE,
+                'sent_at' => now(),
+            ];
+            if (Schema::hasColumn('notifications', 'data')) {
+                $payload['data'] = $data;
+            }
+            NotificationHelper::make($payload);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to create in-app notification (requestor confirm link): ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify CREaM admin/staff that the requestor confirmed availability
+     */
+    public function notifyRequestorConfirmed(Reservation $reservation): void
+    {
+        $requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
+
+        // Notify admins/staff by email and in-app
+        $admins = User::whereIn('role', ['admin', 'staff'])->where('status', 'active')->get();
+        foreach ($admins as $admin) {
+            // Email
+            try {
+                if ($admin->email) {
+                    Mail::raw(
+                        "Requestor confirmed availability.\n\n" .
+                        "Reservation #{$reservation->reservation_id}\n" .
+                        "Service: {$reservation->service->service_name}\n" .
+                        "Date & Time: " . optional($reservation->schedule_date)->format('F d, Y - h:i A') . "\n" .
+                        "Venue: " . ($reservation->custom_venue_name ?? optional($reservation->venue)->name ?? 'N/A') . "\n" .
+                        "Requestor: {$requestorName}\n\n" .
+                        "Next step: Review and approve in Staff panel to notify the priest for confirmation.",
+                        function ($message) use ($admin, $reservation) {
+                            $message->to($admin->email)
+                                ->subject('Requestor Confirmed - Reservation #' . $reservation->reservation_id);
+                        }
+                    );
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send admin/staff email (requestor confirmed): ' . $e->getMessage());
+            }
+
+            // In-app notification
+            try {
+                $message = '<strong>' . e($requestorName) . '</strong> confirmed availability for <strong>' . e($reservation->service->service_name) . '</strong>';
+                $payload = [
+                    'user_id' => $admin->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => $message,
+                    'type' => NotificationHelper::TYPE_UPDATE,
+                    'sent_at' => now(),
+                ];
+                if (Schema::hasColumn('notifications', 'data')) {
+                    $payload['data'] = [
+                        'service_name' => $reservation->service->service_name,
+                        'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
+                        'requestor_name' => $requestorName,
+                        'venue' => $reservation->custom_venue_name ?? optional($reservation->venue)->name ?? 'N/A',
+                        'action' => 'requestor_confirmed',
+                    ];
+                }
+                NotificationHelper::make($payload);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to create admin/staff in-app notification (requestor confirmed): ' . $e->getMessage());
+            }
+        }
+
+        // Optional SMS to first admin/staff with phone
+        try {
+            $adminWithPhone = User::whereIn('role', ['admin', 'staff'])
+                ->whereNotNull('phone')
+                ->first();
+            if ($adminWithPhone && $adminWithPhone->phone) {
+                $this->sendSMS(
+                    $adminWithPhone->phone,
+                    'Requestor confirmed reservation #' . $reservation->reservation_id . ' for ' . $reservation->service->service_name . ' on ' . optional($reservation->schedule_date)->format('M d, Y h:i A')
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::info('Could not send SMS for admin/staff (requestor confirmed): ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Send notification when priest cancels their already confirmed reservation
      * Notifies admin/staff so they can reassign another priest
      */

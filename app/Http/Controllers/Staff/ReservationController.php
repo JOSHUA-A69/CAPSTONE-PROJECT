@@ -9,6 +9,7 @@ use App\Services\ReservationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ReservationController extends Controller
@@ -136,8 +137,13 @@ class ReservationController extends Controller
             'token' => $token
         ]);
 
-        // TODO: Send email/notification to requestor with confirmation link
-        // $this->notificationService->notifyRequestorConfirmation($reservation, $confirmationUrl);
+        // Send email/notification to requestor with confirmation link
+        try {
+            $this->notificationService->notifyRequestorConfirmation($reservation, $confirmationUrl);
+        } catch (\Throwable $e) {
+            // Don't block staff flow if notification fails
+            Log::warning('Failed to send requestor confirmation link: ' . $e->getMessage());
+        }
 
         return Redirect::back()->with('status', 'requestor-contacted')
             ->with('message', 'Requestor has been notified. Confirmation link: ' . $confirmationUrl);

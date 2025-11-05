@@ -299,6 +299,24 @@
                     @elseif($daysUntilEvent < 7 && $daysUntilEvent >= 0)
                         <div class="mt-2 text-sm text-muted">Cannot cancel within 7 days of the event.</div>
                     @endif
+
+                    @php
+                        $canConfirm = $reservation->status === 'adviser_approved'
+                            && $reservation->contacted_at
+                            && !$reservation->requestor_confirmed_at
+                            && !empty($reservation->requestor_confirmation_token);
+                    @endphp
+                    @if($canConfirm)
+                        <div class="mt-4">
+                            <a href="{{ route('requestor.reservations.show-confirmation', ['reservation_id' => $reservation->reservation_id, 'token' => $reservation->requestor_confirmation_token]) }}" class="btn-primary">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Confirm Availability
+                            </a>
+                            <p class="mt-2 text-xs text-muted">You can confirm or decline on the next page.</p>
+                        </div>
+                    @endif
                 </div>
             </div>
             @endif

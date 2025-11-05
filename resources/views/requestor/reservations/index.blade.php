@@ -164,6 +164,17 @@
                                 <a href="{{ route('requestor.reservations.show', $r->reservation_id) }}" class="btn-ghost btn-sm">
                                     View Details
                                 </a>
+                                @php
+                                    $canConfirmInline = $r->status === 'adviser_approved'
+                                        && $r->contacted_at
+                                        && !$r->requestor_confirmed_at
+                                        && !empty($r->requestor_confirmation_token);
+                                @endphp
+                                @if($canConfirmInline)
+                                    <a href="{{ route('requestor.reservations.show-confirmation', ['reservation_id' => $r->reservation_id, 'token' => $r->requestor_confirmation_token]) }}" class="btn-primary btn-sm">
+                                        Confirm Availability
+                                    </a>
+                                @endif
                                 @if($canCancel)
                                     <button
                                         onclick='showCancelModal({{ $r->reservation_id }}, @json($r->service->service_name), @json(optional($r->schedule_date)->format("F d, Y h:i A")))'

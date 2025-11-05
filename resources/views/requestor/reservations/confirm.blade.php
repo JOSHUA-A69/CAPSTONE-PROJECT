@@ -1,99 +1,82 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-heading font-semibold text-xl leading-tight">
-                    @endif
-                </div>
-            </div>
+@extends('layouts.app')
 
-            <!-- Ministry Volunteers -->
-            @if($reservation->commentator || $reservation->servers || $reservation->readers || $reservation->choir || $reservation->psalmist || $reservation->prayer_leader)
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-6">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Ministry Volunteers</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @if($reservation->commentator)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Commentator</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->commentator }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->servers)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Servers</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->servers }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->readers)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Readers</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->readers }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->choir)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Choir</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->choir }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->psalmist)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Psalmist</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->psalmist }}</p>
-                    </div>
-                    @endif
-
-                    @if($reservation->prayer_leader)
-                    <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Leader for Prayer of the Faithful</label>
-                        <p class="text-sm text-gray-900 dark:text-gray-100 mt-1">{{ $reservation->prayer_leader }}</p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @endif
+@section('content')
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
+    <div class="mb-6 flex items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-heading">Confirm Reservation</h1>
+            <p class="text-sm text-muted mt-1">Please review and confirm your availability</p>
         </div>
+        <a href="{{ route('requestor.reservations.show', $reservation->reservation_id) }}" class="btn-ghost">Back to Details</a>
+    </div>
 
-        <!-- Confirmation Actions -->
-        <div class="px-6 py-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Confirm Your Reservation</h3>
-            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                By confirming, you verify that the details above are correct and you are available for this reservation. The CREaM staff will proceed to assign an officiant and finalize the arrangements.
+    <div class="card mb-6">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold">Reservation Summary</h3>
+        </div>
+        <div class="card-body">
+            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <dt class="form-label">Service</dt>
+                    <dd class="mt-1 text-body">{{ $reservation->service->service_name }}</dd>
+                </div>
+                <div>
+                    <dt class="form-label">Schedule</dt>
+                    <dd class="mt-1 text-body">{{ optional($reservation->schedule_date)->format('F d, Y g:i A') }}</dd>
+                </div>
+                <div>
+                    <dt class="form-label">Venue</dt>
+                    <dd class="mt-1 text-body">
+                        @if($reservation->custom_venue_name)
+                            {{ $reservation->custom_venue_name }}
+                        @elseif($reservation->venue)
+                            {{ $reservation->venue->name }}
+                        @else
+                            —
+                        @endif
+                    </dd>
+                </div>
+                @if($reservation->organization)
+                <div>
+                    <dt class="form-label">Organization</dt>
+                    <dd class="mt-1 text-body">{{ $reservation->organization->org_name }}</dd>
+                </div>
+                @endif
+                @if($reservation->purpose)
+                <div class="sm:col-span-2">
+                    <dt class="form-label">Purpose</dt>
+                    <dd class="mt-1 text-body">{{ $reservation->purpose }}</dd>
+                </div>
+                @endif
+            </dl>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3 class="text-lg font-semibold">Confirm Your Reservation</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-sm text-muted mb-4">
+                By confirming, you verify the details are correct and you’re available. CREaM staff will proceed to assign an officiant and finalize arrangements.
             </p>
 
             <div class="flex flex-col sm:flex-row gap-3">
-                <!-- Confirm Button -->
                 <form method="POST" action="{{ route('requestor.reservations.confirm-reservation', ['reservation_id' => $reservation->reservation_id, 'token' => $token]) }}" class="flex-1">
                     @csrf
-                    <button type="submit"
-                            onclick="return confirm('Are you sure you want to confirm this reservation? This action cannot be undone.');"
-                            class="w-full inline-flex items-center justify-center px-6 py-3 bg-green-600 border border-transparent rounded-lg font-semibold text-sm text-white uppercase tracking-wider hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                    <button type="submit" class="btn-primary w-full" onclick="return confirm('Confirm this reservation?');">
                         Confirm Reservation
                     </button>
                 </form>
-
-                <!-- Cancel Button -->
                 <form method="POST" action="{{ route('requestor.reservations.decline-reservation', ['reservation_id' => $reservation->reservation_id, 'token' => $token]) }}" class="flex-1">
                     @csrf
-                    <button type="submit"
-                            onclick="return confirm('Are you sure you want to decline this reservation? This will cancel your request.');"
-                            class="w-full inline-flex items-center justify-center px-6 py-3 bg-red-600 border border-transparent rounded-lg font-semibold text-sm text-white uppercase tracking-wider hover:bg-red-700 active:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
+                    <button type="submit" class="btn-danger w-full" onclick="return confirm('Decline and cancel this reservation?');">
                         Decline Reservation
                     </button>
                 </form>
             </div>
 
-            <p class="text-xs text-gray-500 dark:text-gray-500 mt-4 text-center">
-                If you have any questions, please contact the CREaM Office directly.
-            </p>
+            <p class="text-xs text-muted mt-4 text-center">If you have questions, contact the CREaM Office.</p>
         </div>
     </div>
 </div>

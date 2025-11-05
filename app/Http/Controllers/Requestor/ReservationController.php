@@ -271,8 +271,12 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // TODO: Notify staff that requestor has confirmed
-        // $this->notificationService->notifyRequestorConfirmed($reservation);
+        // Notify staff that requestor has confirmed
+        try {
+            $this->notificationService->notifyRequestorConfirmed($reservation);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to notify staff on requestor confirmation: ' . $e->getMessage());
+        }
 
         return Redirect::route('requestor.reservations.show', $reservation_id)
             ->with('status', 'reservation-confirmed')
