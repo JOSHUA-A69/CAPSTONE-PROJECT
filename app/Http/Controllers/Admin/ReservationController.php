@@ -112,6 +112,11 @@ class ReservationController extends Controller
 
         $reservation = Reservation::findOrFail($reservation_id);
 
+            // Prevent assigning an internal priest when the requestor selected an external priest
+            if ($reservation->priest_selection_type === 'external') {
+                return back()->withErrors(['officiant_id' => 'This reservation uses an external priest. You cannot assign an internal priest. Use "Confirm External Priest" instead.']);
+            }
+
         // Allow if status is adviser_approved OR priest_declined OR pending_priest_reassignment (reassignment)
         if (!in_array($reservation->status, ['adviser_approved', 'priest_declined', 'pending_priest_reassignment'])) {
             return Redirect::back()

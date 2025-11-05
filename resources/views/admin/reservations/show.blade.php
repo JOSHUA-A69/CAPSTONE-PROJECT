@@ -249,8 +249,8 @@
                     </div>
                     @endif
 
-                    <!-- Assign Priest Form -->
-                    @if(in_array($reservation->status, ['pending_priest_assignment', 'adviser_approved']))
+                    <!-- Assign Priest Form (disabled when external priest is chosen) -->
+                    @if($reservation->priest_selection_type !== 'external' && in_array($reservation->status, ['pending_priest_assignment', 'adviser_approved']))
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Assign Priest</h3>
