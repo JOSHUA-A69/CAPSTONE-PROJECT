@@ -22,6 +22,7 @@ Short, practical instructions to get this Laravel app running on another machine
 git clone <repo-url> eReligiousServices
 cd eReligiousServices
 copy .env.example .env
+Copy-Item .env.docker.example .env.docker
 ```
 
 2. Start containers and install deps:
@@ -68,6 +69,12 @@ Restore exact versions with `composer install` (uses composer.lock) and `npm ci`
 - db (`mysql_db`) — MySQL 8 (port 3306)
 - phpmyadmin (`phpmyadmin`) — optional DB UI (port 8080)
 - mailhog (`mailhog`) — dev SMTP (ports 1025/8025)
+
+Secrets and env files:
+
+- Laravel app uses `.env` (git-ignored). Copy from `.env.example` and set real values.
+- Docker Compose services (db, phpmyadmin) load credentials from `.env.docker` (git-ignored). Copy from `.env.docker.example`.
+- Never commit real secrets. Only commit the `*.example` files with placeholders.
 
 ## Quick troubleshooting
 
@@ -243,6 +250,7 @@ Copy/paste to get a fresh machine up and running (PowerShell):
 ```powershell
 git clone <repo-url> eReligiousServices; cd eReligiousServices
 copy .env.example .env
+Copy-Item .env.docker.example .env.docker
 docker compose up -d --build
 docker compose exec app composer install --no-interaction --prefer-dist
 docker compose exec app php artisan key:generate
