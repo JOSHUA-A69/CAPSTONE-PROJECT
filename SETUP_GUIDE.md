@@ -555,7 +555,34 @@ git push origin new-feature
 
 ---
 
-## 💡 Recommended VS Code Extensions (Optional)
+## � Using Docker without exposing secrets
+
+This repo includes a simple `docker-compose.yml` for local development. To keep credentials out of version control:
+
+1) Copy the example Docker env file and fill real values (do NOT commit the new file):
+
+```powershell
+Copy-Item .env.docker.example .env.docker
+# Open .env.docker and set strong passwords
+```
+
+2) Compose loads credentials from `.env.docker` via `env_file` for the `db` and `phpmyadmin` services. The file `.env.docker` is git-ignored; only `.env.docker.example` is tracked.
+
+3) Start the stack (optional):
+
+```powershell
+# Build app image and start containers
+docker compose up -d --build
+
+# View logs
+docker compose logs -f
+```
+
+4) Production note: For real deployments, prefer Docker/Kubernetes secrets or your CI/CD provider’s secret manager instead of env files.
+
+Summary: Put real secrets in `.env` (Laravel) and `.env.docker` (Compose), both are ignored by git. Commit only the `*.example` files with placeholders.
+
+## �💡 Recommended VS Code Extensions (Optional)
 
 If using VS Code:
 
