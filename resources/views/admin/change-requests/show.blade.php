@@ -31,7 +31,7 @@
                                 <div class="flex justify-between"><dt>Organization</dt><dd>{{ optional($changeRequest->reservation->organization)->org_name ?? '—' }}</dd></div>
                                 <div class="flex justify-between"><dt>Requested by</dt><dd>{{ $changeRequest->requestor->full_name ?? $changeRequest->requestor->name ?? '—' }}</dd></div>
                                 <div class="flex justify-between"><dt>Status</dt><dd><span class="px-2 py-1 rounded text-xs font-semibold {{ $changeRequest->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ($changeRequest->status === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800') }}">{{ ucfirst($changeRequest->status) }}</span></dd></div>
-                                <div class="flex justify-between"><dt>Requested</dt><dd>{{ \\Carbon\\Carbon::parse($changeRequest->requested_at)->toDayDateTimeString() }}</dd></div>
+                                <div class="flex justify-between"><dt>Requested</dt><dd>{{ \Carbon\Carbon::parse($changeRequest->requested_at)->toDayDateTimeString() }}</dd></div>
                             </dl>
                         </div>
                     </div>

@@ -46,7 +46,7 @@
                                                     {{ ucfirst($cr->status) }}
                                                 </span>
                                             </td>
-                                            <td class="py-3 pr-4">{{ \\Carbon\\Carbon::parse($cr->requested_at)->diffForHumans() }}</td>
+                                            <td class="py-3 pr-4">{{ \Carbon\Carbon::parse($cr->requested_at)->diffForHumans() }}</td>
                                             <td class="py-3 pr-4 text-right">
                                                 <a href="{{ route('admin.change-requests.show', $cr->id) }}" class="inline-flex items-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg">Review</a>
                                             </td>
