@@ -1,3 +1,51 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="text-heading font-semibold text-xl leading-tight">
+            ✅ Confirm Reservation
+        </h2>
+    </x-slot>
+
+    <div class="py-6 sm:py-12">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            @if(session('error'))
+                <div class="mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200">{{ session('error') }}</div>
+            @endif
+            @if(session('info'))
+                <div class="mb-4 p-3 rounded bg-blue-50 text-blue-700 border border-blue-200">{{ session('info') }}</div>
+            @endif
+
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-lg font-semibold text-heading mb-3">Reservation Details</h3>
+                    <dl class="text-sm text-muted space-y-2">
+                        <div class="flex justify-between"><dt>ID</dt><dd class="text-heading font-medium">#{{ $reservation->reservation_id }}</dd></div>
+                        <div class="flex justify-between"><dt>Service</dt><dd>{{ optional($reservation->service)->service_name ?? '—' }}</dd></div>
+                        <div class="flex justify-between"><dt>Venue</dt><dd>{{ optional($reservation->venue)->name ?? '—' }}</dd></div>
+                        <div class="flex justify-between"><dt>Date</dt><dd>{{ \Carbon\Carbon::parse($reservation->schedule_date)->toFormattedDateString() }}</dd></div>
+                        @if($reservation->schedule_time)
+                        <div class="flex justify-between"><dt>Time</dt><dd>{{ \Carbon\Carbon::parse($reservation->schedule_time)->format('g:i A') }}</dd></div>
+                        @endif
+                        <div class="flex justify-between"><dt>Organization</dt><dd>{{ optional($reservation->organization)->org_name ?? '—' }}</dd></div>
+                    </dl>
+
+                    <p class="mt-4 text-sm text-muted">Please confirm that you can attend at the scheduled date and time. If you cannot, you may decline and the staff will be notified.</p>
+
+                    <div class="mt-6 flex flex-col sm:flex-row gap-3">
+                        <form method="POST" action="{{ route('requestor.reservations.confirm-reservation', [$reservation->reservation_id, $token]) }}">
+                            @csrf
+                            <button type="submit" class="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg">Confirm</button>
+                        </form>
+                        <form method="POST" action="{{ route('requestor.reservations.decline-reservation', [$reservation->reservation_id, $token]) }}">
+                            @csrf
+                            <button type="submit" class="px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg">Decline</button>
+                        </form>
+                        <a href="{{ route('requestor.reservations.show', $reservation->reservation_id) }}" class="px-5 py-3 bg-gray-200 hover:bg-gray-300 text-gray-900 font-semibold rounded-lg text-center">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>
 @extends('layouts.app')
 
 @section('content')

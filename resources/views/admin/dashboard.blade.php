@@ -178,6 +178,26 @@
                     </div>
                 </a>
 
+                <!-- Change Requests -->
+                <a href="{{ route('admin.change-requests.index') }}" class="card-hover group">
+                    <div class="card-body">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5L21 5l-9.5 9.5H9v-2.5L18.5 2.5z" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-lg text-heading mb-1">Change Requests</h4>
+                                <p class="text-sm text-muted">Review and approve or reject requested edits</p>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-orange-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+
                 <!-- Organizations -->
                 <a href="{{ route('staff.organizations.index') }}" class="card-hover group">
                     <div class="card-body">
