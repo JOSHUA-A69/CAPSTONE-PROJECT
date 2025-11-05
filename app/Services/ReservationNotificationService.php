@@ -500,7 +500,11 @@ class ReservationNotificationService
         if ($reservation->officiant && $reservation->officiant->phone) {
             $this->sendSMS(
                 $reservation->officiant->phone,
-                "You have been assigned to officiate {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . " at {$reservation->venue->name}. Please confirm your availability in eReligiousServices."
+                "You have been assigned to officiate {$reservation->service->service_name} on "
+                . $reservation->schedule_date->format('M d, Y h:i A')
+                . " at "
+                . ($reservation->custom_venue_name ?? ($reservation->venue->name ?? 'N/A'))
+                . ". Please confirm your availability in eReligiousServices."
             );
         }
 

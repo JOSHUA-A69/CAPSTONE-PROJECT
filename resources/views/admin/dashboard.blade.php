@@ -44,6 +44,10 @@
 
             <!-- Admin Quick Actions -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                @php
+                    $pendingCancellationsCount = \App\Models\ReservationCancellation::where('status', 'pending')->count();
+                @endphp
+
                 <!-- User Accounts Management -->
                 <a href="{{ route('admin.users.index') }}" class="card-hover group">
                     <div class="card-body">
@@ -58,6 +62,37 @@
                                 <p class="text-sm text-muted">Manage all system users and permissions</p>
                             </div>
                             <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Cancellation Requests -->
+                <a href="{{ route('admin.cancellations.index') }}" class="card-hover group">
+                    <div class="card-body">
+                        <div class="flex items-start gap-4">
+                            <div class="relative">
+                                <div class="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                @if($pendingCancellationsCount > 0)
+                                <span class="absolute -top-2 -right-2 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">{{ $pendingCancellationsCount }}</span>
+                                @endif
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-lg text-heading mb-1">Cancellations</h4>
+                                <p class="text-sm text-muted">
+                                    @if($pendingCancellationsCount > 0)
+                                        {{ $pendingCancellationsCount }} pending confirmation
+                                    @else
+                                        View recent and completed
+                                    @endif
+                                </p>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-red-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
                         </div>

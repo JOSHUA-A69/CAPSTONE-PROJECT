@@ -22,6 +22,34 @@ class CancellationController extends Controller
     }
 
     /**
+     * List pending/in-progress cancellations
+     */
+    public function index(Request $request)
+    {
+        $query = ReservationCancellation::with([
+            'reservation.organization',
+            'reservation.assignedPriest',
+            'requestor',
+            'staffConfirmer',
+            'adminConfirmer',
+            'adviserConfirmer',
+            'priestConfirmer'
+        ])->orderByDesc('created_at');
+
+        // Show only pending/in-progress by default
+        $status = $request->get('status', 'pending');
+        if ($status === 'pending') {
+            $query->where('status', 'pending');
+        } elseif ($status === 'completed') {
+            $query->where('status', 'completed');
+        }
+
+        $cancellations = $query->paginate(20);
+
+        return view('admin.cancellations.index', compact('cancellations', 'status'));
+    }
+
+    /**
      * Show cancellation details
      */
     public function show($id)

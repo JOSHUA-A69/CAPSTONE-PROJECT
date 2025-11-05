@@ -215,6 +215,8 @@ Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App
 
 // Admin Reservation Routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':admin'])->group(function () {
+    // Cancellations Index
+    Route::get('/cancellations', [\App\Http\Controllers\Admin\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/reservations', [\App\Http\Controllers\Admin\ReservationController::class, 'index'])->name('reservations.index');
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Admin\ReservationController::class, 'show'])->name('reservations.show');
     Route::post('/reservations/{reservation_id}/assign-priest', [\App\Http\Controllers\Admin\ReservationController::class, 'assignPriest'])->name('reservations.assign-priest');
@@ -264,6 +266,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
 
 // Staff Reservation Routes (additional to existing staff routes)
 Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':staff'])->group(function () {
+    // Cancellations Index
+    Route::get('/cancellations', [\App\Http\Controllers\Staff\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/reservations', [\App\Http\Controllers\Staff\ReservationController::class, 'index'])->name('reservations.index');
     Route::get('/reservations/unnoticed', [\App\Http\Controllers\Staff\ReservationController::class, 'unnoticed'])->name('reservations.unnoticed');
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Staff\ReservationController::class, 'show'])->name('reservations.show');
