@@ -1,6 +1,9 @@
 /* Import Calendar Styles First */
 @import './calendar.css';
 
+/* Import Professional Animations */
+@import './animations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -504,3 +507,151 @@
 	animation-delay: 0.1s;
 	transform: scale(0);
 }
+
+/* ========================================
+   ENHANCED DROPDOWN MENU
+   ======================================== */
+
+/* Dropdown menu container */
+.relative [x-show] {
+	min-width: 16rem;
+	max-height: 80vh;
+	overflow-y: auto;
+	backdrop-filter: blur(10px);
+	white-space: nowrap;
+}
+
+/* Ensure dropdown content is properly sized */
+[x-data] .rounded-lg {
+	min-width: 16rem;
+}
+
+/* Dark mode toggle button enhancement */
+#darkModeToggle {
+	cursor: pointer;
+	user-select: none;
+	white-space: nowrap;
+}
+
+#darkModeToggle:hover {
+	background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark #darkModeToggle:hover {
+	background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Smooth icon rotation for dropdown arrow */
+.relative button svg {
+	transition: transform 0.2s ease;
+}
+
+.relative [x-data] > div > button:active svg,
+.relative [x-data] > div > button:focus svg {
+	transform: rotate(180deg);
+}
+
+/* Profile dropdown specific styles */
+.relative [x-data] a[href*="profile"],
+.relative [x-data] a[href*="logout"],
+.relative [x-data] button {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	text-align: left;
+	white-space: nowrap;
+}
+
+/* Ensure text doesn't wrap in dropdown items */
+.relative [x-data] a,
+.relative [x-data] button span {
+	white-space: nowrap;
+	overflow: visible;
+}
+
+/* ========================================
+   ENHANCED NOTIFICATION SYSTEM
+   ======================================== */
+
+/* Custom scrollbar for notification list */
+.scrollbar-thin::-webkit-scrollbar {
+	width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+	background-color: rgba(156, 163, 175, 0.5);
+	border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+	background-color: rgba(107, 114, 128, 0.7);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+	background-color: rgba(75, 85, 99, 0.5);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+	background-color: rgba(55, 65, 81, 0.7);
+}
+
+/* Notification badge pulse animation */
+@keyframes badge-pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}
+
+/* Hide elements with x-cloak until Alpine.js initializes */
+[x-cloak] {
+	display: none !important;
+}
+
+
+/* Smooth gradient background for notification header */
+.dark .from-gray-750 {
+	--tw-gradient-from: #2d3748;
+	--tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(45, 55, 72, 0));
+}
+
+/* ========================================
+   DROPDOWN VISIBILITY FIXES
+   ======================================== */
+
+/* Ensure nav and containers don't clip dropdowns */
+nav {
+	overflow: visible !important;
+}
+
+nav .max-w-7xl,
+nav .flex {
+	overflow: visible !important;
+}
+
+/* Ensure all dropdown containers are visible */
+[x-data*="open"] {
+	overflow: visible !important;
+}
+
+/* Force dropdowns to be on top of everything */
+[x-show] > div {
+	z-index: 9999 !important;
+}
+
+/* Ensure dropdown content is fully visible */
+.absolute[x-show] {
+	max-height: none !important;
+}
+
+/* Prevent body scroll when dropdowns are open but allow dropdown scroll */
+body:has([x-show][style*="display: block"]) {
+	overflow: visible;
+}
+

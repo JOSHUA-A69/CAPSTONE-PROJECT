@@ -28,11 +28,18 @@
 .fc-daygrid-day-frame {
     position: relative;
     min-height: 100px;
+    display: flex;
+    flex-direction: column;
 }
 
 .fc-daygrid-day-events {
     margin-top: 0;
     position: relative;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0 !important;
+    padding-top: 0 !important;
 }
 
 .fc-daygrid-event-harness {
@@ -208,15 +215,81 @@
 
 .fc-daygrid-day-events {
     margin-bottom: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    margin-top: 8px !important; /* Consistent top spacing */
+    position: relative !important;
 }
 
-.fc-daygrid-event-harness {
-    margin-bottom: 2px;
+/* Force all event containers to stack from top */
+.fc-daygrid-day-events > * {
+    position: static !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+}
+
+.fc-daygrid-event-harness,
+.fc-daygrid-event-harness[style*="top"],
+.fc-daygrid-event-harness[style*="position"] {
+    margin-bottom: 4px !important;
+    position: static !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    vertical-align: top !important;
+    align-self: flex-start !important;
+    transform: none !important;
+}
+
+/* Make sure the harness wrapper doesn't use absolute positioning */
+.fc-daygrid-event-harness-abs,
+.fc-daygrid-event-harness-abs[style*="top"],
+.fc-daygrid-event-harness-abs[style*="position"] {
+    position: static !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: auto !important;
+    bottom: auto !important;
+    inset: auto !important;
+    vertical-align: top !important;
+    align-self: flex-start !important;
+    transform: none !important;
+}
+
+/* Increase event block height and padding */
+.fc-daygrid-event {
+    min-height: 95px !important; /* Fixed height for uniformity */
+    max-height: 95px !important; /* Prevent boxes from getting taller */
+    height: 95px !important; /* Exact height */
+    padding: 6px 8px !important; /* Increased padding */
+    margin-bottom: 4px !important;
+    overflow: hidden !important; /* Prevent content overflow */
+    position: relative !important;
+}
+
+/* Custom event content styling */
+.fc-event-main-custom {
+    padding: 6px 8px !important; /* Increased padding */
+    line-height: 1.5 !important; /* Increased line height */
+    min-height: 95px !important; /* Match event block height */
+    max-height: 95px !important; /* Prevent boxes from getting taller */
+    height: 95px !important; /* Exact height */
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* Increased gap */
+    overflow: hidden !important; /* Prevent content overflow */
+    justify-content: flex-start !important;
 }
 
 /* Month view specific */
 .fc-dayGridMonth-view .fc-daygrid-day-frame {
-    min-height: 200px;
+    min-height: 250px !important; /* Increased from 220px to accommodate taller events */
 }
 
 /* Increase overall calendar height */
@@ -431,4 +504,54 @@
 /* Larger Calendar Height */
 .fc .fc-view-harness {
     min-height: 700px !important;
+}
+
+/* CRITICAL: Force all events to align to top - Nuclear option */
+.fc-daygrid-day-events .fc-daygrid-event-harness,
+.fc-daygrid-day-events .fc-daygrid-event-harness-abs,
+#homepagecalendar .fc-daygrid-event-harness,
+#homepagecalendar .fc-daygrid-event-harness-abs {
+    position: static !important;
+    top: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 4px !important;
+}
+
+/* Ensure day events container is flex and starts from top */
+#homepagecalendar .fc-daygrid-day-events {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 2px !important;
+}
+
+/* Uniform height for homepage calendar events */
+#homepagecalendar .fc-daygrid-event,
+#homepagecalendar .fc-event {
+    min-height: 95px !important;
+    max-height: 95px !important;
+    height: 95px !important;
+    overflow: hidden !important;
+}
+
+#homepagecalendar .fc-event-main-custom {
+    min-height: 95px !important;
+    max-height: 95px !important;
+    height: 95px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+}
+
+/* Make all event boxes the same width */
+#homepagecalendar .fc-daygrid-event-harness,
+.fc-daygrid-event-harness {
+    width: 100% !important;
+}
+
+/* Ensure consistent box sizing */
+#homepagecalendar .fc-event,
+.fc-event {
+    box-sizing: border-box !important;
 }

@@ -8,26 +8,32 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use App\Models\UserRole;
 
 class UserManagementController extends Controller
 {
     /**
-     * Delete a user by id. Only accessible to admins via middleware.
+     * Archive (soft delete) a user by id. Only accessible to admins via middleware.
      */
     public function destroy(Request $request, $id): RedirectResponse
     {
-        $user = User::findOrFail($id);
+        $user = User::withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class)
+            ->findOrFail($id);
 
-        // Prevent admins from deleting their own account via this route.
+        // Prevent admins from archiving their own account via this route.
         if ($request->user()->id === $user->id) {
-            return Redirect::back()->with('error', 'Administrators cannot delete their own account from this panel.');
+            return Redirect::back()->with('error', 'Administrators cannot archive their own account from this panel.');
         }
 
-        $user->delete();
-
-        return Redirect::back()->with('status', 'user-deleted');
+        // Check if soft deletes column exists
+        if (Schema::hasColumn('users', 'deleted_at')) {
+            $user->delete(); // Soft delete
+            return Redirect::back()->with('status', 'user-archived');
+        } else {
+            return Redirect::back()->with('info', 'Archive feature requires database migration. Please run: php artisan migrate');
+        }
     }
 
     /**
@@ -35,9 +41,52 @@ class UserManagementController extends Controller
      */
     public function index(Request $request)
     {
-        $users = User::orderBy('created_at', 'desc')->paginate(25);
+        // Only show non-archived users if soft deletes column exists
+        if (Schema::hasColumn('users', 'deleted_at')) {
+            $users = User::orderBy('created_at', 'desc')->paginate(25);
+        } else {
+            // Use withoutGlobalScope to bypass SoftDeletes when column doesn't exist
+            $users = User::withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class)
+                ->orderBy('created_at', 'desc')
+                ->paginate(25);
+        }
 
         return view('admin.users.index', compact('users'));
+    }
+
+    /**
+     * Display archived users.
+     */
+    public function archives()
+    {
+        // Check if soft deletes column exists
+        if (!Schema::hasColumn('users', 'deleted_at')) {
+            return redirect()->route('admin.users.index')
+                ->with('info', 'Archive feature requires database migration. Please run: php artisan migrate');
+        }
+        
+        $archivedUsers = User::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(25);
+        return view('admin.users.archives', compact('archivedUsers'));
+    }
+
+    /**
+     * Restore an archived user.
+     */
+    public function restore($id): RedirectResponse
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+        $user->restore();
+        return Redirect::route('admin.users.archives')->with('status', 'user-restored');
+    }
+
+    /**
+     * Permanently delete a user.
+     */
+    public function forceDestroy($id): RedirectResponse
+    {
+        $user = User::onlyTrashed()->findOrFail($id);
+        $user->forceDelete(); // Permanent delete
+        return Redirect::back()->with('status', 'user-permanently-deleted');
     }
 
     /**
@@ -69,9 +118,16 @@ class UserManagementController extends Controller
         $data['password'] = Hash::make($data['password']);
         $data['status'] = $data['status'] ?? 'active';
 
-        User::create($data);
+        $user = User::create($data);
 
-        return Redirect::route('admin.users.index')->with('status', 'user-created');
+        // Create role-specific success message
+        $roleLabel = ucfirst($data['role']);
+        $successMessage = "{$roleLabel} account for {$user->full_name} has been successfully created!";
+
+        return Redirect::route('admin.users.index')
+            ->with('status', 'user-created')
+            ->with('success', $successMessage)
+            ->with('user_role', $roleLabel);
     }
 
     /**
@@ -79,7 +135,8 @@ class UserManagementController extends Controller
      */
     public function edit($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class)
+            ->findOrFail($id);
 
         $userRoles = UserRole::orderBy('role_name')->get();
         return view('admin.users.edit', compact('user', 'userRoles'));
@@ -90,7 +147,8 @@ class UserManagementController extends Controller
      */
     public function update(Request $request, $id): RedirectResponse
     {
-        $user = User::findOrFail($id);
+        $user = User::withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class)
+            ->findOrFail($id);
 
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
@@ -117,7 +175,7 @@ class UserManagementController extends Controller
 
         $user->update($data);
 
-        // Redirect back to edit page so changes are immediately visible
-        return Redirect::route('admin.users.edit', $user->id)->with('status', 'User updated successfully.');
+        // Redirect back to index page with success message
+        return Redirect::route('admin.users.index')->with('status', 'user-updated');
     }
 }

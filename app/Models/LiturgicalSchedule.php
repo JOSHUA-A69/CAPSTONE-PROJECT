@@ -16,8 +16,10 @@ class LiturgicalSchedule extends Model
         'start_time',
         'end_time',
         'location',
+        'venue_id',
         'priest_id',
         'event_type',
+        'mass_subtype',
         'is_public',
         'created_by',
     ];
@@ -43,6 +45,14 @@ class LiturgicalSchedule extends Model
     public function priest(): BelongsTo
     {
         return $this->belongsTo(User::class, 'priest_id');
+    }
+
+    /**
+     * Get the venue for this schedule
+     */
+    public function venue(): BelongsTo
+    {
+        return $this->belongsTo(Venue::class, 'venue_id', 'venue_id');
     }
 
     /**

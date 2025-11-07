@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $org_id
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Organization extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'organizations';
     protected $primaryKey = 'org_id';
@@ -28,6 +29,8 @@ class Organization extends Model
         'org_name',
         'org_desc',
     ];
+
+    protected $dates = ['deleted_at'];
 
     public function adviser()
     {

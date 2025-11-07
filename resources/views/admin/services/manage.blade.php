@@ -44,7 +44,7 @@
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Service Name</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mass Category</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Duration</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
@@ -68,8 +68,8 @@
                         <td class="px-6 py-4 text-right text-sm font-medium space-x-2">
                             <button 
                                 data-name="{{ e($service->service_name) }}"
-                                data-description="{{ e($service->description) }}"
                                 data-category="{{ e($service->service_category) }}"
+                                data-description="{{ e($service->description) }}"
                                 data-duration="{{ e($service->duration) }}"
                                 data-id="{{ $service->service_id }}"
                                 class="btn-edit-service text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">
@@ -105,13 +105,13 @@
                     <input type="text" name="service_name" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white" placeholder="e.g., Wedding, Baptism, Mass">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Category</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mass Category</label>
                     <select name="service_category" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">— Select category —</option>
-                        @foreach(($categories ?? []) as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                        @endforeach
+                        <option value="">— Select Mass Type —</option>
+                        <option value="Institutional Mass">⛪ Institutional Mass</option>
+                        <option value="Non-Institutional Mass">✝️ Non-Institutional Mass</option>
                     </select>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Optional. Select if this is an Institutional or Non-Institutional Mass.</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration (minutes)</label>
@@ -150,12 +150,11 @@
                     <input type="text" id="edit_service_name" name="service_name" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Service Category</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mass Category</label>
                     <select id="edit_service_category" name="service_category" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
-                        <option value="">— Select category —</option>
-                        @foreach(($categories ?? []) as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                        @endforeach
+                        <option value="">— Select Mass Type —</option>
+                        <option value="Institutional Mass">⛪ Institutional Mass</option>
+                        <option value="Non-Institutional Mass">✝️ Non-Institutional Mass</option>
                     </select>
                 </div>
                 <div>

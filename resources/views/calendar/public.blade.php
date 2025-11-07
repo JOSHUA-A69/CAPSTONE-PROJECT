@@ -16,6 +16,72 @@
                 </p>
             </div>
 
+            <!-- Filter Section -->
+            <div class="mb-10">
+                <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border-2 border-emerald-100 dark:border-emerald-800 p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Service Filter -->
+                        <div>
+                            <label for="serviceFilter" class="block text-sm font-bold text-gray-900 dark:text-white mb-3">
+                                Service
+                            </label>
+                            <select id="serviceFilter" class="w-full px-4 py-3 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium">
+                                <option value="">All services</option>
+                                <option value="institutional_mass">Institutional Mass</option>
+                                <option value="non_institutional_mass">Non-Institutional Mass</option>
+                                <option value="bible_study">Bible Study / Catechesis</option>
+                                <option value="daily_noon_mass">Daily Noon Mass</option>
+                                <option value="outreach_activity">Outreach Activity</option>
+                                <option value="prayer_service">Prayer Service</option>
+                                <option value="recollection">Recollection</option>
+                                <option value="retreat">Retreat</option>
+                            </select>
+                        </div>
+
+                        <!-- Mass Subtype Filter (shown when mass type is selected) -->
+                        <div id="massSubtypeContainer" class="hidden">
+                            <label for="massSubtypeFilter" class="block text-sm font-bold text-gray-900 dark:text-white mb-3">
+                                Mass Type
+                            </label>
+                            <select id="massSubtypeFilter" class="w-full px-4 py-3 border-2 border-emerald-200 dark:border-emerald-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-medium">
+                                <option value="">All mass types</option>
+                                <optgroup label="Institutional Mass" id="institutionalOptions">
+                                    <option value="university_opening_mass">University Opening Mass</option>
+                                    <option value="thanksgiving_mass">Thanksgiving Mass</option>
+                                    <option value="convocation_mass">Convocation Mass</option>
+                                    <option value="graduation_mass">Graduation Mass</option>
+                                    <option value="feast_day_masses">Feast Day Masses</option>
+                                    <option value="memorial_requiem_masses">Memorial/Requiem Masses</option>
+                                    <option value="special_celebration_masses">Special Celebration Masses</option>
+                                </optgroup>
+                                <optgroup label="Non-Institutional Mass" id="nonInstitutionalOptions">
+                                    <option value="daily_noon_mass">Daily Noon Mass</option>
+                                    <option value="departmental_group_masses">Departmental/Group Masses</option>
+                                    <option value="recollection_masses">Recollection Masses</option>
+                                    <option value="novenas_devotions">Novenas and Devotions</option>
+                                    <option value="prayer_services_blessings">Prayer Services and Blessings</option>
+                                    <option value="special_devotional_masses">Special Devotional Masses</option>
+                                    <option value="taize_prayer_services">Taizé Prayer Services</option>
+                                    <option value="sacraments">Sacraments</option>
+                                    <option value="community_outreach">Community Outreach</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Filters Display -->
+                    <div id="activeFilters" class="mt-6 hidden">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-300">Active Filters:</span>
+                            <div id="filterTags" class="flex gap-2 flex-wrap"></div>
+                            <button id="clearFilters" class="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 font-semibold underline">
+                                Clear all
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Full Width Calendar -->
             <div class="mb-10">
                 <div class="flex items-center justify-end mb-3">
@@ -62,6 +128,8 @@
     <script>
         // Shared event type maps for colors and labels
         const EVENT_TYPE_COLORS = {
+            'institutional_mass': '#8B5CF6',
+            'non_institutional_mass': '#3B82F6',
             'mass': '#8B5CF6',
             'confession': '#3B82F6',
             'adoration': '#F59E0B',
@@ -72,6 +140,8 @@
             'other': '#6B7280'
         };
         const EVENT_TYPE_LABELS = {
+            'institutional_mass': '⛪ Institutional Mass',
+            'non_institutional_mass': '⛪ Non-Institutional Mass',
             'mass': '⛪ Mass',
             'confession': '✝️ Confession',
             'adoration': '🕯️ Adoration',
@@ -82,10 +152,37 @@
             'other': '📌 Other'
         };
 
+        const MASS_SUBTYPE_LABELS = {
+            'university_opening_mass': 'University Opening Mass',
+            'thanksgiving_mass': 'Thanksgiving Mass',
+            'convocation_mass': 'Convocation Mass',
+            'graduation_mass': 'Graduation Mass',
+            'feast_day_masses': 'Feast Day Masses',
+            'memorial_requiem_masses': 'Memorial/Requiem Masses',
+            'special_celebration_masses': 'Special Celebration Masses',
+            'daily_noon_mass': 'Daily Noon Mass',
+            'departmental_group_masses': 'Departmental/Group Masses',
+            'recollection_masses': 'Recollection Masses',
+            'novenas_devotions': 'Novenas and Devotions',
+            'prayer_services_blessings': 'Prayer Services and Blessings',
+            'special_devotional_masses': 'Special Devotional Masses',
+            'taize_prayer_services': 'Taizé Prayer Services',
+            'sacraments': 'Sacraments',
+            'community_outreach': 'Community Outreach'
+        };
+
+        let fullCalendarInstance = null;
+        let allSchedules = [];
+
         // Initialize calendar when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
-            const schedules = JSON.parse(document.getElementById('publicCalendarData').textContent || '[]');
-            window.initPublicCalendar(schedules);
+            allSchedules = JSON.parse(document.getElementById('publicCalendarData').textContent || '[]');
+            
+            // Initialize calendar with all schedules
+            fullCalendarInstance = window.initPublicCalendar(allSchedules);
+
+            // Setup filter handlers
+            setupFilterHandlers();
 
             // attach click handlers and styles for upcoming event rows
             document.querySelectorAll('.public-event-row').forEach(row => {
@@ -103,7 +200,7 @@
             if (btnNext) {
                 btnNext.addEventListener('click', () => {
                     const today = new Date();
-                    const next = schedules
+                    const next = allSchedules
                         .map(s => ({...s, _d: new Date(s.schedule_date)}))
                         .filter(s => !isNaN(s._d))
                         .sort((a,b) => a._d - b._d)
@@ -122,19 +219,159 @@
             }
 
             // Build legend
-            const legendEl = document.getElementById('eventTypeLegend');
-            if (legendEl) {
-                const types = Object.keys(EVENT_TYPE_COLORS);
-                legendEl.innerHTML = types.map(t => `
-                    <div class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                        <span class="inline-block w-4 h-4 rounded" style="background-color: ${EVENT_TYPE_COLORS[t]}"></span>
-                        <span class="font-medium text-gray-800 dark:text-gray-200">${EVENT_TYPE_LABELS[t] || t}</span>
-                    </div>
-                `).join('');
+            updateLegend();
+            
+            // Trigger filter initialization if there's a pre-selected value
+            const serviceFilter = document.getElementById('serviceFilter');
+            if (serviceFilter && serviceFilter.value) {
+                serviceFilter.dispatchEvent(new Event('change'));
+            }
+        });
+
+        function setupFilterHandlers() {
+            const serviceFilter = document.getElementById('serviceFilter');
+            const massSubtypeFilter = document.getElementById('massSubtypeFilter');
+            const massSubtypeContainer = document.getElementById('massSubtypeContainer');
+            const clearFiltersBtn = document.getElementById('clearFilters');
+
+            // Service filter change
+            serviceFilter.addEventListener('change', function() {
+                const selectedService = this.value;
+                
+                // Show/hide mass subtype filter
+                if (selectedService === 'institutional_mass' || selectedService === 'non_institutional_mass') {
+                    massSubtypeContainer.classList.remove('hidden');
+                    
+                    // Show/hide appropriate optgroups
+                    const institutionalOptions = document.getElementById('institutionalOptions');
+                    const nonInstitutionalOptions = document.getElementById('nonInstitutionalOptions');
+                    
+                    if (selectedService === 'institutional_mass') {
+                        institutionalOptions.style.display = 'block';
+                        nonInstitutionalOptions.style.display = 'none';
+                    } else {
+                        institutionalOptions.style.display = 'none';
+                        nonInstitutionalOptions.style.display = 'block';
+                    }
+                    
+                    massSubtypeFilter.value = '';
+                } else {
+                    massSubtypeContainer.classList.add('hidden');
+                    massSubtypeFilter.value = '';
+                }
+                
+                applyFilters();
+            });
+
+            // Mass subtype filter change
+            massSubtypeFilter.addEventListener('change', function() {
+                applyFilters();
+            });
+
+            // Clear filters button
+            clearFiltersBtn.addEventListener('click', function() {
+                serviceFilter.value = '';
+                massSubtypeFilter.value = '';
+                massSubtypeContainer.classList.add('hidden');
+                applyFilters();
+            });
+        }
+
+        function applyFilters() {
+            const serviceFilter = document.getElementById('serviceFilter').value;
+            const massSubtypeFilter = document.getElementById('massSubtypeFilter').value;
+            
+            console.log('Applying filters - Service:', serviceFilter, 'Mass Subtype:', massSubtypeFilter);
+            
+            let filteredSchedules = allSchedules;
+
+            // Apply service filter
+            if (serviceFilter) {
+                filteredSchedules = filteredSchedules.filter(schedule => {
+                    return schedule.event_type === serviceFilter;
+                });
+                console.log('After service filter:', filteredSchedules.length);
             }
 
-            // Note: Upcoming list replaced by mini calendar section below
-        });
+            // Apply mass subtype filter
+            if (massSubtypeFilter) {
+                filteredSchedules = filteredSchedules.filter(schedule => {
+                    console.log('Checking schedule:', schedule.title, 'mass_subtype:', schedule.mass_subtype, 'looking for:', massSubtypeFilter);
+                    return schedule.mass_subtype === massSubtypeFilter;
+                });
+                console.log('After mass subtype filter:', filteredSchedules.length);
+            }
+
+            console.log('Final filtered schedules:', filteredSchedules);
+
+            // Update window.filteredSchedules BEFORE refetching events
+            window.filteredSchedules = filteredSchedules;
+
+            // Update calendar
+            if (fullCalendarInstance) {
+                fullCalendarInstance.refetchEvents();
+            }
+
+            // Update active filters display
+            updateActiveFilters(serviceFilter, massSubtypeFilter);
+            
+            // Update legend
+            updateLegend();
+        }
+
+        function updateActiveFilters(serviceFilter, massSubtypeFilter) {
+            const activeFiltersDiv = document.getElementById('activeFilters');
+            const filterTagsDiv = document.getElementById('filterTags');
+            
+            filterTagsDiv.innerHTML = '';
+            
+            if (serviceFilter || massSubtypeFilter) {
+                activeFiltersDiv.classList.remove('hidden');
+                
+                if (serviceFilter) {
+                    const label = EVENT_TYPE_LABELS[serviceFilter] || serviceFilter;
+                    filterTagsDiv.innerHTML += `
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-100 rounded-full text-sm font-medium">
+                            ${label}
+                        </span>
+                    `;
+                }
+                
+                if (massSubtypeFilter) {
+                    const label = MASS_SUBTYPE_LABELS[massSubtypeFilter] || massSubtypeFilter;
+                    filterTagsDiv.innerHTML += `
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 rounded-full text-sm font-medium">
+                            ${label}
+                        </span>
+                    `;
+                }
+            } else {
+                activeFiltersDiv.classList.add('hidden');
+            }
+        }
+
+        function updateLegend() {
+            const legendEl = document.getElementById('eventTypeLegend');
+            if (!legendEl) return;
+            
+            // Get current schedules (filtered or all)
+            const currentSchedules = window.filteredSchedules || allSchedules;
+            
+            // Get unique event types from current schedules
+            const uniqueTypes = [...new Set(currentSchedules.map(s => s.event_type))];
+            
+            if (uniqueTypes.length === 0) {
+                legendEl.innerHTML = '<div class="col-span-2 text-center text-gray-500 dark:text-gray-400 py-4">No events to display</div>';
+                return;
+            }
+            
+            legendEl.innerHTML = uniqueTypes.map(t => `
+                <div class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                    <span class="inline-block w-4 h-4 rounded" style="background-color: ${EVENT_TYPE_COLORS[t] || EVENT_TYPE_COLORS['other']}"></span>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">${EVENT_TYPE_LABELS[t] || t}</span>
+                </div>
+            `).join('');
+        }
 
         // Function to show event details modal
         window.showPublicEventModal = function(schedule) {

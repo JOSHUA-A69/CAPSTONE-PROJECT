@@ -122,11 +122,21 @@ Route::get('/staff', fn () => view('staff.dashboard'))
 // Staff organization management
 Route::prefix('staff')->name('staff.')->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':staff'])->group(function () {
     Route::get('/organizations', [\App\Http\Controllers\Staff\OrganizationController::class, 'index'])->name('organizations.index');
+    Route::get('/organizations/archives', [\App\Http\Controllers\Staff\OrganizationController::class, 'archives'])->name('organizations.archives');
     Route::get('/organizations/create', [\App\Http\Controllers\Staff\OrganizationController::class, 'create'])->name('organizations.create');
     Route::post('/organizations', [\App\Http\Controllers\Staff\OrganizationController::class, 'store'])->name('organizations.store');
     Route::get('/organizations/{org_id}/edit', [\App\Http\Controllers\Staff\OrganizationController::class, 'edit'])->name('organizations.edit');
     Route::put('/organizations/{org_id}', [\App\Http\Controllers\Staff\OrganizationController::class, 'update'])->name('organizations.update');
     Route::delete('/organizations/{org_id}', [\App\Http\Controllers\Staff\OrganizationController::class, 'destroy'])->name('organizations.destroy');
+    Route::post('/organizations/{org_id}/restore', [\App\Http\Controllers\Staff\OrganizationController::class, 'restore'])->name('organizations.restore');
+    Route::delete('/organizations/{org_id}/force-delete', [\App\Http\Controllers\Staff\OrganizationController::class, 'forceDestroy'])->name('organizations.force-destroy');
+    
+    // Notification Routes
+    Route::get('/notifications', [\App\Http\Controllers\Staff\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/count', [\App\Http\Controllers\Staff\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
+    Route::get('/notifications/recent', [\App\Http\Controllers\Staff\NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\Staff\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\Staff\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     
     // Calendar Management Routes
     Route::get('/calendar', [\App\Http\Controllers\Staff\CalendarController::class, 'index'])->name('calendar.index');
@@ -160,10 +170,13 @@ Route::post('/admin/users/{id}/approve', [\App\Http\Controllers\Admin\UserApprov
 // Admin user CRUD (list, create, store, edit, update)
 Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'index'])->name('users.index');
+    Route::get('/users/archives', [\App\Http\Controllers\Admin\UserManagementController::class, 'archives'])->name('users.archives');
     Route::get('/users/create', [\App\Http\Controllers\Admin\UserManagementController::class, 'create'])->name('users.create');
     Route::post('/users', [\App\Http\Controllers\Admin\UserManagementController::class, 'store'])->name('users.store');
     Route::get('/users/{id}/edit', [\App\Http\Controllers\Admin\UserManagementController::class, 'edit'])->name('users.edit');
     Route::put('/users/{id}', [\App\Http\Controllers\Admin\UserManagementController::class, 'update'])->name('users.update');
+    Route::post('/users/{id}/restore', [\App\Http\Controllers\Admin\UserManagementController::class, 'restore'])->name('users.restore');
+    Route::delete('/users/{id}/force-delete', [\App\Http\Controllers\Admin\UserManagementController::class, 'forceDestroy'])->name('users.force-destroy');
 });
 
 // ==========================

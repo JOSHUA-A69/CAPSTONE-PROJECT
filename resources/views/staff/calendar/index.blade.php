@@ -1,4 +1,4 @@
-<x-app-layout>
+﻿<x-app-layout>
     @vite(['resources/js/app.js', 'resources/css/app.css'])
     
     <style>
@@ -16,11 +16,23 @@
             border-radius: 3px !important;
             font-size: 0.75rem !important;
             white-space: normal !important;
+            position: relative !important;
         }
         
         .fc-daygrid-event-harness {
             display: block !important;
             margin-bottom: 2px !important;
+            position: relative !important;
+        }
+        
+        /* CRITICAL: Prevent events from spanning across multiple days */
+        .fc-daygrid-event-harness-abs {
+            position: relative !important;
+            right: auto !important;
+        }
+        
+        .fc-event-main {
+            overflow: hidden !important;
         }
         
         .fc-daygrid-day-events {
@@ -36,7 +48,7 @@
     <x-slot name="header">
         <div>
             <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
-                📅 Manage Liturgical Calendar
+                Manage Liturgical Calendar
             </h2>
             <p class="text-muted text-sm mt-1">Add and manage public liturgical schedules and activities</p>
         </div>
@@ -131,38 +143,18 @@
                             </h3>
                         </div>
                         <div class="card-body p-6">
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div class="flex items-center gap-2">
                                     <div class="w-4 h-4 rounded" style="background-color: #8B5CF6;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Mass</span>
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Institutional Mass</span>
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <div class="w-4 h-4 rounded" style="background-color: #3B82F6;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Confession</span>
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Non-Institutional Mass</span>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #F59E0B;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Adoration</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #10B981;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Retreat</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #EF4444;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Seminar</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #6366F1;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Meeting</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #EC4899;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Celebration</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #6B7280;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Other</span>
+                                    <div class="w-4 h-4 rounded" style="background-color: #FCF3CF;"></div>
+                                    <span class="text-sm text-gray-700 dark:text-gray-300">Today's Date</span>
                                 </div>
                             </div>
                         </div>
@@ -207,12 +199,12 @@
                                                     - {{ \Carbon\Carbon::parse($schedule->end_time)->format('g:i A') }}
                                                 @endif
                                             </div>
-                                            @if($schedule->location)
+                                            @if($schedule->venue || $schedule->location)
                                                 <div class="flex items-center gap-2">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                                     </svg>
-                                                    {{ $schedule->location }}
+                                                    {{ $schedule->venue ? $schedule->venue->name : $schedule->location }}
                                                 </div>
                                             @endif
                                             @if($schedule->priest)
@@ -325,19 +317,71 @@
                                 Event Type <span class="text-red-500">*</span>
                             </label>
                             <select name="event_type" 
+                                    id="addEventType"
                                     required 
+                                    x-data="{ massType: '' }"
+                                    x-model="massType"
+                                    @change="document.getElementById('addMassSubtype').value = ''; document.getElementById('addMassSubtypeContainer').style.display = (massType === 'institutional_mass' || massType === 'non_institutional_mass') ? 'block' : 'none';"
                                     class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                                <option value="mass">⛪ Mass</option>
-                                <option value="confession">✝️ Confession</option>
-                                <option value="adoration">🕯️ Adoration</option>
-                                <option value="retreat">🏔️ Retreat</option>
-                                <option value="seminar">📚 Seminar</option>
-                                <option value="meeting">👥 Meeting</option>
-                                <option value="celebration">🎉 Celebration</option>
-                                <option value="other">📌 Other</option>
+                                <option value="">Select Event Type</option>
+                                <option value="institutional_mass">⛪ Institutional Mass</option>
+                                <option value="non_institutional_mass">✝️ Non-Institutional Mass</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Mass Subtype Dropdown (conditionally shown) -->
+                        <div id="addMassSubtypeContainer" style="display: none;">
+                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Mass Type <span class="text-red-500">*</span>
+                            </label>
+                            <select name="mass_subtype" 
+                                    id="addMassSubtype"
+                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                <option value="">Select Mass Type</option>
+                                <!-- Institutional Mass options -->
+                                <optgroup label="Institutional Mass" id="addInstitutionalGroup" style="display: none;">
+                                    @foreach($services->where('service_category', 'Institutional Mass') as $service)
+                                        <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <!-- Non-Institutional Mass options -->
+                                <optgroup label="Non-Institutional Mass" id="addNonInstitutionalGroup" style="display: none;">
+                                    @foreach($services->where('service_category', 'Non-Institutional Mass') as $service)
+                                        <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                    @endforeach
+                                </optgroup>
                             </select>
                         </div>
                     </div>
+
+                    <script>
+                        // Show/hide mass subtype based on selection
+                        document.getElementById('addEventType').addEventListener('change', function() {
+                            const massSubtypeContainer = document.getElementById('addMassSubtypeContainer');
+                            const massSubtype = document.getElementById('addMassSubtype');
+                            const institutionalGroup = document.getElementById('addInstitutionalGroup');
+                            const nonInstitutionalGroup = document.getElementById('addNonInstitutionalGroup');
+                            
+                            if (this.value === 'institutional_mass') {
+                                massSubtypeContainer.style.display = 'block';
+                                massSubtype.required = true;
+                                institutionalGroup.style.display = 'block';
+                                nonInstitutionalGroup.style.display = 'none';
+                                massSubtype.value = '';
+                            } else if (this.value === 'non_institutional_mass') {
+                                massSubtypeContainer.style.display = 'block';
+                                massSubtype.required = true;
+                                institutionalGroup.style.display = 'none';
+                                nonInstitutionalGroup.style.display = 'block';
+                                massSubtype.value = '';
+                            } else {
+                                massSubtypeContainer.style.display = 'none';
+                                massSubtype.required = false;
+                                massSubtype.value = '';
+                            }
+                        });
+                    </script>
+                    
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -359,11 +403,30 @@
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Location</label>
+                        <select id="venue_select" 
+                                name="venue_select"
+                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                onchange="handleVenueChange()">
+                            <option value="">-- Select Location --</option>
+                            @foreach($venues as $venue)
+                                <option value="{{ $venue->venue_id }}">{{ $venue->name }}</option>
+                            @endforeach
+                            <option value="custom">Custom Location (Outside)</option>
+                        </select>
+                    </div>
+
+                    <!-- Custom Location Input (hidden by default) -->
+                    <div id="custom_location_container" style="display: none;">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Custom Location</label>
                         <input type="text" 
+                               id="custom_location_input"
                                name="location" 
-                               placeholder="e.g., Main Chapel, Parish Hall"
+                               placeholder="Enter custom location (e.g., Off-campus venue)"
                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
+
+                    <!-- Hidden input to store venue_id -->
+                    <input type="hidden" id="venue_id_input" name="venue_id" value="">
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -450,18 +513,67 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event Type *</label>
-                            <select name="event_type" id="edit_type" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                                <option value="mass">Mass</option>
-                                <option value="confession">Confession</option>
-                                <option value="adoration">Adoration</option>
-                                <option value="retreat">Retreat</option>
-                                <option value="seminar">Seminar</option>
-                                <option value="meeting">Meeting</option>
-                                <option value="celebration">Celebration</option>
-                                <option value="other">Other</option>
+                            <select name="event_type" 
+                                    id="edit_type" 
+                                    required 
+                                    onchange="handleEditEventTypeChange()"
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                <option value="">Select Event Type</option>
+                                <option value="institutional_mass">⛪ Institutional Mass</option>
+                                <option value="non_institutional_mass">✝️ Non-Institutional Mass</option>
                             </select>
                         </div>
                     </div>
+                    
+                    <!-- Edit Mass Subtype Dropdown -->
+                    <div id="editMassSubtypeContainer" style="display: none;">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Mass Type <span class="text-red-500">*</span>
+                        </label>
+                        <select name="mass_subtype" 
+                                id="edit_mass_subtype"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                            <option value="">Select Mass Type</option>
+                            <!-- Institutional Mass options -->
+                            <optgroup label="Institutional Mass" id="editInstitutionalGroup">
+                                @foreach($services->where('service_category', 'Institutional Mass') as $service)
+                                    <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                @endforeach
+                            </optgroup>
+                            <!-- Non-Institutional Mass options -->
+                            <optgroup label="Non-Institutional Mass" id="editNonInstitutionalGroup">
+                                @foreach($services->where('service_category', 'Non-Institutional Mass') as $service)
+                                    <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                @endforeach
+                            </optgroup>
+                        </select>
+                    </div>
+                    
+                    <script>
+                        function handleEditEventTypeChange() {
+                            const eventType = document.getElementById('edit_type').value;
+                            const massSubtypeContainer = document.getElementById('editMassSubtypeContainer');
+                            const massSubtype = document.getElementById('edit_mass_subtype');
+                            const institutionalGroup = document.getElementById('editInstitutionalGroup');
+                            const nonInstitutionalGroup = document.getElementById('editNonInstitutionalGroup');
+                            
+                            if (eventType === 'institutional_mass') {
+                                massSubtypeContainer.style.display = 'block';
+                                massSubtype.required = true;
+                                institutionalGroup.style.display = 'block';
+                                nonInstitutionalGroup.style.display = 'none';
+                            } else if (eventType === 'non_institutional_mass') {
+                                massSubtypeContainer.style.display = 'block';
+                                massSubtype.required = true;
+                                institutionalGroup.style.display = 'none';
+                                nonInstitutionalGroup.style.display = 'block';
+                            } else {
+                                massSubtypeContainer.style.display = 'none';
+                                massSubtype.required = false;
+                                massSubtype.value = '';
+                            }
+                        }
+                    </script>
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -476,8 +588,30 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location</label>
-                        <input type="text" name="location" id="edit_location" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                        <select id="edit_venue_select" 
+                                name="edit_venue_select"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                                onchange="handleEditVenueChange()">
+                            <option value="">-- Select Location --</option>
+                            @foreach($venues as $venue)
+                                <option value="{{ $venue->venue_id }}">{{ $venue->name }}</option>
+                            @endforeach
+                            <option value="custom">Custom Location (Outside)</option>
+                        </select>
                     </div>
+
+                    <!-- Custom Location Input for Edit (hidden by default) -->
+                    <div id="edit_custom_location_container" style="display: none;">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom Location</label>
+                        <input type="text" 
+                               id="edit_custom_location_input"
+                               name="location" 
+                               placeholder="Enter custom location"
+                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                    </div>
+
+                    <!-- Hidden input to store venue_id for edit -->
+                    <input type="hidden" id="edit_venue_id_input" name="venue_id" value="">
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Priest</label>
@@ -543,17 +677,107 @@
             selectedDate = null;
         }
 
+        // Handle venue selection in Add modal
+        function handleVenueChange() {
+            const venueSelect = document.getElementById('venue_select');
+            const customContainer = document.getElementById('custom_location_container');
+            const customInput = document.getElementById('custom_location_input');
+            const venueIdInput = document.getElementById('venue_id_input');
+
+            if (venueSelect.value === 'custom') {
+                // Show custom location input
+                customContainer.style.display = 'block';
+                customInput.required = true;
+                venueIdInput.value = '';
+            } else if (venueSelect.value) {
+                // Selected a venue from the list
+                customContainer.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+                venueIdInput.value = venueSelect.value;
+            } else {
+                // No selection
+                customContainer.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+                venueIdInput.value = '';
+            }
+        }
+
+        // Handle venue selection in Edit modal
+        function handleEditVenueChange() {
+            const venueSelect = document.getElementById('edit_venue_select');
+            const customContainer = document.getElementById('edit_custom_location_container');
+            const customInput = document.getElementById('edit_custom_location_input');
+            const venueIdInput = document.getElementById('edit_venue_id_input');
+
+            if (venueSelect.value === 'custom') {
+                // Show custom location input
+                customContainer.style.display = 'block';
+                customInput.required = true;
+                venueIdInput.value = '';
+            } else if (venueSelect.value) {
+                // Selected a venue from the list
+                customContainer.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+                venueIdInput.value = venueSelect.value;
+            } else {
+                // No selection
+                customContainer.style.display = 'none';
+                customInput.required = false;
+                customInput.value = '';
+                venueIdInput.value = '';
+            }
+        }
+
         function openEditModal(schedule) {
             document.getElementById('edit_title').value = schedule.title;
             document.getElementById('edit_description').value = schedule.description || '';
             document.getElementById('edit_date').value = schedule.schedule_date;
             document.getElementById('edit_start').value = schedule.start_time.substring(0, 5);
             document.getElementById('edit_end').value = schedule.end_time ? schedule.end_time.substring(0, 5) : '';
-            document.getElementById('edit_location').value = schedule.location || '';
+            
+            // Handle venue/location selection
+            const editVenueSelect = document.getElementById('edit_venue_select');
+            const editCustomContainer = document.getElementById('edit_custom_location_container');
+            const editCustomInput = document.getElementById('edit_custom_location_input');
+            const editVenueIdInput = document.getElementById('edit_venue_id_input');
+            
+            if (schedule.venue_id) {
+                // Has a venue ID, select it from dropdown
+                editVenueSelect.value = schedule.venue_id;
+                editCustomContainer.style.display = 'none';
+                editCustomInput.value = '';
+                editVenueIdInput.value = schedule.venue_id;
+            } else if (schedule.location) {
+                // Has custom location
+                editVenueSelect.value = 'custom';
+                editCustomContainer.style.display = 'block';
+                editCustomInput.value = schedule.location;
+                editVenueIdInput.value = '';
+            } else {
+                // No location set
+                editVenueSelect.value = '';
+                editCustomContainer.style.display = 'none';
+                editCustomInput.value = '';
+                editVenueIdInput.value = '';
+            }
+            
             document.getElementById('edit_priest').value = schedule.priest_id || '';
             document.getElementById('edit_type').value = schedule.event_type;
+            
+            // Handle mass subtype for edit modal
+            const editMassSubtype = document.getElementById('edit_mass_subtype');
+            if (editMassSubtype && schedule.mass_subtype) {
+                editMassSubtype.value = schedule.mass_subtype;
+            }
+            
             document.getElementById('is_public_edit').checked = schedule.is_public;
             document.getElementById('editForm').action = `/staff/calendar/${schedule.schedule_id}`;
+            
+            // Trigger event type change to show/hide mass subtype
+            handleEditEventTypeChange();
             
             document.getElementById('editModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';

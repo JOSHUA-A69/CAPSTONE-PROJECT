@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use App\Models\LiturgicalSchedule;
 use App\Models\User;
+use App\Models\Venue;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,7 +23,7 @@ class CalendarController extends Controller
         // Get all schedules (not limited to current month) so FullCalendar can display them when navigating
         $schedules = LiturgicalSchedule::orderBy('schedule_date')
             ->orderBy('start_time')
-            ->with(['creator', 'priest'])
+            ->with(['creator', 'priest', 'venue'])
             ->get();
 
         // Get all priests for the dropdown
@@ -29,7 +31,13 @@ class CalendarController extends Controller
             ->orderBy('first_name')
             ->get(['id', 'first_name', 'last_name', 'email']);
 
-        return view('staff.calendar.index', compact('schedules', 'month', 'year', 'priests'));
+        // Get all venues for the dropdown
+        $venues = Venue::orderBy('name')->get();
+        
+        // Get all services for mass type dropdowns
+        $services = Service::orderBy('service_name')->get();
+
+        return view('staff.calendar.index', compact('schedules', 'month', 'year', 'priests', 'venues', 'services'));
     }
 
     /**
@@ -58,8 +66,10 @@ class CalendarController extends Controller
             'start_time' => 'required',
             'end_time' => 'nullable',
             'location' => 'nullable|string|max:255',
+            'venue_id' => 'nullable|exists:venues,venue_id',
             'priest_id' => 'nullable|exists:users,id',
-            'event_type' => 'required|in:mass,confession,adoration,retreat,seminar,meeting,celebration,other',
+            'event_type' => 'required|in:institutional_mass,non_institutional_mass',
+            'mass_subtype' => 'required|string|max:255',
             'is_public' => 'boolean',
         ]);
 
@@ -86,8 +96,10 @@ class CalendarController extends Controller
             'start_time' => 'required',
             'end_time' => 'nullable',
             'location' => 'nullable|string|max:255',
+            'venue_id' => 'nullable|exists:venues,venue_id',
             'priest_id' => 'nullable|exists:users,id',
-            'event_type' => 'required|in:mass,confession,adoration,retreat,seminar,meeting,celebration,other',
+            'event_type' => 'required|in:institutional_mass,non_institutional_mass',
+            'mass_subtype' => 'required|string|max:255',
             'is_public' => 'boolean',
         ]);
 

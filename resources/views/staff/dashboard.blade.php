@@ -102,6 +102,28 @@
                     </div>
                 </a>
 
+                <!-- Archived Organizations Card -->
+                <a href="{{ route('staff.organizations.archives') }}" class="card-hover group">
+                    <div class="card-body">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-lg text-heading mb-1">Archived Organizations</h4>
+                                <p class="text-sm text-muted">
+                                    View and restore archived organizations, or permanently delete them from the system.
+                                </p>
+                            </div>
+                            <svg class="w-5 h-5 text-gray-400 group-hover:text-amber-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </div>
+                </a>
+
                 <!-- Calendar Management Card -->
                 <a href="{{ route('staff.calendar.index') }}" class="card-hover group">
                     <div class="card-body">
