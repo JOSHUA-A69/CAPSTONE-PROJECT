@@ -74,71 +74,190 @@ class ReservationController extends Controller
 
     public function store(ReservationRequest $request)
     {
-        $data = $request->validated();
-        $data['user_id'] = Auth::id();
-
-        // Always start at pending status for adviser approval
-        $data['status'] = 'pending';
-        $data['adviser_notified_at'] = now(); // Adviser is notified immediately (email + in-app)
-
-        // Handle custom venue
-        if ($request->venue_id === 'custom') {
-            // Set venue_id to null and store custom venue name
-            $data['venue_id'] = null;
-            $data['custom_venue_name'] = $request->custom_venue;
-        } else {
-            // Regular venue selected, ensure custom_venue_name is null
-            $data['custom_venue_name'] = null;
-        }
-
-        // Handle priest selection based on type
-        if ($data['priest_selection_type'] === 'any_available') {
-            // Remove officiant_id - admin will assign later
-            $data['officiant_id'] = null;
-        } elseif ($data['priest_selection_type'] === 'external') {
-            // Remove officiant_id for external priest
-            $data['officiant_id'] = null;
-        }
-        // For 'specific' type, officiant_id is already in the data from validation
-
-        $reservation = Reservation::create($data);
-
-        // Create history record with appropriate message
-        $historyRemarks = 'Reservation request submitted by requestor - pending adviser review';
-        if ($data['priest_selection_type'] === 'any_available') {
-            $historyRemarks .= ' (Admin will assign priest)';
-        } elseif ($data['priest_selection_type'] === 'external') {
-            $historyRemarks .= ' (External priest: ' . ($data['external_priest_name'] ?? 'N/A') . ')';
-        }
-
-        $reservation->history()->create([
-            'performed_by' => Auth::id(),
-            'action' => 'submitted',
-            'remarks' => $historyRemarks,
-            'performed_at' => now(),
-        ]);
-
-        // Send notifications based on priest selection type
         try {
-            $this->notificationService->notifyReservationSubmitted($reservation);
-            Log::info('Notification sent for reservation: ' . $reservation->reservation_id);
+            \DB::beginTransaction();
+            
+            $data = $request->validated();
+            $data['user_id'] = Auth::id();
+
+            // Always start at pending status for adviser approval
+            $data['status'] = 'pending';
+            $data['adviser_notified_at'] = now(); // Adviser is notified immediately (email + in-app)
+
+            // Handle custom venue
+            if ($request->venue_id === 'custom') {
+                // Set venue_id to null and store custom venue name
+                $data['venue_id'] = null;
+                $data['custom_venue_name'] = $request->custom_venue;
+            } else {
+                // Regular venue selected, ensure custom_venue_name is null
+                $data['custom_venue_name'] = null;
+            }
+
+            // Keep the first organization for backwards compatibility
+            $organizationIds = $request->input('organization_ids', []);
+            $data['org_id'] = !empty($organizationIds) ? $organizationIds[0] : null;
+
+            // Handle priest selection based on type
+            $priestIds = $request->input('priest_ids', []);
+            if ($data['priest_selection_type'] === 'any_available') {
+                // Remove officiant_id - admin will assign later
+                $data['officiant_id'] = null;
+            } elseif ($data['priest_selection_type'] === 'external') {
+                // Remove officiant_id for external priest
+                $data['officiant_id'] = null;
+            } elseif ($data['priest_selection_type'] === 'specific' && !empty($priestIds)) {
+                // Set first priest as primary officiant for backward compatibility
+                $data['officiant_id'] = $priestIds[0];
+            }
+            // For 'specific' type, officiant_id is already in the data from validation
+
+            $reservation = Reservation::create($data);
+
+            // Attach all selected organizations
+            if (!empty($organizationIds)) {
+                $orgData = [];
+                foreach ($organizationIds as $orgId) {
+                    $orgData[$orgId] = [
+                        'notified' => false,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ];
+                }
+                $reservation->organizations()->attach($orgData);
+                
+                // Send notifications to all organizations
+                $this->notifyOrganizations($reservation, $organizationIds);
+            }
+
+            // Attach all selected priests (only for 'specific' type)
+            if ($data['priest_selection_type'] === 'specific' && !empty($priestIds)) {
+                $priestData = [];
+                foreach ($priestIds as $priestId) {
+                    $priestData[$priestId] = [
+                        'confirmation_status' => 'pending',
+                        'notified' => false,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ];
+                }
+                $reservation->priests()->attach($priestData);
+                
+                // Send notifications to all priests
+                $this->notifyPriests($reservation, $priestIds);
+            }
+
+            // Create history record with appropriate message
+            $historyRemarks = 'Reservation request submitted by requestor - pending adviser review';
+            if ($data['priest_selection_type'] === 'any_available') {
+                $historyRemarks .= ' (Admin will assign priest)';
+            } elseif ($data['priest_selection_type'] === 'external') {
+                $historyRemarks .= ' (External priest: ' . ($data['external_priest_name'] ?? 'N/A') . ')';
+            } elseif ($data['priest_selection_type'] === 'specific' && !empty($priestIds)) {
+                $historyRemarks .= ' (' . count($priestIds) . ' priest(s) assigned)';
+            }
+
+            $reservation->history()->create([
+                'performed_by' => Auth::id(),
+                'action' => 'submitted',
+                'remarks' => $historyRemarks,
+                'performed_at' => now(),
+            ]);
+
+            // Send notifications based on priest selection type
+            try {
+                $this->notificationService->notifyReservationSubmitted($reservation);
+                Log::info('Notification sent for reservation: ' . $reservation->reservation_id);
+            } catch (\Exception $e) {
+                Log::error('Failed to send submission notifications: ' . $e->getMessage());
+            }
+
+            \DB::commit();
+
+            // Set success message based on selection type
+            $message = 'Reservation submitted successfully. ';
+            if ($data['priest_selection_type'] === 'specific') {
+                $priestCount = count($priestIds);
+                $orgCount = count($organizationIds);
+                $message .= "All {$priestCount} priest(s) and {$orgCount} organization(s) have been notified.";
+            } elseif ($data['priest_selection_type'] === 'any_available') {
+                $message .= 'The admin will assign an available priest and notify you.';
+            } elseif ($data['priest_selection_type'] === 'external') {
+                $message .= 'The admin will review your reservation with the external priest details.';
+            }
+
+            return Redirect::route('requestor.reservations.index')
+                ->with('success', 'Reservation Added Successfully!')
+                ->with('message', $message);
+                
         } catch (\Exception $e) {
-            Log::error('Failed to send submission notifications: ' . $e->getMessage());
+            \DB::rollBack();
+            Log::error('Reservation creation failed: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create reservation. Please try again.');
         }
+    }
 
-        // Set success message based on selection type
-        $message = 'Reservation submitted successfully. ';
-        if ($data['priest_selection_type'] === 'specific') {
-            $message .= 'The adviser and priest have been notified for review.';
-        } elseif ($data['priest_selection_type'] === 'any_available') {
-            $message .= 'The admin will assign an available priest and notify you.';
-        } elseif ($data['priest_selection_type'] === 'external') {
-            $message .= 'The admin will review your reservation with the external priest details.';
+    /**
+     * Send notifications to all assigned organizations
+     */
+    protected function notifyOrganizations($reservation, $organizationIds)
+    {
+        foreach ($organizationIds as $orgId) {
+            $organization = Organization::with('adviser')->find($orgId);
+            
+            if ($organization && $organization->adviser) {
+                // Create notification for organization adviser
+                Notification::create([
+                    'user_id' => $organization->adviser->id,
+                    'type' => 'organization_assignment',
+                    'title' => '📋 Organization Assignment',
+                    'message' => "Your organization '{$organization->org_name}' has been assigned to participate in: {$reservation->activity_name} on " . $reservation->schedule_date->format('M d, Y') . " at " . $reservation->schedule_time,
+                    'related_type' => 'App\Models\Reservation',
+                    'related_id' => $reservation->reservation_id,
+                    'read' => false
+                ]);
+                
+                // Update pivot table
+                $reservation->organizations()->updateExistingPivot($orgId, [
+                    'notified' => true,
+                    'notified_at' => now()
+                ]);
+                
+                Log::info("Notified organization {$organization->org_name} (adviser: {$organization->adviser->email})");
+            }
         }
+    }
 
-        return Redirect::route('requestor.reservations.index')
-            ->with('success', 'Reservation Added Successfully!')
-            ->with('message', $message);
+    /**
+     * Send notifications to all assigned priests
+     */
+    protected function notifyPriests($reservation, $priestIds)
+    {
+        foreach ($priestIds as $priestId) {
+            $priest = User::find($priestId);
+            
+            if ($priest) {
+                // Create notification for priest
+                Notification::create([
+                    'user_id' => $priestId,
+                    'type' => 'priest_assignment',
+                    'title' => '⛪ New Priest Assignment',
+                    'message' => "You have been assigned to: {$reservation->activity_name} on " . $reservation->schedule_date->format('M d, Y') . " at " . $reservation->schedule_time . ". Expected participants: {$reservation->participants_count}. Please confirm your availability.",
+                    'related_type' => 'App\Models\Reservation',
+                    'related_id' => $reservation->reservation_id,
+                    'read' => false,
+                    'action_required' => true
+                ]);
+                
+                // Update pivot table
+                $reservation->priests()->updateExistingPivot($priestId, [
+                    'notified' => true,
+                    'notified_at' => now()
+                ]);
+                
+                Log::info("Notified priest {$priest->full_name} ({$priest->email})");
+            }
+        }
     }
 
     public function show($reservation_id)

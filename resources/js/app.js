@@ -5,6 +5,15 @@ import Alpine from 'alpinejs';
 // Import calendar functionality
 import './calendar';
 
+// Import professional animations
+import './animations';
+
+// Import form animations
+import './form-animations';
+
+// Import alert animations
+import './alert-animations';
+
 window.Alpine = Alpine;
 
 Alpine.start();

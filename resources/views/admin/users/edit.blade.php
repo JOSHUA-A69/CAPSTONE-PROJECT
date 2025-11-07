@@ -79,16 +79,6 @@
                             </div>
 
                             <div>
-                                <label>User Role Mapping (optional)</label>
-                                <select name="user_role_id" class="w-full">
-                                    <option value="">-- select --</option>
-                                    @foreach($userRoles as $r)
-                                        <option value="{{ $r->user_role_id }}" {{ (int)old('user_role_id', $user->user_role_id) === (int)$r->user_role_id ? 'selected' : '' }}>{{ $r->role_name }}</option>
-                                    @endforeach
-                                </select>
-                                @error('user_role_id')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
-                            </div>
-                            <div>
                                 <label>Status</label>
                                 <select name="status" class="w-full">
                                     <option value="active" {{ old('status', $user->status)==='active' ? 'selected' : '' }}>Active</option>

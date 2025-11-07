@@ -12,15 +12,15 @@ class PublicCalendarController extends Controller
      */
     public function index(Request $request)
     {
-        // Get all public schedules with priest relationship (FullCalendar will handle date filtering)
-        $schedules = LiturgicalSchedule::with(['priest'])
+        // Get all public schedules with priest and venue relationships (FullCalendar will handle date filtering)
+        $schedules = LiturgicalSchedule::with(['priest', 'venue'])
             ->public()
             ->orderBy('schedule_date')
             ->orderBy('start_time')
             ->get();
 
         // Get upcoming schedules (next 5 events)
-        $upcomingSchedules = LiturgicalSchedule::with(['priest'])
+        $upcomingSchedules = LiturgicalSchedule::with(['priest', 'venue'])
             ->public()
             ->upcoming()
             ->limit(5)
@@ -35,7 +35,7 @@ class PublicCalendarController extends Controller
     public function getSchedules(Request $request)
     {
         $date = $request->get('date');
-        $schedules = LiturgicalSchedule::with(['priest'])
+        $schedules = LiturgicalSchedule::with(['priest', 'venue'])
             ->public()
             ->where('schedule_date', $date)
             ->orderBy('start_time')

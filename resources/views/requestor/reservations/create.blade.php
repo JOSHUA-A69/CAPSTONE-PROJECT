@@ -404,6 +404,159 @@
         transform: none !important;
     }
 
+    /* Multi-select styles */
+    .multi-select {
+        padding: 8px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+    }
+
+    .dark .multi-select {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .multi-select option {
+        padding: 8px 12px;
+        margin: 2px 0;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .multi-select option:hover {
+        background-color: #f0f0f0;
+    }
+
+    .dark .multi-select option:hover {
+        background-color: #374151;
+    }
+
+    .multi-select option:checked {
+        background: linear-gradient(to right, #4F46E5, #7C3AED);
+        color: white;
+        font-weight: 600;
+    }
+
+    /* Checkbox list styles */
+    .checkbox-list {
+        display: flex;
+        flex-direction: column;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px;
+        background: white;
+    }
+
+    .dark .checkbox-list {
+        background: #1f2937;
+        border-color: #374151;
+    }
+
+    .checkbox-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 10px;
+        margin: 4px 0;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        width: 100%;
+    }
+
+    .checkbox-item:hover {
+        background: #f3f4f6;
+    }
+
+    .dark .checkbox-item:hover {
+        background: #374151;
+    }
+
+    /* Hide default checkbox */
+    .checkbox-item input[type="checkbox"] {
+        position: absolute;
+        opacity: 0;
+        cursor: pointer;
+        width: 0;
+        height: 0;
+    }
+
+    /* Custom checkbox */
+    .checkbox-item .checkmark {
+        display: inline-block;
+        position: relative;
+        height: 24px;
+        width: 24px;
+        background-color: #fff;
+        border: 2px solid #d1d5db;
+        border-radius: 50%;
+        margin-right: 12px;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .dark .checkbox-item .checkmark {
+        background-color: #374151;
+        border-color: #6b7280;
+    }
+
+    /* Checkmark when checked */
+    .checkbox-item input[type="checkbox"]:checked ~ .checkmark {
+        background-color: #4F46E5;
+        border-color: #4F46E5;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    .dark .checkbox-item input[type="checkbox"]:checked ~ .checkmark {
+        background-color: #6366F1;
+        border-color: #6366F1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Checkmark icon */
+    .checkbox-item .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 7px;
+        top: 3px;
+        width: 6px;
+        height: 11px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .checkbox-item input[type="checkbox"]:checked ~ .checkmark:after {
+        display: block;
+    }
+
+    .checkbox-item span:not(.checkmark) {
+        font-size: 14px;
+        color: #1f2937;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .dark .checkbox-item span:not(.checkmark) {
+        color: #f3f4f6;
+    }
+
+    /* Highlight text when checked */
+    .checkbox-item input[type="checkbox"]:checked ~ span:not(.checkmark) {
+        color: #4F46E5;
+        font-weight: 600;
+    }
+
+    .dark .checkbox-item input[type="checkbox"]:checked ~ span:not(.checkmark) {
+        color: #818CF8;
+    }
+
     /* ========================================
        PHASE B: MOBILE RESPONSIVENESS
        ======================================== */
@@ -782,25 +935,29 @@
                         Requesting Office/Group <span style="color: red;">*</span>
                         <span class="tooltip help-icon">
                             ?
-                            <span class="tooltiptext">Select your organization - required for reservation approval</span>
+                            <span class="tooltiptext">Select all organizations that will participate in this activity. You can select multiple organizations.</span>
                         </span>
                     </label>
-                    <select
-                        name="org_id"
-                        id="org_id"
-                        required
-                        @if($organizations->isEmpty()) disabled @endif
-                        class="@error('org_id') is-invalid @enderror"
-                    >
-                        <option value="">-- Select Organization --</option>
-                        @foreach($organizations as $o)
-                            <option value="{{ $o->org_id }}" @if(old('org_id')==$o->org_id) selected @endif>{{ $o->org_name }}</option>
-                        @endforeach
-                    </select>
-                    @if($organizations->isEmpty())
-                        <div style="color: #d97706; font-size: 10px; margin-top: 4px;">⚠️ No organizations available</div>
-                    @endif
-                    @error('org_id')
+                    <div class="checkbox-list" style="max-height: 200px; overflow-y: auto; border: 2px solid #e0e0e0; border-radius: 8px; padding: 10px; background: white;">
+                        @if($organizations->isEmpty())
+                            <div style="color: #d97706; font-size: 12px; padding: 10px; text-align: center;">⚠️ No organizations available</div>
+                        @else
+                            @foreach($organizations as $o)
+                                <label class="checkbox-item" style="display: flex; align-items: center; padding: 8px 10px; margin: 4px 0; border-radius: 6px; cursor: pointer; transition: background 0.2s;">
+                                    <input 
+                                        type="checkbox" 
+                                        name="organization_ids[]" 
+                                        value="{{ $o->org_id }}"
+                                        @if(is_array(old('organization_ids')) && in_array($o->org_id, old('organization_ids'))) checked @endif
+                                    >
+                                    <span class="checkmark"></span>
+                                    <span style="font-size: 14px;">{{ $o->org_name }}</span>
+                                </label>
+                            @endforeach
+                        @endif
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 5px; font-style: italic;">💡 Check all organizations that will participate in this activity</p>
+                    @error('organization_ids')
                         <div class="error-message">⚠️ {{ $message }}</div>
                     @enderror
                 </td>
@@ -875,26 +1032,31 @@
                         <option value="any_available" @if(old('priest_selection_type')=='any_available') selected @endif>Any Available Priest (Admin will assign)</option>
                         <option value="external" @if(old('priest_selection_type')=='external') selected @endif>Already Have a Priest (External)</option>
                     </select>
-                    @error('priest_selection_type')
-                        <div class="error-message">⚠️ {{ $message }}</div>
-                    @enderror
-
                     <!-- Specific Priest Selection (shown when "Select from SVD Priests" is chosen) -->
                     <div id="specific_priest_div" style="display: none; margin-top: 10px;">
                         <label>
-                            Choose Priest<span class="required-indicator">*</span>
+                            Choose Priest(s)<span class="required-indicator">*</span>
+                            <span class="tooltip help-icon">
+                                ?
+                                <span class="tooltiptext">Select one or more priests for this reservation. All selected priests will be notified and can confirm their availability.</span>
+                            </span>
                         </label>
-                        <select
-                            name="officiant_id"
-                            id="officiant_id"
-                            class="@error('officiant_id') is-invalid @enderror"
-                        >
-                            <option value="">-- Select Priest/Presider --</option>
+                        <div class="checkbox-list">
                             @foreach($priests as $priest)
-                                <option value="{{ $priest->id }}" @if(old('officiant_id')==$priest->id) selected @endif>{{ $priest->full_name }}</option>
+                                <label class="checkbox-item">
+                                    <input 
+                                        type="checkbox" 
+                                        name="priest_ids[]" 
+                                        value="{{ $priest->id }}"
+                                        @if(is_array(old('priest_ids')) && in_array($priest->id, old('priest_ids'))) checked @endif
+                                    >
+                                    <span class="checkmark"></span>
+                                    <span>{{ $priest->full_name }}</span>
+                                </label>
                             @endforeach
-                        </select>
-                        @error('officiant_id')
+                        </div>
+                        <p style="font-size: 12px; color: #666; margin-top: 5px; font-style: italic;">💡 Check multiple priests if co-celebration is needed</p>
+                        @error('priest_ids')
                             <div class="error-message">⚠️ {{ $message }}</div>
                         @enderror
                     </div>
@@ -956,10 +1118,31 @@
                 <td style="width: 50%; vertical-align: top;">
                     <div style="margin-bottom: 8px;">
                         <label>
-                            Service Type<span class="required-indicator">*</span>
+                            Service Category<span class="required-indicator">*</span>
                             <span class="tooltip help-icon">
                                 ?
                                 <span class="tooltiptext">Select the type of spiritual service you are requesting</span>
+                            </span>
+                        </label>
+                        <select
+                            name="service_category"
+                            id="service_category"
+                            required
+                            onchange="toggleMassTypeField()"
+                        >
+                            <option value="">-- Select Service Category --</option>
+                            <option value="institutional_mass" data-requires-mass-type="true">⛪ Institutional Mass</option>
+                            <option value="non_institutional_mass" data-requires-mass-type="true">✝️ Non-Institutional Mass</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Mass Type Selection (Shows when Institutional or Non-Institutional Mass is selected) -->
+                    <div id="mass_type_container" style="display: none; margin-bottom: 8px;">
+                        <label>
+                            Service Type<span class="required-indicator">*</span>
+                            <span class="tooltip help-icon">
+                                ?
+                                <span class="tooltiptext">Select the specific type of mass</span>
                             </span>
                         </label>
                         <select
@@ -968,15 +1151,23 @@
                             required
                             class="@error('service_id') is-invalid @enderror"
                         >
-                            <option value="">-- Select Service --</option>
-                            @foreach($services as $s)
-                                <option value="{{ $s->service_id }}" @if(old('service_id')==$s->service_id) selected @endif>{{ $s->service_name }}</option>
-                            @endforeach
+                            <option value="">-- Select Service Type --</option>
+                            <optgroup label="Institutional Mass" id="institutional_mass_options" style="display: none;">
+                                @foreach($services->where('service_category', 'Institutional Mass') as $service)
+                                    <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="Non-Institutional Mass" id="non_institutional_mass_options" style="display: none;">
+                                @foreach($services->where('service_category', 'Non-Institutional Mass') as $service)
+                                    <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                @endforeach
+                            </optgroup>
                         </select>
                         @error('service_id')
                             <div class="error-message">⚠️ {{ $message }}</div>
                         @enderror
                     </div>
+                    
                     <div>
                         <label>
                             Venue<span class="required-indicator">*</span>
@@ -1215,6 +1406,41 @@
         }
     }
 
+    // Mass type field toggle
+    function toggleMassTypeField() {
+        const serviceCategorySelect = document.getElementById('service_category');
+        const massTypeContainer = document.getElementById('mass_type_container');
+        const serviceIdSelect = document.getElementById('service_id');
+        const institutionalOptions = document.getElementById('institutional_mass_options');
+        const nonInstitutionalOptions = document.getElementById('non_institutional_mass_options');
+        
+        const selectedOption = serviceCategorySelect.options[serviceCategorySelect.selectedIndex];
+        const requiresMassType = selectedOption.getAttribute('data-requires-mass-type') === 'true';
+        
+        if (requiresMassType) {
+            massTypeContainer.style.display = 'block';
+            serviceIdSelect.required = true;
+            
+            // Show appropriate mass type options
+            if (serviceCategorySelect.value === 'institutional_mass') {
+                institutionalOptions.style.display = 'block';
+                nonInstitutionalOptions.style.display = 'none';
+            } else if (serviceCategorySelect.value === 'non_institutional_mass') {
+                institutionalOptions.style.display = 'none';
+                nonInstitutionalOptions.style.display = 'block';
+            }
+            
+            // Reset mass type selection
+            serviceIdSelect.value = '';
+        } else {
+            massTypeContainer.style.display = 'none';
+            serviceIdSelect.required = false;
+            serviceIdSelect.value = '';
+            institutionalOptions.style.display = 'none';
+            nonInstitutionalOptions.style.display = 'none';
+        }
+    }
+
     // Form validation
     function validateForm() {
         const form = document.getElementById('reservationForm');
@@ -1287,6 +1513,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Toggle custom venue on load
         toggleCustomVenue();
+        
+        // Toggle mass type field on load
+        toggleMassTypeField();
 
         // Initialize character counters
         updateCharCounter('activity_name', 'activity_name_counter', 200);
@@ -1357,30 +1586,33 @@
         const externalDiv = document.getElementById('external_priest_div');
         const anyAvailableInfo = document.getElementById('any_available_info');
         const externalInfo = document.getElementById('external_priest_info');
-        const officiantSelect = document.getElementById('officiant_id');
         const externalNameInput = document.getElementById('external_priest_name');
 
+        console.log('Toggle priest options called, selection type:', selectionType);
+        console.log('Specific div found:', specificDiv);
+
         // Hide all sections first
-        specificDiv.style.display = 'none';
-        externalDiv.style.display = 'none';
-        anyAvailableInfo.style.display = 'none';
-        externalInfo.style.display = 'none';
+        if (specificDiv) specificDiv.style.display = 'none';
+        if (externalDiv) externalDiv.style.display = 'none';
+        if (anyAvailableInfo) anyAvailableInfo.style.display = 'none';
+        if (externalInfo) externalInfo.style.display = 'none';
 
         // Remove required attributes
-        officiantSelect.removeAttribute('required');
-        externalNameInput.removeAttribute('required');
+        if (externalNameInput) externalNameInput.removeAttribute('required');
 
         // Show appropriate section based on selection
         if (selectionType === 'specific') {
-            specificDiv.style.display = 'block';
-            officiantSelect.setAttribute('required', 'required');
+            if (specificDiv) {
+                specificDiv.style.display = 'block';
+                console.log('Showing specific priest div');
+            }
         } else if (selectionType === 'any_available') {
-            anyAvailableInfo.style.display = 'block';
+            if (anyAvailableInfo) anyAvailableInfo.style.display = 'block';
             // No officiant needed - admin will assign
         } else if (selectionType === 'external') {
-            externalDiv.style.display = 'block';
-            externalInfo.style.display = 'block';
-            externalNameInput.setAttribute('required', 'required');
+            if (externalDiv) externalDiv.style.display = 'block';
+            if (externalInfo) externalInfo.style.display = 'block';
+            if (externalNameInput) externalNameInput.setAttribute('required', 'required');
         }
     }
 

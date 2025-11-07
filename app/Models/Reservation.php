@@ -123,6 +123,26 @@ class Reservation extends Model
         return $this->belongsTo(Organization::class, 'org_id', 'org_id');
     }
 
+    /**
+     * Many-to-many relationship: All organizations assigned to this reservation
+     */
+    public function organizations()
+    {
+        return $this->belongsToMany(Organization::class, 'reservation_organization', 'reservation_id', 'organization_id')
+            ->withPivot('notified', 'notified_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Many-to-many relationship: All priests assigned to this reservation
+     */
+    public function priests()
+    {
+        return $this->belongsToMany(User::class, 'reservation_priest', 'reservation_id', 'priest_id')
+            ->withPivot('confirmation_status', 'decline_reason', 'notified', 'notified_at', 'responded_at')
+            ->withTimestamps();
+    }
+
     public function venue()
     {
         return $this->belongsTo(Venue::class, 'venue_id', 'venue_id');
@@ -134,7 +154,7 @@ class Reservation extends Model
     }
 
     /**
-     * The priest/officiant assigned to this reservation
+     * The priest/officiant assigned to this reservation (legacy single priest)
      */
     public function officiant()
     {

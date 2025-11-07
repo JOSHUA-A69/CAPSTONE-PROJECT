@@ -1,4 +1,21 @@
 <section class="card">
+    <!-- Success Message - Displayed at the top -->
+    @if (session('status') === 'profile-updated')
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-transition
+            x-init="setTimeout(() => show = false, 5000)"
+            class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 dark:border-green-400 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                </svg>
+                <span class="text-green-700 dark:text-green-200 font-semibold">{{ __('Profile updated successfully!') }}</span>
+            </div>
+        </div>
+    @endif
+
     <div class="card-header">
         <h2 class="text-lg font-semibold text-heading">
             {{ __('Profile Information') }}
@@ -124,20 +141,6 @@
                     </svg>
                     {{ __('Save Changes') }}
                 </x-primary-button>
-
-                @if (session('status') === 'profile-updated')
-                    <div
-                        x-data="{ show: true }"
-                        x-show="show"
-                        x-transition
-                        x-init="setTimeout(() => show = false, 3000)"
-                        class="form-success">
-                        <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                        </svg>
-                        <span>{{ __('Profile updated successfully!') }}</span>
-                    </div>
-                @endif
             </div>
         </form>
     </div>

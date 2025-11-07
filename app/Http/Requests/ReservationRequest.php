@@ -37,7 +37,8 @@ class ReservationRequest extends FormRequest
         $rules = [
             'service_id' => ['required', 'integer', Rule::exists('services', 'service_id')],
             'venue_id' => ['required'],
-            'org_id' => ['required', 'integer', Rule::exists('organizations', 'org_id')],
+            'organization_ids' => ['required', 'array', 'min:1'],
+            'organization_ids.*' => ['integer', Rule::exists('organizations', 'org_id')],
             'priest_selection_type' => ['required', 'in:specific,any_available,external'],
             'schedule_date' => ['required', 'date', 'after:now'],
             'schedule_time' => ['nullable', 'date_format:H:i'],
@@ -56,12 +57,13 @@ class ReservationRequest extends FormRequest
 
         // Priest selection validation based on type
         if ($this->priest_selection_type === 'specific') {
-            $rules['officiant_id'] = ['required', 'integer', Rule::exists('users', 'id')->whereIn('role', ['priest', 'admin'])];
+            $rules['priest_ids'] = ['required', 'array', 'min:1'];
+            $rules['priest_ids.*'] = ['integer', Rule::exists('users', 'id')->whereIn('role', ['priest', 'admin'])];
         } elseif ($this->priest_selection_type === 'external') {
             $rules['external_priest_name'] = ['required', 'string', 'max:255'];
             $rules['external_priest_contact'] = ['nullable', 'string', 'max:255'];
         }
-        // For 'any_available', no officiant_id is required (admin will assign)
+        // For 'any_available', no priest_ids is required (admin will assign)
 
         // If custom venue is selected, require custom_venue field
         if ($this->venue_id === 'custom') {
@@ -80,11 +82,14 @@ class ReservationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'org_id.required' => 'Please select your organization. This is required so the organization adviser can review your reservation.',
-            'org_id.exists' => 'The selected organization is invalid.',
+            'organization_ids.required' => 'Please select at least one organization.',
+            'organization_ids.min' => 'Please select at least one organization.',
+            'organization_ids.*.exists' => 'One or more selected organizations are invalid.',
             'priest_selection_type.required' => 'Please select how you would like to choose a priest.',
             'priest_selection_type.in' => 'Invalid priest selection option.',
-            'officiant_id.required' => 'Please select a priest from the list.',
+            'priest_ids.required' => 'Please select at least one priest from the list.',
+            'priest_ids.min' => 'Please select at least one priest.',
+            'priest_ids.*.exists' => 'One or more selected priests are invalid.',
             'external_priest_name.required' => 'Please provide the name of your external priest.',
         ];
     }

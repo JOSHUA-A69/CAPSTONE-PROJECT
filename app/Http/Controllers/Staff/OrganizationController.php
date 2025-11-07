@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 
 class OrganizationController extends Controller
 {
@@ -19,8 +20,29 @@ class OrganizationController extends Controller
 
     public function index()
     {
-        $organizations = Organization::orderBy('org_name')->paginate(20);
+        // Only exclude soft-deleted if column exists
+        if (Schema::hasColumn('organizations', 'deleted_at')) {
+            $organizations = Organization::whereNull('deleted_at')
+                ->orderBy('org_name')
+                ->paginate(20);
+        } else {
+            $organizations = Organization::orderBy('org_name')
+                ->paginate(20);
+        }
+        
         return view('staff.organizations.index', compact('organizations'));
+    }
+
+    public function archives()
+    {
+        // Check if soft deletes column exists
+        if (!Schema::hasColumn('organizations', 'deleted_at')) {
+            return redirect()->route('staff.organizations.index')
+                ->with('info', 'Archive feature requires database migration. Please run: php artisan migrate');
+        }
+        
+        $archivedOrganizations = Organization::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(20);
+        return view('staff.organizations.archives', compact('archivedOrganizations'));
     }
 
     public function create()
@@ -68,7 +90,21 @@ class OrganizationController extends Controller
     public function destroy(Request $request, $org_id): RedirectResponse
     {
         $organization = Organization::findOrFail($org_id);
-        $organization->delete();
-        return Redirect::back()->with('status', 'organization-deleted');
+        $organization->delete(); // Soft delete
+        return Redirect::back()->with('status', 'organization-archived');
+    }
+
+    public function restore($org_id): RedirectResponse
+    {
+        $organization = Organization::onlyTrashed()->findOrFail($org_id);
+        $organization->restore();
+        return Redirect::route('staff.organizations.archives')->with('status', 'organization-restored');
+    }
+
+    public function forceDestroy($org_id): RedirectResponse
+    {
+        $organization = Organization::onlyTrashed()->findOrFail($org_id);
+        $organization->forceDelete(); // Permanent delete
+        return Redirect::back()->with('status', 'organization-permanently-deleted');
     }
 }

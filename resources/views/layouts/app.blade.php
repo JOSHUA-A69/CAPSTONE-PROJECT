@@ -45,7 +45,7 @@
             @endisset
 
             <!-- Page Content -->
-            <main id="main-content" class="flex-1 min-h-[calc(100vh-4rem)]" role="main" tabindex="-1">
+            <main id="main-content" class="flex-1 min-h-[calc(100vh-4rem)] page-content" role="main" tabindex="-1">
                 @isset($slot)
                     {{ $slot }}
                 @else
