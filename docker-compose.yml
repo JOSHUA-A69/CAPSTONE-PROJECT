@@ -11,6 +11,11 @@ services:
         # Start a simple PHP built-in server so the container responds on the mapped port automatically.
         # This is fine for development. For production, use nginx or another proper webserver.
         command: php -S 0.0.0.0:8000 -t public
+        env_file:
+            - .env.docker
+        environment:
+            # Ensure the app container connects to the DB service by name
+            DB_HOST: db
         ports:
             - 8000:8000
         depends_on:
