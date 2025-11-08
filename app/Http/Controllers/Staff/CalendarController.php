@@ -78,7 +78,8 @@ class CalendarController extends Controller
         ]);
 
         $validated['created_by'] = Auth::id();
-        $validated['is_public'] = $request->has('is_public') ? true : false;
+    // Normalize public flag reliably (hidden 0 + checkbox 1 pattern or missing field)
+    $validated['is_public'] = $request->boolean('is_public');
 
         // If external priest is specified, ensure priest_id is null; otherwise clear external fields
         if ($request->filled('external_priest_name')) {
@@ -127,7 +128,7 @@ class CalendarController extends Controller
             'is_public' => 'boolean',
         ]);
 
-        $validated['is_public'] = $request->has('is_public') ? true : false;
+    $validated['is_public'] = $request->boolean('is_public');
 
         // Mutual exclusivity for priest fields
         if ($request->filled('external_priest_name')) {

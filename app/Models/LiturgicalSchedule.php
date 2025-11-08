@@ -27,9 +27,11 @@ class LiturgicalSchedule extends Model
     ];
 
     protected $casts = [
-        'schedule_date' => 'date',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
+        // Keep schedule_date as a pure date string when serialized to avoid TZ shifts
+        'schedule_date' => 'date:Y-m-d',
+        // Store time columns as plain strings to prevent timezone conversions
+        'start_time' => 'string',
+        'end_time' => 'string',
         'is_public' => 'boolean',
     ];
 

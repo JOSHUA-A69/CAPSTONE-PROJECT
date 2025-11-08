@@ -1,6 +1,7 @@
 ﻿@php
     // Get ALL liturgical schedules (both public and non-public)
     $allSchedules = \App\Models\LiturgicalSchedule::with(['priest', 'venue'])
+        ->public() // show only public schedules on homepage
         ->orderBy('schedule_date')
         ->orderBy('start_time')
         ->get();

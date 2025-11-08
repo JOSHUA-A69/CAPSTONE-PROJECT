@@ -671,6 +671,7 @@
                     </div>
 
                     <div class="flex items-center gap-2">
+                        <!-- Hidden default to ensure field is always present when unchecked -->
                         <input type="hidden" name="is_public" value="0">
                         <input type="checkbox" name="is_public" id="is_public_edit" value="1" class="w-4 h-4 text-indigo-600 rounded">
                         <label for="is_public_edit" class="text-sm text-gray-700 dark:text-gray-300">Make this schedule public (visible to guests)</label>

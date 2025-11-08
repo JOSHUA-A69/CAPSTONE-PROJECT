@@ -4,6 +4,43 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 
+// Helper: normalize a date-like value to 'YYYY-MM-DD' without timezone
+function normalizeDateStr(val) {
+    const s = String(val ?? '').trim();
+    if (!s) return '';
+    // For ISO strings like 'YYYY-MM-DDTHH:mm:ssZ' or objects stringified
+    if (s.length >= 10) return s.slice(0, 10);
+    return s;
+}
+
+// Helper: normalize a time-like value to 'HH:MM:SS' without timezone
+function normalizeTimeStr(val) {
+    let s = String(val ?? '').trim();
+    if (!s) return '00:00:00';
+
+    // If an ISO datetime/time slipped in
+    if (s.includes('T')) s = s.split('T').pop();
+    if (s.includes(' ')) s = s.split(' ').pop();
+
+    // Strip trailing timezone or Z and microseconds
+    s = s.replace(/Z$/, '')
+         .replace(/[+-]\d{2}:?\d{2}$/, '')
+         .replace(/\.[0-9]+$/, '');
+
+    // Ensure HH:MM:SS
+    if (/^\d{2}:\d{2}$/.test(s)) return s + ':00';
+    if (/^\d{2}:\d{2}:\d{2}/.test(s)) return s.slice(0, 8);
+
+    // Fallback: extract first time-like token
+    const m = s.match(/(\d{2}:\d{2}(?::\d{2})?)/);
+    if (m) {
+        let t = m[1];
+        if (/^\d{2}:\d{2}$/.test(t)) t += ':00';
+        return t;
+    }
+    return '00:00:00';
+}
+
 window.initStaffCalendar = function(schedules) {
     console.log('=== INSIDE initStaffCalendar ===');
     console.log('Received schedules:', schedules);
@@ -18,12 +55,10 @@ window.initStaffCalendar = function(schedules) {
 
     // Convert schedules to FullCalendar events
     const events = schedules.map(schedule => {
-        // Extract just the date part (YYYY-MM-DD) from schedule_date
-        const dateOnly = schedule.schedule_date.split('T')[0];
-        
-        // Extract just the time part (HH:MM:SS or HH:MM) from start_time and end_time
-        const startTimeOnly = schedule.start_time.split(' ')[0] || schedule.start_time;
-        const endTimeOnly = schedule.end_time ? (schedule.end_time.split(' ')[0] || schedule.end_time) : null;
+        // Normalize date/time to avoid timezone-induced off-by-one shifts
+        const dateOnly = normalizeDateStr(schedule.schedule_date);
+        const startTimeOnly = normalizeTimeStr(schedule.start_time);
+        const endTimeOnly = schedule.end_time ? normalizeTimeStr(schedule.end_time) : null;
         
         const event = {
             id: schedule.schedule_id,
@@ -483,18 +518,16 @@ window.initPublicCalendar = function(schedules) {
 
     // Convert schedules to FullCalendar events
     const events = schedules.map(schedule => {
-        // Extract date from schedule_date (handle both string and object formats)
-        let dateStr = schedule.schedule_date;
-        if (typeof dateStr === 'object' || dateStr.includes('T')) {
-            // It's a datetime object or ISO string, extract just the date part
-            dateStr = dateStr.split('T')[0];
-        }
+        // Normalize date and times safely
+        const dateStr = normalizeDateStr(schedule.schedule_date);
+        const startTime = normalizeTimeStr(schedule.start_time);
+        const endTime = schedule.end_time ? normalizeTimeStr(schedule.end_time) : null;
         
         return {
             id: schedule.schedule_id,
             title: schedule.title,
-            start: `${dateStr}T${schedule.start_time}`,
-            end: schedule.end_time ? `${dateStr}T${schedule.end_time}` : null,
+            start: `${dateStr}T${startTime}`,
+            end: endTime ? `${dateStr}T${endTime}` : null,
             description: schedule.description,
             location: schedule.location,
             eventType: schedule.event_type,
