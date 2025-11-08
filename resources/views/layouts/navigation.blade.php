@@ -243,7 +243,7 @@
                     <x-slot name="content">
                         <!-- User Info Header -->
                         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                            <p class="text-sm font-medium text-white">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {{ Auth::user()->full_name }}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">
