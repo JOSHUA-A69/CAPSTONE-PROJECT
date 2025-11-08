@@ -163,7 +163,7 @@
 
                 <!-- Schedules List Sidebar -->
                 <div class="xl:col-span-1">
-                    <div class="card sticky top-6 shadow-xl">
+                    <div class="card shadow-xl">
                         <div class="card-header bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30">
                             <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                 <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

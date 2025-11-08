@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="text-heading font-semibold text-xl leading-tight">
-                📊 Requestor Dashboard
+                📝 Requestor Dashboard
             </h2>
             <a href="{{ route('requestor.reservations.create') }}" class="btn-primary">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -21,7 +21,7 @@
                     <div class="flex items-center justify-between flex-wrap gap-4">
                         <div>
                             <h3 class="text-2xl sm:text-3xl font-bold mb-2 text-heading">
-                                Welcome back, {{ auth()->user()->first_name ?? 'User' }}! 👋
+                                Welcome, {{ auth()->user()->first_name ?? 'User' }}! 👋
                             </h3>
                             <p class="text-muted text-sm sm:text-base">
                                 Manage your spiritual activity requests and track their status

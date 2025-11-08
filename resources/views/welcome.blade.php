@@ -37,29 +37,64 @@
             }
             
             /* Removed gradient-text; using solid colors instead of text transparency */
+            /* Header navigation styling to match footer theme */
+            .site-header {
+                /* Green brand bar matching footer */
+                background-color: #2ecc71;
+            }
+            .site-header .nav-link {
+                position: relative;
+                font-weight: 600;
+                letter-spacing: .5px;
+                transition: color .25s ease, transform .25s ease;
+            }
+            .site-header .nav-link:after {
+                content: '';
+                position: absolute;
+                left: 0; bottom: -4px;
+                width: 0; height: 2px;
+                background: rgba(255,255,255,.85);
+                border-radius: 2px;
+                transition: width .3s ease;
+            }
+            .site-header .nav-link:hover:after,
+            .site-header .nav-link:focus:after {
+                width: 100%;
+            }
+            .site-header .nav-link:hover,
+            .site-header .nav-link:focus {
+                transform: translateY(-2px);
+            }
+            @media (max-width: 768px) {
+                .site-header nav {
+                    display: none; /* keep header clean on small screens */
+                }
+            }
         </style>
     </head>
     <body class="antialiased bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-[#1b1b18] full-animations">
         <!-- Header -->
-        <header class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
+    <header class="site-header text-white dark:text-white/90 border-b border-[#27c165] shadow-lg">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex h-20 items-center justify-between">
                     <a href="{{ url('/') }}" class="flex items-center gap-3 group">
                         <div class="relative">
-                            <div class="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full blur-md opacity-50 group-hover:opacity-75 transition-opacity"></div>
-                            <img src="/images/ers-logo.png" alt="eReligiousServices logo" class="relative w-14 h-14 object-contain transform group-hover:scale-110 transition-transform duration-300" />
+                            <div class="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full blur-md opacity-40 group-hover:opacity-60 transition-opacity"></div>
+                            <img src="/images/ers-logo.png" alt="eReligiousServices logo" class="relative w-14 h-14 object-contain transform group-hover:scale-110 transition-transform duration-300 drop-shadow" />
                         </div>
                         <div class="hidden sm:block">
-                            <div class="font-bold text-xl text-emerald-600 dark:text-emerald-400">eReligiousServices</div>
-                            <div class="text-xs text-gray-600 dark:text-gray-400">Center for Religious Education and Mission</div>
+                            <div class="font-bold text-xl text-white tracking-wide">eReligiousServices</div>
+                            <div class="text-xs text-white/90">Center for Religious Education and Mission</div>
                         </div>
                     </a>
+
+                    <!-- Primary Navigation removed as requested -->
 
                     <div class="flex items-center gap-3">
                         @guest
                             <!-- Sign In Button -->
                                      <a href="{{ route('login') }}"
-                                         class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-200 bg-white dark:bg-gray-800 border-2 border-emerald-300 dark:border-emerald-600 rounded-xl hover:border-emerald-500 dark:hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-all duration-300 shadow-sm hover:shadow-md">
+                                         class="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-emerald-700 bg-white border-2 border-emerald-300 rounded-xl hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 shadow-sm hover:shadow-md">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                 </svg>

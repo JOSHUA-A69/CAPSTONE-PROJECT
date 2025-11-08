@@ -1,4 +1,4 @@
-<nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 relative z-50" role="navigation" aria-label="Main navigation">
+<nav x-data="{ open: false }" class="bg-[#2ecc71] dark:bg-dark-bg border-b border-[#27c165] text-white relative z-50" role="navigation" aria-label="Main navigation">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
@@ -6,12 +6,12 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" aria-label="Go to dashboard home">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
+                        <x-application-logo class="block h-9 w-auto fill-current text-white" />
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex" role="menubar">
+                <div class="hidden space-x-8 sm:ms-10 sm:flex items-center" role="menubar">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" role="menuitem">
                         {{ __('Dashboard') }}
                     </x-nav-link>
@@ -115,8 +115,8 @@
                     window.addEventListener('focus', () => updateCount());
                     window.addEventListener('notification-update', () => updateCount());
                 ">
-                    <button @click="open = !open; if (open) loadNotifications()" 
-                            class="relative p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400">
+            <button @click="open = !open; if (open) loadNotifications()" 
+                class="relative flex items-center justify-center h-10 w-10 text-white/85 hover:text-white focus:text-white hover:bg-emerald-700/40 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/60">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
@@ -223,7 +223,7 @@
 
                 <x-dropdown align="right" width="64">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none transition ease-in-out duration-150">
+                        <button class="inline-flex items-center h-10 px-3 border border-transparent text-sm leading-4 font-medium rounded-md text-white hover:text-white/90 focus:text-white focus:outline-none transition ease-in-out duration-150 hover:bg-white/10">
                             <!-- Profile Picture -->
                             <img
                                 src="{{ Auth::user()->profile_picture_url }}"
@@ -243,7 +243,7 @@
                     <x-slot name="content">
                         <!-- User Info Header -->
                         <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <p class="text-sm font-medium text-white">
                                 {{ Auth::user()->full_name }}
                             </p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">

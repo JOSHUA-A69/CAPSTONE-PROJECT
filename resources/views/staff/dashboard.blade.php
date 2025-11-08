@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-heading font-semibold text-xl leading-tight">
-            👔 CREaM Staff Dashboard
+            👥 CREaM Staff Dashboard
         </h2>
     </x-slot>
 
