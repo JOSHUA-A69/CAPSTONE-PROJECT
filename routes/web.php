@@ -262,6 +262,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::get('/change-requests/{id}', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'show'])->name('change-requests.show');
     Route::post('/change-requests/{id}/approve', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'approve'])->name('change-requests.approve');
     Route::post('/change-requests/{id}/reject', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'reject'])->name('change-requests.reject');
+
+    // Organizations (read-only admin view)
+    Route::get('/organizations', [\App\Http\Controllers\Admin\OrganizationController::class, 'index'])->name('organizations.index');
 });
 
 // Shared Notification Routes for Admin and Staff (same controller, broader access)

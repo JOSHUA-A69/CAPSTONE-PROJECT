@@ -113,7 +113,8 @@ class NotificationController extends Controller
             ->where('notification_id', $id)
             ->firstOrFail();
 
-        $notification->update(['read' => true]);
+    // Use timestamp column read_at instead of non-existent boolean 'read'
+    $notification->markAsRead();
 
         return response()->json(['success' => true]);
     }
@@ -125,7 +126,7 @@ class NotificationController extends Controller
     {
         Notification::where('user_id', Auth::id())
             ->unread()
-            ->update(['read' => true]);
+            ->update(['read_at' => now()]);
 
         return redirect()->back()->with('status', 'all-notifications-read');
     }

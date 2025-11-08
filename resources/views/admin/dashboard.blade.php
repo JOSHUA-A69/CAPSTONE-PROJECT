@@ -233,8 +233,8 @@
                     </div>
                 </a>
 
-                <!-- Organizations -->
-                <a href="{{ route('staff.organizations.index') }}" class="card-hover group">
+                <!-- Organizations (Admin read-only list) -->
+                <a href="{{ route('admin.organizations.index') }}" class="card-hover group">
                     <div class="card-body">
                         <div class="flex items-start gap-4">
                             <div class="flex-shrink-0 w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -244,7 +244,7 @@
                             </div>
                             <div class="flex-1">
                                 <h4 class="font-semibold text-lg text-heading mb-1">Organizations</h4>
-                                <p class="text-sm text-muted">Manage organizations and advisers</p>
+                                <p class="text-sm text-muted">View organizations and advisers</p>
                             </div>
                             <svg class="w-5 h-5 text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

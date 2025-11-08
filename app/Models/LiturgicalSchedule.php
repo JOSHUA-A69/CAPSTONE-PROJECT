@@ -18,6 +18,8 @@ class LiturgicalSchedule extends Model
         'location',
         'venue_id',
         'priest_id',
+        'external_priest_name',
+        'external_priest_contact',
         'event_type',
         'mass_subtype',
         'is_public',

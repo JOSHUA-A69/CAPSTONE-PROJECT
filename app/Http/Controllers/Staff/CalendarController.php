@@ -67,7 +67,9 @@ class CalendarController extends Controller
             'end_time' => 'nullable',
             'location' => 'nullable|string|max:255',
             'venue_id' => 'nullable|exists:venues,venue_id',
-            'priest_id' => 'nullable|exists:users,id',
+            'priest_id' => 'nullable|exists:users,id|required_without:external_priest_name',
+            'external_priest_name' => 'nullable|string|max:100|required_without:priest_id',
+            'external_priest_contact' => 'nullable|string|max:100',
             'event_type' => 'required|in:institutional_mass,non_institutional_mass',
             'mass_subtype' => 'required|string|max:255',
             'is_public' => 'boolean',
@@ -75,6 +77,14 @@ class CalendarController extends Controller
 
         $validated['created_by'] = Auth::id();
         $validated['is_public'] = $request->has('is_public') ? true : false;
+
+        // If external priest is specified, ensure priest_id is null; otherwise clear external fields
+        if ($request->filled('external_priest_name')) {
+            $validated['priest_id'] = null;
+        } else {
+            $validated['external_priest_name'] = null;
+            $validated['external_priest_contact'] = null;
+        }
 
         LiturgicalSchedule::create($validated);
 
@@ -97,13 +107,23 @@ class CalendarController extends Controller
             'end_time' => 'nullable',
             'location' => 'nullable|string|max:255',
             'venue_id' => 'nullable|exists:venues,venue_id',
-            'priest_id' => 'nullable|exists:users,id',
+            'priest_id' => 'nullable|exists:users,id|required_without:external_priest_name',
+            'external_priest_name' => 'nullable|string|max:100|required_without:priest_id',
+            'external_priest_contact' => 'nullable|string|max:100',
             'event_type' => 'required|in:institutional_mass,non_institutional_mass',
             'mass_subtype' => 'required|string|max:255',
             'is_public' => 'boolean',
         ]);
 
         $validated['is_public'] = $request->has('is_public') ? true : false;
+
+        // Mutual exclusivity for priest fields
+        if ($request->filled('external_priest_name')) {
+            $validated['priest_id'] = null;
+        } else {
+            $validated['external_priest_name'] = null;
+            $validated['external_priest_contact'] = null;
+        }
 
         $schedule->update($validated);
 

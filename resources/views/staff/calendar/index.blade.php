@@ -214,6 +214,13 @@
                                                     </svg>
                                                     <span class="font-medium">{{ $schedule->priest->name }}</span>
                                                 </div>
+                                            @elseif($schedule->external_priest_name)
+                                                <div class="flex items-center gap-2">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                    </svg>
+                                                    <span class="font-medium">{{ $schedule->external_priest_name }} <span class="text-xs text-gray-500 dark:text-gray-400">(External)</span></span>
+                                                </div>
                                             @endif
                                         </div>
 
@@ -432,15 +439,34 @@
                         <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                             Assign Priest
                         </label>
-                        <select name="priest_id" 
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                            <option value="">-- Select Priest (Optional) --</option>
-                            @foreach($priests as $priest)
-                                <option value="{{ $priest->id }}">
-                                    {{ $priest->name }} ({{ $priest->email }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="space-y-3" x-data="{ useExternal: false }">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" x-model="useExternal" id="add_use_external" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                                <label for="add_use_external" class="text-sm text-gray-700 dark:text-gray-300">Use External Priest</label>
+                            </div>
+                            <template x-if="!useExternal">
+                                <select name="priest_id" 
+                                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                    <option value="">-- Select Priest (Optional) --</option>
+                                    @foreach($priests as $priest)
+                                        <option value="{{ $priest->id }}">
+                                            {{ $priest->name }} ({{ $priest->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </template>
+                            <div x-show="useExternal" x-transition class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">External Priest Name <span class="text-red-500">*</span></label>
+                                    <input type="text" name="external_priest_name" placeholder="e.g. Fr. Juan Dela Cruz" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">External Priest Contact</label>
+                                    <input type="text" name="external_priest_contact" placeholder="Phone or Email (optional)" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                </div>
+                                <p class="text-xs text-indigo-600 dark:text-indigo-400">Internal priest select disabled when using external.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800">
@@ -615,14 +641,33 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Priest</label>
-                        <select name="priest_id" id="edit_priest" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                            <option value="">-- Select Priest (Optional) --</option>
-                            @foreach($priests as $priest)
-                                <option value="{{ $priest->id }}">
-                                    {{ $priest->name }} ({{ $priest->email }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <div class="space-y-3" x-data="{ useExternalEdit: false }">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" x-model="useExternalEdit" id="edit_use_external" class="w-4 h-4 text-indigo-600 rounded">
+                                <label for="edit_use_external" class="text-sm text-gray-700 dark:text-gray-300">Use External Priest</label>
+                            </div>
+                            <template x-if="!useExternalEdit">
+                                <select name="priest_id" id="edit_priest" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                    <option value="">-- Select Priest (Optional) --</option>
+                                    @foreach($priests as $priest)
+                                        <option value="{{ $priest->id }}">
+                                            {{ $priest->name }} ({{ $priest->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </template>
+                            <div x-show="useExternalEdit" x-transition class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">External Priest Name <span class="text-red-500">*</span></label>
+                                    <input type="text" name="external_priest_name" id="edit_external_priest_name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="e.g. Fr. John Smith">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">External Priest Contact</label>
+                                    <input type="text" name="external_priest_contact" id="edit_external_priest_contact" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Phone or Email (optional)">
+                                </div>
+                                <p class="text-xs text-indigo-600 dark:text-indigo-400">Internal priest select disabled when using external.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -764,7 +809,11 @@
                 editVenueIdInput.value = '';
             }
             
-            document.getElementById('edit_priest').value = schedule.priest_id || '';
+            // Priest assignment (internal vs external)
+            const editPriestSelect = document.getElementById('edit_priest');
+            if (editPriestSelect) {
+                editPriestSelect.value = schedule.priest_id || '';
+            }
             document.getElementById('edit_type').value = schedule.event_type;
             
             // Handle mass subtype for edit modal
@@ -778,6 +827,24 @@
             
             // Trigger event type change to show/hide mass subtype
             handleEditEventTypeChange();
+
+            // External priest fields handling
+            const externalNameInput = document.getElementById('edit_external_priest_name');
+            const externalContactInput = document.getElementById('edit_external_priest_contact');
+            const useExternalCheckbox = document.getElementById('edit_use_external');
+            if (externalNameInput && externalContactInput && useExternalCheckbox) {
+                if (schedule.external_priest_name) {
+                    useExternalCheckbox.checked = true;
+                    externalNameInput.value = schedule.external_priest_name;
+                    externalContactInput.value = schedule.external_priest_contact || '';
+                } else {
+                    useExternalCheckbox.checked = false;
+                    externalNameInput.value = '';
+                    externalContactInput.value = '';
+                }
+                // Trigger any reactive UI updates
+                useExternalCheckbox.dispatchEvent(new Event('change'));
+            }
             
             document.getElementById('editModal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
