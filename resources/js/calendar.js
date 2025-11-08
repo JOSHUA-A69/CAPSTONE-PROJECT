@@ -352,6 +352,8 @@ window.initStaffCalendar = function(schedules) {
                                 hour12: true
                             });
                             
+                            const presiderName = ev.extendedProps.scheduleData?.priest?.name || ev.extendedProps.scheduleData?.external_priest_name;
+                            const presiderBadge = ev.extendedProps.scheduleData?.priest ? '' : (presiderName ? ' (External)' : '');
                             li.innerHTML = `
                                 <div style="display: flex; align-items: center; gap: 16px;">
                                     <div style="
@@ -385,6 +387,10 @@ window.initStaffCalendar = function(schedules) {
                                             <span style="font-size: 12px;">📍</span>
                                             ${ev.extendedProps.scheduleData?.venue?.name || ev.extendedProps.location || 'Location TBA'}
                                         </div>
+                                        ${presiderName ? `<div style="color: #6b7280; font-size: 14px; display: flex; align-items: center; gap: 6px; margin-top: 6px;">
+                                            <span style="font-size: 12px;">👤</span>
+                                            Presider: ${presiderName}${presiderBadge}
+                                        </div>` : ''}
                                     </div>
                                 </div>
                             `;
