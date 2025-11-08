@@ -9,6 +9,7 @@
     <link rel="icon" href="/images/ers-logo.png" />
 
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+            <script>window.ANIMATIONS_MODE='full';</script>
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
         
@@ -38,7 +39,7 @@
             /* Removed gradient-text; using solid colors instead of text transparency */
         </style>
     </head>
-    <body class="antialiased bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-[#1b1b18]">
+    <body class="antialiased bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-[#1b1b18] full-animations">
         <!-- Header -->
         <header class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 shadow-sm">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

@@ -43,6 +43,8 @@ class ServiceManagementController extends Controller
             'Outreach Activities',
             'Daily Noon Mass',
             'Catechetical Activities',
+            'Institutional Mass',
+            'Non-Institutional Mass',
         ];
     }
 }

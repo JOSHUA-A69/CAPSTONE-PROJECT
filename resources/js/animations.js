@@ -5,54 +5,67 @@
 
 // Page load animation
 document.addEventListener('DOMContentLoaded', function() {
-    // Fade in page content
-    document.body.style.opacity = '0';
+    const mode = window.ANIMATIONS_MODE || 'full';
+    // Always ensure body is visible quickly to avoid perceived blank pages
+    document.body.style.opacity = '1';
+    document.body.style.transition = 'none';
+
+    if (mode === 'none') {
+        // Hard disable: no transformations applied
+        return;
+    }
+    if (mode === 'scroll-only') {
+        return; // Only scroll observer below will handle reveals
+    }
+    // Optimized full mode: subtle initial fade of key content without hiding whole page
     requestAnimationFrame(() => {
-        document.body.style.transition = 'opacity 0.3s ease-out';
-        document.body.style.opacity = '1';
-    });
-    
-    // Animate cards with stagger effect
-    const cards = document.querySelectorAll('.card, .bg-white, .shadow-sm');
-    cards.forEach((card, index) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            card.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-        }, index * 50);
+        const rootContent = document.querySelector('main') || document.body;
+        rootContent.style.opacity = '0';
+        rootContent.style.willChange = 'opacity';
+        rootContent.style.transition = 'opacity 0.15s ease-out';
+        requestAnimationFrame(() => {
+            rootContent.style.opacity = '1';
+            setTimeout(() => { rootContent.style.willChange = 'auto'; }, 250);
+        });
     });
 });
 
 // Smooth page navigation transitions
 document.addEventListener('click', function(e) {
+    const mode = window.ANIMATIONS_MODE || 'full';
+    if (mode !== 'full') return; // Only apply navigation fades in full mode
     const link = e.target.closest('a[href]');
-    if (link && link.href && !link.target && !link.download && 
+    if (link && link.href && !link.target && !link.download &&
         link.href.startsWith(window.location.origin) &&
         !link.href.includes('#') &&
         !e.ctrlKey && !e.metaKey) {
-        
-        // Don't interfere with logout or special actions
         if (link.href.includes('logout') || link.hasAttribute('data-no-transition')) {
             return;
         }
-        
         e.preventDefault();
-        
-        // Fade out current page
-        document.body.style.opacity = '0';
-        document.body.style.transition = 'opacity 0.2s ease-out';
-        
-        setTimeout(() => {
-            window.location.href = link.href;
-        }, 200);
+        const main = document.querySelector('main') || document.body;
+        main.style.opacity = '1'; // ensure starting state
+        main.style.transition = 'opacity 0.12s ease-out';
+        requestAnimationFrame(() => {
+            main.style.opacity = '0';
+        });
+        setTimeout(() => { window.location.href = link.href; }, 130);
+    }
+});
+
+// Ensure restored pages from BFCache / back navigation are visible
+window.addEventListener('pageshow', (e) => {
+    if (e.persisted) {
+        document.body.style.opacity = '1';
+        const main = document.querySelector('main');
+        if (main) main.style.opacity = '1';
     }
 });
 
 // Enhanced button interactions
 document.addEventListener('click', function(e) {
+    const mode = window.ANIMATIONS_MODE || 'full';
+    if (mode !== 'full') return; // Disable ripple when animations are off
     const button = e.target.closest('button, .btn, [role="button"]');
     if (button && !button.disabled) {
         // Add ripple effect
@@ -101,13 +114,15 @@ if (!document.getElementById('ripple-styles')) {
 // Smooth scroll to anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
+        const mode = window.ANIMATIONS_MODE || 'full';
         const target = document.querySelector(this.getAttribute('href'));
         if (target) {
             e.preventDefault();
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
+            if (mode === 'full') {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+                target.scrollIntoView({ behavior: 'auto', block: 'start' });
+            }
         }
     });
 });
@@ -119,9 +134,23 @@ const observerOptions = {
 };
 
 const observer = new IntersectionObserver((entries) => {
+    const mode = window.ANIMATIONS_MODE || 'full';
     entries.forEach(entry => {
         if (entry.isIntersecting) {
-            entry.target.classList.add('animate-on-scroll');
+            // If element or any ancestor opts out of animations, just show it
+            if (entry.target.closest('.no-animations')) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'none';
+                observer.unobserve(entry.target);
+                return;
+            }
+            if (mode === 'none') {
+                // Instantly show without animation
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'none';
+            } else {
+                entry.target.classList.add('animate-on-scroll');
+            }
             observer.unobserve(entry.target);
         }
     });
@@ -129,16 +158,30 @@ const observer = new IntersectionObserver((entries) => {
 
 // Observe elements that should animate on scroll
 setTimeout(() => {
+    const mode = window.ANIMATIONS_MODE || 'full';
     const elementsToAnimate = document.querySelectorAll('.card, .bg-white, section, .grid > div');
     elementsToAnimate.forEach(el => {
         if (!el.classList.contains('page-content')) {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-            observer.observe(el);
+            // Skip elements inside .no-animations containers entirely
+            if (el.closest('.no-animations')) {
+                el.style.opacity = '1';
+                el.style.transform = 'none';
+                return;
+            }
+            if (mode === 'none') {
+                el.style.opacity = '1';
+                el.style.transform = 'none';
+            } else {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(16px)';
+                // Faster & lighter transitions
+                const baseDuration = mode === 'scroll-only' ? '0.18s' : '0.22s';
+                el.style.transition = `opacity ${baseDuration} ease-out, transform ${baseDuration} ease-out`;
+                observer.observe(el);
+            }
         }
     });
-}, 100);
+}, 60);
 
 // When element is observed and animating
 document.addEventListener('animationstart', function(e) {
@@ -213,29 +256,24 @@ window.animations = {
 };
 
 // Smooth transitions for dynamically added content
-const mutationObserver = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-            if (node.nodeType === 1) { // Element node
-                // Fade in new elements
-                node.style.opacity = '0';
-                node.style.transform = 'translateY(10px)';
-                
-                requestAnimationFrame(() => {
-                    node.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-                    node.style.opacity = '1';
-                    node.style.transform = 'translateY(0)';
-                });
-            }
+if ((window.ANIMATIONS_MODE || 'full') === 'full') {
+    const mutationObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1) { // Element node
+                    node.style.opacity = '0';
+                    node.style.transform = 'translateY(10px)';
+                    requestAnimationFrame(() => {
+                        node.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                        node.style.opacity = '1';
+                        node.style.transform = 'translateY(0)';
+                    });
+                }
+            });
         });
     });
-});
-
-// Observe document for new elements
-mutationObserver.observe(document.body, {
-    childList: true,
-    subtree: true
-});
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+}
 
 // Optimize animations for performance
 let ticking = false;

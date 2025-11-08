@@ -13,6 +13,11 @@
 
     <!-- Favicon -->
     <link rel="icon" href="/images/ers-logo.png" />
+    
+    <!-- Animation Mode: none for app pages (disable all animations) -->
+    <script>
+        window.ANIMATIONS_MODE = 'none';
+    </script>
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -26,7 +31,7 @@
         }
     </script>
     </head>
-    <body class="font-sans antialiased text-base lg:text-[18px]">
+    <body class="font-sans antialiased text-base lg:text-[18px] no-animations">
         <!-- Skip to main content link for keyboard users -->
         <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg focus:shadow-lg">
             Skip to main content

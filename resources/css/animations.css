@@ -564,7 +564,25 @@ html {
 }
 
 .animate-on-scroll {
-    animation: fadeInOnScroll 0.6s ease-out;
+    animation: fadeInOnScroll 0.25s ease-out; /* Faster per requirement */
+}
+
+/* Disable all decorative animations when .no-animations is on body */
+.no-animations *, .no-animations *::before, .no-animations *::after {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* Scroll-only mode: suppress continuous pulses/spins/pings/bounce */
+.scroll-only-animations .animate-pulse,
+.scroll-only-animations .animate-ping,
+.scroll-only-animations .animate-bounce,
+.scroll-only-animations .animate-spin,
+.scroll-only-animations [class*="animate-slideIn"],
+.scroll-only-animations [class*="animate-fadeIn"],
+.scroll-only-animations .ripple,
+.scroll-only-animations .loading-pulse {
+    animation: none !important;
 }
 
 /* ==========================================

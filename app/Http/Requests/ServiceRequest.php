@@ -21,6 +21,8 @@ class ServiceRequest extends FormRequest
             'Outreach Activities',
             'Daily Noon Mass',
             'Catechetical Activities',
+            'Institutional Mass',
+            'Non-Institutional Mass',
         ];
 
         return [

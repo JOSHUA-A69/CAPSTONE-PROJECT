@@ -1,4 +1,4 @@
-<footer class="bg-[#2ecc71] dark:bg-dark-bg text-white mt-16">
+<footer class="bg-[#2ecc71] dark:bg-dark-bg text-white mt-16 no-animations">
     <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8 text-sm lg:text-base">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
 
