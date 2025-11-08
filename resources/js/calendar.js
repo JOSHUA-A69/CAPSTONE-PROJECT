@@ -156,7 +156,11 @@ window.initStaffCalendar = function(schedules) {
             }
             
             // Add priest with icon if available
-            if (arg.event.extendedProps.scheduleData && arg.event.extendedProps.scheduleData.priest) {
+            const scheduleData = arg.event.extendedProps.scheduleData || {};
+            const internalPriest = scheduleData.priest?.name;
+            const externalPriest = scheduleData.external_priest_name;
+            const presiderName = internalPriest || externalPriest;
+            if (presiderName) {
                 let priestDiv = document.createElement('div');
                 priestDiv.style.fontSize = '0.73rem'; // Increased from 0.68rem
                 priestDiv.style.opacity = '0.95';
@@ -165,7 +169,8 @@ window.initStaffCalendar = function(schedules) {
                 priestDiv.style.display = 'flex';
                 priestDiv.style.alignItems = 'center';
                 priestDiv.style.gap = '4px';
-                priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${arg.event.extendedProps.scheduleData.priest.name}</span>`;
+                const externalBadge = internalPriest ? '' : ' <span style="font-size: 0.68rem; opacity: 0.85;">(External)</span>';
+                priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${presiderName}${externalBadge}</span>`;
                 wrapper.appendChild(priestDiv);
             }
             
@@ -450,6 +455,12 @@ function createTooltip(event) {
         .join(' ');
     
     let content = '<div style="color: #ffffff; text-align: center; font-size: 16px; font-weight: 700; line-height: 1.4;">' + massType + '</div>';
+
+    // Presider line (internal or external)
+    const presiderName = event.extendedProps.scheduleData?.priest?.name || event.extendedProps.scheduleData?.external_priest_name;
+    if (presiderName) {
+        content += '<div style="margin-top: 8px; color: #fff; text-align: center; font-size: 13px; font-weight: 600;">Presider: ' + presiderName + (event.extendedProps.scheduleData?.priest ? '' : ' (External)') + '</div>';
+    }
     
     tooltip.innerHTML = content;
     return tooltip;
@@ -548,13 +559,17 @@ window.initPublicCalendar = function(schedules) {
             }
             
             // Add priest if available
-            if (arg.event.extendedProps.scheduleData && arg.event.extendedProps.scheduleData.priest) {
+            const scheduleData = arg.event.extendedProps.scheduleData || {};
+            const internalPriest = scheduleData.priest?.name;
+            const externalPriest = scheduleData.external_priest_name;
+            const presiderName = internalPriest || externalPriest;
+            if (presiderName) {
                 let priestDiv = document.createElement('div');
                 priestDiv.style.fontSize = '0.7rem';
                 priestDiv.style.opacity = '0.9';
                 priestDiv.style.fontWeight = '600';
                 priestDiv.style.marginTop = '2px';
-                priestDiv.innerHTML = `👨‍⚕️ ${arg.event.extendedProps.scheduleData.priest.name}`;
+                priestDiv.innerHTML = `� ${presiderName}${internalPriest ? '' : ' (External)'}`;
                 wrapper.appendChild(priestDiv);
             }
             
