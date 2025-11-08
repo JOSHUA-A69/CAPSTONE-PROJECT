@@ -105,7 +105,31 @@ class ReservationController extends Controller
             })
             ->findOrFail($reservation_id);
 
-        return view('priest.reservations.show', compact('reservation'));
+        // Build a lightweight list of available priests for optional replacement
+        // Exclude current priest and anyone conflicting at this exact schedule_date
+        try {
+            $conflictingPriestIds = \App\Models\Reservation::where('schedule_date', $reservation->schedule_date)
+                ->whereNotIn('status', ['cancelled', 'rejected'])
+                ->pluck('officiant_id')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $availablePriests = \App\Models\User::where('role', 'priest')
+                ->when(\Illuminate\Support\Facades\Schema::hasColumn('users', 'status'), function ($q) {
+                    $q->where('status', 'active');
+                })
+                ->where('id', '!=', $priestId)
+                ->whereNotIn('id', $conflictingPriestIds)
+                ->orderBy('first_name')
+                ->get(['id', 'first_name', 'last_name']);
+        } catch (\Throwable $e) {
+            // Fallback in case schema/columns differ in some environments
+            $availablePriests = collect();
+        }
+
+        return view('priest.reservations.show', compact('reservation', 'availablePriests'));
     }
 
     /**
@@ -158,6 +182,7 @@ class ReservationController extends Controller
     {
         $request->validate([
             'reason' => 'required|string|max:500',
+            'replacement_priest_id' => 'nullable|integer|exists:users,id',
         ]);
 
         $reservation = Reservation::where('officiant_id', Auth::id())
@@ -172,7 +197,7 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation cannot be declined at this stage.');
         }
 
-        $reason = $request->input('reason');
+    $reason = $request->input('reason');
 
         // Store the priest ID before clearing officiant_id
         $priestId = Auth::id();
@@ -188,13 +213,13 @@ class ReservationController extends Controller
             'reservation_venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
         ]);
 
-        // Update confirmation status and revert to staff/admin for reassignment
-        $reservation->update([
+        // Default transition after decline
+        $updatePayload = [
             'priest_confirmation' => 'declined',
             'priest_confirmed_at' => now(),
-            'status' => 'pending_priest_reassignment', // New status for admin to reassign
-            'officiant_id' => null, // Remove assignment so another priest can be selected
-        ]);
+            'status' => 'pending_priest_reassignment',
+            'officiant_id' => null,
+        ];
 
         // Create history
         $historyAction = $isCancellation ? 'priest_cancelled_confirmation' : 'priest_declined';
@@ -209,7 +234,56 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // Send notification to admin and staff for reassignment - pass priest ID
+        // Optional: Priest can assign a replacement immediately
+        $replacementId = $request->input('replacement_priest_id');
+        if ($replacementId) {
+            // Prevent assigning external/internal mismatch
+            if ($reservation->priest_selection_type === 'external') {
+                return Redirect::back()->with('error', 'This reservation uses an external priest. You cannot assign an internal priest.');
+            }
+
+            // Validate selected user is a different priest
+            $replacement = \App\Models\User::where('id', $replacementId)->where('role', 'priest')->first();
+            if (! $replacement || $replacement->id == $priestId) {
+                return Redirect::back()->with('error', 'Invalid replacement priest selected.');
+            }
+
+            // Check for scheduling conflicts for the replacement
+            $conflict = Reservation::where('officiant_id', $replacement->id)
+                ->where('schedule_date', $reservation->schedule_date)
+                ->whereNotIn('status', ['cancelled', 'rejected'])
+                ->where('reservation_id', '!=', $reservation_id)
+                ->exists();
+
+            if ($conflict) {
+                return Redirect::back()->with('error', 'Selected replacement priest is not available at this date and time.');
+            }
+
+            // Apply reassignment instantly; keep decline record but move to awaiting new priest confirmation
+            $updatePayload['officiant_id'] = $replacement->id;
+            $updatePayload['status'] = 'admin_approved'; // unified awaiting priest confirmation state
+            $updatePayload['priest_confirmation'] = 'pending';
+            $updatePayload['priest_notified_at'] = now();
+
+            // History for reassignment (performed by the cancelling priest)
+            $reservation->history()->create([
+                'performed_by' => $priestId,
+                'action' => 'priest_reassigned',
+                'remarks' => 'Reassigned by priest to: ' . ($replacement->first_name . ' ' . $replacement->last_name),
+                'performed_at' => now(),
+            ]);
+        }
+
+        // Persist updates
+        $reservation->update($updatePayload);
+
+        // Send notification to admin/staff and possibly the replacement priest
+        if ($replacementId ?? false) {
+            // Notify the newly assigned priest and requestor
+            $this->notificationService->notifyPriestAssigned($reservation->fresh());
+        }
+
+        // Always notify admins about the decline/cancellation itself
         if ($isCancellation) {
             $this->notificationService->notifyPriestCancelledConfirmation($reservation, $reason, $priestId);
         } else {
@@ -217,8 +291,12 @@ class ReservationController extends Controller
         }
 
         $message = $isCancellation
-            ? 'Reservation cancelled successfully. The administrators and requestor have been notified, and another priest will be assigned.'
-            : 'Decline notification sent successfully. The administrators have been notified to assign another priest.';
+            ? (($replacementId ?? false)
+                ? 'Reservation cancelled and reassigned to another priest. They have been notified to confirm.'
+                : 'Reservation cancelled successfully. Admins have been notified to assign another priest.')
+            : (($replacementId ?? false)
+                ? 'You declined and reassigned this service to another priest successfully. They have been notified.'
+                : 'Decline notification sent successfully. Admins have been notified to assign another priest.');
 
         return Redirect::route('priest.reservations.index')
             ->with('status', 'reservation-declined')
@@ -342,10 +420,15 @@ class ReservationController extends Controller
      */
     public function calendar()
     {
-        // Get all confirmed reservations for this priest
+        // Get all reservations that are either fully approved or explicitly confirmed by this priest
+        // Include only future (upcoming) services for clarity
         $reservations = Reservation::with(['service', 'venue', 'organization'])
             ->forPriest(Auth::id())
-            ->where('priest_confirmation', 'confirmed')
+            ->where(function ($q) {
+                $q->where('status', 'approved')
+                  ->orWhere('priest_confirmation', 'confirmed');
+            })
+            ->where('schedule_date', '>=', now())
             ->orderBy('schedule_date', 'asc')
             ->get();
 

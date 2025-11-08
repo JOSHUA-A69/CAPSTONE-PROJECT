@@ -62,9 +62,9 @@
             <div class="mt-auto">
                 @include('layouts.footer')
             </div>
-        </div>
+    </div>
 
-        <!-- Screen reader announcements for dynamic content -->
+    <!-- Screen reader announcements for dynamic content -->
         <div id="sr-announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
         
         <!-- Dark Mode Toggle Script -->
@@ -90,5 +90,8 @@
             // Update text on page load
             document.addEventListener('DOMContentLoaded', updateDarkModeText);
         </script>
+
+        <!-- Page-specific scripts pushed from views -->
+        @stack('scripts')
     </body>
 </html>

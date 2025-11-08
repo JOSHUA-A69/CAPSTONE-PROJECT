@@ -214,8 +214,8 @@
                 <!-- Right Column: Actions -->
                 <div class="space-y-6">
 
-                    <!-- Confirmation Actions -->
-                    @if(in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved']) && $reservation->priest_confirmation !== 'confirmed')
+                    <!-- Confirmation / Decline Actions -->
+                    @if(in_array($reservation->status, ['pending','admin_approved']) && $reservation->priest_confirmation !== 'confirmed')
                     <div class="card">
                         <div class="card-header">
                             <h3 class="flex items-center">
@@ -364,6 +364,24 @@
                               placeholder="e.g., Schedule conflict, Prior commitment, etc."></textarea>
                 </div>
 
+                @if(isset($availablePriests) && $availablePriests->count() > 0)
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Optional: Suggest a replacement priest
+                    </label>
+                    <select name="replacement_priest_id"
+                            class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">-- No replacement (notify admin to reassign) --</option>
+                        @foreach($availablePriests as $p)
+                            <option value="{{ $p->id }}">{{ $p->first_name }} {{ $p->last_name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        We’ll notify the selected priest immediately and mark this service awaiting their confirmation.
+                    </p>
+                </div>
+                @endif
+
                 <div class="flex justify-end space-x-3">
                     <button type="button"
                             onclick="hideDeclineModal()"
@@ -414,6 +432,24 @@
                               class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500"
                               placeholder="e.g., Emergency, Health issue, Unavoidable conflict, etc."></textarea>
                 </div>
+
+                @if(isset($availablePriests) && $availablePriests->count() > 0)
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Optional: Assign an available replacement now
+                    </label>
+                    <select name="replacement_priest_id"
+                            class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">-- No replacement (notify admin to reassign) --</option>
+                        @foreach($availablePriests as $p)
+                            <option value="{{ $p->id }}">{{ $p->first_name }} {{ $p->last_name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        We’ll notify the selected priest immediately and mark this service awaiting their confirmation.
+                    </p>
+                </div>
+                @endif
 
                 <div class="flex justify-end space-x-3">
                     <button type="button"
