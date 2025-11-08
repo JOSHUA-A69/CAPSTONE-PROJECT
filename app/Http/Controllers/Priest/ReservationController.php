@@ -420,14 +420,14 @@ class ReservationController extends Controller
      */
     public function calendar()
     {
-        // Get all reservations that are either fully approved or explicitly confirmed by this priest
-        // Include only future (upcoming) services for clarity
+        // Upcoming services for this priest, including approved and awaiting confirmation assignments
         $reservations = Reservation::with(['service', 'venue', 'organization'])
             ->forPriest(Auth::id())
             ->where(function ($q) {
-                $q->where('status', 'approved')
+                $q->whereIn('status', ['approved', 'admin_approved', 'pending', 'pending_priest_confirmation'])
                   ->orWhere('priest_confirmation', 'confirmed');
             })
+            ->whereNotIn('status', ['cancelled', 'rejected', 'pending_priest_reassignment'])
             ->where('schedule_date', '>=', now())
             ->orderBy('schedule_date', 'asc')
             ->get();
