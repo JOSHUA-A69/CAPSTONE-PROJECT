@@ -67,11 +67,13 @@ class CalendarController extends Controller
             'end_time' => 'nullable',
             'location' => 'nullable|string|max:255',
             'venue_id' => 'nullable|exists:venues,venue_id',
-            'priest_id' => 'nullable|exists:users,id|required_without:external_priest_name',
-            'external_priest_name' => 'nullable|string|max:100|required_without:priest_id',
+            'priest_id' => 'nullable|exists:users,id',
+            'external_priest_name' => 'nullable|string|max:100',
             'external_priest_contact' => 'nullable|string|max:100',
-            'event_type' => 'required|in:institutional_mass,non_institutional_mass',
-            'mass_subtype' => 'required|string|max:255',
+            // Accept legacy event types to allow editing old records; new UI uses the first two
+            'event_type' => 'required|in:institutional_mass,non_institutional_mass,mass,confession,adoration,retreat,seminar,meeting,celebration,other',
+            // Mass subtype only required for the two new mass categories
+            'mass_subtype' => 'nullable|required_if:event_type,institutional_mass,non_institutional_mass|string|max:255',
             'is_public' => 'boolean',
         ]);
 
@@ -81,9 +83,19 @@ class CalendarController extends Controller
         // If external priest is specified, ensure priest_id is null; otherwise clear external fields
         if ($request->filled('external_priest_name')) {
             $validated['priest_id'] = null;
-        } else {
+        } elseif ($request->filled('priest_id')) {
             $validated['external_priest_name'] = null;
             $validated['external_priest_contact'] = null;
+        }
+
+        // Normalize legacy 'mass' to 'institutional_mass' by default if needed
+        if ($validated['event_type'] === 'mass') {
+            $validated['event_type'] = 'institutional_mass';
+        }
+
+        // If event_type is not one of the two mass categories, clear mass_subtype
+        if (!in_array($validated['event_type'], ['institutional_mass', 'non_institutional_mass'])) {
+            $validated['mass_subtype'] = null;
         }
 
         LiturgicalSchedule::create($validated);
@@ -107,11 +119,11 @@ class CalendarController extends Controller
             'end_time' => 'nullable',
             'location' => 'nullable|string|max:255',
             'venue_id' => 'nullable|exists:venues,venue_id',
-            'priest_id' => 'nullable|exists:users,id|required_without:external_priest_name',
-            'external_priest_name' => 'nullable|string|max:100|required_without:priest_id',
+            'priest_id' => 'nullable|exists:users,id',
+            'external_priest_name' => 'nullable|string|max:100',
             'external_priest_contact' => 'nullable|string|max:100',
-            'event_type' => 'required|in:institutional_mass,non_institutional_mass',
-            'mass_subtype' => 'required|string|max:255',
+            'event_type' => 'required|in:institutional_mass,non_institutional_mass,mass,confession,adoration,retreat,seminar,meeting,celebration,other',
+            'mass_subtype' => 'nullable|required_if:event_type,institutional_mass,non_institutional_mass|string|max:255',
             'is_public' => 'boolean',
         ]);
 
@@ -120,9 +132,18 @@ class CalendarController extends Controller
         // Mutual exclusivity for priest fields
         if ($request->filled('external_priest_name')) {
             $validated['priest_id'] = null;
-        } else {
+        } elseif ($request->filled('priest_id')) {
             $validated['external_priest_name'] = null;
             $validated['external_priest_contact'] = null;
+        }
+
+        // Normalize legacy 'mass'
+        if ($validated['event_type'] === 'mass') {
+            $validated['event_type'] = 'institutional_mass';
+        }
+
+        if (!in_array($validated['event_type'], ['institutional_mass', 'non_institutional_mass'])) {
+            $validated['mass_subtype'] = null;
         }
 
         $schedule->update($validated);

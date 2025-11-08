@@ -298,9 +298,14 @@ function initializeHomeCalendar(schedules) {
             // Get venue name from relationship, fallback to location field
             const venueName = props.venue?.name;
             const locationText = venueName || props.location;
-            
-            const priestInfo = props.priest 
-                ? `<p class="flex items-center gap-2 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg><span><strong>Priest:</strong> ${props.priest.name}</span></p>`
+
+            // Determine presider: internal priest or external priest name
+            const internalPriestName = props.scheduleData?.priest?.name || props.priest?.name;
+            const externalPriestName = props.scheduleData?.external_priest_name;
+            const presiderName = internalPriestName || externalPriestName || '';
+            const isExternal = !internalPriestName && !!externalPriestName;
+            const priestInfo = presiderName
+                ? `<p class="flex items-center gap-2 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg><span><strong>Presider:</strong> ${presiderName}${isExternal ? ' <span class="ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-white/20 border border-white/30 align-middle">External</span>' : ''}</span></p>`
                 : '';
             
             const locationInfo = locationText 
@@ -404,10 +409,13 @@ function initializeHomeCalendar(schedules) {
                 wrapper.appendChild(locationDiv);
             }
             
-            // Add priest with icon if available
-            if (arg.event.extendedProps.scheduleData?.priest || arg.event.extendedProps.priest) {
-                const priestName = arg.event.extendedProps.scheduleData?.priest?.name || arg.event.extendedProps.priest?.name;
-                if (priestName) {
+            // Add presider with icon if available (internal or external)
+            {
+                const internalPriestName = arg.event.extendedProps.scheduleData?.priest?.name || arg.event.extendedProps.priest?.name;
+                const externalPriestName = arg.event.extendedProps.scheduleData?.external_priest_name;
+                const presiderName = internalPriestName || externalPriestName;
+                const isExternal = !internalPriestName && !!externalPriestName;
+                if (presiderName) {
                     let priestDiv = document.createElement('div');
                     priestDiv.style.fontSize = '0.73rem'; // Increased from 0.68rem
                     priestDiv.style.opacity = '0.95';
@@ -416,7 +424,7 @@ function initializeHomeCalendar(schedules) {
                     priestDiv.style.display = 'flex';
                     priestDiv.style.alignItems = 'center';
                     priestDiv.style.gap = '4px';
-                    priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${priestName}</span>`;
+                    priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${presiderName}${isExternal ? ' <span style="margin-left:4px;" class="inline-block px-1.5 py-0.5 text-[10px] rounded bg-white/20 border border-white/30 align-middle">External</span>' : ''}</span>`;
                     wrapper.appendChild(priestDiv);
                 }
             }

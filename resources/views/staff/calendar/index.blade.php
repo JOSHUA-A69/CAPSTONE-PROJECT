@@ -779,7 +779,10 @@
         function openEditModal(schedule) {
             document.getElementById('edit_title').value = schedule.title;
             document.getElementById('edit_description').value = schedule.description || '';
-            document.getElementById('edit_date').value = schedule.schedule_date;
+            // Normalize date string for input[type=date]
+            const rawDate = String(schedule.schedule_date || '');
+            const dateOnly = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate;
+            document.getElementById('edit_date').value = dateOnly;
             document.getElementById('edit_start').value = schedule.start_time.substring(0, 5);
             document.getElementById('edit_end').value = schedule.end_time ? schedule.end_time.substring(0, 5) : '';
             

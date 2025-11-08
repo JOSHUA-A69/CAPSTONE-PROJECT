@@ -16,8 +16,11 @@ class DatabaseSeeder extends Seeder
         // Seed role test users (admin, staff, adviser, priest, requestor)
         $this->call(CreateRoleTestUsersSeeder::class);
 
-        // Seed baseline services catalog aligned with thesis scope
-        $this->call(BaselineServicesSeeder::class);
+    // Seed baseline services catalog aligned with thesis scope
+    $this->call(BaselineServicesSeeder::class);
+
+    // Seed detailed Mass subtype services so request form has full selection
+    $this->call(MassSubtypeServicesSeeder::class);
 
     // Seed student organizations and assign the Adviser user
     $this->call(BaselineOrganizationsSeeder::class);

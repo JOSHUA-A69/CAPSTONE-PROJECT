@@ -1133,6 +1133,7 @@
                             <option value="">-- Select Service Category --</option>
                             <option value="institutional_mass" data-requires-mass-type="true">⛪ Institutional Mass</option>
                             <option value="non_institutional_mass" data-requires-mass-type="true">✝️ Non-Institutional Mass</option>
+                            <option value="other_services" data-requires-mass-type="true">📌 Other Services</option>
                         </select>
                     </div>
                     
@@ -1142,7 +1143,7 @@
                             Service Type<span class="required-indicator">*</span>
                             <span class="tooltip help-icon">
                                 ?
-                                <span class="tooltiptext">Select the specific type of mass</span>
+                                <span class="tooltiptext">Select the specific service</span>
                             </span>
                         </label>
                         <select
@@ -1160,6 +1161,11 @@
                             <optgroup label="Non-Institutional Mass" id="non_institutional_mass_options" style="display: none;">
                                 @foreach($services->where('service_category', 'Non-Institutional Mass') as $service)
                                     <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="Other Services" id="other_services_options" style="display: none;">
+                                @foreach($services->filter(fn($s) => !in_array($s->service_category, ['Institutional Mass','Non-Institutional Mass'])) as $service)
+                                    <option value="{{ $service->service_id }}">{{ $service->service_name }} — {{ $service->service_category }}</option>
                                 @endforeach
                             </optgroup>
                         </select>
@@ -1413,6 +1419,7 @@
         const serviceIdSelect = document.getElementById('service_id');
         const institutionalOptions = document.getElementById('institutional_mass_options');
         const nonInstitutionalOptions = document.getElementById('non_institutional_mass_options');
+        const otherServicesOptions = document.getElementById('other_services_options');
         
         const selectedOption = serviceCategorySelect.options[serviceCategorySelect.selectedIndex];
         const requiresMassType = selectedOption.getAttribute('data-requires-mass-type') === 'true';
@@ -1425,9 +1432,15 @@
             if (serviceCategorySelect.value === 'institutional_mass') {
                 institutionalOptions.style.display = 'block';
                 nonInstitutionalOptions.style.display = 'none';
+                otherServicesOptions.style.display = 'none';
             } else if (serviceCategorySelect.value === 'non_institutional_mass') {
                 institutionalOptions.style.display = 'none';
                 nonInstitutionalOptions.style.display = 'block';
+                otherServicesOptions.style.display = 'none';
+            } else if (serviceCategorySelect.value === 'other_services') {
+                institutionalOptions.style.display = 'none';
+                nonInstitutionalOptions.style.display = 'none';
+                otherServicesOptions.style.display = 'block';
             }
             
             // Reset mass type selection
@@ -1438,6 +1451,7 @@
             serviceIdSelect.value = '';
             institutionalOptions.style.display = 'none';
             nonInstitutionalOptions.style.display = 'none';
+            otherServicesOptions.style.display = 'none';
         }
     }
 

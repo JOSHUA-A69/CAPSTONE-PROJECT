@@ -381,6 +381,12 @@
             const color = EVENT_TYPE_COLORS[schedule.event_type] || EVENT_TYPE_COLORS['other'];
             const typeLabel = EVENT_TYPE_LABELS[schedule.event_type] || '📌 Other';
             
+            // Determine presider (internal priest or external)
+            const internalPriestName = schedule?.priest?.name;
+            const externalPriestName = schedule?.external_priest_name;
+            const presiderName = internalPriestName || externalPriestName || '';
+            const isExternal = !internalPriestName && !!externalPriestName;
+
             content.innerHTML = `
                 <div class="p-6" style="border-top: 4px solid ${color}">
                     <div class="flex items-start justify-between mb-4">
@@ -411,6 +417,15 @@
                             </svg>
                             <span>${schedule.start_time}${schedule.end_time ? ' - ' + schedule.end_time : ''}</span>
                         </div>
+                        
+                        ${presiderName ? `
+                            <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                <span><strong>Presider:</strong> ${presiderName}${isExternal ? ' <span class="ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 align-middle">External</span>' : ''}</span>
+                            </div>
+                        ` : ''}
                         
                         ${schedule.location ? `
                             <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
