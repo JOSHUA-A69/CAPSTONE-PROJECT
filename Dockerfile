@@ -13,3 +13,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
     && apt-get install -y nodejs
 
 WORKDIR /var/www
+
+# Set container timezone to Asia/Manila for PHP runtime and PHP config
+ENV TZ=Asia/Manila
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
+    && echo $TZ > /etc/timezone \
+    && echo "date.timezone=$TZ" > /usr/local/etc/php/conf.d/timezone.ini
