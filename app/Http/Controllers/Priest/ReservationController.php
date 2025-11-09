@@ -432,6 +432,16 @@ class ReservationController extends Controller
             ->orderBy('schedule_date', 'asc')
             ->get();
 
-        return view('priest.reservations.calendar', compact('reservations'));
+        // Staff-plotted liturgical schedules assigned to this priest
+        try {
+            $schedules = \App\Models\LiturgicalSchedule::with(['venue'])
+                ->where('priest_id', Auth::id())
+                ->upcoming()
+                ->get();
+        } catch (\Throwable $e) {
+            $schedules = collect();
+        }
+
+        return view('priest.reservations.calendar', compact('reservations', 'schedules'));
     }
 }

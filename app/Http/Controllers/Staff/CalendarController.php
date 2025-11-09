@@ -9,6 +9,7 @@ use App\Models\Venue;
 use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Support\Notifications as NotificationHelper;
 
 class CalendarController extends Controller
 {
@@ -99,7 +100,36 @@ class CalendarController extends Controller
             $validated['mass_subtype'] = null;
         }
 
-        LiturgicalSchedule::create($validated);
+        $schedule = LiturgicalSchedule::create($validated);
+
+        // Notify assigned priest if any
+        if (!empty($validated['priest_id'])) {
+            $priest = User::find($validated['priest_id']);
+            if ($priest) {
+                $title = $validated['title'] ?? ($validated['event_type'] ?? 'Schedule');
+                $when = $validated['schedule_date'] . (isset($validated['start_time']) ? ' ' . $validated['start_time'] : '');
+                $venueName = null;
+                if (!empty($validated['venue_id'])) {
+                    $venueName = optional(Venue::find($validated['venue_id']))->name;
+                }
+
+                NotificationHelper::make([
+                    'user_id' => $priest->id,
+                    'message' => '<strong>CREaM Staff</strong> assigned you to a schedule: <em>' . e($title) . '</em> on <strong>' . e($when) . '</strong>' . ($venueName ? ' at <strong>' . e($venueName) . '</strong>' : ''),
+                    'type' => NotificationHelper::TYPE_SCHEDULE_ASSIGNMENT,
+                    'data' => [
+                        'schedule_id' => $schedule->schedule_id,
+                        'event_type' => $schedule->event_type,
+                        'schedule_date' => $schedule->schedule_date,
+                        'start_time' => $schedule->start_time,
+                        'end_time' => $schedule->end_time,
+                        'venue' => $venueName ?? $schedule->location,
+                        'title' => $schedule->title,
+                        'created_by' => Auth::id(),
+                    ],
+                ]);
+            }
+        }
 
         return redirect()->route('staff.calendar.index')
             ->with('success', 'Schedule added successfully!');
@@ -147,7 +177,36 @@ class CalendarController extends Controller
             $validated['mass_subtype'] = null;
         }
 
+        // Track original priest to detect reassignment
+        $originalPriestId = $schedule->priest_id;
+
         $schedule->update($validated);
+
+        // Notify newly assigned priest if changed or set
+        if (!empty($validated['priest_id']) && $validated['priest_id'] != $originalPriestId) {
+            $priest = User::find($validated['priest_id']);
+            if ($priest) {
+                $title = $schedule->title ?? ($schedule->event_type ?? 'Schedule');
+                $when = $schedule->schedule_date . ($schedule->start_time ? ' ' . $schedule->start_time : '');
+                $venueName = $schedule->venue->name ?? $schedule->location;
+
+                NotificationHelper::make([
+                    'user_id' => $priest->id,
+                    'message' => '<strong>CREaM Staff</strong> assigned you to a schedule: <em>' . e($title) . '</em> on <strong>' . e($when) . '</strong>' . ($venueName ? ' at <strong>' . e($venueName) . '</strong>' : ''),
+                    'type' => NotificationHelper::TYPE_SCHEDULE_ASSIGNMENT,
+                    'data' => [
+                        'schedule_id' => $schedule->schedule_id,
+                        'event_type' => $schedule->event_type,
+                        'schedule_date' => $schedule->schedule_date,
+                        'start_time' => $schedule->start_time,
+                        'end_time' => $schedule->end_time,
+                        'venue' => $venueName,
+                        'title' => $schedule->title,
+                        'updated_by' => Auth::id(),
+                    ],
+                ]);
+            }
+        }
 
         return redirect()->route('staff.calendar.index')
             ->with('success', 'Schedule updated successfully!');

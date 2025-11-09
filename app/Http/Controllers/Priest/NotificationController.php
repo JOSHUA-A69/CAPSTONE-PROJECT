@@ -71,6 +71,9 @@ class NotificationController extends Controller
 
                 if ($notification->type === 'Assignment') {
                     $url = route('priest.notifications.assignment', $notification->notification_id);
+                } elseif ($notification->type === \App\Support\Notifications::TYPE_SCHEDULE_ASSIGNMENT) {
+                    // For staff-plotted schedule assignments, send priests to their calendar
+                    $url = route('priest.reservations.calendar');
                 } elseif ($notification->reservation_id) {
                     $url = route('priest.reservations.show', $notification->reservation_id);
                 } else {

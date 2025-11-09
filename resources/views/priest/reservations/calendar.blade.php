@@ -4,16 +4,17 @@
 <div class="max-w-6xl mx-auto py-8 px-4">
     <h1 class="text-3xl font-bold mb-6 flex items-center gap-3">
         <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        My Confirmed Schedule
+        My Calendar
     </h1>
 
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <div id="priestCalendar"></div>
     </div>
 
-    @if($reservations->isEmpty())
+    @php $hasSchedules = isset($schedules) && $schedules && $schedules->count() > 0; @endphp
+    @if($reservations->isEmpty() && ! $hasSchedules)
         <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm font-semibold">
-            No confirmed reservations found.
+            No upcoming items found.
         </div>
     @endif
 </div>
@@ -22,16 +23,18 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const raw = @json($reservations);
-        const events = raw.map(r => {
-            const dateObj = new Date(r.schedule_date);
-            // schedule_date may include time concatenated; ensure we format start properly
+    // Load JSON from dedicated script tags to avoid stray inline output/conflicts
+    const rawReservations = JSON.parse(document.getElementById('priest-reservations-json').textContent || '[]');
+    const rawSchedules = JSON.parse(document.getElementById('priest-schedules-json').textContent || '[]');
+
+        const reservationEvents = rawReservations.map(r => {
             let dateStr = r.schedule_date;
             if (typeof dateStr === 'string' && dateStr.includes(' ')) {
                 dateStr = dateStr.split(' ')[0];
             }
             return {
-                id: r.reservation_id,
+                id: 'res-' + r.reservation_id,
+                source: 'reservation',
                 title: r.activity_name || r.service?.service_name || 'Reservation',
                 start: dateStr + (r.schedule_time ? 'T' + r.schedule_time : ''),
                 backgroundColor: '#10B981',
@@ -39,10 +42,35 @@
                 extendedProps: {
                     venue: r.custom_venue_name || (r.venue ? r.venue.name : ''),
                     service: r.service?.service_name,
+                    status: r.status,
                     participants: r.participants_count,
+                    type: 'reservation'
                 }
-            }
+            };
         });
+
+        const scheduleEvents = rawSchedules.map(s => {
+            // schedule_date is Y-m-d string; start_time/end_time are strings
+            const start = s.schedule_date + (s.start_time ? 'T' + s.start_time : '');
+            const end = s.schedule_date + (s.end_time ? 'T' + s.end_time : '');
+            return {
+                id: 'sched-' + s.schedule_id,
+                source: 'schedule',
+                title: s.title || (s.event_type ? s.event_type.replaceAll('_',' ') : 'Schedule'),
+                start: start,
+                end: s.end_time ? end : undefined,
+                backgroundColor: '#3B82F6', // blue for staff schedules
+                borderColor: '#2563EB',
+                extendedProps: {
+                    venue: s.location || (s.venue ? s.venue.name : ''),
+                    status: s.event_type,
+                    public: !!s.is_public,
+                    type: 'schedule'
+                }
+            };
+        });
+
+        const events = [...reservationEvents, ...scheduleEvents];
 
         if (typeof window.Calendar === 'undefined') {
             console.warn('FullCalendar modules not loaded yet; retrying...');
@@ -60,10 +88,12 @@
                 const props = e.extendedProps;
                 const venue = props.venue ? `<p class='mt-2 text-sm'><strong>Venue:</strong> ${props.venue}</p>` : '';
                 const service = props.service ? `<p class='mt-1 text-sm'><strong>Service:</strong> ${props.service}</p>` : '';
+                const status = props.status ? `<p class='mt-1 text-sm'><strong>Status:</strong> ${String(props.status).replaceAll('_',' ')}</p>` : '';
                 const participants = props.participants ? `<p class='mt-1 text-sm'><strong>Participants:</strong> ${props.participants}</p>` : '';
+                const type = props.type ? `<p class='mt-1 text-xs text-gray-500'>(${props.type})</p>` : '';
                 Swal.fire({
                     title: e.title,
-                    html: `<div class='text-left'>${venue}${service}${participants}</div>`,
+                    html: `<div class='text-left'>${venue}${service}${status}${participants}${type}</div>`,
                     icon: 'info',
                     confirmButtonText: 'Close',
                     confirmButtonColor: '#10B981'
@@ -80,4 +110,7 @@
         cal.render();
     });
 </script>
+<script id="priest-reservations-json" type="application/json">{!! $reservations->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
+<script id="priest-schedules-json" type="application/json">{!! ($schedules ?? collect())->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
 @endpush
+

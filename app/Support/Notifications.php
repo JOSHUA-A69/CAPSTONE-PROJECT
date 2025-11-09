@@ -20,6 +20,8 @@ class Notifications
     public const TYPE_EDIT_REQUEST = 'Edit Request';
     public const TYPE_EDIT_APPROVED = 'Edit Approved';
     public const TYPE_EDIT_REJECTED = 'Edit Rejected';
+    // Newly added: schedule (non-reservation) assignment to a priest
+    public const TYPE_SCHEDULE_ASSIGNMENT = 'Schedule Assignment';
 
     /**
      * Create a Notification record with sensible defaults.
