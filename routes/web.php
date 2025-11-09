@@ -186,6 +186,7 @@ Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'
 // Requestor Reservation Routes
 Route::prefix('requestor')->name('requestor.')->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':requestor'])->group(function () {
     Route::get('/reservations', [\App\Http\Controllers\Requestor\ReservationController::class, 'index'])->name('reservations.index');
+    Route::get('/reservations/calendar', [\App\Http\Controllers\Requestor\ReservationController::class, 'calendar'])->name('reservations.calendar');
     Route::get('/reservations/create', [\App\Http\Controllers\Requestor\ReservationController::class, 'create'])->name('reservations.create');
     Route::post('/reservations', [\App\Http\Controllers\Requestor\ReservationController::class, 'store'])->name('reservations.store');
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Requestor\ReservationController::class, 'show'])->name('reservations.show');
@@ -221,6 +222,7 @@ Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App
 
     // Reservation Routes
     Route::get('/reservations', [\App\Http\Controllers\Adviser\ReservationController::class, 'index'])->name('reservations.index');
+    Route::get('/reservations/calendar', [\App\Http\Controllers\Adviser\ReservationController::class, 'calendar'])->name('reservations.calendar');
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Adviser\ReservationController::class, 'show'])->name('reservations.show');
     Route::post('/reservations/{reservation_id}/approve', [\App\Http\Controllers\Adviser\ReservationController::class, 'approve'])->name('reservations.approve');
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Adviser\ReservationController::class, 'reject'])->name('reservations.reject');
@@ -239,7 +241,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
 
     // Admin Service Routes (when admin is assigned as priest)
     Route::get('/services', [\App\Http\Controllers\Admin\ServiceController::class, 'index'])->name('services.index');
-    Route::get('/services/calendar', [\App\Http\Controllers\Admin\ServiceController::class, 'calendar'])->name('services.calendar');
+    // Unified calendar route replaces old services.calendar for admin
+    Route::get('/calendar', [\App\Http\Controllers\Admin\CalendarController::class, 'index'])->name('calendar.index');
     Route::get('/services/declined', [\App\Http\Controllers\Admin\ServiceController::class, 'declined'])->name('services.declined');
     
     // Service Management Routes (MUST be before parameterized routes)
@@ -285,6 +288,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     // Cancellations Index
     Route::get('/cancellations', [\App\Http\Controllers\Staff\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/reservations', [\App\Http\Controllers\Staff\ReservationController::class, 'index'])->name('reservations.index');
+    Route::get('/reservations/calendar', [\App\Http\Controllers\Staff\ReservationController::class, 'calendar'])->name('reservations.calendar');
     Route::get('/reservations/unnoticed', [\App\Http\Controllers\Staff\ReservationController::class, 'unnoticed'])->name('reservations.unnoticed');
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Staff\ReservationController::class, 'show'])->name('reservations.show');
     Route::post('/reservations/{reservation_id}/mark-contacted', [\App\Http\Controllers\Staff\ReservationController::class, 'markContacted'])->name('reservations.mark-contacted');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Adviser;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
+use App\Models\LiturgicalSchedule;
 use App\Services\ReservationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -133,6 +134,28 @@ class ReservationController extends Controller
         return Redirect::back()
             ->with('status', 'reservation-rejected')
             ->with('message', 'Reservation rejected. The requestor has been notified.');
+    }
+
+    /**
+     * Adviser calendar: upcoming reservations for adviser's organizations + staff-plotted schedules
+     */
+    public function calendar()
+    {
+        $adviserOrgs = Auth::user()->organizations->pluck('org_id');
+
+        $reservations = Reservation::with(['service:service_id,service_name', 'venue:venue_id,name'])
+            ->whereIn('org_id', $adviserOrgs)
+            ->whereDate('schedule_date', '>=', now()->toDateString())
+            ->whereNotIn('status', ['cancelled', 'rejected'])
+            ->orderBy('schedule_date')
+            ->get(['reservation_id','service_id','venue_id','custom_venue_name','schedule_date','status','participants_count','activity_name']);
+
+        // Show all upcoming staff-plotted schedules to adviser
+        $schedules = LiturgicalSchedule::with(['priest:id', 'venue:venue_id,name'])
+            ->upcoming()
+            ->get(['schedule_id','title','event_type','schedule_date','start_time','end_time','location','venue_id','priest_id','is_public']);
+
+        return view('adviser.reservations.calendar', compact('reservations', 'schedules'));
     }
 }
 

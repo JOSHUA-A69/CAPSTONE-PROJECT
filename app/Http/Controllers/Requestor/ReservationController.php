@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ReservationRequest;
 use App\Models\Organization;
 use App\Models\Reservation;
+use App\Models\LiturgicalSchedule;
 use App\Models\Service;
 use App\Models\Venue;
 use App\Models\User;
@@ -55,6 +56,27 @@ class ReservationController extends Controller
         $reservations = $query->orderByDesc('created_at')->paginate(15);
 
         return view('requestor.reservations.index', compact('reservations', 'statusFilter'));
+    }
+
+    /**
+     * Requestor calendar: upcoming personal reservations + public staff-plotted schedules
+     */
+    public function calendar()
+    {
+        $reservations = Reservation::with(['service:service_id,service_name', 'venue:venue_id,name'])
+            ->where('user_id', Auth::id())
+            ->whereDate('schedule_date', '>=', now()->toDateString())
+            ->whereNotIn('status', ['cancelled', 'rejected'])
+            ->orderBy('schedule_date')
+            ->get(['reservation_id','service_id','venue_id','custom_venue_name','schedule_date','status','participants_count','activity_name']);
+
+        // For requestors, show only public schedules
+        $schedules = LiturgicalSchedule::with(['priest:id', 'venue:venue_id,name'])
+            ->public()
+            ->upcoming()
+            ->get(['schedule_id','title','event_type','schedule_date','start_time','end_time','location','venue_id','priest_id','is_public']);
+
+        return view('requestor.reservations.calendar', compact('reservations', 'schedules'));
     }
 
     public function create()

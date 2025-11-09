@@ -16,6 +16,24 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
+                    @if(auth()->check())
+                        @php
+                            $calendarRoute = match(auth()->user()->role) {
+                                'priest' => 'priest.reservations.calendar',
+                                'adviser' => 'adviser.reservations.calendar',
+                                'requestor' => 'requestor.reservations.calendar',
+                                'staff' => 'staff.reservations.calendar',
+                                'admin' => 'admin.calendar.index',
+                                default => null,
+                            };
+                        @endphp
+                        @if($calendarRoute)
+                            <x-nav-link :href="route($calendarRoute)" :active="request()->routeIs(str_replace('.','.*',$calendarRoute))" role="menuitem">
+                                {{ __('View Calendar') }}
+                            </x-nav-link>
+                        @endif
+                    @endif
+
                     @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'requestor']))
                         <x-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')"
                                     role="menuitem"
@@ -306,6 +324,23 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+            @if(auth()->check())
+                @php
+                    $calendarRoute = match(auth()->user()->role) {
+                        'priest' => 'priest.reservations.calendar',
+                        'adviser' => 'adviser.reservations.calendar',
+                        'requestor' => 'requestor.reservations.calendar',
+                        'staff' => 'staff.reservations.calendar',
+                        'admin' => 'admin.calendar.index',
+                        default => null,
+                    };
+                @endphp
+                @if($calendarRoute)
+                    <x-responsive-nav-link :href="route($calendarRoute)" :active="request()->routeIs(str_replace('.','.*',$calendarRoute))">
+                        {{ __('View Calendar') }}
+                    </x-responsive-nav-link>
+                @endif
+            @endif
             @if(auth()->check() && auth()->user()->role === 'admin')
                 <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users*')">
                     {{ __('Manage Users') }}

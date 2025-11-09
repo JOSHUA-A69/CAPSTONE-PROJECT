@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reservation;
+use App\Models\LiturgicalSchedule;
 use App\Models\User;
 use App\Services\ReservationNotificationService;
 use Illuminate\Http\Request;
@@ -48,6 +49,24 @@ class ReservationController extends Controller
         $unnoticedCount = Reservation::unnoticedByAdviser()->count();
 
         return view('staff.reservations.index', compact('reservations', 'statuses', 'search', 'status', 'unnoticedCount'));
+    }
+
+    /**
+     * Staff calendar: upcoming reservations (excluding cancelled/rejected) + all upcoming staff-plotted schedules
+     */
+    public function calendar()
+    {
+        $reservations = Reservation::with(['service:service_id,service_name', 'venue:venue_id,name'])
+            ->whereDate('schedule_date', '>=', now()->toDateString())
+            ->whereNotIn('status', ['cancelled', 'rejected'])
+            ->orderBy('schedule_date')
+            ->get(['reservation_id','service_id','venue_id','custom_venue_name','schedule_date','status','participants_count','activity_name']);
+
+        $schedules = LiturgicalSchedule::with(['priest:id', 'venue:venue_id,name'])
+            ->upcoming()
+            ->get(['schedule_id','title','event_type','schedule_date','start_time','end_time','location','venue_id','priest_id','is_public']);
+
+        return view('staff.reservations.calendar', compact('reservations', 'schedules'));
     }
 
     public function show($reservation_id)
