@@ -11,7 +11,7 @@
     <div class="container mx-auto px-4 max-w-7xl">
         
         <div class="text-center mb-12">
-            <div class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900 dark:to-purple-900 backdrop-blur-sm rounded-full text-indigo-700 dark:text-indigo-300 mb-6 shadow-lg border-2 border-indigo-300 dark:border-indigo-600">
+            <div class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900 dark:to-green-900 backdrop-blur-sm rounded-full text-emerald-700 dark:text-emerald-300 mb-6 shadow-lg border-2 border-emerald-300 dark:border-emerald-600">
                 <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
@@ -22,9 +22,9 @@
         <!-- Filter Section -->
         <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             <!-- Service Category Filter -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-2 border-purple-200 dark:border-purple-700">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-2 border-emerald-200 dark:border-emerald-700">
                 <label for="massCategoryFilter" class="block text-sm font-black text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>
                     Service Category
@@ -37,9 +37,9 @@
             </div>
 
             <!-- Mass Type Filter (Specific) -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-2 border-indigo-200 dark:border-indigo-700">
+            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-2 border-green-200 dark:border-green-700">
                 <label for="massTypeFilter" class="block text-sm font-black text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                     </svg>
                     Select Service Type
@@ -70,10 +70,33 @@
             </div>
         </div>
 
-        <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-indigo-900 dark:to-purple-900 rounded-3xl p-6 lg:p-10 shadow-2xl border-2 border-indigo-100 dark:border-indigo-800">
-            <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
-                <div id="homepagecalendar"></div>
+        <!-- Calendar + Right Details Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 dark:from-gray-900 dark:via-emerald-900 dark:to-green-900 rounded-3xl p-6 lg:p-10 shadow-2xl border-2 border-emerald-100 dark:border-emerald-800">
+                <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
+                    <div id="homepagecalendar"></div>
+                </div>
             </div>
+            <aside id="homeEventPanel" class="bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/40 dark:to-green-900/40 rounded-3xl p-6 shadow-2xl border-2 border-emerald-200 dark:border-emerald-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-2xl font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-3">
+                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Event Details
+                    </h3>
+                    <button id="homeEventPanelClose" class="lg:hidden inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/60 dark:bg-gray-800/60 text-emerald-800 dark:text-emerald-200 hover:bg-white dark:hover:bg-gray-800" aria-label="Close details" title="Close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div id="homeEventDetailsBox" class="hidden mb-6"></div>
+                <div class="border-t border-emerald-200 dark:border-emerald-700 pt-4">
+                    <h4 class="text-sm font-black text-emerald-700 dark:text-emerald-300 mb-3">Upcoming Events</h4>
+                    <div id="homepageUpcomingList" class="space-y-3">
+                        <div class="text-gray-600 dark:text-gray-400 text-sm">Loading upcoming events…</div>
+                    </div>
+                </div>
+            </aside>
         </div>
 
         <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -96,8 +119,8 @@
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/40 dark:to-pink-900/40 rounded-2xl p-6 shadow-lg border-2 border-purple-200 dark:border-purple-700">
-                <h3 class="text-2xl font-black text-purple-800 dark:text-purple-300 mb-4 flex items-center gap-3">
+            <div class="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/40 dark:to-green-900/40 rounded-2xl p-6 shadow-lg border-2 border-emerald-200 dark:border-emerald-700">
+                <h3 class="text-2xl font-black text-emerald-800 dark:text-emerald-300 mb-4 flex items-center gap-3">
                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -105,16 +128,16 @@
                 </h3>
                 <div class="space-y-2 text-gray-700 dark:text-gray-300">
                     <p class="flex items-start gap-2 text-sm font-semibold">
-                        <span class="text-purple-600 dark:text-purple-400">•</span>
+                        <span class="text-emerald-600 dark:text-emerald-400">•</span>
                         <span>Click on any event to view more details</span>
                     </p>
                     <p class="flex items-start gap-2 text-sm font-semibold">
-                        <span class="text-purple-600 dark:text-purple-400">•</span>
+                        <span class="text-emerald-600 dark:text-emerald-400">•</span>
                         <span>Use filters above to find specific events</span>
                     </p>
                     <p class="flex items-start gap-2 text-sm font-semibold">
-                        <span class="text-purple-600 dark:text-purple-400">•</span>
-                        <span>Total Events: <span id="totalEvents" class="text-purple-700 dark:text-purple-300 font-black">{{ $allSchedules->count() }}</span></span>
+                        <span class="text-emerald-600 dark:text-emerald-400">•</span>
+                        <span>Total Events: <span id="totalEvents" class="text-emerald-700 dark:text-emerald-300 font-black">{{ $allSchedules->count() }}</span></span>
                     </p>
                 </div>
             </div>
@@ -123,9 +146,20 @@
     </div>
 </section>
 
+<!-- JSON schedule data for homepage calendar -->
+<script id="homeCalendarDataJson" type="application/json">{!! $allSchedules->toJson() !!}</script>
+
 <script>
 let homepageCalendar;
-let allSchedulesData = @json($allSchedules);
+// Blade -> JS data bridge (avoid mentioning the Blade json directive here to prevent parsing)
+var __homeJsonEl = document.getElementById('homeCalendarDataJson');
+var allSchedulesData = [];
+try {
+    allSchedulesData = JSON.parse((__homeJsonEl && __homeJsonEl.textContent) ? __homeJsonEl.textContent : '[]');
+} catch (e) {
+    console.error('Failed to parse home calendar JSON:', e);
+    allSchedulesData = [];
+}
 
 // Wait for both DOM and modules to be ready
 function initWhenReady() {
@@ -293,52 +327,14 @@ function initializeHomeCalendar(schedules) {
             meridiem: 'short'
         },
         eventClick: function(info) {
-            const event = info.event;
-            const props = event.extendedProps;
-            
-            // Get venue name from relationship, fallback to location field
-            const venueName = props.venue?.name;
-            const locationText = venueName || props.location;
-
-            // Determine presider: internal priest or external priest name
-            const internalPriestName = props.scheduleData?.priest?.name || props.priest?.name;
-            const externalPriestName = props.scheduleData?.external_priest_name;
-            const presiderName = internalPriestName || externalPriestName || '';
-            const isExternal = !internalPriestName && !!externalPriestName;
-            const priestInfo = presiderName
-                ? `<p class="flex items-center gap-2 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg><span><strong>Presider:</strong> ${presiderName}${isExternal ? ' <span class="ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-white/20 border border-white/30 align-middle">External</span>' : ''}</span></p>`
-                : '';
-            
-            const locationInfo = locationText 
-                ? `<p class="flex items-center gap-2 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span><strong>Location:</strong> ${locationText}</span></p>`
-                : '';
-
-            Swal.fire({
-                title: event.title,
-                html: `
-                    <div class="text-left space-y-3 mt-4">
-                        <p class="flex items-center gap-2 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span><strong>Time:</strong> ${event.start.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit', hour12: true})}</span></p>
-                        ${locationInfo}
-                        ${priestInfo}
-                        <p class="flex items-center gap-2 text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg><span><strong>Type:</strong> ${props.eventType.replace('_', ' ').toUpperCase()}</span></p>
-                    </div>
-                `,
-                icon: 'info',
-                confirmButtonText: 'Close',
-                confirmButtonColor: event.backgroundColor,
-                customClass: {
-                    popup: 'rounded-2xl',
-                    title: 'text-2xl font-bold',
-                    confirmButton: 'rounded-xl font-bold'
-                }
-            });
+            renderHomeEventDetails(info.event.extendedProps.scheduleData);
         },
         eventContent: function(arg) {
             let wrapper = document.createElement('div');
             wrapper.classList.add('fc-event-main-custom');
             
             // Apply event colors inline to ensure they display
-            const evBg = arg.event.backgroundColor || getEventColor(arg.event.extendedProps?.eventType);
+            const evBg = arg.event.backgroundColor || getEventColor((arg.event.extendedProps && arg.event.extendedProps.eventType) ? arg.event.extendedProps.eventType : undefined);
             const evBorder = arg.event.borderColor || evBg;
             
             wrapper.style.padding = '8px 10px';
@@ -392,8 +388,12 @@ function initializeHomeCalendar(schedules) {
             wrapper.appendChild(titleDiv);
             
             // Get venue name from relationship, fallback to location field
-            const venueName = arg.event.extendedProps.scheduleData?.venue?.name || arg.event.extendedProps.venue?.name;
-            const locationText = venueName || arg.event.extendedProps.scheduleData?.location || arg.event.extendedProps.location || '';
+            const venueName = (arg.event.extendedProps && arg.event.extendedProps.scheduleData && arg.event.extendedProps.scheduleData.venue && arg.event.extendedProps.scheduleData.venue.name)
+                || (arg.event.extendedProps && arg.event.extendedProps.venue && arg.event.extendedProps.venue.name);
+            const locationText = venueName
+                || (arg.event.extendedProps && arg.event.extendedProps.scheduleData ? arg.event.extendedProps.scheduleData.location : null)
+                || (arg.event.extendedProps ? arg.event.extendedProps.location : '')
+                || '';
             
             // Add location with icon if available
             if (locationText && locationText.trim() !== '') {
@@ -412,8 +412,9 @@ function initializeHomeCalendar(schedules) {
             
             // Add presider with icon if available (internal or external)
             {
-                const internalPriestName = arg.event.extendedProps.scheduleData?.priest?.name || arg.event.extendedProps.priest?.name;
-                const externalPriestName = arg.event.extendedProps.scheduleData?.external_priest_name;
+                const internalPriestName = (arg.event.extendedProps && arg.event.extendedProps.scheduleData && arg.event.extendedProps.scheduleData.priest && arg.event.extendedProps.scheduleData.priest.name)
+                    || (arg.event.extendedProps && arg.event.extendedProps.priest && arg.event.extendedProps.priest.name);
+                const externalPriestName = (arg.event.extendedProps && arg.event.extendedProps.scheduleData) ? arg.event.extendedProps.scheduleData.external_priest_name : undefined;
                 const presiderName = internalPriestName || externalPriestName;
                 const isExternal = !internalPriestName && !!externalPriestName;
                 if (presiderName) {
@@ -485,7 +486,7 @@ function initializeHomeCalendar(schedules) {
             tooltip.style.cssText = tooltipStyles;
             
             // Show ONLY Mass Type (mass_subtype) if available, otherwise show title
-            let displayText = event.extendedProps.scheduleData?.mass_subtype || event.title;
+            let displayText = (event.extendedProps && event.extendedProps.scheduleData ? event.extendedProps.scheduleData.mass_subtype : null) || event.title;
             
             // Format the text: remove underscores and capitalize each word
             displayText = displayText
@@ -518,6 +519,126 @@ function initializeHomeCalendar(schedules) {
     
     // Update total count
     document.getElementById('totalEvents').textContent = events.length;
+}
+
+// Render the Upcoming Events list (next 10 from today)
+function renderHomepageUpcomingList(schedules) {
+    const listEl = document.getElementById('homepageUpcomingList');
+    if (!listEl) return;
+
+    const today = new Date();
+    const todayCut = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    var items = [];
+    var i, s;
+    var arr = schedules || [];
+    for (i = 0; i < arr.length; i++) {
+        s = arr[i];
+        var dateStr = (s.schedule_date || '').toString().slice(0, 10);
+        var d = new Date(dateStr);
+        if (isNaN(d)) continue;
+        if (d < todayCut) continue;
+        var copy = {};
+        for (var k in s) { if (Object.prototype.hasOwnProperty.call(s, k)) { copy[k] = s[k]; } }
+        copy._dateObj = d;
+        items.push(copy);
+    }
+
+    items.sort(function(a, b) {
+        if (a._dateObj - b._dateObj !== 0) return a._dateObj - b._dateObj;
+        var at = String(a.start_time || '');
+        var bt = String(b.start_time || '');
+        if (at < bt) return -1;
+        if (at > bt) return 1;
+        return 0;
+    });
+
+    items = items.slice(0, 10);
+
+    if (items.length === 0) {
+        listEl.innerHTML = '<div class="text-gray-600 dark:text-gray-400 text-sm">No upcoming events.</div>';
+        return;
+    }
+
+    var htmlParts = [];
+    for (i = 0; i < items.length; i++) {
+        s = items[i];
+        var displayDate = s._dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        var timeStart = String(s.start_time || '').split(' ').pop().split('.')[0];
+        var venueName = (s.venue && s.venue.name) ? s.venue.name : '';
+        var locationText = venueName || (s.location || '');
+        var color = getEventColor(s.event_type);
+        htmlParts.push(
+            '<button type="button" data-schedule-id="' + s.schedule_id + '" class="w-full text-left p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex items-start gap-3">' +
+                '<span class="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-white font-bold" style="background:' + color + ';">' + displayDate.replace(/[^\d]/g,'').padStart(2,'0') + '</span>' +
+                '<span class="min-w-0">' +
+                    '<span class="block text-sm font-black text-emerald-900 dark:text-emerald-200">' + (s.title || '') + '</span>' +
+                    '<span class="block text-xs text-gray-600 dark:text-gray-400">' + timeStart + (locationText ? ' • ' + locationText : '') + '</span>' +
+                '</span>' +
+            '</button>'
+        );
+    }
+    listEl.innerHTML = htmlParts.join('');
+
+    var buttons = listEl.querySelectorAll('[data-schedule-id]');
+    for (i = 0; i < buttons.length; i++) {
+        buttons[i].addEventListener('click', function() {
+            var id = this.getAttribute('data-schedule-id');
+            var selected = (schedules || []).find(function(x){ return String(x.schedule_id) === String(id); });
+            if (selected) { renderHomeEventDetails(selected); }
+        });
+    }
+
+    // End of renderHomepageUpcomingList
+}
+
+// Render details into the right-side panel (no modal)
+function renderHomeEventDetails(schedule) {
+    const panel = document.getElementById('homeEventDetailsBox');
+    if (!panel) return;
+    const venueName = (schedule && schedule.venue) ? schedule.venue.name : undefined;
+    const locationText = venueName || schedule.location || '';
+    const internalPriestName = (schedule && schedule.priest) ? schedule.priest.name : undefined;
+    const externalPriestName = schedule ? schedule.external_priest_name : undefined;
+    const presiderName = internalPriestName || externalPriestName || '';
+    const isExternal = !internalPriestName && !!externalPriestName;
+    const color = getEventColor(schedule.event_type);
+
+    const timeStart = (schedule.start_time || '').split(' ').pop().split('.')[0];
+    const timeEnd = (schedule.end_time || '').split(' ').pop().split('.')[0];
+    const dateObj = new Date((schedule.schedule_date || '').toString().slice(0,10));
+    const dateLabel = isNaN(dateObj) ? schedule.schedule_date : dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    panel.innerHTML = `
+        <div class="rounded-2xl border-2" style="border-color:${color};">
+            <div class="p-4 bg-white/80 dark:bg-gray-800/70 rounded-t-2xl">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h4 class="text-xl font-extrabold text-emerald-800 dark:text-emerald-200">${schedule.title}</h4>
+                        <div class="mt-1 inline-flex items-center px-2 py-1 text-xs rounded-full text-white" style="background:${color};">
+                            ${String(schedule.event_type || '').replace(/_/g,' ').toUpperCase()}
+                        </div>
+                    </div>
+                    <button class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white" onclick="homepageCalendarSetDate('${schedule.schedule_date}')" title="View in calendar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 space-y-3 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-b-2xl">
+                <p class="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span><strong>Date:</strong> ${dateLabel}</span></p>
+                <p class="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span><strong>Time:</strong> ${timeStart}${timeEnd ? ' - ' + timeEnd : ''}</span></p>
+                ${locationText ? `<p class=\"flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200\"><svg class=\"w-4 h-4 text-emerald-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z\"></path><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 11a3 3 0 11-6 0 3 3 0 016 0z\"></path></svg><span><strong>Location:</strong> ${locationText}</span></p>` : ''}
+                ${presiderName ? `<p class=\"flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200\"><svg class=\"w-4 h-4 text-emerald-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\"></path></svg><span><strong>Presider:</strong> ${presiderName}${isExternal ? ' <span class=\"ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-200/60 text-emerald-900 align-middle\">External</span>' : ''}</span></p>` : ''}
+                ${schedule.description ? `<div class=\"text-sm text-gray-800 dark:text-gray-200\"><strong>Description:</strong> ${schedule.description}</div>` : ''}
+            </div>
+        </div>
+    `;
+    panel.classList.remove('hidden');
+    // On smaller screens, ensure the panel is visible
+    var panelWrap = document.getElementById('homeEventPanel');
+    if (panelWrap && panelWrap.scrollIntoView) {
+        panelWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function applyFilters() {
@@ -569,6 +690,8 @@ function applyFilters() {
     
     // Update total count
     document.getElementById('totalEvents').textContent = filteredSchedules.length;
+    // Update upcoming list under current filters
+    renderHomepageUpcomingList(filteredSchedules);
 }
 
 function getEventColor(eventType) {
@@ -586,6 +709,24 @@ function getEventColor(eventType) {
     };
     return colors[eventType] || colors['other'];
 }
+
+// Jump home calendar to a date (YYYY-MM-DD or Date)
+function homepageCalendarSetDate(dateStrOrObj) {
+    if (!window.homepageCalendar) return;
+    try {
+        window.homepageCalendar.gotoDate(dateStrOrObj);
+    } catch (e) {
+        const d = new Date(dateStrOrObj);
+        if (!isNaN(d)) {
+            window.homepageCalendar.gotoDate(d);
+        }
+    }
+}
+
+// Initial upcoming list render after modules init (executed once DOM + hidden JSON present)
+document.addEventListener('DOMContentLoaded', function() {
+    renderHomepageUpcomingList(allSchedulesData || []);
+});
 </script>
 
 <style>
@@ -611,7 +752,10 @@ function getEventColor(eventType) {
 #homepagecalendar .fc-toolbar-title {
     font-size: 1.75rem !important;
     font-weight: 900 !important;
-    color: #4F46E5;
+    background: linear-gradient(90deg, #059669, #10B981, #34D399);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
 }
 
 #homepagecalendar .fc-button {
@@ -624,14 +768,14 @@ function getEventColor(eventType) {
 }
 
 #homepagecalendar .fc-button-primary {
-    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
+    background: linear-gradient(135deg, #059669, #10B981) !important;
     border: none !important;
 }
 
 #homepagecalendar .fc-button-primary:hover {
-    background: linear-gradient(135deg, #4F46E5, #7C3AED) !important;
+    background: linear-gradient(135deg, #047857, #059669) !important;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
 }
 
 #homepagecalendar .fc-button-primary:disabled {
@@ -645,12 +789,12 @@ function getEventColor(eventType) {
 }
 
 #homepagecalendar .fc-col-header-cell {
-    background: linear-gradient(135deg, #EEF2FF, #E0E7FF) !important;
+    background: linear-gradient(135deg, #ECFDF5, #D1FAE5) !important;
     font-weight: 900 !important;
     text-transform: uppercase !important;
     font-size: 0.875rem !important;
     padding: 1rem 0.5rem !important;
-    color: #4F46E5 !important;
+    color: #065F46 !important;
 }
 
 #homepagecalendar .fc-daygrid-day {

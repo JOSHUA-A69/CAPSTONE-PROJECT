@@ -98,7 +98,7 @@
             </div>
 
             <!-- Legend + Upcoming -->
-            <div class="grid grid-cols-1 gap-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <!-- Legend -->
                 <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border-2 border-emerald-100 dark:border-emerald-800 hover:shadow-emerald-200 dark:hover:shadow-emerald-900 transition-all duration-300">
                     <div class="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 px-8 py-5 border-b-2 border-emerald-200 dark:border-emerald-700">
@@ -111,13 +111,28 @@
                     </div>
                     <div id="eventTypeLegend" class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                 </div>
+                <!-- Upcoming List -->
+                <div class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border-2 border-emerald-100 dark:border-emerald-800 hover:shadow-emerald-200 dark:hover:shadow-emerald-900 transition-all duration-300">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 px-8 py-5 border-b-2 border-blue-200 dark:border-blue-800">
+                        <h3 class="text-xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
+                            <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            Upcoming Events
+                        </h3>
+                    </div>
+                    <div id="upcomingList" class="p-6">
+                        <div class="text-gray-500 dark:text-gray-400 text-sm">Loading upcoming events…</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Event Details Modal -->
-    <div id="eventDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeEventModal()">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full" onclick="event.stopPropagation()">
+    <!-- Event Details Modal (Accessible) -->
+    <div id="eventDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" 
+         role="dialog" aria-modal="true" aria-labelledby="eventModalTitle" aria-describedby="eventModalDesc" onclick="closeEventModal()">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full outline-none" tabindex="-1" onclick="event.stopPropagation()">
             <div id="modalContent"></div>
         </div>
     </div>
@@ -184,17 +199,8 @@
             // Setup filter handlers
             setupFilterHandlers();
 
-            // attach click handlers and styles for upcoming event rows
-            document.querySelectorAll('.public-event-row').forEach(row => {
-                // set dynamic border color from data attribute to avoid inline Blade CSS parsing issues
-                const bc = row.getAttribute('data-border-color');
-                if (bc) row.style.borderLeftColor = bc;
-                row.addEventListener('click', () => {
-                    const id = row.getAttribute('data-schedule-id');
-                    if (!id) return;
-                    window.showPublicEventDetails(parseInt(id, 10));
-                });
-            });
+            // Initial upcoming list render
+            renderUpcomingList(allSchedules);
             // Next upcoming button: open modal for the earliest upcoming and navigate calendar if API exists
             const btnNext = document.getElementById('btnNextUpcoming');
             if (btnNext) {
@@ -317,6 +323,8 @@
             
             // Update legend
             updateLegend();
+            // Re-render upcoming list under current filters
+            renderUpcomingList(filteredSchedules);
         }
 
         function updateActiveFilters(serviceFilter, massSubtypeFilter) {
@@ -372,6 +380,56 @@
                 </div>
             `).join('');
         }
+        // Build and render upcoming list items (next 10 events)
+        function renderUpcomingList(schedules) {
+            const listEl = document.getElementById('upcomingList');
+            if (!listEl) return;
+            const today = new Date();
+            const todayCut = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            const rows = (schedules || [])
+                .map(s => ({
+                    ...s,
+                    _dateObj: new Date(normalizeDateStr(s.schedule_date))
+                }))
+                .filter(s => !isNaN(s._dateObj) && s._dateObj >= todayCut)
+                .sort((a,b) => a._dateObj - b._dateObj || String(a.start_time).localeCompare(String(b.start_time)))
+                .slice(0,10);
+            if (!rows.length) {
+                listEl.innerHTML = '<div class="text-gray-500 dark:text-gray-400 text-sm">No upcoming events.</div>';
+                return;
+            }
+            listEl.innerHTML = rows.map(r => {
+                const color = EVENT_TYPE_COLORS[r.event_type] || EVENT_TYPE_COLORS['other'];
+                const dateLabel = r._dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                const timeLabel = r.start_time + (r.end_time ? ' - ' + r.end_time : '');
+                const venue = r?.venue?.name || r.location || 'Location TBA';
+                const presider = r?.priest?.name || r?.external_priest_name || '';
+                const externalBadge = r?.priest?.name ? '' : (r?.external_priest_name ? '<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">External</span>' : '');
+                return `<button type="button" class="public-event-row w-full text-left mb-3 last:mb-0 p-4 rounded-xl border-2 bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-800 transition shadow-sm flex items-start gap-4 focus:outline-none focus:ring-2 focus:ring-indigo-400" style="border-left:6px solid ${color}" data-schedule-id="${r.schedule_id}" aria-label="View event ${r.title}">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center" style="background:${color};color:#fff;">
+                        <span class="font-extrabold text-xs leading-tight">${dateLabel.split(' ')[1]}<br>${dateLabel.split(' ')[2]}</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="text-gray-900 dark:text-white font-bold">${r.title}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">${dateLabel}</div>
+                        </div>
+                        <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">⏰ ${timeLabel}</div>
+                        <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">📍 ${venue}</div>
+                        ${presider ? `<div class="mt-1 text-sm text-gray-700 dark:text-gray-300">👤 Presider: ${presider}${externalBadge}</div>` : ''}
+                    </div>
+                </button>`;
+            }).join('');
+            listEl.querySelectorAll('.public-event-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const id = row.getAttribute('data-schedule-id');
+                    if (id) window.showPublicEventDetails(id);
+                });
+                row.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); row.click(); }
+                });
+            });
+        }
 
         // Function to show event details modal
         window.showPublicEventModal = function(schedule) {
@@ -387,79 +445,72 @@
             const presiderName = internalPriestName || externalPriestName || '';
             const isExternal = !internalPriestName && !!externalPriestName;
 
+            const shareUrl = window.location.origin + window.location.pathname + '#schedule-' + schedule.schedule_id;
             content.innerHTML = `
                 <div class="p-6" style="border-top: 4px solid ${color}">
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
-                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">${schedule.title}</h3>
+                            <h3 id="eventModalTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-2">${schedule.title}</h3>
                             <span class="inline-block px-3 py-1 rounded-full text-sm font-medium text-white" style="background-color: ${color}">
                                 ${typeLabel}
                             </span>
                         </div>
-                        <button onclick="closeEventModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-4">
+                        <button aria-label="Close" onclick="closeEventModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-4 focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-full p-1">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
                     </div>
-                    
-                    <div class="space-y-3 mb-6">
+                    <div id="eventModalDesc" class="space-y-3 mb-6">
                         <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                             <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
                             <span>${new Date(schedule.schedule_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
                         </div>
-                        
                         <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                             <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <span>${schedule.start_time}${schedule.end_time ? ' - ' + schedule.end_time : ''}</span>
                         </div>
-                        
                         ${presiderName ? `
-                            <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                                <span><strong>Presider:</strong> ${presiderName}${isExternal ? ' <span class="ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 align-middle">External</span>' : ''}</span>
-                            </div>
-                        ` : ''}
-                        
+                        <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span><strong>Presider:</strong> ${presiderName}${isExternal ? ' <span class=\"ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 align-middle\">External</span>' : ''}</span>
+                        </div>` : ''}
                         ${schedule.location ? `
-                            <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                                <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                </svg>
-                                <span>${schedule.location}</span>
-                            </div>
-                        ` : ''}
+                        <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            </svg>
+                            <span>${schedule.location}</span>
+                        </div>` : ''}
                     </div>
-                    
                     ${schedule.description ? `
-                        <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Description</h4>
-                            <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">${schedule.description}</p>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <button onclick="closeEventModal()" class="w-full px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors">
-                            Close
-                        </button>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Description</h4>
+                        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">${schedule.description}</p>
+                    </div>` : ''}
+                    <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-3">
+                        <button onclick="window.publicCalendarSetDate('${schedule.schedule_date}'); closeEventModal();" class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">View In Calendar</button>
+                        <button data-share-url="${shareUrl}" onclick="copyShareUrl(this)" class="flex-1 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400">Copy Share Link</button>
+                        <button onclick="closeEventModal()" class="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">Close</button>
                     </div>
-                </div>
-            `;
+                </div>`;
             
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+            trapFocus(modal);
         };
 
         window.closeEventModal = function() {
             const modal = document.getElementById('eventDetailsModal');
             modal.classList.add('hidden');
             document.body.style.overflow = 'auto';
+            releaseFocus();
         };
 
         window.showPublicEventDetails = function(scheduleId) {
@@ -468,6 +519,45 @@
             if (schedule) {
                 showPublicEventModal(schedule);
             }
+        };
+
+        // Accessibility & share helpers
+        let lastFocusedElement = null;
+        function trapFocus(modal) {
+            lastFocusedElement = document.activeElement;
+            const focusable = modal.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])');
+            if (focusable.length) focusable[0].focus();
+            function handleKey(e) {
+                if (e.key === 'Escape') { closeEventModal(); }
+                if (e.key === 'Tab') {
+                    const list = Array.from(focusable).filter(el => !el.disabled);
+                    if (!list.length) return;
+                    const idx = list.indexOf(document.activeElement);
+                    if (e.shiftKey && idx === 0) { e.preventDefault(); list[list.length - 1].focus(); }
+                    else if (!e.shiftKey && idx === list.length - 1) { e.preventDefault(); list[0].focus(); }
+                }
+            }
+            modal.addEventListener('keydown', handleKey);
+            modal._focusHandler = handleKey;
+        }
+        function releaseFocus() {
+            const modal = document.getElementById('eventDetailsModal');
+            if (modal && modal._focusHandler) {
+                modal.removeEventListener('keydown', modal._focusHandler);
+                delete modal._focusHandler;
+            }
+            if (lastFocusedElement) { lastFocusedElement.focus(); }
+        }
+        window.copyShareUrl = function(btn) {
+            const url = btn.getAttribute('data-share-url');
+            if (!url) return;
+            navigator.clipboard.writeText(url).then(() => {
+                btn.textContent = 'Link Copied!';
+                setTimeout(() => btn.textContent = 'Copy Share Link', 2500);
+            }).catch(() => {
+                btn.textContent = 'Copy Failed';
+                setTimeout(() => btn.textContent = 'Copy Share Link', 2500);
+            });
         };
     </script>
 
