@@ -57,6 +57,9 @@ class NotificationController extends Controller
 
                 $timeAgo = $notification->sent_at->diffForHumans();
 
+                // Sanitize message while allowing minimal formatting
+                $safeMessage = strip_tags((string) $notification->message, '<strong><b><em><i><br>');
+
                 // Determine notification icon color based on type
                 $iconColor = match($notification->type) {
                     'Cancellation Request' => 'bg-red-500',
@@ -81,7 +84,7 @@ class NotificationController extends Controller
                 // Content
                 $html .= '<div class="flex-1 min-w-0">';
                 $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">'
-                    . $notification->message
+                    . $safeMessage
                     . '</p>';
                 $html .= '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">' . $timeAgo . '</p>';
                 $html .= '</div>';

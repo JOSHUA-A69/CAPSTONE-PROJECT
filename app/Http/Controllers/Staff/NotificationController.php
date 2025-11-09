@@ -70,6 +70,9 @@ class NotificationController extends Controller
 
                 $timeAgo = $this->getTimeAgo($notification->sent_at ?? $notification->created_at);
 
+                // Sanitize message while allowing minimal formatting
+                $safeMessage = strip_tags((string) $notification->message, '<strong><b><em><i><br>');
+
                 $html .= '<a href="' . route('staff.notifications.index') . '" class="block px-6 py-4 transition-colors duration-150 ' . $bgClass . ' border-b border-gray-200 dark:border-gray-700">
                             <div class="flex items-start">
                                 <div class="flex-shrink-0 mt-1">
@@ -80,7 +83,7 @@ class NotificationController extends Controller
                                     </div>
                                 </div>
                                 <div class="ml-4 flex-1">
-                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">' . htmlspecialchars($notification->message) . '</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-100">' . $safeMessage . '</p>
                                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">' . $timeAgo . '</p>
                                 </div>
                             </div>

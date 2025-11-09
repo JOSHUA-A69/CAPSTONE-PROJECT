@@ -81,10 +81,12 @@ class NotificationController extends Controller
                 } else {
                     $initials = strtoupper(substr($priestName, 0, 2));
                 }
+                // Sanitize message allowing limited formatting
+                $safeMessage = strip_tags((string) $notification->message, '<strong><b><em><i><br>');
                 $html .= '<div class="' . $bgColor . ' px-6 py-4 flex items-center gap-4 border-b">';
                 $html .= '<div class="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">' . $initials . '</div>';
                 $html .= '<div class="flex-1 min-w-0">';
-                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">' . $notification->message . ' <span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500 dark:text-gray-400">' . $timeAgo . '</span></p>';
+                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">' . $safeMessage . ' <span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500 dark:text-gray-400">' . $timeAgo . '</span></p>';
                 $html .= '</div>';
                 $html .= '</div>';
             }

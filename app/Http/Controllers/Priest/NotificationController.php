@@ -91,10 +91,11 @@ class NotificationController extends Controller
                 $html .= '</div>';
                 $html .= '</div>';
 
-                // Content
+                // Content (sanitize while preserving limited formatting tags)
+                $safeMessage = strip_tags((string) $notification->message, '<strong><b><em><i><br>');
                 $html .= '<div class="flex-1 min-w-0">';
                 $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">'
-                    . $notification->message  // Render HTML (sanitized by service)
+                    . $safeMessage
                     . ' <span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500 dark:text-gray-400">'
                     . $timeAgo
                     . '</span></p>';

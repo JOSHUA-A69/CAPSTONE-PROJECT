@@ -36,8 +36,10 @@ class NotificationController extends Controller
             $html = '<div class="px-4 py-3 text-sm text-gray-500">No new notifications</div>';
         } else {
             foreach ($notifications as $notification) {
+                // Sanitize while allowing minimal emphasis tags
+                $safeMessage = strip_tags((string) $notification->message, '<strong><b><em><i><br>');
                 $html .= '<a href="' . route('requestor.notifications.show', $notification->notification_id) . '" class="block px-4 py-3 hover:bg-gray-50 border-b">';
-                $html .= '<div class="text-sm font-medium text-gray-900">' . strip_tags($notification->message) . '</div>';
+                $html .= '<div class="text-sm font-medium text-gray-900">' . $safeMessage . '</div>';
                 $html .= '<div class="text-xs text-gray-500 mt-1">' . $notification->sent_at->diffForHumans() . '</div>';
                 $html .= '</a>';
             }
