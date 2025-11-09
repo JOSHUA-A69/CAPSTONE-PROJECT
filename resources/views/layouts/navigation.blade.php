@@ -103,7 +103,9 @@
                         fetch(url)
                             .then(response => response.json())
                             .then(data => {
-                                document.getElementById('notification-list').innerHTML = data.html;
+                                const listEl = document.getElementById('notification-list');
+                                listEl.innerHTML = data.html;
+                                if(window.attachInlineMarkRead) { window.attachInlineMarkRead(listEl, '{{ auth()->user()->role }}'); }
                             })
                             .catch(() => {
                                 document.getElementById('notification-list').innerHTML = '<div class=\'px-6 py-4 text-red-600\'>Error loading notifications. Please refresh.</div>';
@@ -196,7 +198,29 @@
                             </div>
 
                             <!-- Footer with View All Link - Enhanced -->
-                            <div class="px-6 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 border-t border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                                <button type="button"
+                                        x-show="count > 0"
+                                        @click="
+                                            let urlBase = '';
+                                            @if(auth()->user()->role === 'priest') urlBase='{{ route('priest.notifications.mark-all-read') }}';
+                                            @elseif(auth()->user()->role === 'adviser') urlBase='{{ route('adviser.notifications.mark-all-read') }}';
+                                            @elseif(auth()->user()->role === 'requestor') urlBase='{{ route('requestor.notifications.mark-all-read') }}';
+                                            @elseif(auth()->user()->role === 'staff') urlBase='{{ route('admin.notifications.mark-all-read') }}';
+                                            @else urlBase='{{ route('admin.notifications.mark-all-read') }}'; @endif
+                                            fetch(urlBase, {method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content') }})
+                                              .then(r => r.json())
+                                              .then(data => {
+                                                  count = 0;
+                                                  // Optimistically clear unread background styles
+                                                  document.querySelectorAll('#notification-list .bg-blue-50').forEach(el => el.classList.remove('bg-blue-50'));
+                                                  window.dispatchEvent(new Event('notification-update'));
+                                              });
+                                        "
+                                        class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/60 disabled:opacity-40">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Mark all read
+                                </button>
                                 @if(auth()->user()->role === 'priest')
                                 <a href="{{ route('priest.notifications.index') }}" class="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
                                     <span>View All Notifications</span>
@@ -386,3 +410,50 @@
         </div>
     </div>
 </nav>
+
+<script>
+    window.attachInlineMarkRead = function(container, role){
+        try {
+            var wrappers = container.querySelectorAll('div.group.bg-blue-50, div.group.bg-blue-900/20');
+            wrappers.forEach(function(wrapper){
+                if(wrapper.dataset.markAugmented) return;
+                wrapper.dataset.markAugmented = '1';
+                var anchor = wrapper.querySelector('a[href]');
+                if(!anchor) return;
+                var href = anchor.getAttribute('href');
+                var m = href.match(/\/(\d+)(?:$|\?|#)/);
+                if(!m) return;
+                var id = m[1];
+                        var roleMarkBase = {};
+                        roleMarkBase.priest = "{{ url('/priest/notifications') }}";
+                        roleMarkBase.adviser = "{{ url('/adviser/notifications') }}";
+                        roleMarkBase.requestor = "{{ url('/requestor/notifications') }}";
+                        roleMarkBase.staff = "{{ url('/admin/notifications') }}";
+                        roleMarkBase.admin = "{{ url('/admin/notifications') }}";
+                var base = roleMarkBase[role] || roleMarkBase['admin'];
+                var markUrl = base + '/' + id + '/mark-read';
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'absolute top-4 right-12 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-green-600 dark:hover:text-green-400';
+                btn.setAttribute('aria-label','Mark notification as read');
+                btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
+                btn.addEventListener('click', function(e){
+                    e.preventDefault(); e.stopPropagation();
+                    var tokenEl = document.querySelector('meta[name=csrf-token]');
+                    var token = tokenEl ? tokenEl.getAttribute('content') : '';
+                    fetch(markUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': token }})
+                        .then(function(r){ return r.json(); })
+                        .then(function(){
+                            wrapper.classList.remove('bg-blue-50','dark:bg-blue-900/20');
+                            wrapper.classList.add('bg-white','dark:bg-gray-800');
+                            var evt = new Event('notification-update');
+                            window.dispatchEvent(evt);
+                            btn.remove();
+                        })
+                        .catch(function(){});
+                });
+                wrapper.appendChild(btn);
+            });
+        } catch(err) { /* no-op */ }
+    };
+</script>
