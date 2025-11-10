@@ -252,11 +252,16 @@
                     <!-- Assign Priest Form (hidden when admin is already assigned priest) -->
                     @php $authIsAssignedPriest = auth()->id() === optional($reservation->officiant)->id; @endphp
                     @if($reservation->priest_selection_type !== 'external'
-                        && in_array($reservation->status, ['pending_priest_assignment', 'adviser_approved'])
+                        && in_array($reservation->status, ['pending_priest_assignment', 'adviser_approved', 'priest_declined', 'pending_priest_reassignment'])
                         && !$authIsAssignedPriest)
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Assign Priest</h3>
+                            @if(in_array($reservation->status, ['priest_declined','pending_priest_reassignment']))
+                                <div class="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded text-sm text-purple-800 dark:text-purple-300">
+                                    This reservation's priest slot is open due to a prior decline. Please assign a new priest.
+                                </div>
+                            @endif
 
                             <form action="{{ route('admin.reservations.assign-priest', $reservation->reservation_id) }}" method="POST">
                                 @csrf

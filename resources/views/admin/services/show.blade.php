@@ -340,8 +340,9 @@
                             Cancel
                         </button>
                         <button type="submit"
-                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
-                            Decline & Reassign
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                onclick="return confirm('Decline this service and open it for reassignment? The priest slot will be cleared.');">
+                            Decline & Open Reassignment
                         </button>
                     </div>
                 </form>
@@ -371,6 +372,7 @@
         if($reservation->relationLoaded('declines')) {
             $myDecline = $reservation->declines->where('priest_id', auth()->id())->sortByDesc('declined_at')->first();
         }
+        $slotOpenForReassignment = is_null($reservation->officiant_id) && in_array($reservation->status, ['pending_priest_reassignment','priest_declined']);
     @endphp
     @if($myDecline)
         <div class="max-w-7xl mx-auto px-6 mt-6">
@@ -383,6 +385,42 @@
                 </h4>
                 <p class="text-sm text-red-700 dark:text-red-300"><span class="font-medium">Reason:</span> {{ $myDecline->reason ?: 'No reason provided' }}</p>
                 <p class="text-xs text-red-600 dark:text-red-400 mt-1">Declined on {{ $myDecline->declined_at?->format('M d, Y g:i A') }}</p>
+                @if($slotOpenForReassignment)
+                    <p class="text-xs text-red-600 dark:text-red-400 mt-1">Slot is open for reassignment.</p>
+                @endif
+            </div>
+        </div>
+    @endif
+
+    @if($slotOpenForReassignment)
+        <div class="max-w-7xl mx-auto px-6 mt-6" id="reassign-card">
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-6 shadow-sm">
+                <h4 class="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-gray-100">
+                    <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Reassign Priest
+                </h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Select a new priest for this reservation. They will be notified to confirm.</p>
+                <form method="POST" action="{{ route('admin.reservations.assign-priest', $reservation->reservation_id) }}">
+                    @csrf
+                    <div class="mb-4">
+                        <label for="officiant_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Available Priests</label>
+                        <select id="officiant_id" name="officiant_id" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            <option value="">-- Select Priest --</option>
+                            @php $availablePriestsForInline = \App\Models\User::where('role','priest')->where('id','!=', auth()->id())->orderBy('first_name')->get(); @endphp
+                            @foreach($availablePriestsForInline as $priest)
+                                <option value="{{ $priest->id }}">{{ $priest->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('officiant_id')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <button type="submit" class="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700" onclick="return confirm('Assign selected priest to this reservation?');">
+                        Assign Priest
+                    </button>
+                </form>
             </div>
         </div>
     @endif

@@ -189,17 +189,26 @@ class ServiceController extends Controller
                 'declined_at' => now(),
             ]);
 
-            // Update reservation to reflect decline; do not self-reassign
+            // Update reservation: open slot for reassignment
             $reservation->priest_confirmation = 'declined';
             $reservation->priest_confirmed_at = now();
-            $reservation->status = 'priest_declined'; // enables separate admin/staff reassignment flow
+            $reservation->officiant_id = null; // free the slot immediately
+            $reservation->status = 'pending_priest_reassignment';
             $reservation->save();
 
-            // Add history record
+            // History: decline
             $reservation->history()->create([
                 'performed_by' => Auth::id(),
                 'action' => 'priest_declined',
-                'remarks' => "Admin (assigned priest) declined. Reason: {$reason}",
+                'remarks' => "Admin (assigned priest) declined. Reason: {$reason}. Slot opened for reassignment.",
+                'performed_at' => now(),
+            ]);
+
+            // History: explicitly mark reassignment open (optional clarity)
+            $reservation->history()->create([
+                'performed_by' => Auth::id(),
+                'action' => 'priest_reassignment_opened',
+                'remarks' => 'Priest slot cleared; awaiting new priest assignment.',
                 'performed_at' => now(),
             ]);
 
@@ -208,11 +217,11 @@ class ServiceController extends Controller
 
             DB::commit();
 
-            $message = 'You have declined this assignment. Admin/Staff will reassign another priest.';
+            $message = 'You have declined this assignment. Slot is now open for reassignment.';
             if (request()->expectsJson()) {
                 return response()->json(['success' => true, 'message' => $message]);
             }
-            return redirect()->route('admin.services.index')
+            return redirect()->route('admin.services.show', $reservation->reservation_id)
                 ->with('success', $message);
 
         } catch (\Exception $e) {
