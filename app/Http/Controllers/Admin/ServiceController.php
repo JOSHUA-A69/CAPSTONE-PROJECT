@@ -112,12 +112,14 @@ class ServiceController extends Controller
 
         DB::beginTransaction();
         try {
-            // Update priest confirmation
+            // Update priest confirmation flags
             $reservation->priest_confirmation = 'confirmed';
             $reservation->priest_confirmed_at = now();
 
-            // Update status to confirmed (final step)
-            $reservation->status = 'confirmed';
+            // Status column in DB is still an ENUM (pending, approved, cancelled).
+            // Writing 'confirmed' caused truncation error. Use 'approved' to represent
+            // final approval after priest confirmation until status column is migrated to VARCHAR.
+            $reservation->status = 'approved';
             $reservation->save();
 
             // Add history record (use enum-safe action)
@@ -142,7 +144,7 @@ class ServiceController extends Controller
 
             DB::commit();
 
-            $message = 'Reservation approved successfully. The requestor has been notified.';
+            $message = 'Reservation approved and priest confirmed successfully. The requestor has been notified.';
             if (request()->expectsJson()) {
                 return response()->json(['success' => true, 'message' => $message]);
             }
@@ -157,10 +159,10 @@ class ServiceController extends Controller
     }
 
     /**
-     * Decline a service assignment and reassign to another priest
+     * Decline a service assignment (admin is the assigned priest)
      *
-     * When admin declines, NO self-notification is sent
-     * Only notify the newly assigned priest, requestor, and adviser
+     * Admin as priest cannot reassign. This marks the reservation as declined by priest
+     * and notifies admin/staff to reassign via the normal admin workflow.
      */
     public function decline(Request $request, $reservation_id)
     {
@@ -173,66 +175,39 @@ class ServiceController extends Controller
 
         $request->validate([
             'reason' => 'nullable|string|max:500',
-            'new_priest_id' => 'required|exists:users,id'
         ]);
 
-        $newPriestId = $request->input('new_priest_id');
         $reason = $request->input('reason', 'Schedule conflict');
-
-        // Verify new priest exists and has priest role
-        $newPriest = User::findOrFail($newPriestId);
-        if (!in_array($newPriest->role, ['priest', 'admin'])) {
-            return redirect()->back()->with('error', 'Selected user is not a priest.');
-        }
 
         DB::beginTransaction();
         try {
-            $oldPriestId = $reservation->officiant_id;
-
             // Record the decline
             $reservation->declines()->create([
                 'priest_id' => Auth::id(),
                 'reason' => $reason,
-                'declined_at' => now()
+                'declined_at' => now(),
             ]);
 
-            // Assign new priest
-            $reservation->officiant_id = $newPriestId;
-            $reservation->priest_confirmation = 'pending';
-            $reservation->priest_confirmed_at = null;
-            $reservation->status = 'pending_priest_confirmation';
+            // Update reservation to reflect decline; do not self-reassign
+            $reservation->priest_confirmation = 'declined';
+            $reservation->priest_confirmed_at = now();
+            $reservation->status = 'priest_declined'; // enables separate admin/staff reassignment flow
             $reservation->save();
 
-            // Add history (enum-safe action)
+            // Add history record
             $reservation->history()->create([
                 'performed_by' => Auth::id(),
-                'action' => 'priest_reassigned',
-                'remarks' => "Admin declined and assigned to {$newPriest->full_name}. Reason: {$reason}",
+                'action' => 'priest_declined',
+                'remarks' => "Admin (assigned priest) declined. Reason: {$reason}",
                 'performed_at' => now(),
             ]);
 
-            // Send notifications (NO self-notification to admin)
-            // Notify NEW priest about assignment
-            $this->notificationService->notifyPriestAssignment($reservation, $newPriest);
-
-            // Notify requestor about priest change
-            $this->notificationService->notifyRequestorPriestReassigned($reservation, Auth::user(), $newPriest);
-
-            // If there's an adviser, notify them
-            if ($reservation->organization && $reservation->organization->adviser) {
-                $this->notificationService->notifyAdviserPriestReassigned($reservation, Auth::user(), $newPriest);
-            }
+            // Notify admins/staff to reassign another priest
+            $this->notificationService->notifyPriestDeclined($reservation->fresh(['user','service','organization']), $reason, Auth::id());
 
             DB::commit();
 
-            Log::info('Admin declined and reassigned service', [
-                'admin_id' => Auth::id(),
-                'reservation_id' => $reservation_id,
-                'new_priest_id' => $newPriestId,
-                'reason' => $reason,
-            ]);
-
-            $message = 'Reservation rejected successfully. The requestor has been notified.';
+            $message = 'You have declined this assignment. Admin/Staff will reassign another priest.';
             if (request()->expectsJson()) {
                 return response()->json(['success' => true, 'message' => $message]);
             }
@@ -242,9 +217,10 @@ class ServiceController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Admin service decline failed: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to decline and reassign: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to decline: ' . $e->getMessage());
         }
-    }    /**
+    }
+    /**
      * Show calendar view of admin's services
      */
     public function calendar()

@@ -249,8 +249,11 @@
                     </div>
                     @endif
 
-                    <!-- Assign Priest Form (disabled when external priest is chosen) -->
-                    @if($reservation->priest_selection_type !== 'external' && in_array($reservation->status, ['pending_priest_assignment', 'adviser_approved']))
+                    <!-- Assign Priest Form (hidden when admin is already assigned priest) -->
+                    @php $authIsAssignedPriest = auth()->id() === optional($reservation->officiant)->id; @endphp
+                    @if($reservation->priest_selection_type !== 'external'
+                        && in_array($reservation->status, ['pending_priest_assignment', 'adviser_approved'])
+                        && !$authIsAssignedPriest)
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Assign Priest</h3>
@@ -288,6 +291,24 @@
                                     ⚠️ No priests available for this schedule. All priests may have conflicting reservations.
                                 </div>
                             @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Self Approve & Confirm block for admin who is already the assigned priest -->
+                    @if($authIsAssignedPriest && in_array($reservation->status, ['adviser_approved','pending']))
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Approve & Confirm (You Are Assigned)</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">You are already the assigned priest for this reservation. Approve and confirm your availability in one step.</p>
+                            <form action="{{ route('admin.reservations.assign-priest', $reservation->reservation_id) }}" method="POST">
+                                @csrf
+                                <button type="submit"
+                                        class="w-full px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 transition"
+                                        onclick="return confirm('Approve and confirm your availability for this reservation?');">
+                                    Approve & Confirm Availability
+                                </button>
+                            </form>
                         </div>
                     </div>
                     @endif

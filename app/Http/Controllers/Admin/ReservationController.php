@@ -105,12 +105,79 @@ class ReservationController extends Controller
      */
     public function assignPriest(Request $request, $reservation_id)
     {
+        $reservation = Reservation::findOrFail($reservation_id);
+        $authUser = Auth::user();
+
+        // Self-approval shortcut: if the authenticated admin is already the selected officiant
+        // and the reservation is awaiting admin approval, allow a single step approve + confirm.
+        if (!empty($reservation->officiant_id)
+            && $reservation->officiant_id === $authUser->id
+            && in_array($reservation->status, ['adviser_approved', 'pending'])
+        ) {
+            // Wrap in transaction for consistency
+            DB::beginTransaction();
+            try {
+                // Update reservation to approved & confirmed
+                $reservation->update([
+                    'status' => 'approved', // final workable status (ENUM-safe)
+                    'priest_confirmation' => 'confirmed',
+                    'priest_confirmed_at' => now(),
+                    'approved_by' => $authUser->id,
+                ]);
+
+                // History: admin_approved + priest_confirmed (two discrete entries for audit clarity)
+                $reservation->history()->create([
+                    'performed_by' => $authUser->id,
+                    'action' => 'admin_approved',
+                    'remarks' => 'Admin (also assigned priest) approved reservation. (Self-approval fast path)',
+                    'performed_at' => now(),
+                ]);
+                $reservation->history()->create([
+                    'performed_by' => $authUser->id,
+                    'action' => 'priest_confirmed',
+                    'remarks' => 'Admin (as priest) confirmed availability in self-approval step.',
+                    'performed_at' => now(),
+                ]);
+
+                // Refresh relations for notifications
+                $reservation->load(['user','service','organization.adviser']);
+
+                // Notify requestor & adviser and other admins/staff (exclude self)
+                try {
+                    $this->notificationService->notifyRequestorPriestConfirmed($reservation, $authUser);
+                } catch (\Throwable $e) { Log::warning('Self-approval notifyRequestor failed: '.$e->getMessage()); }
+                if ($reservation->organization && $reservation->organization->adviser) {
+                    try { $this->notificationService->notifyAdviserPriestConfirmed($reservation, $authUser); } catch (\Throwable $e) { Log::warning('Self-approval notifyAdviser failed: '.$e->getMessage()); }
+                }
+                try { $this->notificationService->notifyPriestConfirmed($reservation, $authUser->id); } catch (\Throwable $e) { Log::warning('Self-approval notifyPriestConfirmed failed: '.$e->getMessage()); }
+
+                DB::commit();
+
+                $message = 'Reservation approved and your availability confirmed.';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => true, 'message' => $message]);
+                }
+                return Redirect::route('admin.reservations.show', $reservation_id)
+                    ->with('status', 'priest-self-approved')
+                    ->with('message', $message);
+            } catch (\Throwable $e) {
+                DB::rollBack();
+                Log::error('Self-approval fast path failed: '.$e->getMessage());
+                return Redirect::back()->with('error', 'Failed to self-approve: '.$e->getMessage());
+            }
+        }
+
+        // If the authenticated admin is already the assigned priest but not in allowed status, block reassignment
+        if (!empty($reservation->officiant_id) && $reservation->officiant_id === $authUser->id) {
+            return Redirect::back()
+                ->withErrors(['officiant_id' => 'You are the assigned priest and cannot reassign another priest.']);
+        }
+
+        // Proceed with standard assignment flow (requires selecting a priest)
         $request->validate([
             'officiant_id' => 'required|exists:users,id',
             'remarks' => 'nullable|string|max:500',
         ]);
-
-        $reservation = Reservation::findOrFail($reservation_id);
 
             // Prevent assigning an internal priest when the requestor selected an external priest
             if ($reservation->priest_selection_type === 'external') {
