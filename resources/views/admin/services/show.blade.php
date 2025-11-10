@@ -47,12 +47,12 @@
                                     $statusColors = [
                                         'pending_priest_confirmation' => ['bg' => 'bg-yellow-100 dark:bg-yellow-900/50', 'text' => 'text-yellow-800 dark:text-yellow-200', 'label' => 'Awaiting Your Confirmation'],
                                         'admin_approved' => ['bg' => 'bg-yellow-100 dark:bg-yellow-900/50', 'text' => 'text-yellow-800 dark:text-yellow-200', 'label' => 'Awaiting Your Confirmation'],
-                                        'confirmed' => ['bg' => 'bg-green-100 dark:bg-green-900/50', 'text' => 'text-green-800 dark:text-green-200', 'label' => 'Confirmed'],
-                                        'pending_priest_reassignment' => ['bg' => 'bg-red-100 dark:bg-red-900/50', 'text' => 'text-red-800 dark:text-red-200', 'label' => 'Declined'],
+                                        'approved' => ['bg' => 'bg-green-100 dark:bg-green-900/50', 'text' => 'text-green-800 dark:text-green-200', 'label' => 'Approved'],
+                                        'priest_declined' => ['bg' => 'bg-red-100 dark:bg-red-900/50', 'text' => 'text-red-800 dark:text-red-200', 'label' => 'Declined'],
                                         'completed' => ['bg' => 'bg-gray-100 dark:bg-gray-900/50', 'text' => 'text-gray-800 dark:text-gray-200', 'label' => 'Completed'],
                                         'cancelled' => ['bg' => 'bg-red-100 dark:bg-red-900/50', 'text' => 'text-red-800 dark:text-red-200', 'label' => 'Cancelled'],
                                     ];
-                                    $statusConfig = $statusColors[$reservation->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => ucfirst($reservation->status)];
+                                    $statusConfig = $statusColors[$reservation->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => ucfirst(str_replace('_', ' ', $reservation->status))];
                                 @endphp
 
                                 <span class="px-3 py-1 text-xs font-semibold rounded-full {{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}">
@@ -232,7 +232,7 @@
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
-                                Decline & Reassign
+                                Decline Service
                             </button>
                         </div>
                     </div>
@@ -298,9 +298,9 @@
                                                     by {{ $event->performedBy->full_name }}
                                                 </p>
                                             @endif
-                                            @if($event->details)
+                                            @if($event->remarks)
                                                 <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                                    {{ $event->details }}
+                                                    {{ $event->remarks }}
                                                 </p>
                                             @endif
                                         </div>
@@ -319,30 +319,11 @@
         <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
             <div class="p-6">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                    Decline Service & Assign Another Priest
+                    Decline Service
                 </h3>
 
                 <form method="POST" action="{{ route('admin.services.decline', $reservation->reservation_id) }}">
                     @csrf
-
-                    <div class="mb-4">
-                        <label for="new_priest_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Select New Priest <span class="text-red-600">*</span>
-                        </label>
-                        <select name="new_priest_id" id="new_priest_id" required
-                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">-- Select a Priest --</option>
-                            @php
-                                $priests = \App\Models\User::where('role', 'priest')
-                                    ->where('id', '!=', auth()->id())
-                                    ->orderBy('first_name')
-                                    ->get();
-                            @endphp
-                            @foreach($priests as $priest)
-                                <option value="{{ $priest->id }}">{{ $priest->full_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
 
                     <div class="mb-4">
                         <label for="reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -384,4 +365,25 @@
             }
         });
     </script>
+    @php
+        // Prepare decline info for this priest if reservation was declined
+        $myDecline = null;
+        if($reservation->relationLoaded('declines')) {
+            $myDecline = $reservation->declines->where('priest_id', auth()->id())->sortByDesc('declined_at')->first();
+        }
+    @endphp
+    @if($myDecline)
+        <div class="max-w-7xl mx-auto px-6 mt-6">
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-4">
+                <h4 class="text-sm font-semibold text-red-800 dark:text-red-200 flex items-center mb-2">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    You Declined This Service
+                </h4>
+                <p class="text-sm text-red-700 dark:text-red-300"><span class="font-medium">Reason:</span> {{ $myDecline->reason ?: 'No reason provided' }}</p>
+                <p class="text-xs text-red-600 dark:text-red-400 mt-1">Declined on {{ $myDecline->declined_at?->format('M d, Y g:i A') }}</p>
+            </div>
+        </div>
+    @endif
 </x-app-layout>

@@ -77,7 +77,8 @@ class ServiceController extends Controller
             'service',
             'venue',
             'organization.adviser',
-            'history.performedBy'
+            'history.performedBy',
+            'declines'
         ])
             ->where(function ($query) use ($adminId, $reservation_id) {
                 $query->where('officiant_id', $adminId)
@@ -248,7 +249,7 @@ class ServiceController extends Controller
      */
     public function declined()
     {
-        $reservations = Reservation::with(['user', 'service', 'venue', 'organization'])
+        $reservations = Reservation::with(['user', 'service', 'venue', 'organization', 'declines'])
             ->whereHas('declines', function ($query) {
                 $query->where('priest_id', Auth::id());
             })

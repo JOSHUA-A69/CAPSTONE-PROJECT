@@ -50,6 +50,20 @@
                                                 <span class="inline-flex items-center px-3 py-1.5 text-xs font-bold rounded-full bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200 shadow-sm">
                                                     Declined
                                                 </span>
+                                                @php
+                                                    $myLatestDecline = optional($reservation->declines
+                                                        ->where('priest_id', auth()->id())
+                                                        ->sortByDesc('declined_at')
+                                                        ->first());
+                                                @endphp
+                                                @if($myLatestDecline && $myLatestDecline->reason)
+                                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        {{ \Illuminate\Support\Str::limit($myLatestDecline->reason, 60) }}
+                                                    </span>
+                                                @endif
                                                 @if($reservation->organization)
                                                     <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">
                                                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,6 +97,20 @@
                                                 <div class="text-xs text-gray-500">{{ date('g:i A', strtotime($reservation->schedule_time)) }}</div>
                                             </div>
                                         </div>
+
+                                        @if($myLatestDecline)
+                                        <div class="flex items-center text-gray-700 dark:text-gray-300">
+                                            <div class="flex-shrink-0 w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mr-3">
+                                                <svg class="w-4 h-4 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="font-medium">{{ $myLatestDecline->reason ?: 'No reason provided' }}</div>
+                                                <div class="text-xs text-gray-500">Declined on {{ $myLatestDecline->declined_at?->format('M d, Y g:i A') }}</div>
+                                            </div>
+                                        </div>
+                                        @endif
 
                                         <div class="flex items-center text-gray-700 dark:text-gray-300">
                                             <div class="flex-shrink-0 w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mr-3">
