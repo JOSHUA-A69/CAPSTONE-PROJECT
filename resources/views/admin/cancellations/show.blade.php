@@ -111,7 +111,7 @@
                         <div class="flex items-start border-b dark:border-gray-700 pb-4">
                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Service Type:</span>
                             <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
-                                {{ $cancellation->reservation->service_type }}
+                                {{ $cancellation->reservation->activity_name ?? optional($cancellation->reservation->service)->service_name ?? 'N/A' }}
                             </span>
                         </div>
 
@@ -119,8 +119,7 @@
                         <div class="flex items-start border-b dark:border-gray-700 pb-4">
                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Schedule:</span>
                             <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
-                                {{ \Carbon\Carbon::parse($cancellation->reservation->schedule_date)->format('F d, Y') }}
-                                at {{ \Carbon\Carbon::parse($cancellation->reservation->schedule_time)->format('h:i A') }}
+                                {{ optional($cancellation->reservation->schedule_date)->format('F d, Y h:i A') ?? 'Not scheduled' }}
                             </span>
                         </div>
 
@@ -128,7 +127,15 @@
                         <div class="flex items-start border-b dark:border-gray-700 pb-4">
                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Organization:</span>
                             <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
-                                {{ $cancellation->reservation->organization->name ?? 'N/A' }}
+                                {{ optional($cancellation->reservation->organization)->org_name ?? 'N/A' }}
+                            </span>
+                        </div>
+
+                        <!-- Venue -->
+                        <div class="flex items-start border-b dark:border-gray-700 pb-4">
+                            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Venue:</span>
+                            <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
+                                {{ $cancellation->reservation->custom_venue_name ?? optional($cancellation->reservation->venue)->name ?? 'Not specified' }}
                             </span>
                         </div>
 

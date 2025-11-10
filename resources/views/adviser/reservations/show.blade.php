@@ -80,7 +80,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Venue</p>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->venue->venue_name ?? $reservation->custom_venue_name ?? 'Not specified' }}</p>
+                        <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->custom_venue_name ?? optional($reservation->venue)->name ?? 'Not specified' }}</p>
                     </div>
                     @if($reservation->custom_venue_name)
                     <div>

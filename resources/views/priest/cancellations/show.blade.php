@@ -111,7 +111,7 @@
                         <div class="flex items-start border-b dark:border-gray-700 pb-4">
                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Service Type:</span>
                             <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
-                                {{ $cancellation->reservation->service_type }}
+                                {{ $cancellation->reservation->activity_name ?? optional($cancellation->reservation->service)->service_name ?? 'N/A' }}
                             </span>
                         </div>
 
@@ -119,8 +119,7 @@
                         <div class="flex items-start border-b dark:border-gray-700 pb-4">
                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Schedule:</span>
                             <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
-                                {{ \Carbon\Carbon::parse($cancellation->reservation->schedule_date)->format('F d, Y') }}
-                                at {{ \Carbon\Carbon::parse($cancellation->reservation->schedule_time)->format('h:i A') }}
+                                {{ optional($cancellation->reservation->schedule_date)->format('F d, Y h:i A') ?? 'Not scheduled' }}
                             </span>
                         </div>
 
@@ -128,7 +127,15 @@
                         <div class="flex items-start border-b dark:border-gray-700 pb-4">
                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Organization:</span>
                             <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
-                                {{ $cancellation->reservation->organization->name ?? 'N/A' }}
+                                {{ optional($cancellation->reservation->organization)->org_name ?? 'N/A' }}
+                            </span>
+                        </div>
+
+                        <!-- Venue -->
+                        <div class="flex items-start border-b dark:border-gray-700 pb-4">
+                            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Venue:</span>
+                            <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
+                                {{ $cancellation->reservation->custom_venue_name ?? optional($cancellation->reservation->venue)->name ?? 'Not specified' }}
                             </span>
                         </div>
 
@@ -235,7 +242,7 @@
             </div>
 
             <!-- Actions -->
-            @if(!$cancellation->isPriestConfirmed())
+            @if($cancellation->needsPriestConfirmation())
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <form action="{{ route('priest.cancellations.confirm', $cancellation->cancellation_id) }}" method="POST">
@@ -256,7 +263,7 @@
                     </form>
                 </div>
             </div>
-            @else
+            @elseif($cancellation->isPriestConfirmed())
             <div class="bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 p-4 rounded-r-lg">
                 <div class="flex items-center">
                     <svg class="w-6 h-6 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
@@ -265,7 +272,7 @@
                     <div>
                         <h3 class="text-sm font-medium text-green-800 dark:text-green-300">Already Confirmed</h3>
                         <p class="text-sm text-green-700 dark:text-green-400 mt-1">
-                            You have already confirmed this cancellation request on {{ $cancellation->priest_confirmed_at->format('M d, Y h:i A') }}.
+                            You confirmed this cancellation on {{ $cancellation->priest_confirmed_at->format('M d, Y h:i A') }}.
                         </p>
                     </div>
                 </div>
