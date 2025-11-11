@@ -158,6 +158,40 @@ class ReservationController extends Controller
             'status' => 'approved', // Final approval status
         ]);
 
+        // Ensure reservation_priest pivot is updated for auditing
+        try {
+            $exists = DB::table('reservation_priest')
+                ->where('reservation_id', $reservation->reservation_id)
+                ->where('priest_id', Auth::id())
+                ->exists();
+
+            if ($exists) {
+                DB::table('reservation_priest')
+                    ->where('reservation_id', $reservation->reservation_id)
+                    ->where('priest_id', Auth::id())
+                    ->update([
+                        'confirmation_status' => 'confirmed',
+                        'responded_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                // Create pivot row if it doesn't exist (e.g., admin assignment flow)
+                DB::table('reservation_priest')->insert([
+                    'reservation_id' => $reservation->reservation_id,
+                    'priest_id' => Auth::id(),
+                    'confirmation_status' => 'confirmed',
+                    'notified' => true,
+                    'notified_at' => now(),
+                    'responded_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Don't block user flow if pivot update fails; log for diagnostics
+            \Log::warning('Failed to update reservation_priest pivot on confirm: ' . $e->getMessage());
+        }
+
         // Create history
         $remarks = $request->input('remarks', 'Priest confirmed availability');
         $reservation->history()->create([
@@ -221,6 +255,40 @@ class ReservationController extends Controller
             'officiant_id' => null,
         ];
 
+        // Update reservation_priest pivot for the declining priest
+        try {
+            $exists = DB::table('reservation_priest')
+                ->where('reservation_id', $reservation->reservation_id)
+                ->where('priest_id', $priestId)
+                ->exists();
+
+            if ($exists) {
+                DB::table('reservation_priest')
+                    ->where('reservation_id', $reservation->reservation_id)
+                    ->where('priest_id', $priestId)
+                    ->update([
+                        'confirmation_status' => 'declined',
+                        'decline_reason' => $reason,
+                        'responded_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                DB::table('reservation_priest')->insert([
+                    'reservation_id' => $reservation->reservation_id,
+                    'priest_id' => $priestId,
+                    'confirmation_status' => 'declined',
+                    'decline_reason' => $reason,
+                    'notified' => true,
+                    'notified_at' => now(),
+                    'responded_at' => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to update reservation_priest pivot on decline: ' . $e->getMessage());
+        }
+
         // Create history
         $historyAction = $isCancellation ? 'priest_cancelled_confirmation' : 'priest_declined';
         $historyRemarks = $isCancellation
@@ -272,6 +340,42 @@ class ReservationController extends Controller
                 'remarks' => 'Reassigned by priest to: ' . ($replacement->first_name . ' ' . $replacement->last_name),
                 'performed_at' => now(),
             ]);
+
+            // Ensure pivot row exists/updated for the replacement priest
+            try {
+                $existsReplacement = DB::table('reservation_priest')
+                    ->where('reservation_id', $reservation->reservation_id)
+                    ->where('priest_id', $replacement->id)
+                    ->exists();
+
+                if ($existsReplacement) {
+                    DB::table('reservation_priest')
+                        ->where('reservation_id', $reservation->reservation_id)
+                        ->where('priest_id', $replacement->id)
+                        ->update([
+                            'confirmation_status' => 'pending',
+                            'decline_reason' => null,
+                            'notified' => true,
+                            'notified_at' => now(),
+                            'responded_at' => null,
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    DB::table('reservation_priest')->insert([
+                        'reservation_id' => $reservation->reservation_id,
+                        'priest_id' => $replacement->id,
+                        'confirmation_status' => 'pending',
+                        'decline_reason' => null,
+                        'notified' => true,
+                        'notified_at' => now(),
+                        'responded_at' => null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning('Failed to upsert reservation_priest pivot for replacement: ' . $e->getMessage());
+            }
         }
 
         // Persist updates

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use App\Support\Notifications as NotificationHelper;
 
 /**
@@ -448,6 +449,40 @@ class ReservationNotificationService
      */
     public function notifyPriestAssigned(Reservation $reservation): void
     {
+        // Ensure reservation_priest pivot row exists/updated for the assigned priest
+        try {
+            if ($reservation->officiant_id) {
+                $exists = DB::table('reservation_priest')
+                    ->where('reservation_id', $reservation->reservation_id)
+                    ->where('priest_id', $reservation->officiant_id)
+                    ->exists();
+
+                if ($exists) {
+                    DB::table('reservation_priest')
+                        ->where('reservation_id', $reservation->reservation_id)
+                        ->where('priest_id', $reservation->officiant_id)
+                        ->update([
+                            'confirmation_status' => 'pending',
+                            'notified' => true,
+                            'notified_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                } else {
+                    DB::table('reservation_priest')->insert([
+                        'reservation_id' => $reservation->reservation_id,
+                        'priest_id' => $reservation->officiant_id,
+                        'confirmation_status' => 'pending',
+                        'notified' => true,
+                        'notified_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to upsert reservation_priest pivot on notifyPriestAssigned: ' . $e->getMessage());
+        }
+
         // Create in-app notification for priest
         if ($reservation->officiant) {
             try {
