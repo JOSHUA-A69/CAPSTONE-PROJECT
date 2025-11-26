@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\LiturgicalSchedule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CalendarController extends Controller
 {
@@ -21,16 +22,58 @@ class CalendarController extends Controller
     public function index()
     {
         // All upcoming reservations across the system except cancelled/rejected
-        $reservations = Reservation::with(['service:service_id,service_name', 'venue:venue_id,name'])
+        $reservations = Reservation::with([
+                'service:service_id,service_name,service_category',
+                'venue:venue_id,name',
+                'user:id,first_name,middle_name,last_name',
+                'organization:org_id,org_name',
+                'officiant:id,first_name,middle_name,last_name'
+            ])
             ->whereDate('schedule_date', '>=', now()->toDateString())
             ->whereNotIn('status', ['cancelled', 'rejected'])
             ->orderBy('schedule_date')
-            ->get(['reservation_id','service_id','venue_id','custom_venue_name','schedule_date','status','participants_count','activity_name','officiant_id']);
+            ->get([
+                'reservation_id',
+                'service_id',
+                'venue_id',
+                'custom_venue_name',
+                'schedule_date',
+                DB::raw('TIME(schedule_date) as schedule_time'),
+                'status',
+                'participants_count',
+                'activity_name',
+                'purpose',
+                'theme',
+                'commentator',
+                'readers',
+                'psalmist',
+                'prayer_leader',
+                'details',
+                'officiant_id',
+                'user_id',
+                'org_id'
+            ]);
 
         // All upcoming staff-plotted schedules
-        $schedules = LiturgicalSchedule::with(['priest:id', 'venue:venue_id,name'])
+        $schedules = LiturgicalSchedule::with([
+                'priest:id,first_name,middle_name,last_name',
+                'venue:venue_id,name'
+            ])
             ->upcoming()
-            ->get(['schedule_id','title','event_type','schedule_date','start_time','end_time','location','venue_id','priest_id','is_public']);
+            ->get([
+                'schedule_id',
+                'title',
+                'event_type',
+                'mass_subtype',
+                'schedule_date',
+                'start_time',
+                'end_time',
+                'location',
+                'venue_id',
+                'priest_id',
+                'is_public',
+                'description'
+            ]);
 
         $adminId = Auth::id();
 

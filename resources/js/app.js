@@ -14,6 +14,12 @@ import './form-animations';
 // Import alert animations
 import './alert-animations';
 
+// Import SweetAlert globally
+import Swal from 'sweetalert2';
+
+// Expose SweetAlert for Blade inline scripts
+window.Swal = Swal;
+
 window.Alpine = Alpine;
 
 Alpine.start();

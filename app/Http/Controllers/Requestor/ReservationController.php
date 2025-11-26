@@ -15,6 +15,7 @@ use App\Services\ReservationNotificationService;
 use App\Services\CancellationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
 use App\Support\Notifications as NotificationHelper;
@@ -63,18 +64,56 @@ class ReservationController extends Controller
      */
     public function calendar()
     {
-        $reservations = Reservation::with(['service:service_id,service_name', 'venue:venue_id,name'])
+        $reservations = Reservation::with([
+                'service:service_id,service_name,service_category',
+                'venue:venue_id,name',
+            'officiant:id,first_name,middle_name,last_name'
+            ])
             ->where('user_id', Auth::id())
             ->whereDate('schedule_date', '>=', now()->toDateString())
             ->whereNotIn('status', ['cancelled', 'rejected'])
             ->orderBy('schedule_date')
-            ->get(['reservation_id','service_id','venue_id','custom_venue_name','schedule_date','status','participants_count','activity_name']);
+            ->get([
+                'reservation_id',
+                'service_id',
+                'venue_id',
+                'custom_venue_name',
+                'schedule_date',
+                DB::raw('TIME(schedule_date) as schedule_time'),
+                'status',
+                'participants_count',
+                'activity_name',
+                'purpose',
+                'theme',
+                'commentator',
+                'readers',
+                'psalmist',
+                'prayer_leader',
+                'details',
+                'officiant_id'
+            ]);
 
         // For requestors, show only public schedules
-        $schedules = LiturgicalSchedule::with(['priest:id', 'venue:venue_id,name'])
+        $schedules = LiturgicalSchedule::with([
+            'priest:id,first_name,middle_name,last_name',
+                'venue:venue_id,name'
+            ])
             ->public()
             ->upcoming()
-            ->get(['schedule_id','title','event_type','schedule_date','start_time','end_time','location','venue_id','priest_id','is_public']);
+            ->get([
+                'schedule_id',
+                'title',
+                'event_type',
+                'mass_subtype',
+                'schedule_date',
+                'start_time',
+                'end_time',
+                'location',
+                'venue_id',
+                'priest_id',
+                'is_public',
+                'description'
+            ]);
 
         return view('requestor.reservations.calendar', compact('reservations', 'schedules'));
     }
@@ -97,7 +136,7 @@ class ReservationController extends Controller
     public function store(ReservationRequest $request)
     {
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
             
             $data = $request->validated();
             $data['user_id'] = Auth::id();
@@ -194,7 +233,7 @@ class ReservationController extends Controller
                 Log::error('Failed to send submission notifications: ' . $e->getMessage());
             }
 
-            \DB::commit();
+            DB::commit();
 
             // Set success message based on selection type
             $message = 'Reservation submitted successfully. ';
@@ -213,7 +252,7 @@ class ReservationController extends Controller
                 ->with('message', $message);
                 
         } catch (\Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
             Log::error('Reservation creation failed: ' . $e->getMessage());
             return back()->withInput()->with('error', 'Failed to create reservation. Please try again.');
         }

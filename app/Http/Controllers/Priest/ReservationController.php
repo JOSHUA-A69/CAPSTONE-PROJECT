@@ -525,7 +525,13 @@ class ReservationController extends Controller
     public function calendar()
     {
         // Upcoming services for this priest, including approved and awaiting confirmation assignments
-        $reservations = Reservation::with(['service', 'venue', 'organization'])
+        $reservations = Reservation::with([
+                'service:service_id,service_name,service_category',
+                'venue:venue_id,name',
+                'organization:org_id,org_name',
+                'user:id,first_name,middle_name,last_name',
+                'officiant:id,first_name,middle_name,last_name'
+            ])
             ->forPriest(Auth::id())
             ->where(function ($q) {
                 $q->whereIn('status', ['approved', 'admin_approved', 'pending', 'pending_priest_confirmation'])
@@ -538,10 +544,26 @@ class ReservationController extends Controller
 
         // Staff-plotted liturgical schedules assigned to this priest
         try {
-            $schedules = \App\Models\LiturgicalSchedule::with(['venue'])
+            $schedules = \App\Models\LiturgicalSchedule::with([
+                    'priest:id,first_name,middle_name,last_name',
+                    'venue:venue_id,name'
+                ])
                 ->where('priest_id', Auth::id())
                 ->upcoming()
-                ->get();
+                ->get([
+                    'schedule_id',
+                    'title',
+                    'event_type',
+                    'mass_subtype',
+                    'schedule_date',
+                    'start_time',
+                    'end_time',
+                    'location',
+                    'venue_id',
+                    'priest_id',
+                    'is_public',
+                    'description'
+                ]);
         } catch (\Throwable $e) {
             $schedules = collect();
         }

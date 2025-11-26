@@ -9,6 +9,7 @@ use App\Services\ReservationNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
 
 class ReservationController extends Controller
 {
@@ -143,17 +144,55 @@ class ReservationController extends Controller
     {
         $adviserOrgs = Auth::user()->organizations->pluck('org_id');
 
-        $reservations = Reservation::with(['service:service_id,service_name', 'venue:venue_id,name'])
+            $reservations = Reservation::with([
+                    'service:service_id,service_name,service_category',
+                    'venue:venue_id,name',
+                    'officiant:id,first_name,middle_name,last_name'
+                ])
             ->whereIn('org_id', $adviserOrgs)
             ->whereDate('schedule_date', '>=', now()->toDateString())
             ->whereNotIn('status', ['cancelled', 'rejected'])
             ->orderBy('schedule_date')
-            ->get(['reservation_id','service_id','venue_id','custom_venue_name','schedule_date','status','participants_count','activity_name']);
+                ->get([
+                    'reservation_id',
+                    'service_id',
+                    'venue_id',
+                    'custom_venue_name',
+                    'schedule_date',
+                    DB::raw('TIME(schedule_date) as schedule_time'),
+                    'status',
+                    'participants_count',
+                    'activity_name',
+                    'purpose',
+                    'theme',
+                    'commentator',
+                    'readers',
+                    'psalmist',
+                    'prayer_leader',
+                    'details',
+                    'officiant_id'
+                ]);
 
         // Show all upcoming staff-plotted schedules to adviser
-        $schedules = LiturgicalSchedule::with(['priest:id', 'venue:venue_id,name'])
+            $schedules = LiturgicalSchedule::with([
+                    'priest:id,first_name,middle_name,last_name',
+                    'venue:venue_id,name'
+                ])
             ->upcoming()
-            ->get(['schedule_id','title','event_type','schedule_date','start_time','end_time','location','venue_id','priest_id','is_public']);
+                ->get([
+                    'schedule_id',
+                    'title',
+                    'event_type',
+                    'mass_subtype',
+                    'schedule_date',
+                    'start_time',
+                    'end_time',
+                    'location',
+                    'venue_id',
+                    'priest_id',
+                    'is_public',
+                    'description'
+                ]);
 
         return view('adviser.reservations.calendar', compact('reservations', 'schedules'));
     }

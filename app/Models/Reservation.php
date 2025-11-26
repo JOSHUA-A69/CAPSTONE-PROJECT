@@ -96,6 +96,10 @@ class Reservation extends Model
         'cancelled_by',
     ];
 
+    protected $appends = [
+        'schedule_time',
+    ];
+
     protected $casts = [
         'schedule_date' => 'datetime',
         'participants_count' => 'integer',
@@ -272,6 +276,11 @@ class Reservation extends Model
     // ===========================
     // Helper Methods
     // ===========================
+
+    public function getScheduleTimeAttribute(): ?string
+    {
+        return $this->schedule_date ? $this->schedule_date->format('H:i:s') : null;
+    }
 
     /**
      * Check if reservation is pending adviser approval

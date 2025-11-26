@@ -73,6 +73,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $appends = [
         'name',
+        'full_name',
     ];
 
     /**

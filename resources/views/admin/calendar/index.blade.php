@@ -7,14 +7,6 @@
         Unified Calendar (Admin)
     </h1>
 
-    <div class="mb-4 text-sm text-gray-600 dark:text-gray-300">
-        <div class="flex items-center gap-4">
-            <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background:#10B981"></span>Reservations</span>
-            <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-2" style="background:#3B82F6"></span>Staff Schedules</span>
-            <span class="inline-flex items-center"><span class="w-3 h-3 rounded-full mr-2 ring-2 ring-amber-400" style="background:#10B981"></span>Admin Presides</span>
-        </div>
-    </div>
-
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
         <div id="adminCalendar"></div>
     </div>
@@ -28,91 +20,330 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    .fc .admin-presider {
+        box-shadow: 0 0 0 2px #FACC15;
+        border-color: #FACC15 !important;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const rawReservations = JSON.parse(document.getElementById('admin-reservations-json').textContent || '[]');
-        const rawSchedules = JSON.parse(document.getElementById('admin-schedules-json').textContent || '[]');
-        const adminId = JSON.parse(document.getElementById('admin-id-json').textContent || '0');
+    document.addEventListener('DOMContentLoaded', initializeAdminCalendar);
 
-        const reservationEvents = rawReservations.map(r => {
-            let dateStr = r.schedule_date;
-            if (typeof dateStr === 'string' && dateStr.includes(' ')) dateStr = dateStr.split(' ')[0];
-            const adminPresides = Number(r.officiant_id) === Number(adminId);
+    function initializeAdminCalendar() {
+        if (typeof window.Calendar === 'undefined') {
+            setTimeout(initializeAdminCalendar, 150);
+            return;
+        }
+
+        const reservationNode = document.getElementById('admin-reservations-json');
+        const scheduleNode = document.getElementById('admin-schedules-json');
+        const adminNode = document.getElementById('admin-id-json');
+        const calendarHost = document.getElementById('adminCalendar');
+        const sweetAlert = window.Swal;
+
+        if (!reservationNode || !calendarHost) {
+            return;
+        }
+
+        const rawReservations = JSON.parse(reservationNode.textContent || '[]');
+        const rawSchedules = scheduleNode ? JSON.parse(scheduleNode.textContent || '[]') : [];
+        const adminId = adminNode ? Number(JSON.parse(adminNode.textContent || '0')) : 0;
+
+        const CATEGORY_COLORS = {
+            institutional: '#7C3AED',
+            nonInstitutional: '#2563EB',
+            other: '#94A3B8'
+        };
+
+        const CATEGORY_LABELS = {
+            institutional: 'Institutional',
+            nonInstitutional: 'Non-Institutional',
+            other: 'Other'
+        };
+
+        const ENTRY_LABELS = {
+            reservation: 'Reservation',
+            schedule: 'Staff-Plotted Schedule'
+        };
+
+        function extractDatePart(value) {
+            if (!value) return null;
+            if (value instanceof Date) {
+                return value.toISOString().split('T')[0];
+            }
+            if (typeof value === 'string') {
+                if (value.includes('T')) {
+                    return value.split('T')[0];
+                }
+                if (value.includes(' ')) {
+                    return value.split(' ')[0];
+                }
+            }
+            return value;
+        }
+
+        function extractTimePart(value) {
+            if (!value) return null;
+            if (typeof value === 'string') {
+                if (value.includes('T')) {
+                    const fragment = value.split('T')[1] || '';
+                    return fragment.replace(/Z$/, '').slice(0, 8) || null;
+                }
+                if (value.includes(' ')) {
+                    const fragment = value.split(' ')[1] || '';
+                    return fragment.slice(0, 8) || null;
+                }
+            }
+            return null;
+        }
+
+        function combineDateAndTime(dateValue, timeValue) {
+            const dateOnly = extractDatePart(dateValue);
+            if (!dateOnly) return null;
+            if (!timeValue) return dateOnly;
+            return `${dateOnly}T${timeValue}`;
+        }
+
+        function resolveCategory(context) {
+            const eventType = (context.eventType || '').toLowerCase();
+            if (eventType.includes('non_institutional')) {
+                return { category: 'nonInstitutional', color: CATEGORY_COLORS.nonInstitutional };
+            }
+            if (eventType.includes('institutional')) {
+                return { category: 'institutional', color: CATEGORY_COLORS.institutional };
+            }
+
+            const serviceCategory = (context.serviceCategory || '').toLowerCase();
+            if (serviceCategory.includes('non')) {
+                return { category: 'nonInstitutional', color: CATEGORY_COLORS.nonInstitutional };
+            }
+            if (serviceCategory.includes('institutional')) {
+                return { category: 'institutional', color: CATEGORY_COLORS.institutional };
+            }
+
+            return { category: 'other', color: CATEGORY_COLORS.other };
+        }
+
+        function formatLabel(value) {
+            if (!value) return '—';
+            return String(value)
+                .replace(/_/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/\b\w/g, char => char.toUpperCase());
+        }
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return '—';
+            }
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function toPlainText(html) {
+            return String(html ?? '').replace(/<[^>]+>/g, '');
+        }
+
+        function formatDateDisplay(dateValue) {
+            if (!dateValue) return '—';
+            const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+            if (Number.isNaN(date.getTime())) {
+                return escapeHtml(dateValue);
+            }
+            return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function formatTimeDisplay(dateValue) {
+            if (!dateValue) return '—';
+            const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+            if (Number.isNaN(date.getTime())) {
+                return escapeHtml(dateValue);
+            }
+            return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function buildName(person) {
+            if (!person) return '';
+            if (person.full_name) return person.full_name;
+            return [person.first_name, person.middle_name, person.last_name].filter(Boolean).join(' ');
+        }
+
+        const reservationEvents = rawReservations.map(reservation => {
+            const scheduleTime = reservation.schedule_time || extractTimePart(reservation.schedule_date);
+            const scheduleDateTime = combineDateAndTime(reservation.schedule_date, scheduleTime);
+            const fallbackStart = scheduleDateTime || reservation.schedule_date || null;
+
+            const { category, color } = resolveCategory({
+                serviceCategory: reservation.service?.service_category
+            });
+
+            const adminPresides = Number(reservation.officiant_id) === adminId;
+
             return {
-                id: 'res-' + r.reservation_id,
-                source: 'reservation',
-                title: r.activity_name || r.service?.service_name || 'Reservation',
-                start: dateStr, // all-day if time not available
-                backgroundColor: '#10B981',
-                borderColor: adminPresides ? '#f59e0b' : '#059669',
-                classNames: adminPresides ? ['ring-2','ring-amber-400'] : [],
+                id: `res-${reservation.reservation_id}`,
+                title: reservation.activity_name || reservation.service?.service_name || 'Reservation',
+                start: fallbackStart,
+                backgroundColor: color,
+                borderColor: adminPresides ? '#FACC15' : color,
+                classNames: adminPresides ? ['reservation-event', 'admin-presider'] : ['reservation-event'],
                 extendedProps: {
-                    venue: r.custom_venue_name || (r.venue ? r.venue.name : ''),
-                    service: r.service?.service_name,
-                    status: r.status,
-                    participants: r.participants_count,
-                    type: 'reservation'
+                    entryType: 'reservation',
+                    entryLabel: ENTRY_LABELS.reservation,
+                    category,
+                    categoryLabel: CATEGORY_LABELS[category],
+                    scheduleDate: extractDatePart(reservation.schedule_date),
+                    scheduleTime,
+                    venue: reservation.custom_venue_name || reservation.venue?.name,
+                    service: reservation.service?.service_name,
+                    status: reservation.status,
+                    participants: reservation.participants_count,
+                    adminPresides,
+                    raw: reservation
                 }
             };
         });
 
-        const scheduleEvents = rawSchedules.map(s => {
-            const start = s.schedule_date + (s.start_time ? 'T' + s.start_time : '');
-            const end = s.schedule_date + (s.end_time ? 'T' + s.end_time : '');
+        const scheduleEvents = rawSchedules.map(schedule => {
+            const start = combineDateAndTime(schedule.schedule_date, schedule.start_time) || schedule.schedule_date;
+            const end = combineDateAndTime(schedule.schedule_date, schedule.end_time);
+
+            const { category, color } = resolveCategory({
+                eventType: schedule.event_type,
+                serviceCategory: schedule.mass_subtype || schedule.title
+            });
+
             return {
-                id: 'sched-' + s.schedule_id,
-                source: 'schedule',
-                title: s.title || (s.event_type ? s.event_type.replaceAll('_',' ') : 'Schedule'),
-                start: start,
-                end: s.end_time ? end : undefined,
-                backgroundColor: '#3B82F6',
-                borderColor: '#2563EB',
+                id: `sched-${schedule.schedule_id}`,
+                title: schedule.title || formatLabel(schedule.event_type) || 'Schedule',
+                start,
+                end,
+                backgroundColor: color,
+                borderColor: color,
+                classNames: ['schedule-event'],
                 extendedProps: {
-                    venue: s.location || (s.venue ? s.venue.name : ''),
-                    status: s.event_type,
-                    public: !!s.is_public,
-                    type: 'schedule'
+                    entryType: 'schedule',
+                    entryLabel: ENTRY_LABELS.schedule,
+                    category,
+                    categoryLabel: CATEGORY_LABELS[category],
+                    status: schedule.event_type,
+                    scheduleDate: extractDatePart(schedule.schedule_date),
+                    scheduleTime: schedule.start_time,
+                    venue: schedule.location || schedule.venue?.name,
+                    public: Boolean(schedule.is_public),
+                    raw: schedule
                 }
             };
         });
 
-        const events = [...reservationEvents, ...scheduleEvents];
-
-        if (typeof window.Calendar === 'undefined') return setTimeout(arguments.callee, 150);
-
-        const cal = new Calendar(document.getElementById('adminCalendar'), {
+        const calendar = new Calendar(calendarHost, {
             plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
             initialView: 'dayGridMonth',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
-            events: events,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
             height: 'auto',
+            events: [...reservationEvents, ...scheduleEvents],
             eventClick(info) {
-                const e = info.event;
-                const p = e.extendedProps;
-                const venue = p.venue ? `<p class='mt-2 text-sm'><strong>Venue:</strong> ${p.venue}</p>` : '';
-                const service = p.service ? `<p class='mt-1 text-sm'><strong>Service:</strong> ${p.service}</p>` : '';
-                const status = p.status ? `<p class='mt-1 text-sm'><strong>Status:</strong> ${String(p.status).replaceAll('_',' ')}</p>` : '';
-                const participants = p.participants ? `<p class='mt-1 text-sm'><strong>Participants:</strong> ${p.participants}</p>` : '';
-                const type = p.type ? `<p class='mt-1 text-xs text-gray-500'>(${p.type})</p>` : '';
-                Swal.fire({
-                    title: e.title,
-                    html: `<div class='text-left'>${venue}${service}${status}${participants}${type}</div>`,
-                    icon: 'info',
-                    confirmButtonText: 'Close',
-                    confirmButtonColor: '#10B981'
-                });
+                const { extendedProps } = info.event;
+                const raw = extendedProps.raw || {};
+                const rows = [];
+
+                rows.push(`<strong>Entry:</strong> ${escapeHtml(extendedProps.entryLabel)}`);
+                if (extendedProps.categoryLabel) {
+                    rows.push(`<strong>Category:</strong> ${escapeHtml(extendedProps.categoryLabel)}`);
+                }
+                rows.push(`<strong>Date:</strong> ${formatDateDisplay(info.event.start || extendedProps.scheduleDate || raw.schedule_date)}`);
+
+                if (extendedProps.entryType === 'reservation') {
+                    const displayTime = extendedProps.scheduleTime || raw.schedule_time;
+                    rows.push(`<strong>Time:</strong> ${displayTime ? escapeHtml(displayTime) : escapeHtml(formatTimeDisplay(info.event.start))}`);
+                    rows.push(`<strong>Service:</strong> ${escapeHtml(extendedProps.service || '—')}`);
+                    rows.push(`<strong>Status:</strong> ${escapeHtml(formatLabel(extendedProps.status))}`);
+                    if (raw.organization?.org_name) {
+                        rows.push(`<strong>Organization:</strong> ${escapeHtml(raw.organization.org_name)}`);
+                    }
+                    const requester = raw.requestor || raw.user;
+                    const requesterName = buildName(requester);
+                    if (requesterName) {
+                        rows.push(`<strong>Requester:</strong> ${escapeHtml(requesterName)}`);
+                    }
+                    if (raw.purpose) rows.push(`<strong>Purpose:</strong> ${escapeHtml(raw.purpose)}`);
+                    if (raw.theme) rows.push(`<strong>Theme:</strong> ${escapeHtml(raw.theme)}`);
+                    if (raw.details) rows.push(`<strong>Details:</strong> ${escapeHtml(raw.details)}`);
+                    if (raw.commentator) rows.push(`<strong>Commentator:</strong> ${escapeHtml(raw.commentator)}`);
+                    if (raw.readers) rows.push(`<strong>Readers:</strong> ${escapeHtml(raw.readers)}`);
+                    if (raw.psalmist) rows.push(`<strong>Psalmist:</strong> ${escapeHtml(raw.psalmist)}`);
+                    if (raw.prayer_leader) rows.push(`<strong>Prayer Leader:</strong> ${escapeHtml(raw.prayer_leader)}`);
+                    if (extendedProps.participants) rows.push(`<strong>Participants:</strong> ${escapeHtml(extendedProps.participants)}`);
+                    if (extendedProps.venue) rows.push(`<strong>Venue:</strong> ${escapeHtml(extendedProps.venue)}`);
+                    if (raw.officiant) {
+                        const officiantName = buildName(raw.officiant);
+                        if (officiantName) {
+                            const suffix = extendedProps.adminPresides ? ' (You)' : '';
+                            rows.push(`<strong>Assigned Priest:</strong> ${escapeHtml(officiantName + suffix)}`);
+                        }
+                    }
+                } else {
+                    const computedStart = extendedProps.scheduleTime
+                        ? combineDateAndTime(extendedProps.scheduleDate, extendedProps.scheduleTime)
+                        : info.event.start;
+                    const computedEnd = raw.end_time
+                        ? combineDateAndTime(extendedProps.scheduleDate, raw.end_time)
+                        : info.event.end;
+
+                    rows.push(`<strong>Start Time:</strong> ${escapeHtml(formatTimeDisplay(computedStart))}`);
+                    rows.push(`<strong>End Time:</strong> ${escapeHtml(formatTimeDisplay(computedEnd))}`);
+                    rows.push(`<strong>Type:</strong> ${escapeHtml(formatLabel(extendedProps.status))}`);
+                    if (raw.mass_subtype) {
+                        rows.push(`<strong>Mass Subtype:</strong> ${escapeHtml(formatLabel(raw.mass_subtype))}`);
+                    }
+                    if (extendedProps.venue) rows.push(`<strong>Venue:</strong> ${escapeHtml(extendedProps.venue)}`);
+                    if (raw.description) rows.push(`<strong>Description:</strong> ${escapeHtml(raw.description)}`);
+                    if (raw.priest) {
+                        const presiderName = buildName(raw.priest);
+                        if (presiderName) {
+                            rows.push(`<strong>Presider:</strong> ${escapeHtml(presiderName)}`);
+                        }
+                    }
+                    rows.push(`<strong>Visible Publicly:</strong> ${extendedProps.public ? 'Yes' : 'No'}`);
+                }
+
+                if (sweetAlert && typeof sweetAlert.fire === 'function') {
+                    sweetAlert.fire({
+                        title: escapeHtml(info.event.title),
+                        html: `<div class="text-left space-y-1 text-sm">${rows.map(row => `<p>${row}</p>`).join('')}</div>`,
+                        icon: 'info',
+                        confirmButtonText: 'Close',
+                        confirmButtonColor: '#10B981'
+                    });
+                } else {
+                    const plainRows = rows.map(toPlainText);
+                    const plainTitle = info.event.title || '';
+                    window.alert(`${plainTitle}\n\n${plainRows.join('\n')}`);
+                }
             },
             eventContent(arg) {
                 const wrapper = document.createElement('div');
                 wrapper.style.fontSize = '0.7rem';
                 wrapper.style.fontWeight = '600';
-                wrapper.innerHTML = `<div>${arg.event.title}</div>`;
+                wrapper.innerHTML = `<div>${escapeHtml(arg.event.title)}</div>`;
                 return { domNodes: [wrapper] };
             }
         });
-        cal.render();
-    });
+
+        calendar.render();
+    }
 </script>
 <script id="admin-reservations-json" type="application/json">{!! $reservations->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
 <script id="admin-schedules-json" type="application/json">{!! ($schedules ?? collect())->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
