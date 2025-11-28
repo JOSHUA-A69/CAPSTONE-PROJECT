@@ -49,6 +49,9 @@ class CalendarController extends Controller
                 'psalmist',
                 'prayer_leader',
                 'details',
+                'priest_selection_type',
+                'external_priest_name',
+                'external_priest_contact',
                 'officiant_id',
                 'user_id',
                 'org_id'
@@ -71,6 +74,8 @@ class CalendarController extends Controller
                 'location',
                 'venue_id',
                 'priest_id',
+                'external_priest_name',
+                'external_priest_contact',
                 'is_public',
                 'description'
             ]);

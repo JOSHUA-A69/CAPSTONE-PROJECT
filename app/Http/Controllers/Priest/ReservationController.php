@@ -540,7 +540,23 @@ class ReservationController extends Controller
             ->whereNotIn('status', ['cancelled', 'rejected', 'pending_priest_reassignment'])
             ->where('schedule_date', '>=', now())
             ->orderBy('schedule_date', 'asc')
-            ->get();
+            ->get([
+                'reservation_id',
+                'service_id',
+                'venue_id',
+                'org_id',
+                'user_id',
+                'schedule_date',
+                'status',
+                'priest_selection_type',
+                'external_priest_name',
+                'external_priest_contact',
+                'activity_name',
+                'purpose',
+                'theme',
+                'participants_count',
+                'officiant_id',
+            ]);
 
         // Staff-plotted liturgical schedules assigned to this priest
         try {
@@ -561,6 +577,8 @@ class ReservationController extends Controller
                     'location',
                     'venue_id',
                     'priest_id',
+                    'external_priest_name',
+                    'external_priest_contact',
                     'is_public',
                     'description'
                 ]);

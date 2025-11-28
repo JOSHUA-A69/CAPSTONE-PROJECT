@@ -262,6 +262,22 @@
                         if (priestName) {
                             rows.push(`<strong>Assigned Priest:</strong> ${escapeHtml(priestName)}`);
                         }
+                    } else {
+                        const externalCandidates = [
+                            raw.external_priest_name,
+                            raw.external_officiant_name,
+                            raw.external_presider_name,
+                            raw.external_priest,
+                            raw.officiant_external_name,
+                            raw.officiant_external,
+                            raw.officiant && raw.officiant.external_priest_name,
+                            extendedProps.scheduleData && extendedProps.scheduleData.external_priest_name,
+                            extendedProps.scheduleData && extendedProps.scheduleData.external_priest,
+                            raw.schedule && raw.schedule.external_priest_name,
+                            raw.schedule && raw.schedule.external_priest
+                        ];
+                        const externalName = externalCandidates.find(v => v && String(v).trim());
+                        if (externalName) rows.push(`<strong>Presider:</strong> ${escapeHtml(externalName)} (External)`);
                     }
                 } else {
                     const computedStart = extendedProps.scheduleTime
@@ -282,9 +298,20 @@
                     rows.push(`<strong>Visible Publicly:</strong> ${extendedProps.public ? 'Yes' : 'No'}`);
                     if (raw.priest) {
                         const priestName = raw.priest.full_name || [raw.priest.first_name, raw.priest.last_name].filter(Boolean).join(' ');
-                        if (priestName) {
-                            rows.push(`<strong>Presider:</strong> ${escapeHtml(priestName)}`);
-                        }
+                        if (priestName) rows.push(`<strong>Presider:</strong> ${escapeHtml(priestName)}`);
+                    } else {
+                        const externalCandidates = [
+                            raw.external_priest_name,
+                            raw.external_officiant_name,
+                            raw.external_presider_name,
+                            raw.external_priest,
+                            raw.priest && raw.priest.external_priest_name,
+                            extendedProps.scheduleData && extendedProps.scheduleData.external_priest_name,
+                            extendedProps.scheduleData && extendedProps.scheduleData.external_priest,
+                            raw.schedule && raw.schedule.external_priest_name
+                        ];
+                        const externalName = externalCandidates.find(v => v && String(v).trim());
+                        if (externalName) rows.push(`<strong>Presider:</strong> ${escapeHtml(externalName)} (External)`);
                     }
                 }
 
