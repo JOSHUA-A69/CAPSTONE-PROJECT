@@ -395,21 +395,7 @@
                 <!-- Helpful Information Sidebar -->
                 <div class="space-y-6">
 
-                    <!-- Contact Support Card -->
-                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
-                        <div class="text-center">
-                            <div class="bg-blue-50 dark:bg-blue-900/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                            <h4 class="font-bold text-gray-900 dark:text-white mb-2">Need Help?</h4>
-                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Our team is here to support your spiritual journey</p>
-                            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl">
-                                Contact Support
-                            </button>
-                        </div>
-                    </div>
+                    <!-- Contact Support Card removed by request -->
 
                     <!-- Calendar Integration -->
                     <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
@@ -421,9 +407,9 @@
                             </div>
                             <h4 class="font-bold text-gray-900 dark:text-white mb-2">📅 Stay Organized</h4>
                             <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Keep track of your upcoming events and appointments</p>
-                            <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl">
+                            <a href="{{ route('requestor.reservations.calendar') }}" class="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl">
                                 View Calendar
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>
