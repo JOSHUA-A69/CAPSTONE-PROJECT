@@ -80,7 +80,7 @@ class ReservationController extends Controller
         $priestId = Auth::id();
 
         // Allow priests to view reservations where they are:
-        // 1. Currently assigned as officiant (officiant_id = priest_id)
+        // 1. Currently assigned as officiant (officiant_id = priest_id) OR via many-to-many priests
         // 2. Previously declined (has a decline record)
         // 3. Received notification for this reservation
         $reservation = Reservation::with([
@@ -88,10 +88,14 @@ class ReservationController extends Controller
             'service',
             'venue',
             'organization.adviser',
-            'history.performedBy'
+            'history.performedBy',
+            'priests'
         ])
             ->where(function ($query) use ($priestId, $reservation_id) {
                 $query->where('officiant_id', $priestId)
+                    ->orWhereHas('priests', function ($priestQuery) use ($priestId) {
+                        $priestQuery->where('users.id', $priestId);
+                    })
                     ->orWhereHas('declines', function ($q) use ($priestId) {
                         $q->where('priest_id', $priestId);
                     })
@@ -137,38 +141,49 @@ class ReservationController extends Controller
      */
     public function confirm(Request $request, $reservation_id)
     {
-        $reservation = Reservation::where('officiant_id', Auth::id())
+        $priestId = Auth::id();
+
+        // Find reservation where priest is assigned (via officiant_id OR priests relationship)
+        $reservation = Reservation::with('priests')
+            ->where(function($query) use ($priestId) {
+                $query->where('officiant_id', $priestId)
+                      ->orWhereHas('priests', function($q) use ($priestId) {
+                          $q->where('users.id', $priestId);
+                      });
+            })
             ->findOrFail($reservation_id);
 
-        // Only confirm if status is pending, pending_priest_confirmation or admin_approved (reassignment) and not yet confirmed
-        if (!in_array($reservation->status, ['pending', 'pending_priest_confirmation', 'admin_approved'])) {
+        // Only confirm if status is adviser_approved or admin_approved (reassignment) and not yet confirmed
+        if (!in_array($reservation->status, ['adviser_approved', 'admin_approved'])) {
             return Redirect::back()
                 ->with('error', 'This reservation is not ready for confirmation.');
         }
 
-        if ($reservation->priest_confirmation === 'confirmed') {
+        // Check if this priest has already confirmed (via pivot)
+        $priestInPivot = $reservation->priests->firstWhere('id', $priestId);
+        if ($priestInPivot && $priestInPivot->pivot->confirmation_status === 'confirmed') {
             return Redirect::back()
                 ->with('error', 'You have already confirmed this reservation.');
         }
 
-        // Update confirmation status
-        $reservation->update([
-            'priest_confirmation' => 'confirmed',
-            'priest_confirmed_at' => now(),
-            'status' => 'approved', // Final approval status
-        ]);
+        // Legacy single-priest check
+        if ($reservation->officiant_id === $priestId && $reservation->priest_confirmation === 'confirmed') {
+            return Redirect::back()
+                ->with('error', 'You have already confirmed this reservation.');
+        }
 
-        // Ensure reservation_priest pivot is updated for auditing
+        DB::beginTransaction();
         try {
-            $exists = DB::table('reservation_priest')
+            // Update pivot table for this priest
+            $pivotExists = DB::table('reservation_priest')
                 ->where('reservation_id', $reservation->reservation_id)
-                ->where('priest_id', Auth::id())
+                ->where('priest_id', $priestId)
                 ->exists();
 
-            if ($exists) {
+            if ($pivotExists) {
                 DB::table('reservation_priest')
                     ->where('reservation_id', $reservation->reservation_id)
-                    ->where('priest_id', Auth::id())
+                    ->where('priest_id', $priestId)
                     ->update([
                         'confirmation_status' => 'confirmed',
                         'responded_at' => now(),
@@ -178,7 +193,7 @@ class ReservationController extends Controller
                 // Create pivot row if it doesn't exist (e.g., admin assignment flow)
                 DB::table('reservation_priest')->insert([
                     'reservation_id' => $reservation->reservation_id,
-                    'priest_id' => Auth::id(),
+                    'priest_id' => $priestId,
                     'confirmation_status' => 'confirmed',
                     'notified' => true,
                     'notified_at' => now(),
@@ -187,26 +202,67 @@ class ReservationController extends Controller
                     'updated_at' => now(),
                 ]);
             }
+
+            // Create history
+            $remarks = $request->input('remarks', 'Priest confirmed availability');
+            $reservation->history()->create([
+                'performed_by' => $priestId,
+                'action' => 'priest_confirmed',
+                'remarks' => $remarks,
+                'performed_at' => now(),
+            ]);
+
+            // Reload reservation with fresh priests data
+            $reservation->load('priests');
+
+            // Check if all priests have now confirmed
+            $allPriestsConfirmed = $reservation->allPriestsConfirmed();
+            $totalPriests = $reservation->priests->count();
+            $confirmedCount = $reservation->confirmedPriestCount();
+
+            if ($allPriestsConfirmed || $totalPriests <= 1) {
+                // All priests confirmed OR single priest - move to admin approval stage
+                $reservation->update([
+                    'priest_confirmation' => 'confirmed',
+                    'priest_confirmed_at' => now(),
+                    'status' => 'admin_approved', // Ready for final admin approval
+                ]);
+
+                // Notify admin that all priests confirmed and reservation is ready
+                $this->notificationService->notifyAllPriestsConfirmed($reservation);
+
+                $message = "You have confirmed your availability. All priests have confirmed - awaiting final admin approval.";
+            } else {
+                // Still waiting for other priests
+                // Update legacy field for this priest if they're the officiant
+                if ($reservation->officiant_id === $priestId) {
+                    $reservation->update([
+                        'priest_confirmation' => 'confirmed',
+                        'priest_confirmed_at' => now(),
+                    ]);
+                }
+
+                $pending = $reservation->pendingPriestCount();
+                $message = "Your confirmation recorded ({$confirmedCount}/{$totalPriests}). Waiting for {$pending} more priest(s) to confirm.";
+            }
+
+            // Send notification to admin/staff and requestor about this priest's confirmation
+            $this->notificationService->notifyPriestConfirmed($reservation, $priestId);
+
+            DB::commit();
+
+            $serviceName = $reservation->activity_name ?? $reservation->service->service_name;
+            $serviceDate = $reservation->schedule_date->format('F d, Y \a\t g:i A');
+            
+            return Redirect::route('priest.reservations.index')
+                ->with('status', 'reservation-confirmed')
+                ->with('message', $message);
+
         } catch (\Throwable $e) {
-            // Don't block user flow if pivot update fails; log for diagnostics
-            \Log::warning('Failed to update reservation_priest pivot on confirm: ' . $e->getMessage());
+            DB::rollBack();
+            \Log::error('Priest confirmation failed: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'Failed to confirm: ' . $e->getMessage());
         }
-
-        // Create history
-        $remarks = $request->input('remarks', 'Priest confirmed availability');
-        $reservation->history()->create([
-            'performed_by' => Auth::id(),
-            'action' => 'priest_confirmed',
-            'remarks' => $remarks,
-            'performed_at' => now(),
-        ]);
-
-        // Send notification to admin/staff and requestor
-        $this->notificationService->notifyPriestConfirmed($reservation, Auth::id());
-
-        return Redirect::back()
-            ->with('status', 'reservation-confirmed')
-            ->with('message', 'Reservation confirmed successfully! The requestor and administrators have been notified.');
     }
 
     /**
@@ -219,14 +275,28 @@ class ReservationController extends Controller
             'replacement_priest_id' => 'nullable|integer|exists:users,id',
         ]);
 
-        $reservation = Reservation::where('officiant_id', Auth::id())
+        $priestId = Auth::id();
+
+        // Find reservation where priest is assigned (via officiant_id OR priests relationship)
+        $reservation = Reservation::where(function($query) use ($priestId) {
+                $query->where('officiant_id', $priestId)
+                      ->orWhereHas('priests', function($q) use ($priestId) {
+                          $q->where('users.id', $priestId);
+                      });
+            })
             ->findOrFail($reservation_id);
+
+        // Prevent duplicate declines - check if already declined
+        if ($reservation->priest_confirmation === 'declined') {
+            return Redirect::back()
+                ->with('error', 'You have already declined this reservation.');
+        }
 
         // Check if this is a cancellation of already confirmed reservation
         $isCancellation = ($reservation->priest_confirmation === 'confirmed');
 
-        // Allow decline for: pending, pending_priest_confirmation, admin_approved, OR approved (confirmed)
-        if (!in_array($reservation->status, ['pending', 'pending_priest_confirmation', 'admin_approved', 'approved'])) {
+        // Allow decline for: adviser_approved, admin_approved, OR approved (confirmed)
+        if (!in_array($reservation->status, ['adviser_approved', 'admin_approved', 'approved'])) {
             return Redirect::back()
                 ->with('error', 'This reservation cannot be declined at this stage.');
         }
@@ -394,13 +464,16 @@ class ReservationController extends Controller
             $this->notificationService->notifyPriestDeclined($reservation, $reason, $priestId);
         }
 
+        $serviceName = $reservation->activity_name ?? $reservation->service->service_name;
+        $serviceDate = $reservation->schedule_date->format('F d, Y \a\t g:i A');
+        
         $message = $isCancellation
             ? (($replacementId ?? false)
-                ? 'Reservation cancelled and reassigned to another priest. They have been notified to confirm.'
-                : 'Reservation cancelled successfully. Admins have been notified to assign another priest.')
+                ? "Your confirmation for '{$serviceName}' on {$serviceDate} has been cancelled and reassigned to another priest. They have been notified to confirm their availability."
+                : "Your confirmation for '{$serviceName}' on {$serviceDate} has been cancelled. Administrators have been notified to assign another priest urgently.")
             : (($replacementId ?? false)
-                ? 'You declined and reassigned this service to another priest successfully. They have been notified.'
-                : 'Decline notification sent successfully. Admins have been notified to assign another priest.');
+                ? "You have declined '{$serviceName}' on {$serviceDate} and suggested a replacement priest. They have been notified to confirm their availability."
+                : "You have declined '{$serviceName}' on {$serviceDate}. Administrators have been notified to assign another priest.");
 
         return Redirect::route('priest.reservations.index')
             ->with('status', 'reservation-declined')

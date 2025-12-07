@@ -27,6 +27,7 @@ class CancellationController extends Controller
         $query = ReservationCancellation::with([
             'reservation.organization',
                 'reservation.officiant',
+                'reservation.priests',
             'requestor',
             'staffConfirmer',
             'adminConfirmer',
@@ -54,6 +55,7 @@ class CancellationController extends Controller
         $cancellation = ReservationCancellation::with([
             'reservation.organization',
                 'reservation.officiant',
+                'reservation.priests',
             'requestor',
             'staffConfirmer',
             'adminConfirmer',

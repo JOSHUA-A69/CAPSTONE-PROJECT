@@ -131,8 +131,59 @@
             </div>
             @endif
 
-            <!-- Action Buttons (show if not rejected/cancelled) -->
-            @if(!in_array($reservation->status, ['rejected', 'cancelled']))
+            <!-- Action Buttons -->
+            @if(in_array($reservation->status, ['adviser_approved', 'approved']))
+                @php
+                    // Calculate days until the mass
+                    $daysUntilMass = now()->diffInDays($reservation->schedule_date, false);
+                    $canCancel = $daysUntilMass >= 6; // Can only cancel if 6 or more days before
+                @endphp
+                
+                <div class="border-t pt-6 mt-6">
+                    <div class="max-w-4xl mx-auto space-y-6">
+                        @if($canCancel)
+                            <!-- Cancel Approval Form -->
+                            <form method="POST" action="{{ route('adviser.reservations.cancel-approval', $reservation->reservation_id) }}" class="bg-white dark:bg-gray-800 rounded-lg border border-orange-200 dark:border-orange-700 p-6">
+                                @csrf
+                                <div class="mb-4">
+                                    <label class="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                        <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                        </svg>
+                                        Cancel Approval - Reason Required
+                                    </label>
+                                    <textarea name="reason" rows="3" required class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none" placeholder="Explain why you need to cancel this approval..."></textarea>
+                                </div>
+                                <div class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 mb-4">
+                                    <p class="text-sm text-orange-700 dark:text-orange-300">
+                                        <strong>Warning:</strong> Cancelling approval will revert status to "Pending Adviser" and notify staff and the requestor. This action should only be used if circumstances have changed.
+                                    </p>
+                                </div>
+                                <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200" onclick="return confirm('Are you sure you want to cancel this approval? This will notify staff and the requestor.')">
+                                    Cancel Approval
+                                </button>
+                            </form>
+                        @else
+                            <!-- Time Restriction Message -->
+                            <div class="bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-6">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Approval Cannot Be Cancelled</h3>
+                                </div>
+                                <p class="text-gray-600 dark:text-gray-300 mb-2">
+                                    This reservation is scheduled for <strong>{{ $reservation->schedule_date->format('F d, Y \\a\\t g:i A') }}</strong>
+                                </p>
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    You can only cancel approvals for masses scheduled <strong>6 or more days</strong> in advance. 
+                                    This mass is only <strong>{{ $daysUntilMass }}</strong> day(s) away.
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @elseif($reservation->status === 'pending')
             <div class="border-t pt-6 mt-6">
                 <div class="max-w-4xl mx-auto space-y-6">
                     <!-- Approve Form -->
@@ -235,6 +286,15 @@
 </div>
 
 <script>
+@if(request()->has('notification_read'))
+// Dispatch notification update event since notification was marked as read
+window.addEventListener('DOMContentLoaded', function() {
+    if (window.dispatchEvent) {
+        window.dispatchEvent(new Event('notification-update'));
+    }
+});
+@endif
+
 function showRejectModal() {
     const m = document.getElementById('rejectModal');
     m.classList.remove('hidden');

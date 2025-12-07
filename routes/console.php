@@ -18,3 +18,12 @@ Schedule::command('reservations:check-unnoticed --send-notifications')
     ->dailyAt('09:00')
     ->emailOutputOnFailure(config('mail.from.address'))
     ->description('Check for unnoticed reservation requests and send follow-ups');
+
+/**
+ * Schedule the organization booking overdue check command
+ * Runs daily at 10:00 AM to send reminders for overdue organization booking requests
+ */
+Schedule::command('organization-bookings:process-overdue')
+    ->dailyAt('10:00')
+    ->emailOutputOnFailure(config('mail.from.address'))
+    ->description('Process overdue organization booking requests and send staff reminders');

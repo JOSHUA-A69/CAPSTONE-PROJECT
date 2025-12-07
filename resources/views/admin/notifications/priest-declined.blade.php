@@ -293,4 +293,13 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Dispatch notification update event since this notification was marked as read
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.dispatchEvent) {
+                window.dispatchEvent(new Event('notification-update'));
+            }
+        });
+    </script>
 </x-app-layout>

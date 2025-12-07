@@ -1,25 +1,156 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto py-8 px-4">
-    <h1 class="text-3xl font-bold mb-6 flex items-center gap-3">
-        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        My Calendar
-    </h1>
+<div class="max-w-7xl mx-auto py-8 px-4">
+    <div class="mb-8">
+        <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
+            <div class="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            My Calendar
+        </h1>
+        <p class="mt-2 text-gray-600 dark:text-gray-400 text-lg">View and manage your upcoming reservations and scheduled activities</p>
+    </div>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border-2 border-emerald-100 dark:border-emerald-800 p-8 hover:shadow-2xl transition-shadow duration-300">
         <div id="requestorCalendar"></div>
     </div>
 
     @php $hasSchedules = isset($schedules) && $schedules && $schedules->count() > 0; @endphp
     @if($reservations->isEmpty() && ! $hasSchedules)
-        <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm font-semibold">
-            No upcoming items found.
+        <div class="mt-6 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border-l-4 border-yellow-400 dark:border-yellow-600 rounded-xl shadow-md">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-yellow-800 dark:text-yellow-200 font-semibold">No upcoming reservations or scheduled activities found.</p>
+            </div>
         </div>
     @endif
 </div>
 @endsection
 
+
+@push('styles')
+<style>
+    /* Enhanced calendar event styling */
+    .fc-event-content-enhanced {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .fc-event:hover .fc-event-content-enhanced {
+        transform: translateY(-1px);
+    }
+    
+    .fc-event {
+        border-radius: 6px !important;
+        border-width: 2px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
+    }
+    
+    .fc-event:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+        z-index: 10;
+    }
+    
+    .fc-daygrid-event {
+        margin: 2px 0;
+        padding: 2px;
+    }
+    
+    /* Calendar header styling */
+    .fc .fc-toolbar-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #047857;
+    }
+    
+    .dark .fc .fc-toolbar-title {
+        color: #34d399;
+    }
+    
+    .fc .fc-button-primary {
+        background-color: #10b981 !important;
+        border-color: #10b981 !important;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    .fc .fc-button-primary:hover {
+        background-color: #059669 !important;
+        border-color: #059669 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+    }
+    
+    .fc .fc-button-primary:disabled {
+        background-color: #6ee7b7 !important;
+        border-color: #6ee7b7 !important;
+        opacity: 0.6;
+    }
+    
+    .fc-theme-standard td, .fc-theme-standard th {
+        border-color: #e5e7eb;
+    }
+    
+    .dark .fc-theme-standard td, .dark .fc-theme-standard th {
+        border-color: #374151;
+    }
+    
+    .fc .fc-col-header-cell {
+        background-color: #f3f4f6;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+        color: #374151;
+        padding: 12px 4px;
+    }
+    
+    .dark .fc .fc-col-header-cell {
+        background-color: #1f2937;
+        color: #d1d5db;
+    }
+    
+    .fc .fc-daygrid-day-top {
+        padding: 4px;
+        font-weight: 600;
+    }
+    
+    .fc .fc-daygrid-day.fc-day-today {
+        background-color: #ecfdf5 !important;
+    }
+    
+    .dark .fc .fc-daygrid-day.fc-day-today {
+        background-color: #064e3b !important;
+    }
+    
+    .fc .fc-daygrid-day-number {
+        color: #1f2937;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+    
+    .dark .fc .fc-daygrid-day-number {
+        color: #f3f4f6;
+    }
+    
+    .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+        background-color: #10b981;
+        color: white;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>
@@ -331,9 +462,89 @@
             },
             eventContent(arg) {
                 const wrapper = document.createElement('div');
-                wrapper.style.fontSize = '0.7rem';
-                wrapper.style.fontWeight = '600';
-                wrapper.innerHTML = `<div>${escapeHtml(arg.event.title)}</div>`;
+                wrapper.className = 'fc-event-content-enhanced';
+                wrapper.style.padding = '4px 6px';
+                wrapper.style.fontSize = '0.75rem';
+                wrapper.style.lineHeight = '1.3';
+                wrapper.style.overflow = 'hidden';
+                
+                const { extendedProps } = arg.event;
+                const isReservation = extendedProps.entryType === 'reservation';
+                
+                // Title with time
+                const titleDiv = document.createElement('div');
+                titleDiv.style.fontWeight = '700';
+                titleDiv.style.marginBottom = '2px';
+                titleDiv.style.fontSize = '0.8rem';
+                
+                let displayTime = '';
+                if (isReservation && extendedProps.scheduleTime) {
+                    displayTime = extendedProps.scheduleTime.substring(0, 5); // HH:MM
+                } else if (arg.timeText) {
+                    displayTime = arg.timeText;
+                }
+                
+                titleDiv.innerHTML = displayTime 
+                    ? `<span style="font-weight: 800; color: rgba(255,255,255,0.95);">${escapeHtml(displayTime)}</span> ${escapeHtml(arg.event.title)}`
+                    : escapeHtml(arg.event.title);
+                wrapper.appendChild(titleDiv);
+                
+                // Service name for reservations
+                if (isReservation && extendedProps.service) {
+                    const serviceDiv = document.createElement('div');
+                    serviceDiv.style.fontSize = '0.7rem';
+                    serviceDiv.style.opacity = '0.95';
+                    serviceDiv.style.marginTop = '2px';
+                    serviceDiv.style.fontWeight = '500';
+                    serviceDiv.innerHTML = `📋 ${escapeHtml(extendedProps.service)}`;
+                    wrapper.appendChild(serviceDiv);
+                }
+                
+                // Venue
+                if (extendedProps.venue) {
+                    const venueDiv = document.createElement('div');
+                    venueDiv.style.fontSize = '0.7rem';
+                    venueDiv.style.opacity = '0.9';
+                    venueDiv.style.marginTop = '2px';
+                    venueDiv.style.fontStyle = 'italic';
+                    venueDiv.innerHTML = `📍 ${escapeHtml(extendedProps.venue)}`;
+                    wrapper.appendChild(venueDiv);
+                }
+                
+                // Status badge for reservations
+                if (isReservation && extendedProps.status) {
+                    const statusDiv = document.createElement('div');
+                    statusDiv.style.fontSize = '0.65rem';
+                    statusDiv.style.marginTop = '3px';
+                    statusDiv.style.padding = '2px 6px';
+                    statusDiv.style.borderRadius = '4px';
+                    statusDiv.style.display = 'inline-block';
+                    statusDiv.style.fontWeight = '600';
+                    statusDiv.style.textTransform = 'uppercase';
+                    statusDiv.style.letterSpacing = '0.5px';
+                    
+                    const status = extendedProps.status.toLowerCase();
+                    if (status === 'approved') {
+                        statusDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.9)';
+                        statusDiv.style.color = 'white';
+                        statusDiv.innerHTML = '✓ Approved';
+                    } else if (status === 'admin_approved') {
+                        statusDiv.style.backgroundColor = 'rgba(59, 130, 246, 0.9)';
+                        statusDiv.style.color = 'white';
+                        statusDiv.innerHTML = '✓ Admin Approved';
+                    } else if (status === 'pending') {
+                        statusDiv.style.backgroundColor = 'rgba(251, 191, 36, 0.9)';
+                        statusDiv.style.color = 'white';
+                        statusDiv.innerHTML = '⏳ Pending';
+                    } else {
+                        statusDiv.style.backgroundColor = 'rgba(148, 163, 184, 0.9)';
+                        statusDiv.style.color = 'white';
+                        statusDiv.innerHTML = escapeHtml(formatLabel(extendedProps.status));
+                    }
+                    
+                    wrapper.appendChild(statusDiv);
+                }
+                
                 return { domNodes: [wrapper] };
             }
         });

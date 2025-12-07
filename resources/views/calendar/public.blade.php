@@ -51,11 +51,11 @@
                                     <option value="convocation_mass">Convocation Mass</option>
                                     <option value="graduation_mass">Graduation Mass</option>
                                     <option value="feast_day_masses">Feast Day Masses</option>
-                                    <option value="memorial_requiem_masses">Memorial/Requiem Masses</option>
+                                    <option value="daily_noon_mass">Daily Noon Mass</option>
                                     <option value="special_celebration_masses">Special Celebration Masses</option>
                                 </optgroup>
                                 <optgroup label="Non-Institutional Mass" id="nonInstitutionalOptions">
-                                    <option value="daily_noon_mass">Daily Noon Mass</option>
+                                    <option value="memorial_requiem_masses">Memorial/Requiem Masses</option>
                                     <option value="departmental_group_masses">Departmental/Group Masses</option>
                                     <option value="recollection_masses">Recollection Masses</option>
                                     <option value="novenas_devotions">Novenas and Devotions</option>

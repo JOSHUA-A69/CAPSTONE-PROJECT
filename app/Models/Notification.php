@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Notification extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'notifications';
     protected $primaryKey = 'notification_id';
@@ -19,13 +20,16 @@ class Notification extends Model
         'type',
         'sent_at',
         'read_at',
+        'archived_at',
         'data', // Additional JSON data
     ];
 
     protected $casts = [
         'sent_at' => 'datetime',
         'read_at' => 'datetime',
+        'archived_at' => 'datetime',
         'data' => 'array',
+        'deleted_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -86,5 +90,21 @@ class Notification extends Model
     public function scopeRead($query)
     {
         return $query->whereNotNull('read_at');
+    }
+
+    /**
+     * Scope for non-archived notifications
+     */
+    public function scopeNotArchived($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    /**
+     * Scope for archived notifications
+     */
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
     }
 }

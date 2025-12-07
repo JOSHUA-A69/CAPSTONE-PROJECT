@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-heading font-semibold text-xl leading-tight">
-            ⚙️ CREaM Administrator Dashboard
+            CREaM Administrator Dashboard
         </h2>
     </x-slot>
 

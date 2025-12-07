@@ -67,45 +67,34 @@
         @endif
 
         <!-- Status Banner -->
-        <!-- Status Banner -->
         <div class="card mb-6 border-l-4
-            @if($reservation->status === 'confirmed' || $reservation->status === 'completed') border-green-500
+            @if($reservation->status === 'confirmed' || $reservation->status === 'completed' || $reservation->status === 'approved') border-green-500
             @elseif($reservation->status === 'cancelled' || $reservation->status === 'rejected') border-red-500
             @else border-yellow-500
             @endif">
             <div class="card-body">
-                <div class="flex items-center gap-3">
-                    @if($reservation->status === 'confirmed' || $reservation->status === 'completed')
-                        <span class="badge-success">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
-                    @elseif($reservation->status === 'cancelled' || $reservation->status === 'rejected')
-                        <span class="badge-danger">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
-                    @else
-                        <span class="badge-warning">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
-                    @endif
-
-                    <span class="text-sm text-muted">
-                        @if($reservation->status === 'pending')
-                            Waiting for organization adviser approval
-                        @elseif($reservation->status === 'adviser_approved' && !$reservation->contacted_at)
-                            Approved by adviser - Waiting for CREaM staff contact
-                        @elseif($reservation->status === 'adviser_approved' && $reservation->contacted_at && !$reservation->requestor_confirmed_at)
-                            CREaM staff has contacted you - Please confirm your reservation
-                        @elseif($reservation->status === 'adviser_approved' && $reservation->requestor_confirmed_at)
-                            You have confirmed - Waiting for staff approval
-                        @elseif($reservation->status === 'pending_priest_assignment')
-                            Approved - Waiting for priest assignment
-                        @elseif($reservation->status === 'pending_priest_confirmation')
-                            Priest assigned - Waiting for priest confirmation
-                        @elseif($reservation->status === 'confirmed')
-                            Confirmed - Event scheduled
-                        @elseif($reservation->status === 'completed')
-                            Event completed successfully
-                        @elseif($reservation->status === 'cancelled')
-                            Reservation cancelled
-                        @elseif($reservation->status === 'rejected')
-                            Reservation not available
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        @if($reservation->status === 'confirmed' || $reservation->status === 'completed')
+                            <span class="badge-success">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
+                        @elseif($reservation->status === 'cancelled' || $reservation->status === 'rejected')
+                            <span class="badge-danger">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
+                        @elseif($reservation->status === 'approved')
+                            <span class="badge-success bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold shadow-sm border border-green-300">Approved by Admin</span>
+                        @else
+                            <span class="badge-warning">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
                         @endif
-                    </span>
+                    </div>
+
+                    @if($reservation->status === 'rejected')
+                        <a href="{{ route('requestor.organization-bookings.create') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm transition-all duration-200">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Book Another Date
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -197,7 +186,19 @@
                             </div>
                             @endif
 
-                            @if($reservation->officiant)
+                            @php
+                                $assignedPriests = isset($reservation->priests) ? $reservation->priests : collect();
+                            @endphp
+                            @if($assignedPriests->count() > 0)
+                            <div>
+                                <label class="form-label">Assigned Priests</label>
+                                <ul class="mt-2 space-y-1">
+                                    @foreach($assignedPriests as $p)
+                                        <li class="text-base font-semibold text-heading">{{ $p->full_name }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @elseif($reservation->officiant)
                             <div>
                                 <label class="form-label">Assigned Priest</label>
                                 <p class="mt-1 text-base font-semibold text-heading">{{ $reservation->officiant->full_name }}</p>
@@ -281,7 +282,7 @@
 
                     <form id="cancelForm" method="POST" action="{{ route('requestor.reservations.cancel', $reservation->reservation_id) }}" class="hidden mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                         @csrf
-                        <label class="form-label mb-2">Reason for Cancellation</label>
+                        <label class="form-label mb-2">Note that if you cancel a reservation, your cancellation will be reported to all actors, admin, priest, and adviser.</label>
                         <textarea name="reason" rows="3" required minlength="10" class="form-input" placeholder="Please provide a reason...">{{ old('reason') }}</textarea>
                         @error('reason')
                             <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -327,6 +328,15 @@
 
 @push('scripts')
 <script>
+    @if(request()->has('notification_read'))
+    // Dispatch notification update event since notification was marked as read
+    window.addEventListener('DOMContentLoaded', function() {
+        if (window.dispatchEvent) {
+            window.dispatchEvent(new Event('notification-update'));
+        }
+    });
+    @endif
+
     // If there was a validation error for the cancellation reason, unhide the cancel form
     @if ($errors->has('reason'))
         document.addEventListener('DOMContentLoaded', function () {

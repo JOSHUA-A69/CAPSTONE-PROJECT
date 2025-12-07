@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Services\AvailabilityService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * @property string|null $venue_id
@@ -74,6 +77,126 @@ class ReservationRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    /**
+     * Configure the validator instance with double-booking prevention
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            // Skip double-booking check if there are already validation errors
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $this->validateDoubleBooking($validator);
+        });
+    }
+
+    /**
+     * Validate for double-booking conflicts
+     */
+    protected function validateDoubleBooking(Validator $validator): void
+    {
+        $availabilityService = app(AvailabilityService::class);
+
+        // Get the schedule date and time
+        $scheduleDateTime = $this->getScheduleDateTime();
+        if (!$scheduleDateTime) {
+            return;
+        }
+
+        // Get priest ID(s) if specific priest selected
+        $priestId = null;
+        if ($this->priest_selection_type === 'specific') {
+            $priestIds = $this->input('priest_ids', []);
+            $priestId = !empty($priestIds) ? (int) $priestIds[0] : null;
+        }
+
+        // Get venue ID (null if custom venue)
+        $venueId = null;
+        if ($this->venue_id !== 'custom' && is_numeric($this->venue_id)) {
+            $venueId = (int) $this->venue_id;
+        }
+
+        // Get exclude reservation ID for edit scenarios
+        $excludeReservationId = $this->route('reservation_id') ?? $this->route('reservation');
+
+        // Check availability
+        $result = $availabilityService->checkFullAvailability(
+            $priestId,
+            $venueId,
+            $scheduleDateTime,
+            $excludeReservationId
+        );
+
+        // Add validation errors with suggestions
+        if (!$result['available']) {
+            $messages = $result['messages'];
+            $suggestions = $result['suggestions'];
+
+            if (!$result['priest_available'] && $priestId) {
+                $errorMsg = "The selected priest is not available at this time.";
+                
+                // Find time suggestions
+                $timeSuggestion = collect($suggestions)->firstWhere('type', 'time');
+                if ($timeSuggestion) {
+                    $errorMsg .= " " . $timeSuggestion['message'];
+                }
+                
+                // Find priest suggestions
+                $priestSuggestion = collect($suggestions)->firstWhere('type', 'priest');
+                if ($priestSuggestion) {
+                    $errorMsg .= " Or select another priest.";
+                }
+
+                $validator->errors()->add('priest_ids', $errorMsg);
+            }
+
+            if (!$result['venue_available'] && $venueId) {
+                $errorMsg = "The selected venue is not available at this time.";
+                
+                // Find venue suggestions
+                $venueSuggestion = collect($suggestions)->firstWhere('type', 'venue');
+                if ($venueSuggestion) {
+                    $errorMsg .= " " . $venueSuggestion['message'];
+                }
+
+                $validator->errors()->add('venue_id', $errorMsg);
+            }
+
+            // Add general error if both conflicts exist
+            if (!$result['priest_available'] && !$result['venue_available']) {
+                $validator->errors()->add('schedule_date', 
+                    "This time slot is already taken. Please select another date, time, venue, or priest.");
+            }
+        }
+    }
+
+    /**
+     * Get the combined schedule date time
+     */
+    protected function getScheduleDateTime(): ?Carbon
+    {
+        try {
+            // Use the original input since prepareForValidation already merged them
+            $dateInput = $this->input('schedule_date');
+            $timeInput = $this->input('schedule_time');
+            
+            if ($dateInput && $timeInput) {
+                // Check if date already has time component
+                if (strpos($dateInput, ':') !== false) {
+                    return Carbon::parse($dateInput);
+                }
+                return Carbon::parse($dateInput . ' ' . $timeInput);
+            } elseif ($dateInput) {
+                return Carbon::parse($dateInput);
+            }
+            return null;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**

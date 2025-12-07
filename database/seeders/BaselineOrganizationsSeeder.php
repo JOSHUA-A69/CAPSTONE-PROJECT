@@ -10,11 +10,15 @@ class BaselineOrganizationsSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     * This seeder is idempotent and will also restore organizations that were soft-deleted.
      */
     public function run(): void
     {
-        // Find the sample Adviser user created by CreateRoleTestUsersSeeder
-        $adviser = User::where('role', 'adviser')->where('email', 'cecilia.adviser@example.com')->first();
+        // Prefer a specifically created adviser; fall back to any adviser if the sample user is missing
+        $adviser = User::where('role', 'adviser')
+            ->where('email', 'cecilia.adviser@example.com')
+            ->first()
+            ?? User::where('role', 'adviser')->first();
 
         $orgs = [
             ['org_name' => 'Himig Diwa Chorale', 'org_desc' => 'Leads musical worship during religious events.'],
@@ -25,14 +29,25 @@ class BaselineOrganizationsSeeder extends Seeder
             ['org_name' => 'Catechetical Organization', 'org_desc' => 'Supports religious education and catechism classes.'],
         ];
 
-        foreach ($orgs as $row) {
-            Organization::updateOrCreate(
-                ['org_name' => $row['org_name']],
-                [
-                    'org_desc' => $row['org_desc'] ?? null,
+        foreach ($orgs as $data) {
+            // Include trashed records so we can revive them instead of duplicating
+            $existing = Organization::withTrashed()->where('org_name', $data['org_name'])->first();
+
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+                $existing->update([
+                    'org_desc' => $data['org_desc'],
                     'adviser_id' => $adviser?->id,
-                ]
-            );
+                ]);
+            } else {
+                Organization::create([
+                    'org_name' => $data['org_name'],
+                    'org_desc' => $data['org_desc'],
+                    'adviser_id' => $adviser?->id,
+                ]);
+            }
         }
     }
 }

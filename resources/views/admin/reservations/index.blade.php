@@ -42,7 +42,26 @@
                             <td class="px-4 py-2">{{ Str::limit($r->purpose, 60) }}</td>
                             <td class="px-4 py-2">{{ optional($r->user)->full_name ?? '—' }}</td>
                             <td class="px-4 py-2">
-                                <span class="inline-block px-2 py-1 rounded bg-gray-100">{{ ucfirst(str_replace('_', ' ', $r->status)) }}</span>
+                                @php
+                                    $statusLabel = match($r->status) {
+                                        'approved' => 'Approved by Admin',
+                                        'admin_approved' => 'Awaiting Admin',
+                                        'adviser_approved' => 'Awaiting Priest',
+                                        'pending' => 'Awaiting Adviser',
+                                        'confirmed' => 'Confirmed',
+                                        'completed' => 'Completed',
+                                        'rejected' => 'Rejected',
+                                        'cancelled' => 'Cancelled',
+                                        default => ucfirst(str_replace('_', ' ', $r->status))
+                                    };
+                                    $statusClass = match($r->status) {
+                                        'approved', 'confirmed', 'completed' => 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+                                        'rejected', 'cancelled' => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+                                        'admin_approved' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+                                        default => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300'
+                                    };
+                                @endphp
+                                <span class="inline-block px-2 py-1 rounded text-xs font-medium {{ $statusClass }}">{{ $statusLabel }}</span>
                             </td>
                             <td class="px-4 py-2">{{ optional($r->schedule_date)->format('Y-m-d H:i') }}</td>
                             <td class="px-4 py-2">

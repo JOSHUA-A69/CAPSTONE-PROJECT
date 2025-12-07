@@ -62,9 +62,30 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($r->status === 'pending')
-                                <span class="badge-warning">Pending</span>
+                                {{-- Show partial approval progress if applicable --}}
+                                @php
+                                    $approvedCount = $r->organizations ? $r->organizations->where('pivot.approval_status', 'approved')->count() : 0;
+                                    $totalOrgs = $r->organizations ? $r->organizations->count() : 0;
+                                @endphp
+                                @if($totalOrgs > 1 && $approvedCount > 0)
+                                    <span class="badge-warning">Awaiting Adviser ({{ $approvedCount }}/{{ $totalOrgs }})</span>
+                                @else
+                                    <span class="badge-warning">Awaiting Adviser</span>
+                                @endif
                             @elseif($r->status === 'adviser_approved')
-                                <span class="badge-success">Adviser Approved</span>
+                                <span class="badge-info">Awaiting Priest</span>
+                            @elseif($r->status === 'admin_approved')
+                                <span class="badge-info">Awaiting Admin</span>
+                            @elseif($r->status === 'approved')
+                                <span class="badge-success">Approved by Admin</span>
+                            @elseif($r->status === 'confirmed')
+                                <span class="badge-success">Confirmed</span>
+                            @elseif($r->status === 'completed')
+                                <span class="badge-success">Completed</span>
+                            @elseif($r->status === 'rejected')
+                                <span class="badge-danger">Rejected</span>
+                            @elseif($r->status === 'cancelled')
+                                <span class="badge-secondary">Cancelled</span>
                             @else
                                 <span class="badge-secondary">{{ ucfirst(str_replace('_', ' ', $r->status)) }}</span>
                             @endif

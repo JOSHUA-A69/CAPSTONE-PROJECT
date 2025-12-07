@@ -328,7 +328,7 @@ class ReservationController extends Controller
 
     public function show($reservation_id)
     {
-        $reservation = Reservation::with(['service', 'venue', 'organization.adviser', 'officiant', 'history.reservation'])
+        $reservation = Reservation::with(['service', 'venue', 'organization.adviser', 'officiant', 'priests', 'history.reservation'])
             ->where('user_id', Auth::id())
             ->findOrFail($reservation_id);
 

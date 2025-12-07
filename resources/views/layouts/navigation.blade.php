@@ -32,6 +32,12 @@
                                 {{ __('View Calendar') }}
                             </x-nav-link>
                         @endif
+
+                        @if(auth()->user()->role === 'requestor')
+                            <x-nav-link :href="route('requestor.organization-bookings.create')" :active="request()->routeIs('requestor.organization-bookings.*')" role="menuitem">
+                                {{ __('Organization Request') }}
+                            </x-nav-link>
+                        @endif
                     @endif
 
                     @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'requestor']))
@@ -136,16 +142,16 @@
                     window.addEventListener('notification-update', () => updateCount());
                 ">
             <button @click="open = !open; if (open) loadNotifications()" 
-                class="relative flex items-center justify-center h-10 w-10 text-white/85 hover:text-white focus:text-white hover:bg-emerald-700/40 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/60">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="relative flex items-center justify-center h-8 w-8 text-white/85 hover:text-white focus:text-white hover:bg-emerald-700/40 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/60">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
                         <!-- Notification Count Badge - Professional Clean Design -->
                         <span x-show="count > 0" 
                               x-cloak
-                              class="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-semibold leading-none text-white bg-red-600 rounded-full border-2 border-white dark:border-gray-800 shadow-sm transform translate-x-1/2 -translate-y-1/2"
+                              class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1 py-0.5 text-xs font-medium leading-none text-white bg-red-500 rounded-full border border-white dark:border-gray-800 shadow-sm"
                               x-text="count > 99 ? '99+' : count"
-                              style="min-width: 1.25rem;">
+                              style="min-width: 1rem; font-size: 0.6rem;">
                         </span>
                     </button>
 
@@ -158,101 +164,67 @@
                          x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
                          x-transition:leave-end="opacity-0 transform scale-95 -translate-y-2"
                          @click.away="open = false" 
-                         class="absolute top-full right-0 mt-2 w-[500px] max-w-[calc(100vw-24px)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-[9999]" 
+                         class="absolute top-full right-0 mt-2 w-[400px] max-w-[calc(100vw-24px)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-[9999]" 
                          style="display: none;">
                         <div>
                             <!-- Header - Enhanced -->
-                            <div class="px-6 py-4 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 border-b-2 border-blue-200 dark:border-blue-800">
-                                <div class="flex items-center gap-3">
-                                    <div class="flex-shrink-0">
-                                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 flex items-center justify-center shadow-md">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Notifications</h3>
-                                        <p x-show="count > 0" class="text-xs text-gray-600 dark:text-gray-400" x-text="count === 1 ? '1 unread message' : count + ' unread messages'"></p>
-                                    </div>
-                                    <span x-show="count > 0" 
-                                          class="ml-2 flex items-center justify-center min-w-[28px] h-7 px-2.5 text-sm font-bold text-white bg-gradient-to-br from-red-500 to-red-600 rounded-full shadow-lg border-2 border-white dark:border-gray-800 animate-pulse" 
-                                          x-text="count"></span>
-                                </div>
-                                <button @click="open = false" class="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                </button>
+                            <div class="px-6 py-4 flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 border-b-2 border-blue-200 dark:border-blue-800">
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
+                                <p x-show="count > 0" class="ml-3 text-xs text-gray-600 dark:text-gray-400" x-text="count === 1 ? '1 unread message' : count + ' unread messages'"></p>
+                                  <!-- Removed red notification count badge -->
                             </div>
 
                             <!-- Notification List - Enhanced -->
                             <div id="notification-list" class="max-h-[480px] overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                                <!-- Notifications will be loaded here -->
-                                <div class="px-6 py-8 text-center">
-                                    <svg class="w-8 h-8 mx-auto mb-2 text-gray-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                    </svg>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400">Loading notifications...</p>
-                                </div>
+                                <!-- Notifications will be loaded here via AJAX -->
+                                <template x-if="true">
+                                    <div>
+                                        @php
+                                            // Render the recent-list component with empty notifications for initial load
+                                            echo view('components.notifications.recent-list', [
+                                                'notifications' => collect([]),
+                                                'role' => auth()->user()->role ?? 'requestor',
+                                            ]);
+                                        @endphp
+                                    </div>
+                                </template>
                             </div>
 
                             <!-- Footer with View All Link - Enhanced -->
                             <div class="px-6 py-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                                <button type="button"
-                                        x-show="count > 0"
-                                        @click="
-                                            let urlBase = '';
-                                            @if(auth()->user()->role === 'priest') urlBase='{{ route('priest.notifications.mark-all-read') }}';
-                                            @elseif(auth()->user()->role === 'adviser') urlBase='{{ route('adviser.notifications.mark-all-read') }}';
-                                            @elseif(auth()->user()->role === 'requestor') urlBase='{{ route('requestor.notifications.mark-all-read') }}';
-                                            @elseif(auth()->user()->role === 'staff') urlBase='{{ route('admin.notifications.mark-all-read') }}';
-                                            @else urlBase='{{ route('admin.notifications.mark-all-read') }}'; @endif
-                                            fetch(urlBase, {method: 'POST', headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content') }})
-                                              .then(r => r.json())
-                                              .then(data => {
-                                                  count = 0;
-                                                  // Optimistically clear unread background styles
-                                                  document.querySelectorAll('#notification-list .bg-blue-50').forEach(el => el.classList.remove('bg-blue-50'));
-                                                  window.dispatchEvent(new Event('notification-update'));
-                                              });
-                                        "
-                                        class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/60 disabled:opacity-40">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    Mark all read
-                                </button>
+                                <!-- Removed Mark all read button -->
                                 @if(auth()->user()->role === 'priest')
-                                <a href="{{ route('priest.notifications.index') }}" class="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
+                                <a href="{{ route('priest.notifications.index') }}" class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
                                     <span>View All Notifications</span>
-                                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                     </svg>
                                 </a>
                                 @elseif(auth()->user()->role === 'adviser')
-                                <a href="{{ route('adviser.notifications.index') }}" class="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
+                                <a href="{{ route('adviser.notifications.index') }}" class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
                                     <span>View All Notifications</span>
-                                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                     </svg>
                                 </a>
                                 @elseif(auth()->user()->role === 'requestor')
-                                <a href="{{ route('requestor.notifications.index') }}" class="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
+                                <a href="{{ route('requestor.notifications.index') }}" class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
                                     <span>View All Notifications</span>
-                                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                     </svg>
                                 </a>
                                 @elseif(auth()->user()->role === 'staff')
-                                <a href="{{ route('staff.notifications.index') }}" class="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
+                                <a href="{{ route('staff.notifications.index') }}" class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
                                     <span>View All Notifications</span>
-                                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                     </svg>
                                 </a>
                                 @else
-                                <a href="{{ route('admin.notifications.index') }}" class="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
+                                <a href="{{ route('admin.notifications.index') }}" class="flex items-center justify-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors group">
                                     <span>View All Notifications</span>
-                                    <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                     </svg>
                                 </a>
@@ -308,6 +280,26 @@
                             </svg>
                             {{ __('Profile') }}
                         </x-dropdown-link>
+
+                        <!-- Archived History Link (Only for Priest role) -->
+                        @if(Auth::user()->role === 'priest')
+                        <x-dropdown-link :href="route('priest.history.archived')" class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            {{ __('Archived History') }}
+                        </x-dropdown-link>
+                        @endif
+
+                        <!-- Archived Notifications Link (For Admin and Staff) -->
+                        @if(Auth::user()->role === 'admin' || Auth::user()->role === 'staff')
+                        <x-dropdown-link :href="route('admin.notifications.archived')" class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            {{ __('Archived Notifications') }}
+                        </x-dropdown-link>
+                        @endif
 
                         <!-- Divider -->
                         <div class="border-t border-gray-200 dark:border-gray-600"></div>

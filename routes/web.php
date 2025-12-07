@@ -18,6 +18,15 @@ Route::get('/refresh-csrf', function () {
     return response()->json(['token' => csrf_token()]);
 });
 
+// Availability API Routes (for real-time double-booking prevention)
+Route::middleware(['auth'])->prefix('api/availability')->name('api.availability.')->group(function () {
+    Route::post('/check', [\App\Http\Controllers\Api\AvailabilityController::class, 'checkAvailability'])->name('check');
+    Route::post('/priests', [\App\Http\Controllers\Api\AvailabilityController::class, 'getAvailablePriests'])->name('priests');
+    Route::post('/venues', [\App\Http\Controllers\Api\AvailabilityController::class, 'getAvailableVenues'])->name('venues');
+    Route::post('/times', [\App\Http\Controllers\Api\AvailabilityController::class, 'getAvailableTimes'])->name('times');
+    Route::post('/summary', [\App\Http\Controllers\Api\AvailabilityController::class, 'getDateSummary'])->name('summary');
+});
+
 Route::get('/', [\App\Http\Controllers\WelcomeController::class, 'index']);
 
 // Public Calendar Route (accessible to everyone)
@@ -47,6 +56,25 @@ if (app()->environment('local')) {
         // Redirect to dashboard which will forward to the role-specific page
         return redirect()->route('dashboard');
     })->middleware('auth')->name('dev.verify');
+
+    // Manual test route to trigger unnoticed reservations check
+    Route::get('/dev/test-unnoticed', function () {
+        if (Auth::user()?->role !== 'admin') {
+            return response('Unauthorized', 403);
+        }
+
+        \Illuminate\Support\Facades\Artisan::call('reservations:check-unnoticed', ['--send-notifications' => true]);
+        
+        return response(
+            '<pre>' . htmlspecialchars(\Illuminate\Support\Facades\Artisan::output()) . '</pre>' .
+            '<p><a href="' . route('staff.notifications.index') . '">View Staff Notifications</a></p>',
+            200,
+            ['Content-Type' => 'text/html']
+        );
+    })->middleware('auth')->name('dev.test-unnoticed');
+
+    // Debug notifications page
+    Route::get('/dev/debug-notifications', [\App\Http\Controllers\DebugController::class, 'notifications'])->middleware('auth')->name('dev.debug-notifications');
 }
 
 // Default dashboard: redirect users to their role-specific dashboard
@@ -133,10 +161,15 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', \App\Http\Middleware
     
     // Notification Routes
     Route::get('/notifications', [\App\Http\Controllers\Staff\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/archived', [\App\Http\Controllers\Staff\NotificationController::class, 'archived'])->name('notifications.archived');
     Route::get('/notifications/count', [\App\Http\Controllers\Staff\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
     Route::get('/notifications/recent', [\App\Http\Controllers\Staff\NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Staff\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/clear-all', [\App\Http\Controllers\Staff\NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::post('/notifications/{id}/archive', [\App\Http\Controllers\Staff\NotificationController::class, 'archive'])->name('notifications.archive');
+    Route::post('/notifications/{id}/restore', [\App\Http\Controllers\Staff\NotificationController::class, 'restore'])->name('notifications.restore');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\Staff\NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [\App\Http\Controllers\Staff\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::get('/notifications/{id}', [\App\Http\Controllers\Staff\NotificationController::class, 'show'])->name('notifications.show');
     
     // Calendar Management Routes
     Route::get('/calendar', [\App\Http\Controllers\Staff\CalendarController::class, 'index'])->name('calendar.index');
@@ -199,20 +232,38 @@ Route::prefix('requestor')->name('requestor.')->middleware(['auth', 'verified', 
 
     // Notification Routes
     Route::get('/notifications', [\App\Http\Controllers\Requestor\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/archived', [\App\Http\Controllers\Requestor\NotificationController::class, 'archived'])->name('notifications.archived');
     Route::get('/notifications/count', [\App\Http\Controllers\Requestor\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
     Route::get('/notifications/recent', [\App\Http\Controllers\Requestor\NotificationController::class, 'getRecent'])->name('notifications.recent');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Requestor\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/clear-all', [\App\Http\Controllers\Requestor\NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::post('/notifications/{id}/archive', [\App\Http\Controllers\Requestor\NotificationController::class, 'archive'])->name('notifications.archive');
+    Route::post('/notifications/{id}/restore', [\App\Http\Controllers\Requestor\NotificationController::class, 'restore'])->name('notifications.restore');
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Requestor\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::get('/notifications/{id}', [\App\Http\Controllers\Requestor\NotificationController::class, 'show'])->name('notifications.show');
+
+    // Organization Booking Routes
+    Route::get('/organization-bookings', [\App\Http\Controllers\Requestor\OrganizationBookingController::class, 'index'])->name('organization-bookings.index');
+    Route::get('/organization-bookings/create', [\App\Http\Controllers\Requestor\OrganizationBookingController::class, 'create'])->name('organization-bookings.create');
+    Route::post('/organization-bookings', [\App\Http\Controllers\Requestor\OrganizationBookingController::class, 'store'])->name('organization-bookings.store');
+    Route::get('/organization-bookings/{organizationBookingRequest}', [\App\Http\Controllers\Requestor\OrganizationBookingController::class, 'show'])->name('organization-bookings.show');
+    Route::get('/organization-bookings/{organizationBookingRequest}/edit', [\App\Http\Controllers\Requestor\OrganizationBookingController::class, 'edit'])->name('organization-bookings.edit');
+    Route::put('/organization-bookings/{organizationBookingRequest}', [\App\Http\Controllers\Requestor\OrganizationBookingController::class, 'update'])->name('organization-bookings.update');
+    Route::delete('/organization-bookings/{organizationBookingRequest}', [\App\Http\Controllers\Requestor\OrganizationBookingController::class, 'destroy'])->name('organization-bookings.destroy');
+    Route::get('/organizations/{organization}/details', [\App\Http\Controllers\Requestor\OrganizationBookingController::class, 'getOrganizationDetails'])->name('organizations.details');
 });
 
 // Adviser Reservation Routes
 Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':adviser'])->group(function () {
     // Notification Routes
     Route::get('/notifications', [\App\Http\Controllers\Adviser\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/archived', [\App\Http\Controllers\Adviser\NotificationController::class, 'archived'])->name('notifications.archived');
     Route::get('/notifications/count', [\App\Http\Controllers\Adviser\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
     Route::get('/notifications/recent', [\App\Http\Controllers\Adviser\NotificationController::class, 'getRecent'])->name('notifications.recent');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Adviser\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/clear-all', [\App\Http\Controllers\Adviser\NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::post('/notifications/{id}/archive', [\App\Http\Controllers\Adviser\NotificationController::class, 'archive'])->name('notifications.archive');
+    Route::post('/notifications/{id}/restore', [\App\Http\Controllers\Adviser\NotificationController::class, 'restore'])->name('notifications.restore');
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Adviser\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
     Route::get('/notifications/{id}', [\App\Http\Controllers\Adviser\NotificationController::class, 'show'])->name('notifications.show');
 
@@ -226,6 +277,16 @@ Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App
     Route::get('/reservations/{reservation_id}', [\App\Http\Controllers\Adviser\ReservationController::class, 'show'])->name('reservations.show');
     Route::post('/reservations/{reservation_id}/approve', [\App\Http\Controllers\Adviser\ReservationController::class, 'approve'])->name('reservations.approve');
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Adviser\ReservationController::class, 'reject'])->name('reservations.reject');
+    Route::post('/reservations/{reservation_id}/cancel-approval', [\App\Http\Controllers\Adviser\ReservationController::class, 'cancelApproval'])->name('reservations.cancel-approval');
+
+    // Organization Booking Routes
+    Route::get('/organization-bookings', [\App\Http\Controllers\Adviser\OrganizationBookingController::class, 'index'])->name('organization-bookings.index');
+    Route::get('/organization-bookings/calendar', [\App\Http\Controllers\Adviser\OrganizationBookingController::class, 'calendar'])->name('organization-bookings.calendar');
+    Route::get('/organization-bookings/calendar-data', [\App\Http\Controllers\Adviser\OrganizationBookingController::class, 'calendarData'])->name('organization-bookings.calendar-data');
+    Route::get('/organization-bookings/summary', [\App\Http\Controllers\Adviser\OrganizationBookingController::class, 'summary'])->name('organization-bookings.summary');
+    Route::get('/organization-bookings/{organizationBookingRequest}', [\App\Http\Controllers\Adviser\OrganizationBookingController::class, 'show'])->name('organization-bookings.show');
+    Route::post('/organization-bookings/{organizationBookingRequest}/approve', [\App\Http\Controllers\Adviser\OrganizationBookingController::class, 'approve'])->name('organization-bookings.approve');
+    Route::post('/organization-bookings/{organizationBookingRequest}/reject', [\App\Http\Controllers\Adviser\OrganizationBookingController::class, 'reject'])->name('organization-bookings.reject');
 });
 
 // Admin Reservation Routes
@@ -238,6 +299,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Admin\ReservationController::class, 'reject'])->name('reservations.reject');
     Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Admin\ReservationController::class, 'cancel'])->name('reservations.cancel');
     Route::post('/reservations/{reservation_id}/confirm-external', [\App\Http\Controllers\Admin\ReservationController::class, 'confirmExternal'])->name('reservations.confirm-external');
+    Route::post('/reservations/{reservation_id}/final-approve', [\App\Http\Controllers\Admin\ReservationController::class, 'finalApprove'])->name('reservations.final-approve');
 
     // Admin Service Routes (when admin is assigned as priest)
     Route::get('/services', [\App\Http\Controllers\Admin\ServiceController::class, 'index'])->name('services.index');
@@ -268,6 +330,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
 
     // Organizations (read-only admin view)
     Route::get('/organizations', [\App\Http\Controllers\Admin\OrganizationController::class, 'index'])->name('organizations.index');
+
+    // Organization Booking Routes (Admin oversight and management)
+    Route::get('/organization-bookings', [\App\Http\Controllers\Admin\OrganizationBookingController::class, 'index'])->name('organization-bookings.index');
+    Route::get('/organization-bookings/reports', [\App\Http\Controllers\Admin\OrganizationBookingController::class, 'reports'])->name('organization-bookings.reports');
+    Route::get('/organization-bookings/{organizationBookingRequest}', [\App\Http\Controllers\Admin\OrganizationBookingController::class, 'show'])->name('organization-bookings.show');
+    Route::post('/organization-bookings/{organizationBookingRequest}/reassign-adviser', [\App\Http\Controllers\Admin\OrganizationBookingController::class, 'reassignAdviser'])->name('organization-bookings.reassign-adviser');
 });
 
 // Shared Notification Routes for Admin and Staff (same controller, broader access)
@@ -276,7 +344,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::get('/notifications', [\App\Http\Controllers\Admin\NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/count', [\App\Http\Controllers\Admin\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
     Route::get('/notifications/recent', [\App\Http\Controllers\Admin\NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::get('/notifications/archived', [\App\Http\Controllers\Admin\NotificationController::class, 'archived'])->name('notifications.archived');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/clear-all', [\App\Http\Controllers\Admin\NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::post('/notifications/{id}/archive', [\App\Http\Controllers\Admin\NotificationController::class, 'archive'])->name('notifications.archive');
+    Route::post('/notifications/{id}/restore', [\App\Http\Controllers\Admin\NotificationController::class, 'restore'])->name('notifications.restore');
     Route::get('/notifications/{id}/priest-declined', [\App\Http\Controllers\Admin\NotificationController::class, 'showPriestDeclined'])->name('notifications.priest-declined');
     Route::get('/notifications/{id}/priest-action', [\App\Http\Controllers\Admin\NotificationController::class, 'showPriestAction'])->name('notifications.priest-action');
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
@@ -306,22 +378,38 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     // Services Management (Staff can edit only; no add/delete)
     Route::get('/services/manage', [\App\Http\Controllers\Staff\ServiceManagementController::class, 'index'])->name('services.manage');
     Route::put('/services/manage/{id}', [\App\Http\Controllers\Staff\ServiceManagementController::class, 'update'])->name('services.manage.update');
+
+    // Organization Booking Routes (Staff monitoring and reminder system)
+    Route::get('/organization-bookings', [\App\Http\Controllers\Staff\OrganizationBookingController::class, 'index'])->name('organization-bookings.index');
+    Route::get('/organization-bookings/overdue', [\App\Http\Controllers\Staff\OrganizationBookingController::class, 'overdue'])->name('organization-bookings.overdue');
+    Route::get('/organization-bookings/{organizationBookingRequest}', [\App\Http\Controllers\Staff\OrganizationBookingController::class, 'show'])->name('organization-bookings.show');
+    Route::post('/organization-bookings/{organizationBookingRequest}/send-reminder', [\App\Http\Controllers\Staff\OrganizationBookingController::class, 'sendReminder'])->name('organization-bookings.send-reminder');
 });
 
 // Priest Reservation Routes (specific routes BEFORE parameterized ones)
 Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':priest'])->group(function () {
     // Notification routes
     Route::get('/notifications', [\App\Http\Controllers\Priest\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/archived', [\App\Http\Controllers\Priest\NotificationController::class, 'archived'])->name('notifications.archived');
     Route::get('/notifications/count', [\App\Http\Controllers\Priest\NotificationController::class, 'getUnreadCount'])->name('notifications.count');
     Route::get('/notifications/recent', [\App\Http\Controllers\Priest\NotificationController::class, 'getRecent'])->name('notifications.recent');
+    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Priest\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::post('/notifications/clear-all', [\App\Http\Controllers\Priest\NotificationController::class, 'clearAll'])->name('notifications.clear-all');
+    Route::post('/notifications/{id}/archive', [\App\Http\Controllers\Priest\NotificationController::class, 'archive'])->name('notifications.archive');
+    Route::post('/notifications/{id}/restore', [\App\Http\Controllers\Priest\NotificationController::class, 'restore'])->name('notifications.restore');
     Route::get('/notifications/{id}/assignment', [\App\Http\Controllers\Priest\NotificationController::class, 'showAssignment'])->name('notifications.assignment');
     Route::get('/notifications/{id}', [\App\Http\Controllers\Priest\NotificationController::class, 'show'])->name('notifications.show');
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Priest\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
-    Route::post('/notifications/mark-all-read', [\App\Http\Controllers\Priest\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
 
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Priest\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Priest\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+
+    // History routes
+    Route::post('/history/{historyId}/archive', [\App\Http\Controllers\Priest\HistoryController::class, 'archive'])->name('history.archive');
+    Route::post('/history/reservation/{reservationId}/clear-all', [\App\Http\Controllers\Priest\HistoryController::class, 'clearAll'])->name('history.clearAll');
+    Route::get('/history/archived', [\App\Http\Controllers\Priest\HistoryController::class, 'archived'])->name('history.archived');
+    Route::post('/history/{historyId}/restore', [\App\Http\Controllers\Priest\HistoryController::class, 'restore'])->name('history.restore');
 
     // Reservation routes
     Route::get('/reservations', [\App\Http\Controllers\Priest\ReservationController::class, 'index'])->name('reservations.index');

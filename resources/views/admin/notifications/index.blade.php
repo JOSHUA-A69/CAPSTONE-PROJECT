@@ -7,8 +7,14 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <!-- Mark All as Read Button -->
-            <div class="mb-4 flex justify-end">
+            <!-- Action Buttons -->
+            <div class="mb-4 flex justify-end gap-3">
+                <button onclick="clearAllNotifications()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    Clear All
+                </button>
                 <button onclick="markAllAsRead()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                     Mark All as Read
                 </button>
@@ -18,8 +24,8 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 space-y-3">
                     @forelse($notifications as $notification)
-                        <div class="rounded-lg p-4 shadow-md transition-all {{ $notification->isUnread() ? 'bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-200 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600' }}">
-                            <div class="flex items-start justify-between">
+                        <div class="notification-item rounded-lg p-4 shadow-md transition-all {{ $notification->isUnread() ? 'bg-blue-100 dark:bg-blue-900/40 border-2 border-blue-200 dark:border-blue-700' : 'bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600' }}" id="notification-{{ $notification->notification_id }}">
+                            <div class="flex items-start justify-between gap-4">
                                 <div class="flex-1">
                                     <div class="flex items-center mb-2">
                                         @if($notification->type === 'Priest Declined')
@@ -60,7 +66,13 @@
                                     </p>
                                 </div>
 
-                                <div class="ml-4 flex-shrink-0">
+                                <div class="ml-4 flex-shrink-0 flex flex-col items-end gap-2">
+                                    <button onclick="archiveNotification({{ $notification->notification_id }})" class="flex-shrink-0 text-gray-400 hover:text-red-500 transition-colors p-2" title="Archive this notification">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                    
                                     @if($notification->type === 'Priest Declined')
                                         <a href="{{ route('admin.notifications.priest-declined', $notification->notification_id) }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none transition">
                                             View Details
@@ -121,8 +133,209 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Dispatch event to update notification badge
+                    if (window.dispatchEvent) {
+                        window.dispatchEvent(new Event('notification-update'));
+                    }
                     location.reload();
                 }
+            });
+        }
+
+        function clearAllNotifications() {
+            if (!confirm('Are you sure you want to archive all notifications?')) {
+                return;
+            }
+
+            fetch('{{ route('admin.notifications.clear-all') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Dispatch event to update notification badge
+                    if (window.dispatchEvent) {
+                        window.dispatchEvent(new Event('notification-update'));
+                    }
+                    // Fade out all notifications
+                    const notifications = document.querySelectorAll('.notification-item');
+                    notifications.forEach(item => {
+                        item.style.transition = 'opacity 0.3s, transform 0.3s';
+                        item.style.opacity = '0';
+                        item.style.transform = 'scale(0.95)';
+                    });
+                    setTimeout(() => {
+                        location.reload();
+                    }, 300);
+                } else {
+                    alert('Failed to clear notifications. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
+
+        function archiveNotification(notificationId) {
+            // Create custom confirmation modal instead of using confirm()
+            const modalHtml = `
+                <div id="archiveModal-${notificationId}" style="
+                    position: fixed;
+                    inset: 0;
+                    z-index: 99999;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: rgba(0,0,0,0.5);
+                    backdrop-filter: blur(4px);
+                    animation: fadeIn 0.2s ease;
+                " onclick="if(event.target === this) closeArchiveModal(${notificationId})">
+                    <div style="
+                        background: white;
+                        dark:background: #1f2937;
+                        border-radius: 16px;
+                        box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+                        max-width: 380px;
+                        width: 90%;
+                        overflow: hidden;
+                        animation: slideUp 0.3s ease;
+                    ">
+                        <!-- Header -->
+                        <div style="
+                            background: linear-gradient(135deg, #f3e8ff 0%, #e0e7ff 100%);
+                            padding: 24px;
+                            text-align: center;
+                            border-bottom: 1px solid #e9d5ff;
+                        ">
+                            <div style="
+                                width: 56px;
+                                height: 56px;
+                                background: #fef3c7;
+                                border-radius: 50%;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin: 0 auto 12px;
+                            ">
+                                <svg width="28" height="28" fill="#d97706" viewBox="0 0 24 24">
+                                    <path fill-rule="evenodd" d="M3 12a9 9 0 110 18 9 9 0 010-18zm8-4a1 1 0 00-1 1v8a1 1 0 102 0V9a1 1 0 00-1-1zm0 12a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 style="color: #1f2937; font-size: 18px; font-weight: 700; margin: 0;">
+                                Archive Notification?
+                            </h3>
+                            <p style="color: #6b7280; font-size: 13px; margin: 8px 0 0 0;">
+                                This notification will be moved to archived
+                            </p>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div style="padding: 20px 24px;">
+                            <p style="color: #6b7280; font-size: 14px; margin: 0; line-height: 1.6;">
+                                You can restore this notification later from your archived notifications. This action is reversible.
+                            </p>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div style="padding: 16px 24px 24px; display: flex; gap: 12px; justify-content: flex-end; border-top: 1px solid #e5e7eb;">
+                            <button onclick="closeArchiveModal(${notificationId})" style="
+                                background: #f3f4f6;
+                                color: #374151;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 8px;
+                                font-size: 14px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.background='#e5e7eb'" 
+                               onmouseout="this.style.background='#f3f4f6'">
+                                Cancel
+                            </button>
+                            <button onclick="confirmArchive(${notificationId})" style="
+                                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                                color: white;
+                                border: none;
+                                padding: 10px 20px;
+                                border-radius: 8px;
+                                font-size: 14px;
+                                font-weight: 600;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.boxShadow='0 4px 12px rgba(37, 99, 235, 0.4)'" 
+                               onmouseout="this.style.boxShadow='none'">
+                                Archive
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes slideUp {
+                        from { transform: translateY(20px); opacity: 0; }
+                        to { transform: translateY(0); opacity: 1; }
+                    }
+                </style>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function closeArchiveModal(notificationId) {
+            const modal = document.getElementById(`archiveModal-${notificationId}`);
+            if (modal) {
+                modal.style.opacity = '0';
+                setTimeout(() => modal.remove(), 200);
+            }
+        }
+
+        function confirmArchive(notificationId) {
+            const modal = document.getElementById(`archiveModal-${notificationId}`);
+            if (modal) {
+                modal.remove();
+            }
+
+            fetch(`/admin/notifications/${notificationId}/archive`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const notificationItem = document.getElementById(`notification-${notificationId}`);
+                    notificationItem.style.transition = 'opacity 0.3s, transform 0.3s';
+                    notificationItem.style.opacity = '0';
+                    notificationItem.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        notificationItem.remove();
+                        // Dispatch event to update notification badge
+                        if (window.dispatchEvent) {
+                            window.dispatchEvent(new Event('notification-update'));
+                        }
+                        // Check if no more notifications
+                        const remainingItems = document.querySelectorAll('.notification-item');
+                        if (remainingItems.length === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+                } else {
+                    alert('Failed to archive notification');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
             });
         }
     </script>

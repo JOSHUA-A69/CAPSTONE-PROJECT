@@ -50,7 +50,7 @@
                                 <h3 class="text-heading text-2xl font-bold">{{ $reservation->activity_name ?? $reservation->service->service_name }}</h3>
 
                                 <!-- Status Badge -->
-                                @if(in_array($reservation->status, ['pending_priest_confirmation', 'admin_approved']))
+                                @if(in_array($reservation->status, ['adviser_approved', 'admin_approved']) && $reservation->priest_confirmation !== 'confirmed')
                                     <span class="badge-warning whitespace-nowrap">Awaiting Your Confirmation</span>
                                 @elseif($reservation->status === 'approved')
                                     <span class="badge-success whitespace-nowrap">Confirmed</span>
@@ -214,119 +214,54 @@
                 <!-- Right Column: Actions -->
                 <div class="space-y-6">
 
-                    <!-- Confirmation / Decline Actions -->
-                    @if(in_array($reservation->status, ['pending','admin_approved']) && $reservation->priest_confirmation !== 'confirmed')
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Confirmation Required
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            @if($reservation->status === 'admin_approved')
-                            <div class="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-                                <p class="text-sm text-purple-800 dark:text-purple-300 font-medium">
-                                    🔔 You have been reassigned to this service by the administrator.
-                                </p>
-                            </div>
-                            @endif
-
-                            <p class="text-muted text-sm mb-6">
-                                Please confirm your availability for this service. If you are not available, you can decline and another priest will be assigned.
-                            </p>
-
-                            <!-- Confirm Button -->
-                            <form method="POST" action="{{ route('priest.reservations.confirm', $reservation->reservation_id) }}" class="mb-3">
-                                @csrf
-                                <button type="submit"
-                                        onclick="return confirm('Confirm your availability for this service?')"
-                                        class="btn-success w-full justify-center">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    Confirm Availability
-                                </button>
-                            </form>
-
-                            <!-- Decline Button -->
-                            <button onclick="showDeclineModal()"
-                                    class="btn-danger w-full justify-center">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                                Decline Assignment
-                            </button>
-                        </div>
-                    </div>
-                    @elseif($reservation->priest_confirmation === 'confirmed')
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg mb-4">
-                                <div class="flex items-center">
-                                    <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                    </svg>
-                                    <div>
-                                        <h4 class="text-sm font-semibold text-green-900 dark:text-green-200">
-                                            Availability Confirmed
-                                        </h4>
-                                        <p class="text-sm text-green-800 dark:text-green-300">
-                                            Confirmed on {{ $reservation->priest_confirmed_at->format('M d, Y') }}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Cancel Confirmation Option -->
-                            @if($reservation->status === 'approved' && $reservation->schedule_date->isFuture())
-                            <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
-                                    <strong>Need to cancel?</strong> If you can no longer attend this service, you can cancel your confirmation and the administrator will be notified to assign another priest.
-                                </p>
-                                <button onclick="showCancelConfirmationModal()"
-                                        class="btn-danger w-full justify-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
-                                    Cancel My Confirmation
-                                </button>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                    @endif
-
                     <!-- History Timeline -->
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6 text-gray-900 dark:text-gray-100">
-                            <h3 class="text-lg font-semibold mb-4 flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Activity History
-                            </h3>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold flex items-center">
+                                    <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Activity History
+                                </h3>
+                                @if(!$reservation->history->where('archived_at', null)->isEmpty())
+                                <button onclick="clearAllHistory()" class="text-xs px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition-colors font-medium">
+                                    Clear All
+                                </button>
+                                @endif
+                            </div>
 
-                            @if($reservation->history->isEmpty())
+                            @php
+                                $activeHistory = $reservation->history->where('archived_at', null)->sortByDesc('created_at');
+                            @endphp
+
+                            @if($activeHistory->isEmpty())
                                 <p class="text-gray-500 text-sm">No activity recorded yet.</p>
                             @else
-                                <div class="space-y-4">
-                                    @foreach($reservation->history->sortByDesc('created_at') as $h)
-                                    <div class="flex">
-                                        <div class="flex-shrink-0 w-2 bg-blue-500 rounded-full mr-4"></div>
-                                        <div class="flex-1 pb-4">
-                                            <p class="text-sm font-semibold">{{ ucfirst(str_replace('_', ' ', $h->action)) }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                by {{ $h->performedBy?->full_name ?? 'System' }}
-                                                • {{ $h->created_at->format('M d, Y h:i A') }}
-                                            </p>
-                                            @if($h->remarks)
-                                            <p class="text-sm text-gray-700 dark:text-gray-300 mt-2 p-2 bg-gray-50 dark:bg-gray-700 rounded">
-                                                "{{ $h->remarks }}"
-                                            </p>
-                                            @endif
+                                <div class="space-y-3">
+                                    @foreach($activeHistory as $h)
+                                    <div class="history-item bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" id="history-{{ $h->history_id }}">
+                                        <div class="flex justify-between items-start gap-4">
+                                            <div class="flex flex-1">
+                                                <div class="flex-shrink-0 w-2 bg-blue-500 rounded-full mr-4"></div>
+                                                <div class="flex-1">
+                                                    <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ ucfirst(str_replace('_', ' ', $h->action)) }}</p>
+                                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                        by {{ $h->performedBy?->full_name ?? 'System' }}
+                                                        • {{ $h->created_at->format('M d, Y h:i A') }}
+                                                    </p>
+                                                    @if($h->remarks)
+                                                    <p class="text-sm text-gray-700 dark:text-gray-300 mt-2 p-2 bg-gray-50 dark:bg-gray-600 rounded">
+                                                        "{{ $h->remarks }}"
+                                                    </p>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <button onclick="archiveHistory({{ $h->history_id }})" class="flex-shrink-0 text-gray-400 hover:text-red-500 transition-colors" title="Archive this item">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
                                         </div>
                                     </div>
                                     @endforeach
@@ -468,6 +403,15 @@
 
     <!-- JavaScript -->
     <script>
+        @if(request()->has('notification_read'))
+        // Dispatch notification update event since notification was marked as read
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.dispatchEvent) {
+                window.dispatchEvent(new Event('notification-update'));
+            }
+        });
+        @endif
+
         function showDeclineModal() {
             document.getElementById('declineModal').style.display = 'flex';
         }
@@ -479,6 +423,78 @@
         }
         function hideCancelConfirmationModal() {
             document.getElementById('cancelConfirmationModal').style.display = 'none';
+        }
+
+        // Archive single history item
+        function archiveHistory(historyId) {
+            if (!confirm('Archive this activity history item?')) return;
+
+            fetch(`/priest/history/${historyId}/archive`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const historyItem = document.getElementById(`history-${historyId}`);
+                    historyItem.style.transition = 'opacity 0.3s, transform 0.3s';
+                    historyItem.style.opacity = '0';
+                    historyItem.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        historyItem.remove();
+                        // Check if no more history items and reload page
+                        const remainingItems = document.querySelectorAll('.history-item');
+                        if (remainingItems.length === 0) {
+                            location.reload();
+                        }
+                    }, 300);
+                } else {
+                    alert('Failed to archive history item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
+        }
+
+        // Clear all history items
+        function clearAllHistory() {
+            if (!confirm('Archive all activity history items for this reservation?')) return;
+
+            const reservationId = {{ $reservation->reservation_id }};
+
+            fetch(`/priest/history/reservation/${reservationId}/clear-all`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Fade out all history items
+                    const historyItems = document.querySelectorAll('.history-item');
+                    historyItems.forEach(item => {
+                        item.style.transition = 'opacity 0.3s, transform 0.3s';
+                        item.style.opacity = '0';
+                        item.style.transform = 'scale(0.95)';
+                    });
+                    setTimeout(() => {
+                        location.reload();
+                    }, 300);
+                } else {
+                    alert('Failed to clear history');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
         }
     </script>
 

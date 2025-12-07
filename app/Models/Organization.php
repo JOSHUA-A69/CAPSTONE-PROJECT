@@ -32,8 +32,32 @@ class Organization extends Model
 
     protected $dates = ['deleted_at'];
 
+    // ===========================
+    // Accessors
+    // ===========================
+
+    /**
+     * Convenience accessor for organization name
+     */
+    public function getNameAttribute()
+    {
+        return $this->org_name;
+    }
+
+    // ===========================
+    // Relationships
+    // ===========================
+
     public function adviser()
     {
         return $this->belongsTo(User::class, 'adviser_id');
+    }
+
+    /**
+     * Organization booking requests
+     */
+    public function bookingRequests()
+    {
+        return $this->hasMany(OrganizationBookingRequest::class, 'organization_id', 'org_id');
     }
 }

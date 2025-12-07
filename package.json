@@ -23,6 +23,6 @@
         "@fullcalendar/interaction": "^6.1.19",
         "@fullcalendar/list": "^6.1.19",
         "@fullcalendar/timegrid": "^6.1.19",
-        "sweetalert2": "^11.12.4"
+        "sweetalert2": "^11.26.3"
     }
 }

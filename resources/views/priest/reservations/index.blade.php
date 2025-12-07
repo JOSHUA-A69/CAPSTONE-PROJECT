@@ -11,6 +11,61 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
+            <!-- Success Messages -->
+            @if(session('status') === 'reservation-confirmed')
+                <div class="mb-6 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-4">
+                    <div class="flex items-start">
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-sm font-semibold text-green-900 dark:text-green-200 mb-1">
+                                ✓ Availability Confirmed Successfully!
+                            </h3>
+                            <p class="text-sm text-green-800 dark:text-green-300">
+                                {{ session('message', 'Your availability has been confirmed. The requestor and administrators have been notified.') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('status') === 'reservation-declined')
+                <div class="mb-6 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4">
+                    <div class="flex items-start">
+                        <svg class="w-6 h-6 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-1">
+                                Assignment Declined Successfully
+                            </h3>
+                            <p class="text-sm text-blue-800 dark:text-blue-300">
+                                {{ session('message', 'Your decline notification has been sent. Administrators have been notified to assign another priest.') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="mb-6 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4">
+                    <div class="flex items-start">
+                        <svg class="w-6 h-6 text-red-600 dark:text-red-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-sm font-semibold text-red-900 dark:text-red-200 mb-1">
+                                Error
+                            </h3>
+                            <p class="text-sm text-red-800 dark:text-red-300">
+                                {{ session('error') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Filter Tabs -->
             <div class="mb-6 flex flex-wrap gap-2 justify-between items-center">
                 <div class="flex flex-wrap gap-2">
@@ -85,12 +140,16 @@
 
                                         <!-- Status Badge -->
                                         @if($reservation->status === 'pending')
-                                            <span class="badge-warning">New Assignment - Pending Review</span>
+                                            <span class="badge-warning">Awaiting Adviser</span>
+                                        @elseif($reservation->status === 'adviser_approved')
+                                            <span class="badge-warning">Awaiting Your Confirmation</span>
                                         @elseif($reservation->status === 'pending_priest_confirmation')
                                             <span class="badge-warning">Awaiting Confirmation</span>
                                         @elseif($reservation->status === 'admin_approved')
-                                            <span class="badge-info">New Assignment</span>
+                                            <span class="badge-info">Awaiting Admin</span>
                                         @elseif($reservation->status === 'approved')
+                                            <span class="badge-success">Approved by Admin</span>
+                                        @elseif($reservation->status === 'confirmed')
                                             <span class="badge-success">Confirmed</span>
                                         @elseif($reservation->status === 'completed')
                                             <span class="badge-secondary">Completed</span>
@@ -135,8 +194,9 @@
                                     @endif
 
                                     <!-- Action Buttons -->
-                                    @if(in_array($reservation->status, ['pending', 'pending_priest_confirmation', 'admin_approved']) &&
-                                        (!$reservation->priest_confirmation || $reservation->priest_confirmation === 'pending'))
+                                    @if(in_array($reservation->status, ['adviser_approved', 'admin_approved']) &&
+                                        $reservation->priest_confirmation !== 'confirmed' &&
+                                        $reservation->priest_confirmation !== 'declined')
                                         <!-- Pending Confirmation Actions -->
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t dark:border-gray-700">
                                             <a href="{{ route('priest.reservations.show', $reservation) }}" class="btn-secondary text-center">
@@ -178,8 +238,9 @@
                                         </div>
                                     @endif
 
-                                    @if(in_array($reservation->status, ['pending', 'pending_priest_confirmation', 'admin_approved']) &&
-                                        (!$reservation->priest_confirmation || $reservation->priest_confirmation === 'pending'))
+                                    @if(in_array($reservation->status, ['adviser_approved', 'admin_approved']) &&
+                                        $reservation->priest_confirmation !== 'confirmed' &&
+                                        $reservation->priest_confirmation !== 'declined')
                                         <!-- Inline Decline Panel (more reliable than overlay modal) -->
                                         <div id="declinePanel-{{ $reservation->reservation_id }}" class="hidden mt-4 p-4 border border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/10">
                               <form method="POST" action="{{ route('priest.reservations.decline', $reservation->reservation_id) }}"

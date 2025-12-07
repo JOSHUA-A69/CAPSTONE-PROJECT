@@ -133,7 +133,7 @@ class Reservation extends Model
     public function organizations()
     {
         return $this->belongsToMany(Organization::class, 'reservation_organization', 'reservation_id', 'organization_id')
-            ->withPivot('notified', 'notified_at')
+            ->withPivot('notified', 'notified_at', 'approval_status', 'rejection_reason', 'responded_by', 'responded_at')
             ->withTimestamps();
     }
 
@@ -175,6 +175,13 @@ class Reservation extends Model
 
     public function history()
     {
+        return $this->hasMany(ReservationHistory::class, 'reservation_id', 'reservation_id')
+                    ->whereNull('archived_at');
+    }
+
+    // All history including archived
+    public function allHistory()
+    {
         return $this->hasMany(ReservationHistory::class, 'reservation_id', 'reservation_id');
     }
 
@@ -208,11 +215,12 @@ class Reservation extends Model
 
     /**
      * Scope: Waiting for priest confirmation
-     * Includes: pending (just submitted), admin_approved (after admin approval)
+     * Includes: adviser_approved (after adviser approval), admin_approved (after admin assignment)
+     * Per swimlane: Adviser approves → Priest confirms availability → Admin assigns
      */
     public function scopeAwaitingPriestConfirmation(Builder $query): Builder
     {
-        return $query->whereIn('status', ['pending', 'admin_approved'])
+        return $query->whereIn('status', ['adviser_approved', 'admin_approved'])
             ->where(function ($q) {
                 $q->whereNull('priest_confirmation')
                     ->orWhere('priest_confirmation', 'pending');
@@ -251,10 +259,16 @@ class Reservation extends Model
 
     /**
      * Scope: Reservations assigned to a specific priest
+     * Checks both many-to-many priests relationship and legacy officiant_id
      */
     public function scopeForPriest(Builder $query, int $priestId): Builder
     {
-        return $query->where('officiant_id', $priestId);
+        return $query->where(function ($q) use ($priestId) {
+            $q->where('officiant_id', $priestId)
+              ->orWhereHas('priests', function ($priestQuery) use ($priestId) {
+                  $priestQuery->where('users.id', $priestId);
+              });
+        });
     }
 
     /**
@@ -349,6 +363,151 @@ class Reservation extends Model
             'declined' => 'Declined',
             default => 'Not Yet Assigned',
         };
+    }
+
+    // ===========================
+    // Multi-Approval Helper Methods
+    // ===========================
+
+    /**
+     * Check if all organizations/advisers have approved
+     */
+    public function allAdvisersApproved(): bool
+    {
+        $orgs = $this->organizations;
+        
+        // If no organizations attached, check if single org_id is approved (legacy)
+        if ($orgs->isEmpty()) {
+            return $this->status !== 'pending';
+        }
+
+        // All organizations must have approval_status = 'approved'
+        return $orgs->every(fn($org) => $org->pivot->approval_status === 'approved');
+    }
+
+    /**
+     * Check if any adviser has rejected
+     */
+    public function anyAdviserRejected(): bool
+    {
+        return $this->organizations->contains(fn($org) => $org->pivot->approval_status === 'rejected');
+    }
+
+    /**
+     * Get count of pending adviser approvals
+     */
+    public function pendingAdviserCount(): int
+    {
+        return $this->organizations->filter(fn($org) => $org->pivot->approval_status === 'pending')->count();
+    }
+
+    /**
+     * Get count of approved advisers
+     */
+    public function approvedAdviserCount(): int
+    {
+        return $this->organizations->filter(fn($org) => $org->pivot->approval_status === 'approved')->count();
+    }
+
+    /**
+     * Check if all selected priests have confirmed
+     */
+    public function allPriestsConfirmed(): bool
+    {
+        $priests = $this->priests;
+        
+        // If no priests attached via pivot, check legacy officiant
+        if ($priests->isEmpty()) {
+            return $this->priest_confirmation === 'confirmed';
+        }
+
+        // All priests must have confirmation_status = 'confirmed'
+        return $priests->every(fn($priest) => $priest->pivot->confirmation_status === 'confirmed');
+    }
+
+    /**
+     * Check if any priest has declined
+     */
+    public function anyPriestDeclined(): bool
+    {
+        return $this->priests->contains(fn($priest) => $priest->pivot->confirmation_status === 'declined');
+    }
+
+    /**
+     * Get count of pending priest confirmations
+     */
+    public function pendingPriestCount(): int
+    {
+        return $this->priests->filter(fn($priest) => $priest->pivot->confirmation_status === 'pending')->count();
+    }
+
+    /**
+     * Get count of confirmed priests
+     */
+    public function confirmedPriestCount(): int
+    {
+        return $this->priests->filter(fn($priest) => $priest->pivot->confirmation_status === 'confirmed')->count();
+    }
+
+    /**
+     * Get the display status for requestor view
+     * This shows user-friendly status based on the workflow state
+     */
+    public function getRequestorDisplayStatusAttribute(): string
+    {
+        // Check for cancelled/rejected first
+        if (in_array($this->status, ['cancelled', 'rejected'])) {
+            return ucfirst($this->status);
+        }
+
+        // Completed
+        if ($this->status === 'completed') {
+            return 'Completed';
+        }
+
+        // Final approved
+        if ($this->status === 'approved') {
+            return 'Approved by Admin';
+        }
+
+        // Check multi-adviser approval status
+        if ($this->status === 'pending') {
+            $totalOrgs = $this->organizations->count();
+            if ($totalOrgs > 1) {
+                $approved = $this->approvedAdviserCount();
+                return "Awaiting Adviser ({$approved}/{$totalOrgs} approved)";
+            }
+            return 'Awaiting Adviser';
+        }
+
+        // After all advisers approve, waiting for priests
+        if ($this->status === 'adviser_approved') {
+            $totalPriests = $this->priests->count();
+            if ($totalPriests > 1) {
+                $confirmed = $this->confirmedPriestCount();
+                if ($confirmed < $totalPriests) {
+                    return "Awaiting Priest ({$confirmed}/{$totalPriests} confirmed)";
+                }
+            }
+            // Single priest or external - check priest confirmation status
+            if ($this->priest_selection_type === 'external') {
+                return 'Awaiting Admin';
+            }
+            if ($this->priest_confirmation === 'confirmed' || $this->allPriestsConfirmed()) {
+                return 'Awaiting Admin';
+            }
+            return 'Awaiting Priest';
+        }
+
+        // Admin has approved, waiting for final priest confirmation
+        if ($this->status === 'admin_approved') {
+            if ($this->priest_confirmation === 'confirmed' || $this->allPriestsConfirmed()) {
+                return 'Approved by Admin';
+            }
+            return 'Awaiting Priest';
+        }
+
+        return ucwords(str_replace('_', ' ', $this->status));
     }
 }
 

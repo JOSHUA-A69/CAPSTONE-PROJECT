@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -18,6 +19,7 @@ class NotificationController extends Controller
     {
         $count = Notification::where('user_id', Auth::id())
             ->whereNull('read_at')
+            ->notArchived()
             ->count();
 
         return response()->json(['count' => $count]);
@@ -27,23 +29,15 @@ class NotificationController extends Controller
     {
         $notifications = Notification::where('user_id', Auth::id())
             ->whereNull('read_at')
+            ->notArchived()
             ->orderBy('sent_at', 'desc')
             ->limit(5)
             ->get();
 
-        $html = '';
-        if ($notifications->isEmpty()) {
-            $html = '<div class="px-4 py-3 text-sm text-gray-500">No new notifications</div>';
-        } else {
-            foreach ($notifications as $notification) {
-                // Sanitize while allowing minimal emphasis tags
-                $safeMessage = strip_tags((string) $notification->message, '<strong><b><em><i><br>');
-                $html .= '<a href="' . route('requestor.notifications.show', $notification->notification_id) . '" class="block px-4 py-3 hover:bg-gray-50 border-b">';
-                $html .= '<div class="text-sm font-medium text-gray-900">' . $safeMessage . '</div>';
-                $html .= '<div class="text-xs text-gray-500 mt-1">' . $notification->sent_at->diffForHumans() . '</div>';
-                $html .= '</a>';
-            }
-        }
+        $html = view('components.notifications.recent-list', [
+            'notifications' => $notifications,
+            'role' => 'requestor',
+        ])->render();
 
         return response()->json(['html' => $html]);
     }
@@ -51,10 +45,25 @@ class NotificationController extends Controller
     public function index()
     {
         $notifications = Notification::where('user_id', Auth::id())
+            ->notArchived()
             ->orderBy('sent_at', 'desc')
             ->paginate(20);
 
         return view('requestor.notifications.index', compact('notifications'));
+    }
+
+    /**
+     * Display archived notifications
+     */
+    public function archived()
+    {
+        $notifications = Notification::where('user_id', Auth::id())
+            ->archived()
+            ->with('reservation')
+            ->orderBy('archived_at', 'desc')
+            ->paginate(20);
+
+        return view('requestor.notifications.archived', compact('notifications'));
     }
 
     public function show($id)
@@ -69,7 +78,10 @@ class NotificationController extends Controller
         }
 
         if ($notification->reservation_id) {
-            return redirect()->route('requestor.reservations.show', $notification->reservation_id);
+            return redirect()->route('requestor.reservations.show', [
+                'reservation_id' => $notification->reservation_id,
+                'notification_read' => 1
+            ]);
         }
 
         return redirect()->route('requestor.notifications.index');
@@ -91,8 +103,61 @@ class NotificationController extends Controller
     {
         Notification::where('user_id', Auth::id())
             ->whereNull('read_at')
+            ->notArchived()
             ->update(['read_at' => now()]);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Clear all notifications for the current user (archive them)
+     */
+    public function clearAll()
+    {
+        try {
+            $updated = Notification::where('user_id', Auth::id())
+                ->whereNull('archived_at')
+                ->update(['archived_at' => now()]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully archived {$updated} notification(s).",
+                'count' => $updated
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to clear all notifications: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear notifications. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Archive a specific notification
+     */
+    public function archive($id)
+    {
+        $notification = Notification::where('user_id', Auth::id())
+            ->where('notification_id', $id)
+            ->firstOrFail();
+
+        $notification->update(['archived_at' => now()]);
+
+        return response()->json(['success' => true, 'message' => 'Notification archived successfully']);
+    }
+
+    /**
+     * Restore an archived notification
+     */
+    public function restore($id)
+    {
+        $notification = Notification::where('user_id', Auth::id())
+            ->where('notification_id', $id)
+            ->firstOrFail();
+
+        $notification->update(['archived_at' => null]);
+
+        return response()->json(['success' => true, 'message' => 'Notification restored successfully']);
     }
 }

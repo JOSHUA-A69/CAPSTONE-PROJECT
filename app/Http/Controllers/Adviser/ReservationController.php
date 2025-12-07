@@ -6,19 +6,23 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\LiturgicalSchedule;
 use App\Services\ReservationNotificationService;
+use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ReservationController extends Controller
 {
     protected ReservationNotificationService $notificationService;
+    protected AvailabilityService $availabilityService;
 
-    public function __construct(ReservationNotificationService $notificationService)
+    public function __construct(ReservationNotificationService $notificationService, AvailabilityService $availabilityService)
     {
         $this->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':adviser']);
         $this->notificationService = $notificationService;
+        $this->availabilityService = $availabilityService;
     }
 
     public function index()
@@ -60,43 +64,244 @@ class ReservationController extends Controller
 
     public function approve(Request $request, $reservation_id)
     {
-        $reservation = Reservation::findOrFail($reservation_id);
+        $reservation = Reservation::with(['organizations', 'priests'])->findOrFail($reservation_id);
+        $adviser = Auth::user();
 
-        // Verify this adviser is assigned to the reservation's organization
-        if (!Auth::user()->organizations->pluck('org_id')->contains($reservation->org_id)) {
-            abort(403, 'You are not the adviser for this organization.');
+        // Get the adviser's organization IDs
+        $adviserOrgIds = $adviser->organizations->pluck('org_id');
+
+        // Check if adviser is associated with any organization in this reservation
+        $reservationOrgIds = $reservation->organizations->pluck('org_id');
+        
+        // Support both multi-org and legacy single org_id
+        if ($reservationOrgIds->isEmpty()) {
+            $reservationOrgIds = collect([$reservation->org_id]);
         }
 
-        // Allow approval if pending or approved (adviser can confirm availability later)
-        if (!in_array($reservation->status, ['pending', 'approved', 'adviser_approved', 'admin_approved'])) {
+        $matchingOrgId = $adviserOrgIds->intersect($reservationOrgIds)->first();
+        
+        if (!$matchingOrgId) {
+            abort(403, 'You are not the adviser for any organization in this reservation.');
+        }
+
+        // Allow approval if pending (waiting for advisers)
+        if (!in_array($reservation->status, ['pending'])) {
             return Redirect::back()
-                ->with('error', 'This reservation cannot be approved at this time.');
+                ->with('error', 'This reservation cannot be approved at this time. Current status: ' . $reservation->status);
+        }
+
+        // If a priest is already assigned, validate their availability hasn't changed
+        if ($reservation->officiant_id) {
+            $availabilityCheck = $this->availabilityService->isPriestAvailable(
+                $reservation->officiant_id,
+                $reservation->schedule_date,
+                $reservation_id
+            );
+
+            if (!$availabilityCheck['available']) {
+                return Redirect::back()
+                    ->with('error', 'Cannot approve: ' . $availabilityCheck['message']);
+            }
+        }
+
+        // If a venue is assigned, validate its availability hasn't changed
+        if ($reservation->venue_id) {
+            $venueAvailabilityCheck = $this->availabilityService->isVenueAvailable(
+                $reservation->venue_id,
+                $reservation->schedule_date,
+                $reservation_id
+            );
+
+            if (!$venueAvailabilityCheck['available']) {
+                return Redirect::back()
+                    ->with('error', 'Cannot approve: ' . $venueAvailabilityCheck['message']);
+            }
         }
 
         $remarks = $request->input('remarks') ?? 'Approved by organization adviser';
 
-        $reservation->update([
-            'status' => 'adviser_approved',
-            'adviser_responded_at' => now(),
-            'admin_notified_at' => now(), // Notify admin immediately
-        ]);
+        DB::beginTransaction();
+        try {
+            // Update the pivot table for this adviser's organization
+            if ($reservation->organizations->isNotEmpty()) {
+                $reservation->organizations()->updateExistingPivot($matchingOrgId, [
+                    'approval_status' => 'approved',
+                    'responded_by' => $adviser->id,
+                    'responded_at' => now(),
+                ]);
+            }
 
-        $reservation->history()->create([
-            'performed_by' => Auth::id(),
-            'action' => 'adviser_approved',
-            'remarks' => $remarks,
-            'performed_at' => now(),
-        ]);
+            // Create history entry for this adviser's approval
+            $reservation->history()->create([
+                'performed_by' => $adviser->id,
+                'action' => 'adviser_approved',
+                'remarks' => $remarks . ' (Organization: ' . ($adviser->organizations->where('org_id', $matchingOrgId)->first()->org_name ?? 'Unknown') . ')',
+                'performed_at' => now(),
+            ]);
 
-        // Send notifications to requestor and CREaM admin/staff
-        $this->notificationService->notifyAdviserApproved($reservation, $remarks ?? '');
+            // Reload organizations to check updated status
+            $reservation->load('organizations');
 
-        return Redirect::back()
-            ->with('status', 'reservation-approved')
-            ->with('message', 'Reservation approved. CREaM administrators have been notified.');
+            // Check if ALL advisers have now approved
+            $allApproved = $reservation->allAdvisersApproved();
+
+            if ($allApproved) {
+                // All advisers approved - move to next status
+                $reservation->update([
+                    'status' => 'adviser_approved',
+                    'adviser_responded_at' => now(),
+                    'admin_notified_at' => now(),
+                ]);
+
+                // Notify priests about the reservation (they need to confirm)
+                $this->notifyPriestsForConfirmation($reservation);
+
+                // Send notifications to requestor and CREaM admin/staff
+                $this->notificationService->notifyAdviserApproved($reservation, $remarks);
+
+                $message = 'All advisers have approved. Reservation is now awaiting priest confirmation.';
+            } else {
+                // Still waiting for other advisers
+                $pending = $reservation->pendingAdviserCount();
+                $approved = $reservation->approvedAdviserCount();
+                $total = $reservation->organizations->count();
+
+                $message = "Your approval recorded ({$approved}/{$total}). Waiting for {$pending} more adviser(s) to approve.";
+            }
+
+            DB::commit();
+
+            return Redirect::back()
+                ->with('status', 'reservation-approved')
+                ->with('message', $message);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Adviser approval failed: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'Failed to approve reservation: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify priests that they need to confirm their availability
+     */
+    protected function notifyPriestsForConfirmation(Reservation $reservation): void
+    {
+        // If using multiple priests from pivot table
+        if ($reservation->priests->isNotEmpty()) {
+            foreach ($reservation->priests as $priest) {
+                // Update notification status in pivot
+                $reservation->priests()->updateExistingPivot($priest->id, [
+                    'notified' => true,
+                    'notified_at' => now(),
+                ]);
+
+                // Create in-app notification
+                try {
+                    $this->notificationService->notifyPriestAssigned($reservation, $priest->id);
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to notify priest ' . $priest->id . ': ' . $e->getMessage());
+                }
+            }
+        } elseif ($reservation->officiant_id) {
+            // Legacy single priest
+            try {
+                $this->notificationService->notifyPriestAssigned($reservation);
+            } catch (\Throwable $e) {
+                Log::warning('Failed to notify officiant: ' . $e->getMessage());
+            }
+        }
     }
 
     public function reject(Request $request, $reservation_id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $reservation = Reservation::with('organizations')->findOrFail($reservation_id);
+        $adviser = Auth::user();
+
+        // Get the adviser's organization IDs
+        $adviserOrgIds = $adviser->organizations->pluck('org_id');
+
+        // Check if adviser is associated with any organization in this reservation
+        $reservationOrgIds = $reservation->organizations->pluck('org_id');
+        
+        // Support both multi-org and legacy single org_id
+        if ($reservationOrgIds->isEmpty()) {
+            $reservationOrgIds = collect([$reservation->org_id]);
+        }
+
+        $matchingOrgId = $adviserOrgIds->intersect($reservationOrgIds)->first();
+        
+        if (!$matchingOrgId) {
+            abort(403, 'You are not the adviser for any organization in this reservation.');
+        }
+
+        // Allow rejection if not already rejected or cancelled
+        if (in_array($reservation->status, ['rejected', 'cancelled'])) {
+            return Redirect::back()
+                ->with('error', 'This reservation has already been rejected or cancelled.');
+        }
+
+        $reason = $request->input('reason');
+        $orgName = $adviser->organizations->where('org_id', $matchingOrgId)->first()->org_name ?? 'Unknown';
+
+        DB::beginTransaction();
+        try {
+            // Update the pivot table for this adviser's organization
+            if ($reservation->organizations->isNotEmpty()) {
+                $reservation->organizations()->updateExistingPivot($matchingOrgId, [
+                    'approval_status' => 'rejected',
+                    'rejection_reason' => $reason,
+                    'responded_by' => $adviser->id,
+                    'responded_at' => now(),
+                ]);
+            }
+
+            // Create history entry
+            $reservation->history()->create([
+                'performed_by' => $adviser->id,
+                'action' => 'adviser_rejected',
+                'remarks' => "Rejected by adviser ({$orgName}): {$reason}",
+                'performed_at' => now(),
+            ]);
+
+            // Notify requestor and staff about the rejection (even partial rejection)
+            $this->notificationService->notifyAdviserRejected($reservation, $reason, $orgName);
+
+            // Check if this is a single-org reservation or if all orgs have now responded
+            $totalOrgs = $reservation->organizations->count();
+            
+            if ($totalOrgs <= 1) {
+                // Single org - reject the whole reservation
+                $reservation->update([
+                    'status' => 'rejected',
+                    'adviser_responded_at' => now(),
+                ]);
+                $message = 'Reservation has been rejected.';
+            } else {
+                // Multi-org - notify but don't reject entire reservation yet
+                // The reservation stays in pending status until all required approvals are met
+                // Other advisers can still approve
+                $message = "Your rejection has been recorded and the requestor/staff have been notified. Other advisers may still approve for their organizations.";
+            }
+
+            DB::commit();
+
+            return Redirect::back()
+                ->with('status', 'reservation-rejected')
+                ->with('message', $message);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Adviser rejection failed: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'Failed to reject reservation: ' . $e->getMessage());
+        }
+    }
+
+    public function cancelApproval(Request $request, $reservation_id)
     {
         $request->validate([
             'reason' => 'required|string|max:500',
@@ -109,32 +314,43 @@ class ReservationController extends Controller
             abort(403, 'You are not the adviser for this organization.');
         }
 
-        // Allow rejection if not already rejected or cancelled
-        if (in_array($reservation->status, ['rejected', 'cancelled'])) {
+        // Only allow cancellation of approved reservations
+        if (!in_array($reservation->status, ['adviser_approved', 'admin_approved', 'approved'])) {
             return Redirect::back()
-                ->with('error', 'This reservation has already been rejected or cancelled.');
+                ->with('error', 'Only approved reservations can have their approval cancelled.');
+        }
+
+        // Check if the mass is at least 6 days away
+        $massDate = \Carbon\Carbon::parse($reservation->schedule_date);
+        $daysUntilMass = now()->diffInDays($massDate, false);
+
+        if ($daysUntilMass < 6) {
+            return Redirect::back()
+                ->with('error', 'Cannot cancel approval for reservations less than 6 days before the scheduled date.');
         }
 
         $reason = $request->input('reason');
 
+        // Update reservation status to pending
         $reservation->update([
-            'status' => 'rejected',
-            'adviser_responded_at' => now(),
+            'status' => 'pending',
+            'adviser_responded_at' => null,
+            'admin_notified_at' => null,
         ]);
 
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'rejected',
-            'remarks' => 'Rejected by adviser: ' . $reason,
+            'action' => 'approval_cancelled',
+            'remarks' => 'Approval cancelled by adviser: ' . $reason,
             'performed_at' => now(),
         ]);
 
-        // Send rejection notifications
-        $this->notificationService->notifyAdviserRejected($reservation, $reason);
+        // Send notifications to requestor and CREaM staff
+        $this->notificationService->notifyApprovalCancelled($reservation, $reason);
 
         return Redirect::back()
-            ->with('status', 'reservation-rejected')
-            ->with('message', 'Reservation rejected. The requestor has been notified.');
+            ->with('status', 'approval-cancelled')
+            ->with('message', 'Approval cancelled successfully. The requestor and staff have been notified.');
     }
 
     /**

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use App\Models\UserRole;
+use App\Models\Organization;
 
 class UserManagementController extends Controller
 {
@@ -41,17 +42,38 @@ class UserManagementController extends Controller
      */
     public function index(Request $request)
     {
+        $search = $request->input('search');
+        $role = $request->input('role');
+        
         // Only show non-archived users if soft deletes column exists
         if (Schema::hasColumn('users', 'deleted_at')) {
-            $users = User::orderBy('created_at', 'desc')->paginate(25);
+            $query = User::query();
         } else {
             // Use withoutGlobalScope to bypass SoftDeletes when column doesn't exist
-            $users = User::withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class)
-                ->orderBy('created_at', 'desc')
-                ->paginate(25);
+            $query = User::withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class);
         }
+        
+        // Apply search filter if provided
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'like', "%{$search}%")
+                  ->orWhere('last_name', 'like', "%{$search}%")
+                  ->orWhere('middle_name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+        
+        // Apply role filter if provided
+        if ($role) {
+            $query->where('role', $role);
+        }
+        
+        $users = $query->orderBy('created_at', 'desc')->paginate(25);
+        
+        // Preserve search and role query in pagination links
+        $users->appends(['search' => $search, 'role' => $role]);
 
-        return view('admin.users.index', compact('users'));
+        return view('admin.users.index', compact('users', 'search', 'role'));
     }
 
     /**
@@ -95,7 +117,8 @@ class UserManagementController extends Controller
     public function create()
     {
         $userRoles = UserRole::orderBy('role_name')->get();
-        return view('admin.users.create', compact('userRoles'));
+        $organizations = Organization::orderBy('org_name')->get();
+        return view('admin.users.create', compact('userRoles', 'organizations'));
     }
 
     /**
@@ -113,12 +136,23 @@ class UserManagementController extends Controller
             'status' => ['nullable', Rule::in(['pending','active','suspended'])],
             'user_role_id' => ['nullable', 'integer', Rule::exists('user_roles', 'user_role_id')],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'organization_ids' => ['nullable', 'array'],
+            'organization_ids.*' => ['integer', Rule::exists('organizations', 'org_id')],
         ]);
 
         $data['password'] = Hash::make($data['password']);
         $data['status'] = $data['status'] ?? 'active';
 
+        // Extract organization_ids before creating user
+        $organizationIds = $data['organization_ids'] ?? [];
+        unset($data['organization_ids']);
+
         $user = User::create($data);
+
+        // If the role is adviser and organizations were selected, assign them
+        if ($data['role'] === 'adviser' && !empty($organizationIds)) {
+            Organization::whereIn('org_id', $organizationIds)->update(['adviser_id' => $user->id]);
+        }
 
         // Create role-specific success message
         $roleLabel = ucfirst($data['role']);
@@ -139,7 +173,12 @@ class UserManagementController extends Controller
             ->findOrFail($id);
 
         $userRoles = UserRole::orderBy('role_name')->get();
-        return view('admin.users.edit', compact('user', 'userRoles'));
+        $organizations = Organization::orderBy('org_name')->get();
+        
+        // Get the IDs of organizations this user is adviser for
+        $userOrganizationIds = $user->organizations->pluck('org_id')->toArray();
+        
+        return view('admin.users.edit', compact('user', 'userRoles', 'organizations', 'userOrganizationIds'));
     }
 
     /**
@@ -160,6 +199,8 @@ class UserManagementController extends Controller
             'status' => ['nullable', Rule::in(['pending','active','suspended'])],
             'user_role_id' => ['nullable', 'integer', Rule::exists('user_roles', 'user_role_id')],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'organization_ids' => ['nullable', 'array'],
+            'organization_ids.*' => ['integer', Rule::exists('organizations', 'org_id')],
         ]);
 
         // Prevent an admin from demoting themselves out of the admin role here
@@ -173,7 +214,25 @@ class UserManagementController extends Controller
             unset($data['password']);
         }
 
+        // Extract organization_ids before updating user
+        $organizationIds = $data['organization_ids'] ?? [];
+        unset($data['organization_ids']);
+
         $user->update($data);
+
+        // Handle organization assignments for advisers
+        if ($data['role'] === 'adviser') {
+            // First, remove this adviser from all organizations they were previously assigned to
+            Organization::where('adviser_id', $user->id)->update(['adviser_id' => null]);
+            
+            // Then assign to selected organizations
+            if (!empty($organizationIds)) {
+                Organization::whereIn('org_id', $organizationIds)->update(['adviser_id' => $user->id]);
+            }
+        } else {
+            // If role changed from adviser to something else, remove from all organizations
+            Organization::where('adviser_id', $user->id)->update(['adviser_id' => null]);
+        }
 
         // Redirect back to index page with success message
         return Redirect::route('admin.users.index')->with('status', 'user-updated');

@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">User Management</h2>
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Manage Users</h2>
     </x-slot>
 
     <style>
@@ -17,6 +17,44 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <!-- Search Bar and Filter -->
+                    <div class="mb-6">
+                        <form method="GET" action="{{ route('admin.users.index') }}" id="userFilterForm" class="flex flex-wrap gap-2 items-center">
+                            <div class="relative flex-1 max-w-md">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </div>
+                                <input type="text" 
+                                       name="search" 
+                                       value="{{ $search ?? '' }}" 
+                                       placeholder="Search by name or email..." 
+                                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            </div>
+                            <select name="role" 
+                                    onchange="document.getElementById('userFilterForm').submit();"
+                                    class="block px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <option value="">All Roles</option>
+                                <option value="admin" {{ ($role ?? '') === 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="staff" {{ ($role ?? '') === 'staff' ? 'selected' : '' }}>Staff</option>
+                                <option value="adviser" {{ ($role ?? '') === 'adviser' ? 'selected' : '' }}>Adviser</option>
+                                <option value="priest" {{ ($role ?? '') === 'priest' ? 'selected' : '' }}>Priest</option>
+                                <option value="requestor" {{ ($role ?? '') === 'requestor' ? 'selected' : '' }}>Requestor</option>
+                            </select>
+                            <button type="submit" 
+                                    class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                Search
+                            </button>
+                            @if(($search ?? false) || ($role ?? false))
+                                <a href="{{ route('admin.users.index') }}" 
+                                   class="inline-flex items-center px-4 py-2 bg-gray-500 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Reset
+                                </a>
+                            @endif
+                        </form>
+                    </div>
+
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-medium">Users</h3>
                         <div class="flex gap-3">

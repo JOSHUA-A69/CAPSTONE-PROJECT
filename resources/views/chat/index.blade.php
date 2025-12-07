@@ -39,8 +39,8 @@
                                    class="flex items-center px-4 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all duration-200 {{ request()->route('userId') == $conversation->id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600' : 'border-l-4 border-transparent' }}">
                                     <!-- Profile Picture -->
                                     <div class="relative flex-shrink-0">
-                                        <img src="{{ asset('storage/' . ($conversation->profile_picture ?? 'profile-pictures/default-avatar.png')) }}"
-                                             alt="{{ $conversation->first_name ?? 'User' }}"
+                                        <img src="{{ $conversation->profile_picture ? asset('storage/' . $conversation->profile_picture) : asset('images/default-avatar.svg') }}"
+                                            alt="{{ $conversation->first_name ?? 'User' }}"
                                              class="w-9 h-9 rounded-full object-cover border-2 {{ request()->route('userId') == $conversation->id ? 'border-blue-500' : 'border-gray-200 dark:border-gray-600' }}">
                                         @if($conversation->unread_count > 0)
                                             <span class="absolute -top-1 -right-1 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full shadow-lg">

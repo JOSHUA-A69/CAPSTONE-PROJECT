@@ -115,7 +115,7 @@
                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Venue</th>
                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Schedule</th>
                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Purpose</th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Priest</th>
                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -142,23 +142,53 @@
                         </td>
                         <td class="px-4 py-3 text-sm text-body">{{ optional($r->schedule_date)->format('M d, Y h:i A') }}</td>
                         <td class="px-4 py-3">
-                            @if($r->status === 'admin_approved')
-                                <span class="badge-success">Approved</span>
-                            @elseif($r->status === 'approved' || $r->status === 'confirmed')
-                                <span class="badge-success">Approved</span>
+                            @if($r->status === 'approved' || $r->status === 'confirmed')
+                                <span class="badge-success">Approved by Admin</span>
+                            @elseif($r->status === 'admin_approved')
+                                {{-- admin_approved means all priests confirmed, awaiting final admin approval --}}
+                                <span class="badge-warning">Awaiting Admin</span>
+                            @elseif($r->status === 'adviser_approved')
+                                {{-- adviser_approved means awaiting priest confirmation --}}
+                                <span class="badge-warning">Awaiting Priest</span>
+                            @elseif($r->status === 'pending')
+                                {{-- pending means awaiting adviser approval --}}
+                                @php
+                                    $approvedCount = $r->organizations ? $r->organizations->where('pivot.approval_status', 'approved')->count() : 0;
+                                    $totalOrgs = $r->organizations ? $r->organizations->count() : 0;
+                                @endphp
+                                @if($totalOrgs > 1 && $approvedCount > 0)
+                                    <span class="badge-warning">Awaiting Adviser ({{ $approvedCount }}/{{ $totalOrgs }})</span>
+                                @else
+                                    <span class="badge-warning">Awaiting Adviser</span>
+                                @endif
                             @elseif($r->status === 'completed')
                                 <span class="badge-info">Completed</span>
                             @elseif($r->status === 'cancelled' || $r->status === 'rejected')
                                 <span class="badge-danger">{{ ucwords(str_replace('_', ' ', $r->status)) }}</span>
-                            @elseif($r->status === 'adviser_approved')
-                                <span class="badge-warning">Awaiting Admin</span>
-                            @elseif($r->status === 'pending')
-                                <span class="badge-warning">Awaiting Adviser</span>
                             @else
                                 <span class="badge-warning">{{ ucwords(str_replace('_', ' ', $r->status)) }}</span>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-sm text-muted">{{ \Illuminate\Support\Str::limit($r->purpose ?? '—', 60) }}</td>
+                        <td class="px-4 py-3 text-sm text-body">
+                            @if($r->priest_selection_type === 'external' && $r->external_priest_name)
+                                <div class="flex flex-col gap-1">
+                                    <span class="font-medium">{{ $r->external_priest_name }}</span>
+                                    <span class="text-xs text-muted italic">(External)</span>
+                                </div>
+                            @elseif($r->officiant)
+                                <div class="flex flex-col gap-1">
+                                    <span class="font-medium">Fr. {{ $r->officiant->first_name }} {{ $r->officiant->last_name }}</span>
+                                </div>
+                            @elseif($r->priests && $r->priests->isNotEmpty())
+                                <div class="flex flex-col gap-1">
+                                    @foreach($r->priests as $priest)
+                                        <span class="font-medium">Fr. {{ $priest->first_name }} {{ $priest->last_name }}</span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <span class="text-muted italic">Not yet assigned</span>
+                            @endif
+                        </td>
                         <td class="px-4 py-3">
                             <div class="flex flex-wrap gap-2">
                                 <a href="{{ route('requestor.reservations.show', $r->reservation_id) }}" class="btn-ghost btn-sm">

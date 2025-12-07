@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Services\ReservationNotificationService;
+use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,11 +23,13 @@ use Illuminate\Support\Facades\Schema;
 class ReservationController extends Controller
 {
     protected ReservationNotificationService $notificationService;
+    protected AvailabilityService $availabilityService;
 
-    public function __construct(ReservationNotificationService $notificationService)
+    public function __construct(ReservationNotificationService $notificationService, AvailabilityService $availabilityService)
     {
         $this->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin']);
         $this->notificationService = $notificationService;
+        $this->availabilityService = $availabilityService;
     }
 
     /**
@@ -84,6 +87,7 @@ class ReservationController extends Controller
             'venue',
             'organization.adviser',
             'officiant',
+            'priests',
             'history.performedBy',
             'cancelledByUser'
         ])->findOrFail($reservation_id);
@@ -195,16 +199,16 @@ class ReservationController extends Controller
             ->where('role', 'priest')
             ->firstOrFail();
 
-        // Check for scheduling conflicts
-        $conflict = Reservation::where('officiant_id', $priest->id)
-            ->where('schedule_date', $reservation->schedule_date)
-            ->whereNotIn('status', ['cancelled', 'rejected'])
-            ->where('reservation_id', '!=', $reservation_id)
-            ->exists();
+        // Check for scheduling conflicts using AvailabilityService for proper 2-hour block checking
+        $availabilityCheck = $this->availabilityService->isPriestAvailable(
+            $priest->id,
+            $reservation->schedule_date,
+            $reservation_id
+        );
 
-        if ($conflict) {
+        if (!$availabilityCheck['available']) {
             return Redirect::back()
-                ->with('error', 'This priest already has an assignment at this date and time.');
+                ->with('error', $availabilityCheck['message']);
         }
 
         // Determine if this is a reassignment or initial assignment
@@ -231,7 +235,8 @@ class ReservationController extends Controller
         // Send notifications to priest and requestor
         $this->notificationService->notifyPriestAssigned($reservation);
 
-        $message = 'Reservation approved successfully. The requestor has been notified.';
+        $priestName = 'Fr. ' . $priest->first_name . ' ' . $priest->last_name;
+        $message = "Successfully assigned {$priestName} to this reservation. The priest and requestor have been notified.";
         if ($request->expectsJson()) {
             return response()->json(['success' => true, 'message' => $message]);
         }
@@ -400,6 +405,64 @@ class ReservationController extends Controller
             } catch (\Exception $e) {
                 Log::error('Failed to create adviser notification for external priest confirmation: ' . $e->getMessage());
             }
+        }
+    }
+
+    /**
+     * Final approval after all priests have confirmed
+     * This is the admin's final step to mark the reservation as fully approved
+     */
+    public function finalApprove(Request $request, $reservation_id)
+    {
+        $reservation = Reservation::with(['priests', 'user', 'service', 'organization'])->findOrFail($reservation_id);
+
+        // Only allow final approval if status is admin_approved (all priests confirmed, waiting for admin)
+        if (!in_array($reservation->status, ['admin_approved'])) {
+            return Redirect::back()
+                ->with('error', 'This reservation is not ready for final approval. Current status: ' . $reservation->status);
+        }
+
+        // Verify all priests have confirmed
+        if (!$reservation->allPriestsConfirmed() && $reservation->priest_confirmation !== 'confirmed') {
+            return Redirect::back()
+                ->with('error', 'Cannot approve: Not all priests have confirmed their availability.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $remarks = $request->input('remarks', 'Final approval by admin');
+
+            $reservation->update([
+                'status' => 'approved',
+                'approved_by' => Auth::id(),
+            ]);
+
+            $reservation->history()->create([
+                'performed_by' => Auth::id(),
+                'action' => 'admin_final_approved',
+                'remarks' => $remarks,
+                'performed_at' => now(),
+            ]);
+
+            // Notify requestor about final approval
+            $this->notificationService->notifyFinalApproval($reservation);
+
+            DB::commit();
+
+            $message = 'Reservation has been finally approved. The requestor has been notified.';
+            
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+
+            return Redirect::back()
+                ->with('status', 'reservation-approved')
+                ->with('message', $message);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Final approval failed: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'Failed to approve reservation: ' . $e->getMessage());
         }
     }
 

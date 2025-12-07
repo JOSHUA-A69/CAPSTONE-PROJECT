@@ -139,12 +139,26 @@
                             </span>
                         </div>
 
-                        <!-- Assigned Priest -->
-                        @if($cancellation->reservation->officiant)
+                        <!-- Assigned Priests -->
+                        @php
+                            $assignedPriests = isset($cancellation->reservation->priests) ? $cancellation->reservation->priests : collect();
+                        @endphp
+                        @if($assignedPriests->count() > 0)
+                        <div class="flex items-start">
+                            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Assigned Priests:</span>
+                            <div class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
+                                <ul class="space-y-1">
+                                    @foreach($assignedPriests as $p)
+                                        <li>{{ $p->full_name }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                        @elseif($cancellation->reservation->officiant)
                         <div class="flex items-start">
                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Assigned Priest:</span>
                             <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
-                                {{ $cancellation->reservation->officiant->name }}
+                                {{ $cancellation->reservation->officiant->full_name ?? $cancellation->reservation->officiant->name }}
                             </span>
                         </div>
                         @endif

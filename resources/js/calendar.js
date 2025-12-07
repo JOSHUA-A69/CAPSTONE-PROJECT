@@ -516,32 +516,6 @@ window.initPublicCalendar = function(schedules) {
         return;
     }
 
-    // Convert schedules to FullCalendar events
-    const events = schedules.map(schedule => {
-        // Normalize date and times safely
-        const dateStr = normalizeDateStr(schedule.schedule_date);
-        const startTime = normalizeTimeStr(schedule.start_time);
-        const endTime = schedule.end_time ? normalizeTimeStr(schedule.end_time) : null;
-        
-        return {
-            id: schedule.schedule_id,
-            title: schedule.title,
-            start: `${dateStr}T${startTime}`,
-            end: endTime ? `${dateStr}T${endTime}` : null,
-            description: schedule.description,
-            location: schedule.location,
-            eventType: schedule.event_type,
-            backgroundColor: getEventColor(schedule.event_type),
-            borderColor: getEventColor(schedule.event_type),
-            extendedProps: {
-                description: schedule.description,
-                location: schedule.location,
-                eventType: schedule.event_type,
-                scheduleData: schedule
-            }
-        };
-    });
-    
     const calendar = new Calendar(calendarEl, {
         plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
         initialView: 'dayGridMonth',
@@ -550,7 +524,36 @@ window.initPublicCalendar = function(schedules) {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,listWeek'
         },
-        events: events,
+        events: function(info, successCallback, failureCallback) {
+            // Use filtered schedules if available, otherwise use all schedules
+            const schedulesToUse = window.filteredSchedules || schedules;
+            
+            const events = schedulesToUse.map(schedule => {
+                const dateStr = normalizeDateStr(schedule.schedule_date);
+                const startTime = normalizeTimeStr(schedule.start_time);
+                const endTime = schedule.end_time ? normalizeTimeStr(schedule.end_time) : null;
+                
+                return {
+                    id: schedule.schedule_id,
+                    title: schedule.title,
+                    start: `${dateStr}T${startTime}`,
+                    end: endTime ? `${dateStr}T${endTime}` : null,
+                    description: schedule.description,
+                    location: schedule.location,
+                    eventType: schedule.event_type,
+                    backgroundColor: getEventColor(schedule.event_type),
+                    borderColor: getEventColor(schedule.event_type),
+                    extendedProps: {
+                        description: schedule.description,
+                        location: schedule.location,
+                        eventType: schedule.event_type,
+                        scheduleData: schedule
+                    }
+                };
+            });
+            
+            successCallback(events);
+        },
         editable: false,
         selectable: false,
         dayMaxEvents: 3,

@@ -147,9 +147,8 @@ class User extends Authenticatable implements MustVerifyEmail
             return asset('storage/' . $this->profile_picture);
         }
 
-        // Generate default avatar with initials using UI Avatars service
-        $name = urlencode($this->full_name);
-        return "https://ui-avatars.com/api/?name={$name}&size=200&background=4F46E5&color=ffffff&bold=true";
+        // Professional default avatar (local asset)
+        return asset('images/default-avatar.svg');
     }
 
     /**

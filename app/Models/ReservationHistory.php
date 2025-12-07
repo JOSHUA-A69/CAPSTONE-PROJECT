@@ -15,11 +15,12 @@ class ReservationHistory extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'reservation_id', 'performed_by', 'action', 'remarks', 'performed_at',
+        'reservation_id', 'performed_by', 'action', 'remarks', 'performed_at', 'archived_at', 'archived_by',
     ];
 
     protected $casts = [
         'performed_at' => 'datetime',
+        'archived_at' => 'datetime',
     ];
 
     // Allowed action values for reservation_history.action enum
@@ -55,5 +56,22 @@ class ReservationHistory extends Model
     public function performedBy()
     {
         return $this->belongsTo(User::class, 'performed_by', 'id');
+    }
+
+    public function archivedBy()
+    {
+        return $this->belongsTo(User::class, 'archived_by', 'id');
+    }
+
+    // Scope for non-archived history
+    public function scopeNotArchived($query)
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    // Scope for archived history
+    public function scopeArchived($query)
+    {
+        return $query->whereNotNull('archived_at');
     }
 }

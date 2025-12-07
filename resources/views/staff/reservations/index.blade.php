@@ -99,13 +99,17 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($r->status === 'pending')
-                                <span class="badge-warning">Pending</span>
+                                <span class="badge-warning">Awaiting Adviser</span>
                             @elseif($r->status === 'adviser_approved')
-                                <span class="badge-info">Adviser Approved</span>
+                                <span class="badge-warning">Awaiting Priest</span>
                             @elseif($r->status === 'admin_approved')
-                                <span class="badge-success">Admin Approved</span>
+                                <span class="badge-info">Awaiting Admin</span>
                             @elseif($r->status === 'approved')
-                                <span class="badge-success">Approved</span>
+                                <span class="badge-success">Approved by Admin</span>
+                            @elseif($r->status === 'confirmed')
+                                <span class="badge-success">Confirmed</span>
+                            @elseif($r->status === 'completed')
+                                <span class="badge-success">Completed</span>
                             @elseif($r->status === 'rejected')
                                 <span class="badge-danger">Rejected</span>
                             @elseif($r->status === 'cancelled')

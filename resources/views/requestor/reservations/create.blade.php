@@ -1143,35 +1143,49 @@
                             Service Type<span class="required-indicator">*</span>
                             <span class="tooltip help-icon">
                                 ?
-                                <span class="tooltiptext">Select the specific service</span>
+                                <span class="tooltiptext">Select the specific service or type your custom service</span>
                             </span>
                         </label>
-                        <select
-                            name="service_id"
-                            id="service_id"
-                            required
-                            class="@error('service_id') is-invalid @enderror"
-                        >
-                            <option value="">-- Select Service Type --</option>
-                            <optgroup label="Institutional Mass" id="institutional_mass_options" style="display: none;">
-                                @foreach($services->where('service_category', 'Institutional Mass') as $service)
-                                    <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
-                                @endforeach
-                            </optgroup>
-                            <optgroup label="Non-Institutional Mass" id="non_institutional_mass_options" style="display: none;">
-                                @foreach($services->where('service_category', 'Non-Institutional Mass') as $service)
-                                    <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
-                                @endforeach
-                            </optgroup>
-                            <optgroup label="Other Services" id="other_services_options" style="display: none;">
-                                @foreach($services->filter(fn($s) => !in_array($s->service_category, ['Institutional Mass','Non-Institutional Mass'])) as $service)
-                                    <option value="{{ $service->service_id }}">{{ $service->service_name }} — {{ $service->service_category }}</option>
-                                @endforeach
-                            </optgroup>
-                        </select>
-                        @error('service_id')
-                            <div class="error-message">⚠️ {{ $message }}</div>
-                        @enderror
+                        
+                        <!-- Dropdown for predefined services -->
+                        <div id="service_dropdown_container" style="display: none;">
+                            <select
+                                name="service_id"
+                                id="service_id"
+                                required
+                                class="@error('service_id') is-invalid @enderror"
+                            >
+                                <option value="">-- Select Service Type --</option>
+                                <optgroup label="Institutional Mass" id="institutional_mass_options" style="display: none;">
+                                    @foreach($services->where('service_category', 'Institutional Mass') as $service)
+                                        <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                                <optgroup label="Non-Institutional Mass" id="non_institutional_mass_options" style="display: none;">
+                                    @foreach($services->where('service_category', 'Non-Institutional Mass') as $service)
+                                        <option value="{{ $service->service_id }}">{{ $service->service_name }}</option>
+                                    @endforeach
+                                </optgroup>
+                            </select>
+                            @error('service_id')
+                                <div class="error-message">⚠️ {{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        <!-- Text input for Other Services -->
+                        <div id="other_services_input_container" style="display: none;">
+                            <input
+                                type="text"
+                                name="other_service_type"
+                                id="other_service_type"
+                                placeholder="Please enter the service type you want to request..."
+                                maxlength="255"
+                                class="@error('other_service_type') is-invalid @enderror"
+                            >
+                            @error('other_service_type')
+                                <div class="error-message">⚠️ {{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
                     
                     <div>
@@ -1416,42 +1430,58 @@
     function toggleMassTypeField() {
         const serviceCategorySelect = document.getElementById('service_category');
         const massTypeContainer = document.getElementById('mass_type_container');
+        const serviceDropdownContainer = document.getElementById('service_dropdown_container');
+        const otherServicesInputContainer = document.getElementById('other_services_input_container');
         const serviceIdSelect = document.getElementById('service_id');
+        const otherServiceTypeInput = document.getElementById('other_service_type');
         const institutionalOptions = document.getElementById('institutional_mass_options');
         const nonInstitutionalOptions = document.getElementById('non_institutional_mass_options');
-        const otherServicesOptions = document.getElementById('other_services_options');
         
         const selectedOption = serviceCategorySelect.options[serviceCategorySelect.selectedIndex];
         const requiresMassType = selectedOption.getAttribute('data-requires-mass-type') === 'true';
         
         if (requiresMassType) {
             massTypeContainer.style.display = 'block';
-            serviceIdSelect.required = true;
             
             // Show appropriate mass type options
             if (serviceCategorySelect.value === 'institutional_mass') {
+                serviceDropdownContainer.style.display = 'block';
+                otherServicesInputContainer.style.display = 'none';
+                serviceIdSelect.required = true;
+                otherServiceTypeInput.required = false;
                 institutionalOptions.style.display = 'block';
                 nonInstitutionalOptions.style.display = 'none';
-                otherServicesOptions.style.display = 'none';
+                serviceIdSelect.value = '';
+                otherServiceTypeInput.value = '';
             } else if (serviceCategorySelect.value === 'non_institutional_mass') {
+                serviceDropdownContainer.style.display = 'block';
+                otherServicesInputContainer.style.display = 'none';
+                serviceIdSelect.required = true;
+                otherServiceTypeInput.required = false;
                 institutionalOptions.style.display = 'none';
                 nonInstitutionalOptions.style.display = 'block';
-                otherServicesOptions.style.display = 'none';
+                serviceIdSelect.value = '';
+                otherServiceTypeInput.value = '';
             } else if (serviceCategorySelect.value === 'other_services') {
+                serviceDropdownContainer.style.display = 'none';
+                otherServicesInputContainer.style.display = 'block';
+                serviceIdSelect.required = false;
+                otherServiceTypeInput.required = true;
                 institutionalOptions.style.display = 'none';
                 nonInstitutionalOptions.style.display = 'none';
-                otherServicesOptions.style.display = 'block';
+                serviceIdSelect.value = '';
+                otherServiceTypeInput.value = '';
             }
-            
-            // Reset mass type selection
-            serviceIdSelect.value = '';
         } else {
             massTypeContainer.style.display = 'none';
+            serviceDropdownContainer.style.display = 'none';
+            otherServicesInputContainer.style.display = 'none';
             serviceIdSelect.required = false;
+            otherServiceTypeInput.required = false;
             serviceIdSelect.value = '';
+            otherServiceTypeInput.value = '';
             institutionalOptions.style.display = 'none';
             nonInstitutionalOptions.style.display = 'none';
-            otherServicesOptions.style.display = 'none';
         }
     }
 
@@ -1459,13 +1489,26 @@
     function validateForm() {
         const form = document.getElementById('reservationForm');
         let isValid = true;
+        let errorMessages = [];
 
         // Check required fields
         const requiredFields = form.querySelectorAll('[required]');
         requiredFields.forEach(field => {
+            // Skip hidden fields
+            if (field.offsetParent === null && field.type !== 'hidden') {
+                return;
+            }
+            
             if (!field.value.trim()) {
                 field.classList.add('is-invalid');
+                field.classList.remove('is-valid');
                 isValid = false;
+                
+                // Get field label - clean version
+                let label = getFieldLabel(field);
+                if (label && !errorMessages.includes(label)) {
+                    errorMessages.push(label);
+                }
             } else {
                 field.classList.remove('is-invalid');
                 field.classList.add('is-valid');
@@ -1481,7 +1524,7 @@
 
             if (selectedDate < minDate) {
                 dateInput.classList.add('is-invalid');
-                alert('Event date must be at least 7 days from today.');
+                errorMessages.push('Event date must be at least 7 days from today');
                 isValid = false;
             }
         }
@@ -1492,12 +1535,212 @@
             const phonePattern = /^[0-9+\-\s()]+$/;
             if (!phonePattern.test(phoneInput.value)) {
                 phoneInput.classList.add('is-invalid');
-                alert('Please enter a valid phone number.');
+                errorMessages.push('Please enter a valid phone number');
                 isValid = false;
             }
         }
 
+        // Show error modal if validation fails
+        if (!isValid) {
+            showValidationErrorModal(errorMessages);
+        }
+
         return isValid;
+    }
+    
+    // Get clean field label
+    function getFieldLabel(field) {
+        const fieldLabels = {
+            'activity_name': 'Activity Name',
+            'schedule_date': 'Date of Activity',
+            'schedule_time': 'Time',
+            'contact_person': 'Contact Person',
+            'contact_number': 'Contact Number',
+            'officiant_id': 'Officiant/Priest',
+            'service_category': 'Service Category',
+            'service_id': 'Service Type',
+            'other_service_type': 'Service Type',
+            'venue_select': 'Venue',
+            'venue_id': 'Venue',
+            'custom_venue': 'Custom Venue',
+            'purpose': 'Reason for Celebration',
+            'theme': 'Theme',
+            'details': 'Additional Details',
+            'organization_id': 'Organization',
+            'priest_selection_type': 'Priest Selection',
+            'external_priest_name': 'External Priest Name'
+        };
+        
+        // Check if we have a predefined label
+        if (fieldLabels[field.id]) {
+            return fieldLabels[field.id];
+        }
+        if (fieldLabels[field.name]) {
+            return fieldLabels[field.name];
+        }
+        
+        // Fallback: clean up field name
+        let name = field.name || field.id || 'Field';
+        return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    // Show validation error modal
+    function showValidationErrorModal(errors) {
+        // Remove existing modal if any
+        const existingModal = document.getElementById('validationErrorModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Create error list
+        const uniqueErrors = [...new Set(errors)];
+        const displayErrors = uniqueErrors.slice(0, 6);
+        const errorListHtml = displayErrors.map(err => `
+            <li style="display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
+                <span style="color: #ef4444; font-size: 16px;">○</span>
+                <span style="color: #374151;">${err}</span>
+            </li>
+        `).join('');
+        
+        const remainingCount = uniqueErrors.length - displayErrors.length;
+        
+        const modalHtml = `
+            <div id="validationErrorModal" style="
+                position: fixed;
+                inset: 0;
+                z-index: 99999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(0,0,0,0.4);
+                backdrop-filter: blur(4px);
+                animation: fadeIn 0.2s ease;
+            " onclick="if(event.target === this) closeValidationErrorModal()">
+                <div style="
+                    background: white;
+                    border-radius: 20px;
+                    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+                    max-width: 420px;
+                    width: 90%;
+                    overflow: hidden;
+                    animation: slideUp 0.3s ease;
+                ">
+                    <!-- Header -->
+                    <div style="
+                        background: #fef2f2;
+                        padding: 24px;
+                        text-align: center;
+                        border-bottom: 1px solid #fecaca;
+                    ">
+                        <div style="
+                            width: 56px;
+                            height: 56px;
+                            background: #fee2e2;
+                            border-radius: 50%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            margin: 0 auto 12px;
+                        ">
+                            <svg width="28" height="28" fill="#dc2626" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <h3 style="color: #991b1b; font-size: 20px; font-weight: 700; margin: 0;">
+                            Almost there!
+                        </h3>
+                        <p style="color: #b91c1c; font-size: 14px; margin: 8px 0 0 0;">
+                            Please complete the required fields
+                        </p>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div style="padding: 20px 24px;">
+                        <p style="color: #6b7280; font-size: 13px; margin: 0 0 12px 0;">
+                            The following fields need to be filled:
+                        </p>
+                        <ul style="
+                            list-style: none;
+                            padding: 0;
+                            margin: 0;
+                            max-height: 200px;
+                            overflow-y: auto;
+                        ">
+                            ${errorListHtml}
+                        </ul>
+                        ${remainingCount > 0 ? `
+                            <p style="color: #9ca3af; font-size: 12px; margin: 12px 0 0 0; text-align: center;">
+                                + ${remainingCount} more field${remainingCount > 1 ? 's' : ''}
+                            </p>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Footer -->
+                    <div style="padding: 16px 24px 24px;">
+                        <button onclick="closeValidationErrorModal()" style="
+                            width: 100%;
+                            background: #3b82f6;
+                            color: white;
+                            border: none;
+                            padding: 14px 24px;
+                            border-radius: 12px;
+                            font-size: 15px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='#2563eb'" 
+                           onmouseout="this.style.background='#3b82f6'">
+                            OK, I'll complete the form
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <style>
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes slideUp {
+                    from { transform: translateY(20px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+            </style>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Reset submit button state
+        resetSubmitButton();
+    }
+    
+    // Reset submit button to normal state
+    function resetSubmitButton() {
+        const submitBtn = document.getElementById('submitBtn');
+        const submitText = document.getElementById('submitText');
+        const submitLoader = document.getElementById('submitLoader');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.style.display = 'inline';
+        if (submitLoader) submitLoader.style.display = 'none';
+        if (loadingOverlay) loadingOverlay.classList.remove('active');
+    }
+
+    // Close validation error modal
+    function closeValidationErrorModal() {
+        const modal = document.getElementById('validationErrorModal');
+        if (modal) {
+            modal.style.opacity = '0';
+            setTimeout(() => modal.remove(), 200);
+        }
+        
+        // Scroll to first error field
+        const form = document.getElementById('reservationForm');
+        const firstError = form.querySelector('.is-invalid');
+        if (firstError) {
+            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => firstError.focus(), 300);
+        }
     }
 
     // Real-time validation on blur
@@ -1553,24 +1796,53 @@
         const submitLoader = document.getElementById('submitLoader');
         const loadingOverlay = document.getElementById('loadingOverlay');
 
+        // Ensure button starts in normal state on page load
+        submitBtn.disabled = false;
+        submitText.style.display = 'inline';
+        submitLoader.style.display = 'none';
+        if (loadingOverlay) loadingOverlay.classList.remove('active');
+
         form.addEventListener('submit', function(e) {
-            // Validate form
+            // Validate form first - don't show loading until validation passes
             if (!validateForm()) {
                 e.preventDefault();
-                // Scroll to first error
-                const firstError = form.querySelector('.is-invalid');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    firstError.focus();
-                }
+                // Ensure button is reset
+                submitBtn.disabled = false;
+                submitText.style.display = 'inline';
+                submitLoader.style.display = 'none';
+                if (loadingOverlay) loadingOverlay.classList.remove('active');
                 return false;
             }
 
-            // Show loading state
+            // Check for availability conflicts using the global status variable
+            if (typeof currentAvailabilityStatus !== 'undefined' && !currentAvailabilityStatus.available) {
+                e.preventDefault();
+                
+                // Build a nice message
+                let conflictMsg = 'Please resolve the scheduling conflicts before submitting:\n\n';
+                if (currentAvailabilityStatus.messages && currentAvailabilityStatus.messages.length > 0) {
+                    currentAvailabilityStatus.messages.forEach(msg => {
+                        conflictMsg += '• ' + msg + '\n';
+                    });
+                } else {
+                    conflictMsg += '• The selected time slot is not available';
+                }
+                
+                alert(conflictMsg);
+                
+                // Ensure button is reset
+                submitBtn.disabled = false;
+                submitText.style.display = 'inline';
+                submitLoader.style.display = 'none';
+                if (loadingOverlay) loadingOverlay.classList.remove('active');
+                return false;
+            }
+
+            // Validation passed - show loading state
             submitBtn.disabled = true;
             submitText.style.display = 'none';
             submitLoader.style.display = 'inline';
-            loadingOverlay.classList.add('active');
+            if (loadingOverlay) loadingOverlay.classList.add('active');
         });
 
         // Auto-save to localStorage (optional - uncomment to enable)
@@ -1633,7 +1905,263 @@
     // Call on page load to handle old values
     document.addEventListener('DOMContentLoaded', function() {
         togglePriestOptions();
+        
+        // Initialize availability checking
+        initAvailabilityCheck();
     });
+
+    // Availability checking functionality
+    function initAvailabilityCheck() {
+        const dateInput = document.getElementById('schedule_date');
+        const timeInput = document.getElementById('schedule_time');
+        const venueSelect = document.getElementById('venue_select');
+        const priestCheckboxes = document.querySelectorAll('input[name="priest_ids[]"]');
+
+        // Add event listeners for live availability checking
+        if (dateInput) {
+            dateInput.addEventListener('change', checkAvailability);
+        }
+        if (timeInput) {
+            timeInput.addEventListener('change', checkAvailability);
+        }
+        if (venueSelect) {
+            venueSelect.addEventListener('change', checkAvailability);
+        }
+        priestCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', checkAvailability);
+        });
+    }
+
+    let availabilityTimeout = null;
+    let currentAvailabilityStatus = { available: true }; // Track current availability
+    
+    async function checkAvailability() {
+        // Debounce to avoid too many requests
+        clearTimeout(availabilityTimeout);
+        availabilityTimeout = setTimeout(async () => {
+            await performAvailabilityCheck();
+        }, 500);
+    }
+
+    async function performAvailabilityCheck() {
+        const dateInput = document.getElementById('schedule_date');
+        const timeInput = document.getElementById('schedule_time');
+        const venueSelect = document.getElementById('venue_select');
+        const priestSelectionType = document.getElementById('priest_selection_type')?.value;
+
+        const date = dateInput?.value;
+        const time = timeInput?.value;
+        const venueId = venueSelect?.value;
+
+        // Only check if we have date and time
+        if (!date || !time) return;
+
+        // Get selected priest (only if specific selection)
+        let priestId = null;
+        if (priestSelectionType === 'specific') {
+            const selectedPriest = document.querySelector('input[name="priest_ids[]"]:checked');
+            priestId = selectedPriest?.value;
+        }
+
+        // Skip if venue is custom
+        const actualVenueId = (venueId && venueId !== 'custom') ? venueId : null;
+
+        try {
+            const response = await fetch('/api/availability/check', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    date: date,
+                    time: time,
+                    priest_id: priestId,
+                    venue_id: actualVenueId
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                displayAvailabilityStatus(result);
+                
+                // Also update priest and venue availability indicators
+                await updatePriestAvailabilityUI();
+                await updateVenueAvailabilityUI();
+            }
+        } catch (error) {
+            console.error('Availability check failed:', error);
+        }
+    }
+
+    function displayAvailabilityStatus(result) {
+        // Store current availability status
+        currentAvailabilityStatus = result;
+        
+        // Remove existing availability messages
+        document.querySelectorAll('.availability-message').forEach(el => el.remove());
+
+        if (result.available) {
+            // Show success message
+            showAvailabilityMessage('schedule_time', 'This time slot is available!', 'success');
+        } else {
+            // Show conflict messages
+            if (!result.priest_available) {
+                showAvailabilityMessage('specific_priest_div', 
+                    result.messages[0] || 'Priest is not available at this time', 'error');
+            }
+            if (!result.venue_available) {
+                const venueMsg = result.messages.find(m => m.includes('Venue')) || 
+                    'Venue is not available at this time';
+                showAvailabilityMessage('venue_select', venueMsg, 'error');
+            }
+
+            // Show suggestions
+            if (result.suggestions && result.suggestions.length > 0) {
+                result.suggestions.forEach(suggestion => {
+                    if (suggestion.type === 'time') {
+                        showAvailabilityMessage('schedule_time', suggestion.message, 'warning');
+                    } else if (suggestion.type === 'priest') {
+                        showAvailabilityMessage('specific_priest_div', suggestion.message, 'warning');
+                    } else if (suggestion.type === 'venue') {
+                        showAvailabilityMessage('venue_container', suggestion.message, 'warning');
+                    }
+                });
+            }
+        }
+    }
+
+    function showAvailabilityMessage(afterElementId, message, type) {
+        const targetElement = document.getElementById(afterElementId);
+        if (!targetElement) return;
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'availability-message';
+        
+        const colors = {
+            success: { bg: '#d1fae5', border: '#10b981', text: '#065f46', icon: '✓' },
+            error: { bg: '#fee2e2', border: '#ef4444', text: '#991b1b', icon: '⚠️' },
+            warning: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e', icon: '💡' }
+        };
+        
+        const style = colors[type] || colors.warning;
+        
+        messageDiv.style.cssText = `
+            background: ${style.bg};
+            border: 1px solid ${style.border};
+            color: ${style.text};
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        `;
+        
+        messageDiv.innerHTML = `<span>${style.icon}</span> <span>${message}</span>`;
+        
+        // Insert after target element
+        targetElement.parentNode.insertBefore(messageDiv, targetElement.nextSibling);
+    }
+
+    // Also mark unavailable options in dropdowns/checkboxes
+    async function updatePriestAvailabilityUI() {
+        const dateInput = document.getElementById('schedule_date');
+        const timeInput = document.getElementById('schedule_time');
+
+        const date = dateInput?.value;
+        const time = timeInput?.value;
+
+        if (!date || !time) return;
+
+        try {
+            const response = await fetch('/api/availability/priests', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ date, time })
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.priests) {
+                result.priests.forEach(priest => {
+                    const checkbox = document.querySelector(`input[name="priest_ids[]"][value="${priest.id}"]`);
+                    if (checkbox) {
+                        const label = checkbox.closest('label') || checkbox.parentElement;
+                        if (label) {
+                            if (!priest.available) {
+                                label.style.opacity = '0.5';
+                                label.title = 'Not available at this time';
+                                
+                                // Add "busy" indicator
+                                let busyBadge = label.querySelector('.busy-badge');
+                                if (!busyBadge) {
+                                    busyBadge = document.createElement('span');
+                                    busyBadge.className = 'busy-badge';
+                                    busyBadge.style.cssText = 'background: #ef4444; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 8px;';
+                                    busyBadge.textContent = 'BUSY';
+                                    label.appendChild(busyBadge);
+                                }
+                            } else {
+                                label.style.opacity = '1';
+                                label.title = '';
+                                const busyBadge = label.querySelector('.busy-badge');
+                                if (busyBadge) busyBadge.remove();
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to update priest availability UI:', error);
+        }
+    }
+
+    async function updateVenueAvailabilityUI() {
+        const dateInput = document.getElementById('schedule_date');
+        const timeInput = document.getElementById('schedule_time');
+        const venueSelect = document.getElementById('venue_select');
+
+        const date = dateInput?.value;
+        const time = timeInput?.value;
+
+        if (!date || !time || !venueSelect) return;
+
+        try {
+            const response = await fetch('/api/availability/venues', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ date, time })
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.venues) {
+                result.venues.forEach(venue => {
+                    const option = venueSelect.querySelector(`option[value="${venue.id}"]`);
+                    if (option) {
+                        if (!venue.available) {
+                            option.textContent = option.textContent.replace(' (BUSY)', '') + ' (BUSY)';
+                            option.style.color = '#ef4444';
+                        } else {
+                            option.textContent = option.textContent.replace(' (BUSY)', '');
+                            option.style.color = '';
+                        }
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to update venue availability UI:', error);
+        }
+    }
 </script>
 
 @endsection

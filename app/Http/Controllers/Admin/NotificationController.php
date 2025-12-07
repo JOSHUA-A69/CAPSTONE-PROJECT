@@ -24,6 +24,7 @@ class NotificationController extends Controller
     {
         $count = Notification::where('user_id', Auth::id())
             ->unread()
+            ->notArchived()
             ->count();
 
         return response()->json(['count' => $count]);
@@ -37,6 +38,7 @@ class NotificationController extends Controller
         try {
             $notifications = Notification::where('user_id', Auth::id())
                 ->unread()
+                ->notArchived()
                 ->with(['reservation.officiant'])
                 ->orderByRaw('COALESCE(sent_at, created_at) DESC')
                 ->limit(5)
@@ -46,51 +48,10 @@ class NotificationController extends Controller
             return response()->json(['html' => '<div class="px-5 py-12 text-center bg-white dark:bg-gray-800"><p class="text-red-600">Error loading notifications. Please refresh.</p></div>']);
         }
 
-        $html = '';
-        if ($notifications->isEmpty()) {
-            $html = '<div class="px-5 py-12 text-center bg-white dark:bg-gray-800">';
-            $html .= '<svg class="mx-auto h-16 w-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">';
-            $html .= '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>';
-            $html .= '</svg>';
-            $html .= '<p class="mt-3 text-sm text-gray-500 dark:text-gray-400">No notifications yet</p>';
-            $html .= '</div>';
-        } else {
-            foreach ($notifications as $notification) {
-                $bgColor = $notification->isUnread() ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-gray-800';
-                $data = $notification->data;
-                if (is_string($data)) {
-                    $data = json_decode($data, true);
-                }
-                
-                // Get priest from reservation or data (use officiant relation)
-                $priest = null;
-                $priestId = $data['priest_id'] ?? null;
-                if ($priestId) {
-                    $priest = \App\Models\User::find($priestId);
-                } elseif ($notification->reservation && $notification->reservation->officiant) {
-                    $priest = $notification->reservation->officiant;
-                }
-                $priestName = $data['priest_name'] ?? ($priest ? $priest->full_name : 'Unknown');
-                $timeAgo = optional($notification->sent_at)->diffForHumans() ?? optional($notification->created_at)->diffForHumans() ?? '';
-
-                // Generate avatar initials
-                $nameParts = explode(' ', str_replace('Fr. ', '', $priestName));
-                $initials = '';
-                if (count($nameParts) >= 2) {
-                    $initials = strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1));
-                } else {
-                    $initials = strtoupper(substr($priestName, 0, 2));
-                }
-                // Sanitize message allowing limited formatting
-                $safeMessage = strip_tags((string) $notification->message, '<strong><b><em><i><br>');
-                $html .= '<div class="' . $bgColor . ' px-6 py-4 flex items-center gap-4 border-b">';
-                $html .= '<div class="w-11 h-11 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">' . $initials . '</div>';
-                $html .= '<div class="flex-1 min-w-0">';
-                $html .= '<p class="text-[15px] text-gray-900 dark:text-gray-100 leading-snug">' . $safeMessage . ' <span class="mx-2 text-gray-400">•</span><span class="text-xs text-gray-500 dark:text-gray-400">' . $timeAgo . '</span></p>';
-                $html .= '</div>';
-                $html .= '</div>';
-            }
-        }
+        $html = view('components.notifications.recent-list', [
+            'notifications' => $notifications,
+            'role' => 'admin',
+        ])->render();
         return response()->json(['html' => $html]);
     }
 
@@ -102,6 +63,7 @@ class NotificationController extends Controller
     public function index()
     {
         $notifications = Notification::where('user_id', Auth::id())
+            ->notArchived()
             ->with('reservation')
             ->orderByRaw('COALESCE(sent_at, created_at) DESC')
             ->paginate(20);
@@ -237,6 +199,31 @@ class NotificationController extends Controller
     }
 
     /**
+     * Clear all notifications for the current user (archive them)
+     */
+    public function clearAll()
+    {
+        try {
+            $updated = Notification::where('user_id', Auth::id())
+                ->whereNull('archived_at')
+                ->update(['archived_at' => now()]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully archived {$updated} notification(s).",
+                'count' => $updated
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to clear all notifications: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear notifications. Please try again.'
+            ], 500);
+        }
+    }
+
+
+    /**
      * Get available priests for a specific date/time
      */
     private function getAvailablePriests($scheduleDate, $excludeReservationId = null)
@@ -262,5 +249,47 @@ class NotificationController extends Controller
             $priest->is_available = !in_array($priest->id, $assignedPriestIds);
             return $priest;
         });
+    }
+
+    /**
+     * Archive a notification
+     */
+    public function archive($notificationId)
+    {
+        $notification = Notification::where('user_id', Auth::id())
+            ->where('notification_id', $notificationId)
+            ->firstOrFail();
+
+        $notification->update(['archived_at' => now()]);
+
+        return response()->json(['success' => true, 'message' => 'Notification archived successfully']);
+    }
+
+    /**
+     * Show archived notifications
+     */
+    public function archived()
+    {
+        $notifications = Notification::where('user_id', Auth::id())
+            ->archived()
+            ->with('reservation')
+            ->orderBy('archived_at', 'desc')
+            ->paginate(20);
+
+        return view('admin.notifications.archived', compact('notifications'));
+    }
+
+    /**
+     * Restore an archived notification
+     */
+    public function restore($notificationId)
+    {
+        $notification = Notification::where('user_id', Auth::id())
+            ->where('notification_id', $notificationId)
+            ->firstOrFail();
+
+        $notification->update(['archived_at' => null]);
+
+        return response()->json(['success' => true, 'message' => 'Notification restored successfully']);
     }
 }

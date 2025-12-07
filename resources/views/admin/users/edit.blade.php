@@ -68,7 +68,7 @@
 
                             <div>
                                 <label>Role</label>
-                                <select name="role" class="w-full">
+                                <select name="role" id="roleSelect" class="w-full">
                                     <option value="admin" {{ old('role', $user->role)==='admin' ? 'selected' : '' }}>Admin</option>
                                     <option value="staff" {{ old('role', $user->role)==='staff' ? 'selected' : '' }}>Staff</option>
                                     <option value="adviser" {{ old('role', $user->role)==='adviser' ? 'selected' : '' }}>Adviser</option>
@@ -76,6 +76,41 @@
                                     <option value="requestor" {{ old('role', $user->role)==='requestor' ? 'selected' : '' }}>Requestor</option>
                                 </select>
                                 @error('role')<p class="text-sm text-red-500 mt-1">{{ $message }}</p>@enderror
+                            </div>
+
+                            <!-- Organization Selection (shown only for Adviser role) -->
+                            <div id="organizationSection" class="{{ old('role', $user->role) === 'adviser' ? '' : 'hidden' }}">
+                                <label class="block mb-2">Assign to Organizations</label>
+                                <div class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg p-4 max-h-60 overflow-y-auto">
+                                    @if(isset($organizations) && $organizations->count() > 0)
+                                        @php
+                                            $selectedOrgIds = old('organization_ids', $userOrganizationIds ?? []);
+                                        @endphp
+                                        @foreach($organizations as $org)
+                                            <div class="flex items-center mb-2">
+                                                <input type="checkbox" 
+                                                       name="organization_ids[]" 
+                                                       value="{{ $org->org_id }}" 
+                                                       id="org_{{ $org->org_id }}"
+                                                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                       {{ in_array($org->org_id, $selectedOrgIds) ? 'checked' : '' }}>
+                                                <label for="org_{{ $org->org_id }}" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">
+                                                    {{ $org->org_name }}
+                                                    @if($org->adviser_id && $org->adviser_id != $user->id)
+                                                        <span class="text-xs text-orange-500 dark:text-orange-400">(Adviser -{{ $org->adviser->name }})</span>
+                                                    @elseif($org->adviser_id == $user->id)
+                                                        <span class="text-xs text-green-500 dark:text-green-400">(Currently assigned)</span>
+                                                    @endif
+                                                </label>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">No organizations available.</p>
+                                    @endif
+                                </div>
+                                <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                    Select the organizations this adviser will manage.
+                                </p>
                             </div>
 
                             <div>
@@ -110,4 +145,22 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleSelect = document.getElementById('roleSelect');
+            const organizationSection = document.getElementById('organizationSection');
+
+            function toggleOrganizationSection() {
+                if (roleSelect.value === 'adviser') {
+                    organizationSection.classList.remove('hidden');
+                } else {
+                    organizationSection.classList.add('hidden');
+                }
+            }
+
+            // Listen for changes
+            roleSelect.addEventListener('change', toggleOrganizationSection);
+        });
+    </script>
 </x-app-layout>

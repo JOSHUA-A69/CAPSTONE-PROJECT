@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
-                Reservation #{{ $reservation->reservation_id }}
+            <h2 class="text-heading text-2xl font-bold text-gray-800 dark:text-gray-200">
+                Reservation Details
             </h2>
 
             <a href="{{ route('admin.reservations.index') }}" class="btn-ghost">
@@ -23,7 +23,7 @@
                         <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
-                        {{ session('status') }}
+                        {{ session('message', session('status')) }}
                     </span>
                 </div>
             @endif
@@ -42,9 +42,22 @@
             <!-- Status Banner -->
             @php
                 $statusColor = match($reservation->status) {
-                    'confirmed', 'completed' => 'border-green-500',
+                    'approved', 'confirmed', 'completed' => 'border-green-500',
                     'rejected', 'cancelled' => 'border-red-500',
+                    'admin_approved' => 'border-blue-500', // Ready for final approval
                     default => 'border-yellow-500'
+                };
+                
+                $statusLabel = match($reservation->status) {
+                    'approved' => 'Approved by Admin',
+                    'admin_approved' => 'Awaiting Admin (All Priests Confirmed)',
+                    'adviser_approved' => 'Awaiting Priest',
+                    'pending' => 'Awaiting Adviser',
+                    'confirmed' => 'Confirmed',
+                    'completed' => 'Completed',
+                    'rejected' => 'Rejected',
+                    'cancelled' => 'Cancelled',
+                    default => ucfirst(str_replace('_', ' ', $reservation->status))
                 };
             @endphp
             <div class="card border-l-4 {{ $statusColor }} mb-6">
@@ -52,12 +65,14 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
                             <h3 class="form-label mb-2">Current Status</h3>
-                            @if(in_array($reservation->status, ['confirmed', 'completed']))
-                                <span class="badge-success text-lg">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
+                            @if(in_array($reservation->status, ['approved', 'confirmed', 'completed']))
+                                <span class="badge-success text-lg">{{ $statusLabel }}</span>
                             @elseif(in_array($reservation->status, ['rejected', 'cancelled']))
-                                <span class="badge-danger text-lg">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
+                                <span class="badge-danger text-lg">{{ $statusLabel }}</span>
+                            @elseif($reservation->status === 'admin_approved')
+                                <span class="badge-info text-lg">{{ $statusLabel }}</span>
                             @else
-                                <span class="badge-warning text-lg">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
+                                <span class="badge-warning text-lg">{{ $statusLabel }}</span>
                             @endif
                         </div>
                         <div class="text-left sm:text-right">
@@ -183,7 +198,7 @@
 
                 </div>
 
-                <!-- Right Column: Actions & Assigned Priest -->
+                <!-- Right Column: Priest Assignment & Actions -->
                 <div class="lg:col-span-1 space-y-6">
 
                     <!-- External Priest Info -->
@@ -231,7 +246,30 @@
                     @endif
 
                     <!-- Assigned Priest Info (for SVD priests) -->
-                    @if($reservation->officiant && $reservation->priest_selection_type !== 'external')
+                    @php
+                        $assignedPriests = isset($reservation->priests) ? $reservation->priests : collect();
+                    @endphp
+                    @if($assignedPriests->count() > 0 && $reservation->priest_selection_type !== 'external')
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-gray-100">
+                                <svg class="w-5 h-5 mr-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                Assigned Priest{{ $assignedPriests->count() > 1 ? 's' : '' }}
+                            </h3>
+
+                            <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700 space-y-3">
+                                @foreach($assignedPriests as $p)
+                                <div>
+                                    <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $p->full_name ?? $p->name }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $p->email }}</p>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    @elseif($reservation->officiant && $reservation->priest_selection_type !== 'external')
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 flex items-center text-gray-900 dark:text-gray-100">
@@ -242,17 +280,17 @@
                             </h3>
 
                             <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                                <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $reservation->officiant->name }}</p>
+                                <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $reservation->officiant->full_name ?? $reservation->officiant->name }}</p>
                                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $reservation->officiant->email }}</p>
                             </div>
                         </div>
                     </div>
                     @endif
 
-                    <!-- Assign Priest Form (hidden when admin is already assigned priest) -->
+                    <!-- Assign Priest Form (only shown when priest has declined/rejected) -->
                     @php $authIsAssignedPriest = auth()->id() === optional($reservation->officiant)->id; @endphp
                     @if($reservation->priest_selection_type !== 'external'
-                        && in_array($reservation->status, ['pending_priest_assignment', 'adviser_approved', 'priest_declined', 'pending_priest_reassignment'])
+                        && in_array($reservation->status, ['priest_declined', 'pending_priest_reassignment'])
                         && !$authIsAssignedPriest)
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
@@ -359,6 +397,58 @@
                     </div>
                     @endif
 
+                    <!-- Final Approve Button - When all priests have confirmed and reservation is awaiting admin final approval -->
+                    @if($reservation->status === 'admin_approved')
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg border-2 border-green-500 dark:border-green-400">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-green-700 dark:text-green-300 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Final Approval Required
+                            </h3>
+
+                            <div class="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded text-sm text-green-800 dark:text-green-300">
+                                <p class="font-medium mb-2">✅ All priests have confirmed their availability</p>
+                                <p>This reservation is ready for your final approval. Review the details and click the button below to complete the approval process.</p>
+                            </div>
+
+                            @if($reservation->priests->isNotEmpty())
+                            <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                                <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirmed Priests:</p>
+                                <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400">
+                                    @foreach($reservation->priests as $priest)
+                                        <li>Fr. {{ $priest->first_name }} {{ $priest->last_name }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
+
+                            <form action="{{ route('admin.reservations.final-approve', $reservation->reservation_id) }}" method="POST"
+                                  onsubmit="return confirm('Give final approval to this reservation? This will confirm the reservation and notify all parties.');">
+                                @csrf
+
+                                <div class="mb-4">
+                                    <label for="final_remarks" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        Approval Remarks (optional)
+                                    </label>
+                                    <textarea name="remarks" id="final_remarks" rows="2"
+                                              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-green-500 focus:ring-green-500"
+                                              placeholder="Add any remarks (optional)...">{{ old('remarks') }}</textarea>
+                                </div>
+
+                                <button type="submit"
+                                        class="w-full px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-green-700 transition flex items-center justify-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Give Final Approval
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Reject Button -->
                     @if($reservation->status === 'pending_priest_assignment' || $reservation->status === 'adviser_approved')
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -422,7 +512,9 @@
                     @endif
 
                 </div>
+                <!-- End of Right Column -->
             </div>
+            <!-- End of Main Content Grid -->
         </div>
     </div>
 </x-app-layout>

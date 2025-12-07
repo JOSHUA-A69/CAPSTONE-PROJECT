@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-heading font-semibold text-xl leading-tight">
-            ⛪ Priest Dashboard
+            Priest Dashboard
         </h2>
     </x-slot>
 
@@ -13,12 +13,18 @@
                 <div class="card-body">
                     @php
                         $user = auth()->user();
-                        $displayName = $user->first_name ?? $user->name ?? $user->email ?? 'User';
+                        $displayName = 'Fr. ' . ($user->first_name ?? $user->name ?? $user->email ?? 'User');
 
                         // Get pending confirmations count - include all statuses where priest needs to review/confirm
-                        // This includes: pending (just submitted), pending_priest_confirmation, admin_approved
-                        $pendingCount = \App\Models\Reservation::where('officiant_id', $user->id)
-                            ->whereIn('status', ['pending', 'pending_priest_confirmation', 'admin_approved'])
+                        // This includes: pending, adviser_approved, pending_priest_confirmation, admin_approved
+                        // Check both officiant_id (legacy) and priests relationship (many-to-many)
+                        $pendingCount = \App\Models\Reservation::where(function($q) use ($user) {
+                                $q->where('officiant_id', $user->id)
+                                  ->orWhereHas('priests', function($priestQuery) use ($user) {
+                                      $priestQuery->where('users.id', $user->id);
+                                  });
+                            })
+                            ->whereIn('status', ['pending', 'adviser_approved', 'pending_priest_confirmation', 'admin_approved'])
                             ->where(function($q) {
                                 $q->where('priest_confirmation', '!=', 'confirmed')
                                   ->orWhereNull('priest_confirmation')
@@ -27,13 +33,18 @@
                             ->count();
 
                         // Get upcoming confirmed services
-                        $upcomingCount = \App\Models\Reservation::where('officiant_id', $user->id)
+                        $upcomingCount = \App\Models\Reservation::where(function($q) use ($user) {
+                                $q->where('officiant_id', $user->id)
+                                  ->orWhereHas('priests', function($priestQuery) use ($user) {
+                                      $priestQuery->where('users.id', $user->id);
+                                  });
+                            })
                             ->where('priest_confirmation', 'confirmed')
                             ->where('schedule_date', '>=', now())
                             ->count();
                     @endphp
 
-                    <h3 class="text-2xl font-bold mb-2 text-heading">Welcome, {{ $displayName }}! 🙏</h3>
+                    <h3 class="text-2xl font-bold mb-2 text-heading">Welcome, {{ $displayName }}!</h3>
                     <p class="text-muted">Manage your service assignments and schedule.</p>
                 </div>
             </div>
