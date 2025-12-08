@@ -110,7 +110,29 @@ class ReservationController extends Controller
                 'description'
             ]);
 
-        return view('staff.reservations.calendar', compact('reservations', 'schedules'));
+        // All upcoming organization booking requests (pending/approved)
+        $orgBookings = \App\Models\OrganizationBookingRequest::with([
+                'organization:org_id,org_name',
+                'requestor:id,first_name,last_name'
+            ])
+            ->whereDate('requested_date', '>=', now()->toDateString())
+            ->whereIn('status', ['pending', 'approved'])
+            ->orderBy('requested_date')
+            ->get([
+                'id',
+                'organization_id',
+                'requestor_id',
+                'activity_name',
+                'purpose',
+                'activity_details',
+                'requested_date',
+                'requested_venue',
+                'estimated_participants',
+                'special_requirements',
+                'status'
+            ]);
+
+        return view('staff.reservations.calendar', compact('reservations', 'schedules', 'orgBookings'));
     }
 
     public function show($reservation_id)

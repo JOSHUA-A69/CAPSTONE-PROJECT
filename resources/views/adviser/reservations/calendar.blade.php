@@ -33,6 +33,7 @@
 
         const reservationNode = document.getElementById('adviser-reservations-json');
         const scheduleNode = document.getElementById('adviser-schedules-json');
+        const orgBookingsNode = document.getElementById('adviser-org-bookings-json');
         const calendarHost = document.getElementById('adviserCalendar');
         const sweetAlert = window.Swal;
 
@@ -42,6 +43,7 @@
 
         const rawReservations = JSON.parse(reservationNode.textContent || '[]');
         const rawSchedules = JSON.parse(scheduleNode.textContent || '[]');
+        const rawOrgBookings = orgBookingsNode ? JSON.parse(orgBookingsNode.textContent || '[]') : [];
 
         const CATEGORY_COLORS = {
             institutional: '#7C3AED',
@@ -222,6 +224,33 @@
             };
         });
 
+        // Organization bookings mapped to events
+        const orgBookingEvents = rawOrgBookings.map(booking => {
+            const start = booking.requested_date;
+            return {
+                id: `org-${booking.id}`,
+                title: booking.activity_name || (booking.organization?.org_name ? `${booking.organization.org_name} Booking` : 'Organization Booking'),
+                start,
+                backgroundColor: CATEGORY_COLORS.other,
+                borderColor: CATEGORY_COLORS.other,
+                classNames: ['organization-booking-event'],
+                extendedProps: {
+                    entryType: 'org_booking',
+                    entryLabel: 'Organization Booking',
+                    category: 'other',
+                    categoryLabel: CATEGORY_LABELS.other,
+                    scheduleDate: extractDatePart(booking.requested_date),
+                    scheduleTime: extractTimePart(booking.requested_date),
+                    venue: booking.requested_venue,
+                    service: booking.activity_name,
+                    status: booking.status,
+                    participants: booking.estimated_participants,
+                    organization: booking.organization?.org_name,
+                    raw: booking
+                }
+            };
+        });
+
         const calendar = new Calendar(calendarHost, {
             plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
             initialView: 'dayGridMonth',
@@ -231,7 +260,7 @@
                 right: 'dayGridMonth,timeGridWeek,listWeek'
             },
             height: 'auto',
-            events: [...reservationEvents, ...scheduleEvents],
+            events: [...reservationEvents, ...scheduleEvents, ...orgBookingEvents],
             eventClick(info) {
                 const { extendedProps } = info.event;
                 const raw = extendedProps.raw || {};
@@ -277,6 +306,14 @@
                         const externalName = externalCandidates.find(v => v && String(v).trim());
                         if (externalName) rows.push(`<strong>Presider:</strong> ${escapeHtml(externalName)} (External)`);
                     }
+                } else if (extendedProps.entryType === 'org_booking') {
+                    const displayTime = extendedProps.scheduleTime;
+                    rows.push(`<strong>Time:</strong> ${displayTime ? escapeHtml(displayTime) : formatTimeDisplay(info.event.start)}`);
+                    rows.push(`<strong>Activity:</strong> ${escapeHtml(extendedProps.service || '—')}`);
+                    rows.push(`<strong>Status:</strong> ${escapeHtml(formatLabel(extendedProps.status))}`);
+                    if (extendedProps.organization) rows.push(`<strong>Organization:</strong> ${escapeHtml(extendedProps.organization)}`);
+                    if (extendedProps.participants) rows.push(`<strong>Participants:</strong> ${escapeHtml(extendedProps.participants)}`);
+                    if (extendedProps.venue) rows.push(`<strong>Venue:</strong> ${escapeHtml(extendedProps.venue)}`);
                 } else {
                     const computedStart = extendedProps.scheduleTime
                         ? combineDateAndTime(extendedProps.scheduleDate, extendedProps.scheduleTime)
@@ -341,4 +378,5 @@
 </script>
 <script id="adviser-reservations-json" type="application/json">{!! $reservations->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
 <script id="adviser-schedules-json" type="application/json">{!! ($schedules ?? collect())->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
+<script id="adviser-org-bookings-json" type="application/json">@json($orgBookings ?? [])</script>
 @endpush

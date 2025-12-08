@@ -87,8 +87,8 @@
                                         </div>
                                         <div class="flex-1">
                                             <div class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-1">Upcoming Event</div>
-                                            <div class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">{{ $nextReservation->schedule_date->format('M d') }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $nextReservation->schedule_date->diffForHumans() }}</div>
+                                            <div class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">{{ \Carbon\Carbon::parse($nextReservation->schedule_date)->timezone(config('app.timezone'))->format('M d') }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($nextReservation->schedule_date)->timezone(config('app.timezone'))->diffForHumans() }}</div>
                                         </div>
                                         <div class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-700 dark:text-green-300 text-xs rounded-full font-semibold border border-green-200 dark:border-green-800">
                                             <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 animate-pulse"></span>
@@ -122,8 +122,8 @@
                                         </div>
                                         <div class="flex-1">
                                             <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Upcoming Organization Event</div>
-                                            <div class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">{{ \Carbon\Carbon::parse($nextOrgBooking->requested_date)->format('M d') }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($nextOrgBooking->requested_date)->diffForHumans() }}</div>
+                                            <div class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">{{ \Carbon\Carbon::parse($nextOrgBooking->requested_date)->timezone(config('app.timezone'))->format('M d') }}</div>
+                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($nextOrgBooking->requested_date)->timezone(config('app.timezone'))->diffForHumans() }}</div>
                                         </div>
                                         <div class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 text-emerald-700 dark:text-emerald-300 text-xs rounded-full font-semibold border border-emerald-200 dark:border-emerald-800">
                                             <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
@@ -270,7 +270,7 @@
                                         'type' => 'reservation',
                                         'id' => $r->reservation_id,
                                         'name' => $r->activity_name,
-                                        'subtitle' => ($r->service->service_name ?? 'N/A') . ' • ' . $r->schedule_date->format('M d, Y'),
+                                        'subtitle' => ($r->service->service_name ?? 'N/A') . ' • ' . \Carbon\Carbon::parse($r->schedule_date)->timezone(config('app.timezone'))->format('M d, Y'),
                                         'status' => $r->status,
                                         'updated_at' => $r->updated_at,
                                         'route' => route('requestor.reservations.show', $r->reservation_id),

@@ -96,6 +96,27 @@ class ReservationController extends Controller
                 'officiant_id'
             ]);
 
+        // Include upcoming organization bookings submitted by this requestor
+        $orgBookings = \App\Models\OrganizationBookingRequest::with([
+                'organization:org_id,org_name'
+            ])
+            ->where('requestor_id', Auth::id())
+            ->whereDate('requested_date', '>=', now()->toDateString())
+            ->whereIn('status', ['pending', 'approved'])
+            ->orderBy('requested_date')
+            ->get([
+                'id',
+                'organization_id',
+                'activity_name',
+                'purpose',
+                'activity_details',
+                'requested_date',
+                'requested_venue',
+                'estimated_participants',
+                'special_requirements',
+                'status'
+            ]);
+
         // For requestors, show only public schedules
         $schedules = LiturgicalSchedule::with([
             'priest:id,first_name,middle_name,last_name',
@@ -120,7 +141,7 @@ class ReservationController extends Controller
                 'description'
             ]);
 
-        return view('requestor.reservations.calendar', compact('reservations', 'schedules'));
+        return view('requestor.reservations.calendar', compact('reservations', 'schedules', 'orgBookings'));
     }
 
     public function create()
