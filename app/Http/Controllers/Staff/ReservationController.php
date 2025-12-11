@@ -124,7 +124,6 @@ class ReservationController extends Controller
                 'requestor_id',
                 'activity_name',
                 'purpose',
-                'activity_details',
                 'requested_date',
                 'requested_venue',
                 'estimated_participants',
