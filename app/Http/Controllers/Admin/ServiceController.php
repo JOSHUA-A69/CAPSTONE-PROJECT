@@ -187,11 +187,15 @@ class ServiceController extends Controller
 
         DB::beginTransaction();
         try {
-            // Record the decline
-            $reservation->declines()->create([
+            // Record the decline with reservation snapshot fields
+            \App\Models\PriestDecline::create([
+                'reservation_id' => $reservation->reservation_id,
                 'priest_id' => Auth::id(),
                 'reason' => $reason,
                 'declined_at' => now(),
+                'reservation_activity_name' => $reservation->activity_name ?? ($reservation->service->service_name ?? 'N/A'),
+                'reservation_schedule_date' => $reservation->schedule_date,
+                'reservation_venue' => $reservation->custom_venue_name ?? ($reservation->venue->name ?? 'N/A'),
             ]);
 
             // Always mark the current assignment as declined
