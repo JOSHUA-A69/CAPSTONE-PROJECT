@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
 class Notifications
 {
     // Common notification types in the system
+    public const TYPE_SUCCESS = 'Success';
     public const TYPE_UPDATE = 'Update';
     public const TYPE_URGENT = 'Urgent';
     public const TYPE_ASSIGNMENT = 'Assignment';

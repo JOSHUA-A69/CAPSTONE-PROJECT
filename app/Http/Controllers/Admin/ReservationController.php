@@ -439,7 +439,7 @@ class ReservationController extends Controller
 
             $reservation->history()->create([
                 'performed_by' => Auth::id(),
-                'action' => 'admin_final_approved',
+                'action' => 'admin_approved',
                 'remarks' => $remarks,
                 'performed_at' => now(),
             ]);

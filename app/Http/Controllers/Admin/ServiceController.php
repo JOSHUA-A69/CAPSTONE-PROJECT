@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Services\ReservationNotificationService;
+use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -19,11 +20,13 @@ use Illuminate\Support\Facades\Log;
 class ServiceController extends Controller
 {
     protected ReservationNotificationService $notificationService;
+    protected AvailabilityService $availabilityService;
 
-    public function __construct(ReservationNotificationService $notificationService)
+    public function __construct(ReservationNotificationService $notificationService, AvailabilityService $availabilityService)
     {
         $this->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin']);
         $this->notificationService = $notificationService;
+        $this->availabilityService = $availabilityService;
     }
 
     /**
@@ -176,9 +179,11 @@ class ServiceController extends Controller
 
         $request->validate([
             'reason' => 'nullable|string|max:500',
+            'new_priest_id' => 'nullable|integer|exists:users,id',
         ]);
 
         $reason = $request->input('reason', 'Schedule conflict');
+        $newPriestId = $request->input('new_priest_id');
 
         DB::beginTransaction();
         try {
@@ -189,12 +194,30 @@ class ServiceController extends Controller
                 'declined_at' => now(),
             ]);
 
-            // Update reservation: open slot for reassignment
+            // Always mark the current assignment as declined
             $reservation->priest_confirmation = 'declined';
             $reservation->priest_confirmed_at = now();
-            $reservation->officiant_id = null; // free the slot immediately
-            $reservation->status = 'pending_priest_reassignment';
-            $reservation->save();
+
+            // If admin chose a replacement priest, immediately reassign
+            if (!empty($newPriestId) && (int)$newPriestId !== (int)Auth::id()) {
+                // Verify availability for replacement priest
+                $availability = $this->availabilityService->isPriestAvailable($newPriestId, $reservation->schedule_date, $reservation->reservation_id);
+                if (!$availability['available']) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', $availability['message']);
+                }
+
+                $reservation->officiant_id = $newPriestId;
+                $reservation->status = 'admin_approved';
+                $reservation->priest_confirmation = 'pending';
+                $reservation->priest_notified_at = now();
+                $reservation->save();
+            } else {
+                // No replacement selected: open slot for reassignment
+                $reservation->officiant_id = null;
+                $reservation->status = 'pending_priest_reassignment';
+                $reservation->save();
+            }
 
             // History: decline
             $reservation->history()->create([
@@ -204,20 +227,38 @@ class ServiceController extends Controller
                 'performed_at' => now(),
             ]);
 
-            // History: explicitly mark reassignment open (optional clarity)
-            $reservation->history()->create([
-                'performed_by' => Auth::id(),
-                'action' => 'priest_reassignment_opened',
-                'remarks' => 'Priest slot cleared; awaiting new priest assignment.',
-                'performed_at' => now(),
-            ]);
+            // Follow-up history depending on whether reassigned immediately
+            if (!empty($newPriestId) && (int)$newPriestId !== (int)Auth::id()) {
+                $newPriest = User::find($newPriestId);
+                $reservation->history()->create([
+                    'performed_by' => Auth::id(),
+                    'action' => 'priest_reassigned',
+                    'remarks' => 'Admin declined and reassigned to: ' . ($newPriest?->full_name ?? ('User#'.$newPriestId)),
+                    'performed_at' => now(),
+                ]);
+            } else {
+                $reservation->history()->create([
+                    'performed_by' => Auth::id(),
+                    'action' => 'priest_reassignment_opened',
+                    'remarks' => 'Priest slot cleared; awaiting new priest assignment.',
+                    'performed_at' => now(),
+                ]);
+            }
 
-            // Notify admins/staff to reassign another priest
+            // Notify admins/staff about decline
+            $reservation->refresh();
             $this->notificationService->notifyPriestDeclined($reservation->fresh(['user','service','organization']), $reason, Auth::id());
+
+            // If reassigned, notify the new priest immediately
+            if (!empty($newPriestId) && (int)$newPriestId !== (int)Auth::id()) {
+                try { $this->notificationService->notifyPriestAssigned($reservation); } catch (\Throwable $e) { Log::warning('Notify reassigned priest failed: '.$e->getMessage()); }
+            }
 
             DB::commit();
 
-            $message = 'You have declined this assignment. Slot is now open for reassignment.';
+            $message = !empty($newPriestId) && (int)$newPriestId !== (int)Auth::id()
+                ? 'You have declined and reassigned this service to another priest.'
+                : 'You have declined this assignment. Slot is now open for reassignment.';
             if (request()->expectsJson()) {
                 return response()->json(['success' => true, 'message' => $message]);
             }

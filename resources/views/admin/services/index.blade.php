@@ -174,14 +174,14 @@
                                         <!-- Action Buttons -->
                                         <div class="flex flex-wrap gap-2">
                                             <!-- Admin Approve/Reject Buttons (for initial admin handling) -->
-                                            @if(in_array($reservation->status, ['pending', 'pending_adviser_approval', 'adviser_approved']))
+                                            @if(in_array($reservation->status, ['pending', 'pending_adviser_approval', 'adviser_approved']) && $reservation->officiant_id !== auth()->id())
                                                 <button type="button"
                                                         onclick="showApproveModal{{ $reservation->reservation_id }}()"
                                                         class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
                                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                     </svg>
-                                                    Approve & Assign
+                                                    Approve
                                                 </button>
 
                                                 <button type="button"
@@ -195,7 +195,7 @@
                                             @endif
 
                                             <!-- Priest Confirmation Button (for pending_priest_confirmation status) -->
-                                            @if($reservation->status === 'pending_priest_confirmation')
+                                            @if(($reservation->officiant_id === auth()->id()))
                                                 <!-- Approve (Confirm) - opens a sleek confirmation modal -->
                                                 <button type="button"
                                                         onclick="openModal('approveConfirmModal{{ $reservation->reservation_id }}')"
@@ -206,9 +206,19 @@
                                                     Approve
                                                 </button>
 
-                                                <!-- Reject (Decline & Reassign) -->
+                                                <!-- Decline (open reassign modal) -->
                                                 <button type="button"
                                                         onclick="showPriestDeclineModal{{ $reservation->reservation_id }}()"
+                                                        class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
+                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                    </svg>
+                                                    Decline
+                                                </button>
+
+                                                <!-- Reject (send rejection to requestor) -->
+                                                <button type="button"
+                                                        onclick="showRejectModal{{ $reservation->reservation_id }}()"
                                                         class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md">
                                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -390,7 +400,7 @@
                                 @endif
 
                                 <!-- Approve Confirmation Modal (for pending_priest_confirmation) -->
-                                @if($reservation->status === 'pending_priest_confirmation')
+                                @if(($reservation->officiant_id === auth()->id()))
                                     <div id="approveConfirmModal{{ $reservation->reservation_id }}" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 p-4" onclick="if(event.target === this) closeModal('approveConfirmModal{{ $reservation->reservation_id }}')">
                                         <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl transform transition-all ring-1 ring-gray-200 dark:ring-gray-700">
                                             <div class="p-6">
@@ -413,10 +423,46 @@
                                             </div>
                                         </div>
                                     </div>
+                                    <!-- Reject Modal (also available during priest confirmation) -->
+                                    <div id="rejectModal{{ $reservation->reservation_id }}" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 p-4" onclick="if(event.target === this) closeRejectModal{{ $reservation->reservation_id }}()">
+                                        <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl transform transition-all ring-1 ring-gray-200 dark:ring-gray-700">
+                                            <div class="p-6">
+                                                <div class="flex items-center justify-between mb-3">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                        </div>
+                                                        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">Reject Reservation</h3>
+                                                    </div>
+                                                    <button type="button" onclick="closeRejectModal{{ $reservation->reservation_id }}()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                    </button>
+                                                </div>
+                                                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Your reason will be sent to the requestor. Please be concise and professional.</p>
+                                                <form method="POST" action="{{ route('admin.reservations.reject', $reservation->reservation_id) }}" class="ajax-form" data-after="toast" data-modal="rejectModal{{ $reservation->reservation_id }}">
+                                                    @csrf
+                                                    <div class="mb-4">
+                                                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Reason for Rejection *</label>
+                                                        <textarea name="reason" rows="5" maxlength="500" required data-counter="reject-count-{{ $reservation->reservation_id }}"
+                                                                  class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-200 resize-none"
+                                                                  placeholder="Please provide a clear reason for rejecting this reservation..."></textarea>
+                                                        <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 text-right">
+                                                            <span id="reject-count-{{ $reservation->reservation_id }}">0/500</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex gap-3">
+                                                        <button type="button" onclick="closeRejectModal{{ $reservation->reservation_id }}()"
+                                                                class="flex-1 px-5 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 font-bold rounded-lg transition-colors">Cancel</button>
+                                                        <button type="submit" class="flex-1 px-5 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-lg transition-all shadow-lg">Reject Reservation</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endif
 
                                 <!-- Priest Decline & Reassign Modal (only for pending_priest_confirmation) -->
-                                @if($reservation->status === 'pending_priest_confirmation')
+                                @if(($reservation->officiant_id === auth()->id()))
                                     <div id="priestDeclineModal{{ $reservation->reservation_id }}" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 p-4" onclick="if(event.target === this) closePriestDeclineModal{{ $reservation->reservation_id }}()">
                                         <div class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl transform transition-all">
                                             <div class="p-6">
@@ -469,6 +515,18 @@
                                         }
                                         function closePriestDeclineModal{{ $reservation->reservation_id }}() {
                                             const m = document.getElementById('priestDeclineModal{{ $reservation->reservation_id }}');
+                                            m.classList.add('hidden');
+                                            m.classList.remove('flex');
+                                            document.body.style.overflow = 'auto';
+                                        }
+                                        function showRejectModal{{ $reservation->reservation_id }}() {
+                                            const m = document.getElementById('rejectModal{{ $reservation->reservation_id }}');
+                                            m.classList.remove('hidden');
+                                            m.classList.add('flex');
+                                            document.body.style.overflow = 'hidden';
+                                        }
+                                        function closeRejectModal{{ $reservation->reservation_id }}() {
+                                            const m = document.getElementById('rejectModal{{ $reservation->reservation_id }}');
                                             m.classList.add('hidden');
                                             m.classList.remove('flex');
                                             document.body.style.overflow = 'auto';

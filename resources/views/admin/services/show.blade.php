@@ -267,9 +267,50 @@
                                    class="w-full inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                     View Full Reservation Details
                                 </a>
+
+                                <!-- Reject Reservation Button -->
+                                <button type="button"
+                                        onclick="showRejectModal()"
+                                        class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150">
+                                    Reject Reservation
+                                </button>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Inline Reassignment Panel (shown when slot is open due to decline) -->
+                    @if(in_array($reservation->status, ['pending_priest_reassignment','priest_declined']) && is_null($reservation->officiant_id))
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6 text-gray-900 dark:text-gray-100">
+                            <h3 class="text-lg font-semibold mb-4">Assign Another Priest</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">This reservation's priest slot is open due to a prior decline. Assign a new priest below.</p>
+                            <form method="POST" action="{{ route('admin.reservations.assign-priest', $reservation->reservation_id) }}">
+                                @csrf
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Priest *</label>
+                                        <select name="officiant_id" required class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                            <option value="">-- Select a Priest --</option>
+                                            @php
+                                                $priests = \App\Models\User::where('role','priest')->get();
+                                            @endphp
+                                            @foreach($priests as $priest)
+                                                <option value="{{ $priest->id }}">Fr. {{ $priest->first_name }} {{ $priest->last_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Remarks (optional)</label>
+                                        <input type="text" name="remarks" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="e.g., reassigned after decline" />
+                                    </div>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Assign Priest</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
 
                     <!-- Activity History -->
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
@@ -334,6 +375,20 @@
                                   placeholder="e.g., Schedule conflict, Prior commitment"></textarea>
                     </div>
 
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reassign to Priest (optional)</label>
+                        <select name="new_priest_id" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-red-500 focus:ring-red-500">
+                            <option value="">-- Select a Priest --</option>
+                            @php
+                                $priests = \App\Models\User::whereIn('role', ['priest','admin'])->where('id','!=', auth()->id())->get();
+                            @endphp
+                            @foreach($priests as $priest)
+                                <option value="{{ $priest->id }}">Fr. {{ $priest->first_name }} {{ $priest->last_name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pick a priest to immediately reassign; leave blank to open the slot for reassignment.</p>
+                    </div>
+
                     <div class="flex justify-end gap-3">
                         <button type="button" onclick="hideDeclineModal()"
                                 class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500">
@@ -341,8 +396,44 @@
                         </button>
                         <button type="submit"
                                 class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                                onclick="return confirm('Decline this service and open it for reassignment? The priest slot will be cleared.');">
-                            Decline & Open Reassignment
+                                onclick="return confirm('Decline this service? If you selected a priest above, it will be reassigned immediately; otherwise the slot will be opened for reassignment.');">
+                            Decline
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Reservation Modal -->
+    <div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    Reject Reservation
+                </h3>
+
+                <form method="POST" action="{{ route('admin.reservations.reject', $reservation->reservation_id) }}">
+                    @csrf
+
+                    <div class="mb-4">
+                        <label for="reject_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Reason for Rejection <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="reason" id="reject_reason" rows="3" required
+                                  class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 shadow-sm focus:border-red-500 focus:ring-red-500"
+                                  placeholder="Provide a brief reason for rejection..."></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3">
+                        <button type="button" onclick="hideRejectModal()"
+                                class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-400 dark:hover:bg-gray-500">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                                onclick="return confirm('Reject this reservation? This cannot be undone.');">
+                            Reject Reservation
                         </button>
                     </div>
                 </form>
@@ -357,6 +448,14 @@
 
         function hideDeclineModal() {
             document.getElementById('declineModal').classList.add('hidden');
+        }
+
+        function showRejectModal() {
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+
+        function hideRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
         }
 
         // Close modal when clicking outside
