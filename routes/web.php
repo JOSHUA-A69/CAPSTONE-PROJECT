@@ -278,6 +278,7 @@ Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App
     Route::post('/reservations/{reservation_id}/approve', [\App\Http\Controllers\Adviser\ReservationController::class, 'approve'])->name('reservations.approve');
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Adviser\ReservationController::class, 'reject'])->name('reservations.reject');
     Route::post('/reservations/{reservation_id}/cancel-approval', [\App\Http\Controllers\Adviser\ReservationController::class, 'cancelApproval'])->name('reservations.cancel-approval');
+    Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Adviser\ReservationController::class, 'cancel'])->name('reservations.cancel');
 
     // Organization Booking Routes
     Route::get('/organization-bookings', [\App\Http\Controllers\Adviser\OrganizationBookingController::class, 'index'])->name('organization-bookings.index');

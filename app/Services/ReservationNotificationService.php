@@ -1899,7 +1899,7 @@ class ReservationNotificationService
                     'user_id' => $member->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $staffMessage,
-                    'type' => NotificationHelper::TYPE_ALERT,
+                    'type' => NotificationHelper::TYPE_URGENT,
                     'sent_at' => now(),
                 ];
                 if (Schema::hasColumn('notifications', 'data')) {
@@ -1924,7 +1924,7 @@ class ReservationNotificationService
                     'user_id' => $admin->id,
                     'reservation_id' => $reservation->reservation_id,
                     'message' => $adminMessage,
-                    'type' => NotificationHelper::TYPE_ALERT,
+                    'type' => NotificationHelper::TYPE_URGENT,
                     'sent_at' => now(),
                 ];
                 if (Schema::hasColumn('notifications', 'data')) {

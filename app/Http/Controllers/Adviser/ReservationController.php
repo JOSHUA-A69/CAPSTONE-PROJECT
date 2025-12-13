@@ -340,7 +340,7 @@ class ReservationController extends Controller
 
         $reservation->history()->create([
             'performed_by' => Auth::id(),
-            'action' => 'approval_cancelled',
+            'action' => \App\Models\ReservationHistory::ACTION_STATUS_UPDATED,
             'remarks' => 'Approval cancelled by adviser: ' . $reason,
             'performed_at' => now(),
         ]);
@@ -351,6 +351,70 @@ class ReservationController extends Controller
         return Redirect::back()
             ->with('status', 'approval-cancelled')
             ->with('message', 'Approval cancelled successfully. The requestor and staff have been notified.');
+    }
+
+    /**
+     * Allow adviser to cancel a reservation for their organization.
+     */
+    public function cancel(Request $request, $reservation_id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $reservation = Reservation::with(['organizations', 'user'])->findOrFail($reservation_id);
+        $adviser = Auth::user();
+
+        // Verify adviser is associated with reservation's organizations
+        $adviserOrgIds = $adviser->organizations->pluck('org_id');
+        $reservationOrgIds = $reservation->organizations->pluck('org_id');
+        if ($reservationOrgIds->isEmpty()) {
+            $reservationOrgIds = collect([$reservation->org_id]);
+        }
+        $matchingOrgId = $adviserOrgIds->intersect($reservationOrgIds)->first();
+        if (!$matchingOrgId) {
+            abort(403, 'You are not the adviser for any organization in this reservation.');
+        }
+
+        // Disallow double-cancel
+        if ($reservation->status === 'cancelled') {
+            return Redirect::back()->with('error', 'Reservation is already cancelled.');
+        }
+
+        $reason = $request->input('reason');
+
+        DB::beginTransaction();
+        try {
+            // Update reservation status
+            $reservation->update([
+                'status' => 'cancelled',
+            ]);
+
+            // Record history
+            $orgName = $adviser->organizations->where('org_id', $matchingOrgId)->first()->org_name ?? 'Unknown';
+            $reservation->history()->create([
+                'performed_by' => $adviser->id,
+                'action' => \App\Models\ReservationHistory::ACTION_CANCELLED,
+                'remarks' => "Cancelled by adviser ({$orgName}): {$reason}",
+                'performed_at' => now(),
+            ]);
+
+            // Notify stakeholders
+            try {
+                $this->notificationService->notifyReservationCancelled($reservation, $reason, actor: 'adviser');
+            } catch (\Throwable $e) {
+                Log::warning('Failed to notify on adviser cancel: ' . $e->getMessage());
+            }
+
+            DB::commit();
+            return Redirect::back()
+                ->with('status', 'reservation-cancelled')
+                ->with('message', 'Reservation cancelled. The requestor and staff/admin have been notified.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Adviser cancellation failed: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'Failed to cancel reservation: ' . $e->getMessage());
+        }
     }
 
     /**
