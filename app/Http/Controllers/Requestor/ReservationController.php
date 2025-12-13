@@ -180,6 +180,25 @@ class ReservationController extends Controller
                 $data['custom_venue_name'] = null;
             }
 
+            // If "Other Services" was selected, create/find a Service record to attach
+            if (($data['service_category'] ?? null) === 'other_services') {
+                $customName = trim($request->input('other_service_type'));
+                if ($customName !== '') {
+                    // Normalize name and category
+                    $service = Service::firstOrCreate(
+                        [
+                            'service_name' => $customName,
+                            'service_category' => 'Other Services',
+                        ],
+                        [
+                            'description' => null,
+                            'duration' => null,
+                        ]
+                    );
+                    $data['service_id'] = $service->service_id;
+                }
+            }
+
             // Keep the first organization for backwards compatibility
             $organizationIds = $request->input('organization_ids', []);
             $data['org_id'] = !empty($organizationIds) ? $organizationIds[0] : null;
@@ -197,6 +216,9 @@ class ReservationController extends Controller
                 $data['officiant_id'] = $priestIds[0];
             }
             // For 'specific' type, officiant_id is already in the data from validation
+
+            // Remove form-only fields not part of reservations table
+            unset($data['service_category']);
 
             $reservation = Reservation::create($data);
 

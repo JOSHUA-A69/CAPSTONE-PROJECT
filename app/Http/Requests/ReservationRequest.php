@@ -38,7 +38,10 @@ class ReservationRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'service_id' => ['required', 'integer', Rule::exists('services', 'service_id')],
+            // When selecting predefined services, require a valid service_id.
+            // For "Other Services", we validate differently below.
+            'service_id' => ['nullable', 'integer', Rule::exists('services', 'service_id')],
+            'service_category' => ['required', 'in:institutional_mass,non_institutional_mass,other_services'],
             'venue_id' => ['required'],
             'organization_ids' => ['required', 'array', 'min:1'],
             'organization_ids.*' => ['integer', Rule::exists('organizations', 'org_id')],
@@ -67,6 +70,17 @@ class ReservationRequest extends FormRequest
             $rules['external_priest_contact'] = ['nullable', 'string', 'max:255'];
         }
         // For 'any_available', no priest_ids is required (admin will assign)
+
+        // Service selection validation based on category
+        if ($this->service_category === 'other_services') {
+            // Require a custom service type string when "Other Services" is chosen
+            $rules['other_service_type'] = ['required', 'string', 'max:255'];
+            // service_id is not required in this path
+            $rules['service_id'] = ['nullable', 'integer', Rule::exists('services', 'service_id')];
+        } else {
+            // Predefined services require a valid service_id
+            $rules['service_id'] = ['required', 'integer', Rule::exists('services', 'service_id')];
+        }
 
         // If custom venue is selected, require custom_venue field
         if ($this->venue_id === 'custom') {
@@ -214,6 +228,9 @@ class ReservationRequest extends FormRequest
             'priest_ids.min' => 'Please select at least one priest.',
             'priest_ids.*.exists' => 'One or more selected priests are invalid.',
             'external_priest_name.required' => 'Please provide the name of your external priest.',
+            'service_category.required' => 'Please select a service category.',
+            'service_category.in' => 'Invalid service category.',
+            'other_service_type.required' => 'Please enter the service type you are requesting.',
         ];
     }
 

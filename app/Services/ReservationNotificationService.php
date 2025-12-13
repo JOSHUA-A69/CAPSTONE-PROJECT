@@ -667,6 +667,47 @@ class ReservationNotificationService
             }
         }
 
+        // Notify requestor (in-app)
+        try {
+            $message = "A priest declined your reservation for <strong>{$reservation->service->service_name}</strong>. The admin will assign another presider.";
+            NotificationHelper::make([
+                'user_id' => $reservation->user_id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => NotificationHelper::TYPE_UPDATE,
+                'sent_at' => now(),
+                'data' => [
+                    'action' => 'priest_declined',
+                    'reason' => $reason,
+                    'service_name' => $reservation->service->service_name,
+                    'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::warning('Failed to create requestor priest-declined notification: ' . $e->getMessage());
+        }
+
+        // Notify adviser (in-app)
+        if ($reservation->organization && $reservation->organization->adviser) {
+            try {
+                NotificationHelper::make([
+                    'user_id' => $reservation->organization->adviser->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => "Priest declined reservation for {$reservation->service->service_name}. Slot is open for reassignment.",
+                    'type' => NotificationHelper::TYPE_PRIEST_DECLINED,
+                    'sent_at' => now(),
+                    'data' => [
+                        'reason' => $reason,
+                        'service_name' => $reservation->service->service_name,
+                        'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
+                        'action' => 'priest_declined',
+                    ],
+                ]);
+            } catch (\Exception $e) {
+                Log::warning('Failed to create adviser priest-declined notification: ' . $e->getMessage());
+            }
+        }
+
         // SMS to admin/staff
         $adminWithPhone = User::whereIn('role', ['admin', 'staff'])
             ->whereNotNull('phone')

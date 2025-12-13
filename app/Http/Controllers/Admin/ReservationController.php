@@ -310,9 +310,9 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation cannot be confirmed at this stage.');
         }
 
-        // Update reservation status to admin_approved (since external priest doesn't need further confirmation)
+        // External priest doesn't need further confirmation → mark fully approved
         $reservation->update([
-            'status' => 'admin_approved',
+            'status' => 'approved',
         ]);
 
         // Create history
