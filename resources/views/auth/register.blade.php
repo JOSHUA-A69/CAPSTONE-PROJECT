@@ -29,166 +29,185 @@
             @csrf
 
             <!-- Personal Information Section -->
-            <div class="bg-gray-50 dark:bg-gray-900 p-5 rounded-lg border-l-4 border-[#2ecc71]">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-9 h-9 bg-[#2ecc71] rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                        </svg>
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800 p-6 rounded-2xl border-2 border-green-200 dark:border-green-900/30 shadow-sm">
+                <!-- Header -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-11 h-11 bg-gradient-to-br from-[#2ecc71] to-[#27ae60] rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Personal Information</h3>
+                        </div>
                     </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Tell us about yourself</p>
+                </div>
+
+                <!-- Name Fields -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div>
-                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Personal Information</h3>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">Tell us about yourself</p>
+                        <x-input-label for="first_name" :value="__('First Name')" />
+                        <x-text-input
+                            id="first_name"
+                            name="first_name"
+                            type="text"
+                            :value="old('first_name')"
+                            required
+                            autofocus
+                            autocomplete="given-name"
+                            placeholder="Enter your first name"
+                            class="mt-1" />
+                        <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="middle_name" :value="__('Middle Name')" />
+                        <x-text-input
+                            id="middle_name"
+                            name="middle_name"
+                            type="text"
+                            :value="old('middle_name')"
+                            autocomplete="additional-name"
+                            placeholder="Optional"
+                            class="mt-1" />
+                        <p class="form-helper">Optional</p>
+                        <x-input-error :messages="$errors->get('middle_name')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="last_name" :value="__('Last Name')" />
+                        <x-text-input
+                            id="last_name"
+                            name="last_name"
+                            type="text"
+                            :value="old('last_name')"
+                            required
+                            autocomplete="family-name"
+                            placeholder="Enter your last name"
+                            class="mt-1" />
+                        <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
                     </div>
                 </div>
-
-            <!-- Name Fields -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <x-input-label for="first_name" :value="__('First Name')" />
-                    <x-text-input
-                        id="first_name"
-                        name="first_name"
-                        type="text"
-                        :value="old('first_name')"
-                        required
-                        autofocus
-                        autocomplete="given-name"
-                        class="mt-1" />
-                    <x-input-error :messages="$errors->get('first_name')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="middle_name" :value="__('Middle Name')" />
-                    <x-text-input
-                        id="middle_name"
-                        name="middle_name"
-                        type="text"
-                        :value="old('middle_name')"
-                        autocomplete="additional-name"
-                        class="mt-1" />
-                    <p class="form-helper">Optional</p>
-                    <x-input-error :messages="$errors->get('middle_name')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="last_name" :value="__('Last Name')" />
-                    <x-text-input
-                        id="last_name"
-                        name="last_name"
-                        type="text"
-                        :value="old('last_name')"
-                        required
-                        autocomplete="family-name"
-                        class="mt-1" />
-                    <x-input-error :messages="$errors->get('last_name')" class="mt-2" />
-                </div>
-            </div>
             </div>
 
             <!-- Contact Information Section -->
-            <div class="bg-gray-50 dark:bg-gray-900 p-5 rounded-lg border-l-4 border-blue-500">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-9 h-9 bg-blue-500 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
+            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 p-6 rounded-2xl border-2 border-blue-200 dark:border-blue-900/30 shadow-sm">
+                <!-- Header -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-11 h-11 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Contact Information</h3>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Contact Information</h3>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">How can we reach you?</p>
-                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">How can we reach you?</p>
                 </div>
 
-            <!-- Email -->
-            <div>
-                <x-input-label for="email" :value="__('Email Address')" />
-                <x-text-input
-                    id="email"
-                    name="email"
-                    type="email"
-                    :value="old('email')"
-                    required
-                    autocomplete="username"
-                    class="mt-1" />
-                <x-input-error :messages="$errors->get('email')" class="mt-2" />
-            </div>
+                <!-- Contact Fields -->
+                <div class="space-y-5">
+                    <!-- Email -->
+                    <div>
+                        <x-input-label for="email" :value="__('Email Address')" />
+                        <x-text-input
+                            id="email"
+                            name="email"
+                            type="email"
+                            :value="old('email')"
+                            required
+                            autocomplete="username"
+                            placeholder="your.email@example.com"
+                            class="mt-1" />
+                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
+                    </div>
 
-            <!-- Phone -->
-            <div>
-                <x-input-label for="phone" :value="__('Phone Number')" />
-                <x-text-input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    :value="old('phone')"
-                    required
-                    autocomplete="tel"
-                    placeholder="+63 912 345 6789"
-                    class="mt-1" />
-                <p class="form-helper">Required - for contact purposes</p>
-                <x-input-error :messages="$errors->get('phone')" class="mt-2" />
-            </div>
+                    <!-- Phone -->
+                    <div>
+                        <x-input-label for="phone" :value="__('Phone Number')" />
+                        <x-text-input
+                            id="phone"
+                            name="phone"
+                            type="tel"
+                            :value="old('phone')"
+                            required
+                            autocomplete="tel"
+                            placeholder="+63 912 345 6789"
+                            class="mt-1" />
+                        <p class="form-helper">Required for contact purposes</p>
+                        <x-input-error :messages="$errors->get('phone')" class="mt-2" />
+                    </div>
+                </div>
             </div>
 
             <!-- Security Section -->
-            <div class="bg-gray-50 dark:bg-gray-900 p-5 rounded-lg border-l-4 border-purple-500">
-                <div class="flex items-center gap-2 mb-4">
-                    <div class="w-9 h-9 bg-purple-500 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
+            <div class="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-gray-800 p-6 rounded-2xl border-2 border-purple-200 dark:border-purple-900/30 shadow-sm">
+                <!-- Header -->
+                <div class="mb-6">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-11 h-11 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Security</h3>
+                        </div>
                     </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Keep your account safe</p>
+                </div>
+
+                <!-- Password Fields -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
-                        <h3 class="text-base font-bold text-gray-900 dark:text-white">Security</h3>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">Keep your account safe</p>
+                        <x-input-label for="password" :value="__('Password')" />
+                        <x-text-input
+                            id="password"
+                            name="password"
+                            type="password"
+                            required
+                            autocomplete="new-password"
+                            placeholder="••••••••"
+                            class="mt-1" />
+                        <p class="form-helper">Minimum 8 characters</p>
+                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                    </div>
+
+                    <div>
+                        <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
+                        <x-text-input
+                            id="password_confirmation"
+                            name="password_confirmation"
+                            type="password"
+                            required
+                            autocomplete="new-password"
+                            placeholder="••••••••"
+                            class="mt-1" />
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                     </div>
                 </div>
-
-            <!-- Password Fields -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <x-input-label for="password" :value="__('Password')" />
-                    <x-text-input
-                        id="password"
-                        name="password"
-                        type="password"
-                        required
-                        autocomplete="new-password"
-                        class="mt-1" />
-                    <p class="form-helper">Minimum 8 characters</p>
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                </div>
-
-                <div>
-                    <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-                    <x-text-input
-                        id="password_confirmation"
-                        name="password_confirmation"
-                        type="password"
-                        required
-                        autocomplete="new-password"
-                        class="mt-1" />
-                    <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-                </div>
-            </div>
             </div>
 
             @if(config('registration.allow_role_selection'))
                 <!-- Role Selection Section -->
-                <div class="bg-gray-50 dark:bg-gray-900 p-5 rounded-lg border-l-4 border-amber-500">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-gray-900 dark:to-gray-800 p-6 rounded-2xl border-2 border-amber-200 dark:border-amber-900/30 shadow-sm">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-11 h-11 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-base font-bold text-gray-900 dark:text-white">Account Role</h3>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Account Role</h3>
                             <p class="text-xs text-gray-600 dark:text-gray-400">Optional - Select if you have elevated access</p>
                         </div>
                     </div>
 
+                <div class="space-y-5">
                 <!-- Role Selection -->
                 <div>
                     <x-input-label for="role" :value="__('User Role')" />
@@ -215,6 +234,7 @@
                         class="mt-1" />
                     <p class="form-helper">Required for elevated roles (Admin, Staff, Adviser, Priest)</p>
                     <x-input-error :messages="$errors->get('elevated_code')" class="mt-2" />
+                </div>
                 </div>
                 </div>
             @else

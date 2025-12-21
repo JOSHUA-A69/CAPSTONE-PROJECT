@@ -16,11 +16,13 @@ class Message extends Model
         'attachment_name',
         'attachment_type',
         'attachment_size',
+        'is_auto_reply',
     ];
 
     protected $casts = [
         'read_at' => 'datetime',
         'created_at' => 'datetime',
+        'is_auto_reply' => 'boolean',
     ];
 
     protected $appends = ['attachment_url'];

@@ -9,143 +9,154 @@
         </div>
     </x-slot>
 
-    <div class="py-8">
+    <div class="py-8 bg-gradient-to-br from-blue-50/30 to-purple-50/30 dark:from-gray-900 dark:to-gray-800 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Welcome Banner -->
-            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-8 mb-8 border border-blue-100 dark:border-blue-800/30">
-                <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                    <div class="lg:flex-1 lg:max-w-md xl:max-w-lg">
-                        <h3 class="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
-                            Welcome! 🌟
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Left Column - Welcome and Quick Tips -->
+                <div class="space-y-6">
+                    <!-- Welcome Section - No Card Background -->
+                    <div>
+                        <h3 class="text-4xl font-bold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                            Welcome! <span class="text-5xl">☀️</span>
                         </h3>
-                        <p class="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                        <p class="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
                             Manage your requests, review updates, and stay connected with the community."
                         </p>
-                        <div class="mt-6">
-                            <div class="bg-yellow-50 dark:bg-yellow-900/10 rounded-xl p-4 border border-yellow-100 dark:border-yellow-800/30">
-                                <div class="flex items-center mb-2">
-                                    <span class="bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded-lg mr-2">
-                                        <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                    </span>
-                                    <span class="font-bold text-yellow-900 dark:text-yellow-200 text-lg">Quick Tips</span>
-                                </div>
-                                <ul class="text-sm text-yellow-800 dark:text-yellow-300 space-y-1 ml-1">
-                                    <li>• Submit requests at least 7 days in advance</li>
-                                    <li>• Check your email regularly for updates</li>
-                                    <li>• Respond to confirmations promptly</li>
-                                </ul>
-                            </div>
-                        </div>
                     </div>
-                    <div class="flex flex-col gap-4 lg:w-auto lg:min-w-[420px] xl:min-w-[480px] shrink-0">
-                        <!-- Action Buttons -->
-                        <div class="grid grid-cols-2 gap-3">
-                            <a href="{{ route('requestor.reservations.create') }}" class="group inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 border border-blue-500/20">
-                                <div class="bg-white/20 p-2 rounded-xl mr-3 group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-base font-semibold">New Service Request</span>
-                            </a>
-                            <a href="{{ route('requestor.organization-bookings.create') }}" class="group inline-flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300 border border-blue-500/20">
-                                <div class="bg-white/20 p-2 rounded-xl mr-3 group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
-                                    </svg>
-                                </div>
-                                <span class="text-base font-semibold">Book Organization Service</span>
-                            </a>
+
+                    <!-- Quick Tips -->
+                    <div class="bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/10 dark:to-amber-900/10 rounded-3xl p-6 border border-yellow-200 dark:border-yellow-800/30">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="font-bold text-yellow-900 dark:text-yellow-200 text-lg">Quick Tips</span>
                         </div>
-                        
-                        <!-- Upcoming Events Cards -->
-                        <div class="grid grid-cols-2 gap-3">
-                            @php
-                                $nextReservation = \App\Models\Reservation::where('user_id', auth()->id())
-                                    ->whereIn('status', ['approved', 'confirmed'])
-                                    ->where('schedule_date', '>=', now())
-                                    ->orderBy('schedule_date')
-                                    ->first();
-                                
-                                $nextOrgBooking = \App\Models\OrganizationBookingRequest::where('requestor_id', auth()->id())
-                                    ->where('status', 'approved')
-                                    ->where('requested_date', '>=', now())
-                                    ->orderBy('requested_date')
-                                    ->first();
-                            @endphp
+                        <ul class="text-sm text-yellow-800 dark:text-yellow-300 space-y-2.5 ml-1">
+                            <li class="flex items-start">
+                                <span class="mr-2">•</span>
+                                <span>Submit requests at least 7 days in advance</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-2">•</span>
+                                <span>Check your email regularly for updates</span>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="mr-2">•</span>
+                                <span>Respond to confirmations promptly</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Right Column - Action Buttons and Events -->
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <a href="{{ route('requestor.reservations.create') }}" class="group inline-flex items-center justify-center gap-3 px-6 py-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-3xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
+                            <div class="bg-white/20 p-2 rounded-xl group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </div>
+                            <span class="text-base font-semibold">New Service Request</span>
+                        </a>
+                        <a href="{{ route('requestor.organization-bookings.create') }}" class="group inline-flex items-center justify-center gap-3 px-6 py-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-3xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
+                            <div class="bg-white/20 p-2 rounded-xl group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </div>
+                            <span class="text-base font-semibold">Book Organization Service</span>
+                        </a>
+                    </div>
+
+                    <!-- Upcoming Events Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        @php
+                            $nextReservation = \App\Models\Reservation::where('user_id', auth()->id())
+                                ->whereIn('status', ['approved', 'confirmed'])
+                                ->where('schedule_date', '>=', now())
+                                ->orderBy('schedule_date')
+                                ->first();
                             
-                            <!-- Service Reservation Card -->
-                            @if($nextReservation)
-                                <a href="{{ route('requestor.reservations.show', $nextReservation->reservation_id) }}" class="group bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-2xl hover:border-purple-200 dark:hover:border-purple-700 transform hover:scale-[1.02] transition-all duration-300 h-full">
-                                    <div class="flex flex-col items-center text-center space-y-3">
-                                        <div class="inline-flex items-center justify-center w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-2xl group-hover:scale-110 transition-transform">
-                                            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-1">Upcoming Event</div>
-                                            <div class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">{{ \Carbon\Carbon::parse($nextReservation->schedule_date)->timezone(config('app.timezone'))->format('M d') }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($nextReservation->schedule_date)->timezone(config('app.timezone'))->diffForHumans() }}</div>
-                                        </div>
-                                        <div class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-700 dark:text-green-300 text-xs rounded-full font-semibold border border-green-200 dark:border-green-800">
-                                            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                                            Confirmed
-                                        </div>
-                                    </div>
-                                </a>
-                            @else
-                                <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-gray-700 h-full flex flex-col items-center justify-center text-center space-y-4">
-                                    <div class="inline-flex items-center justify-center w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-2xl">
-                                        <svg class="w-7 h-7 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            $nextOrgBooking = \App\Models\OrganizationBookingRequest::where('requestor_id', auth()->id())
+                                ->where('status', 'approved')
+                                ->where('requested_date', '>=', now())
+                                ->orderBy('requested_date')
+                                ->first();
+                        @endphp
+                        
+                        <!-- Service Reservation Card -->
+                        @if($nextReservation)
+                            <a href="{{ route('requestor.reservations.show', $nextReservation->reservation_id) }}" class="group bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-2xl hover:border-purple-200 dark:hover:border-purple-700 transform hover:scale-[1.02] transition-all duration-300">
+                                <div class="flex flex-col items-center text-center space-y-4">
+                                    <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-2xl group-hover:scale-110 transition-transform">
+                                        <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                         </svg>
                                     </div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-900 dark:text-white mb-1">No Service Reservations Yet</h4>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">No Mass reservations have been created yet. Click the button to make a reservation</p>
+                                    <div class="flex-1">
+                                        <div class="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-2">Upcoming Event</div>
+                                        <div class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">{{ \Carbon\Carbon::parse($nextReservation->schedule_date)->timezone(config('app.timezone'))->format('M d') }}</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400 font-medium">{{ \Carbon\Carbon::parse($nextReservation->schedule_date)->timezone(config('app.timezone'))->diffForHumans() }}</div>
                                     </div>
-                                   
+                                    <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 text-green-700 dark:text-green-300 text-sm rounded-full font-semibold">
+                                        <span class="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
+                                        Confirmed
+                                    </div>
                                 </div>
-                            @endif
-                            
-                            <!-- Organization Booking Card -->
-                            @if($nextOrgBooking)
-                                <a href="{{ route('requestor.organization-bookings.show', $nextOrgBooking->id) }}" class="group bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-2xl hover:border-emerald-200 dark:hover:border-emerald-700 transform hover:scale-[1.02] transition-all duration-300 h-full">
-                                    <div class="flex flex-col items-center text-center space-y-3">
-                                        <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl group-hover:scale-110 transition-transform">
-                                            <svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="flex-1">
-                                            <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Upcoming Organization Event</div>
-                                            <div class="text-2xl font-extrabold text-gray-900 dark:text-white mb-1">{{ \Carbon\Carbon::parse($nextOrgBooking->requested_date)->timezone(config('app.timezone'))->format('M d') }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ \Carbon\Carbon::parse($nextOrgBooking->requested_date)->timezone(config('app.timezone'))->diffForHumans() }}</div>
-                                        </div>
-                                        <div class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 text-emerald-700 dark:text-emerald-300 text-xs rounded-full font-semibold border border-emerald-200 dark:border-emerald-800">
-                                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
-                                            Approved
-                                        </div>
-                                    </div>
-                                </a>
-                            @else
-                                <div class="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-gray-700 h-full flex flex-col items-center justify-center text-center space-y-4">
-                                    <div class="inline-flex items-center justify-center w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl">
-                                        <svg class="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </a>
+                        @else
+                            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center space-y-4">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-2xl">
+                                    <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900 dark:text-white mb-1">No Service Reservations Yet</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Click the button above to make your first reservation</p>
+                                </div>
+                            </div>
+                        @endif
+                        
+                        <!-- Organization Booking Card -->
+                        @if($nextOrgBooking)
+                            <a href="{{ route('requestor.organization-bookings.show', $nextOrgBooking->id) }}" class="group bg-white dark:bg-gray-800 rounded-3xl p-6 shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-2xl hover:border-emerald-200 dark:hover:border-emerald-700 transform hover:scale-[1.02] transition-all duration-300">
+                                <div class="flex flex-col items-center text-center space-y-4">
+                                    <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl group-hover:scale-110 transition-transform">
+                                        <svg class="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-3-3h-2m0 0a3 3 0 10-6 0m6 0H9m11 0v2m-6-8a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         </svg>
                                     </div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-900 dark:text-white mb-1">No Organization Bookings Yet</h4>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">No organization services have been booked yet. Click the button to make a booking</p>
+                                    <div class="flex-1">
+                                        <div class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2">Upcoming Organization Event</div>
+                                        <div class="text-3xl font-extrabold text-gray-900 dark:text-white mb-2">{{ \Carbon\Carbon::parse($nextOrgBooking->requested_date)->timezone(config('app.timezone'))->format('M d') }}</div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400 font-medium">{{ \Carbon\Carbon::parse($nextOrgBooking->requested_date)->timezone(config('app.timezone'))->diffForHumans() }}</div>
                                     </div>
-                                   
+                                    <div class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 text-emerald-700 dark:text-emerald-300 text-sm rounded-full font-semibold">
+                                        <span class="w-2 h-2 bg-emerald-500 rounded-full mr-2 animate-pulse"></span>
+                                        Approved
+                                    </div>
                                 </div>
-                            @endif
-                        </div>
+                            </a>
+                        @else
+                            <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-100 dark:border-gray-700 flex flex-col items-center justify-center text-center space-y-4">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-2xl">
+                                    <svg class="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-3-3h-2m0 0a3 3 0 10-6 0m6 0H9m11 0v2m-6-8a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900 dark:text-white mb-1">No Organization Bookings Yet</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Click the button above to book your first organization service</p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

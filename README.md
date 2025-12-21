@@ -300,3 +300,19 @@ If you'd like to contribute:
 1. Fork and create a feature branch.
 2. Run tests and keep changes small and documented.
 3. Open a PR describing the change and its reasoning.
+
+## pull and after pull
+
+git pull https://github.com/JOSHUA-A69/CAPSTONE-PROJECT.git
+
+composer install
+
+npm install
+
+php artisan migrate
+
+php artisan cache:clear
+php artisan config:clear
+
+docker compose up -df
+

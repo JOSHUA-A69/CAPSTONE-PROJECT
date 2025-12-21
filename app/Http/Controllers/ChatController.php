@@ -134,13 +134,90 @@ class ChatController extends Controller
     }
 
     /**
+     * Send FAQ auto-reply (question + automated response).
+     */
+    public function sendFaqAutoReply(Request $request)
+    {
+        $request->validate([
+            'receiver_id' => 'required|exists:users,id',
+            'question' => 'required|string|max:500',
+            'answer' => 'required|string|max:5000',
+        ]);
+
+        $user = Auth::user();
+        $receiverId = $request->receiver_id;
+
+        // Only requestors can use this endpoint
+        if ($user->role !== 'requestor') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // 1. Send the question first
+        $questionMessage = Message::create([
+            'sender_id' => $user->id,
+            'receiver_id' => $receiverId,
+            'message' => $request->question,
+            'is_auto_reply' => false,
+        ]);
+        $questionMessage->load(['sender', 'receiver']);
+
+        // 2. Send the automated reply (from admin to requestor)
+        $autoReplyMessage = Message::create([
+            'sender_id' => $receiverId, // Admin/receiver sends the auto-reply
+            'receiver_id' => $user->id, // To the requestor
+            'message' => "🤖 **Automated FAQ Response:**\n\n" . $request->answer . "\n\n_If you need further assistance, please type your question below and an admin will respond shortly._",
+            'is_auto_reply' => true,
+            'read_at' => now(), // Mark as read immediately since it's automated
+        ]);
+        $autoReplyMessage->load(['sender', 'receiver']);
+
+        return response()->json([
+            'success' => true,
+            'question' => [
+                'id' => $questionMessage->id,
+                'message' => $questionMessage->message,
+                'sender_id' => $questionMessage->sender_id,
+                'receiver_id' => $questionMessage->receiver_id,
+                'is_auto_reply' => false,
+                'sender' => [
+                    'id' => $questionMessage->sender->id,
+                    'name' => $questionMessage->sender->first_name ?? $questionMessage->sender->name,
+                    'profile_picture' => $questionMessage->sender->profile_picture_url,
+                ],
+                'created_at' => $questionMessage->created_at->toISOString(),
+            ],
+            'auto_reply' => [
+                'id' => $autoReplyMessage->id,
+                'message' => $autoReplyMessage->message,
+                'sender_id' => $autoReplyMessage->sender_id,
+                'receiver_id' => $autoReplyMessage->receiver_id,
+                'is_auto_reply' => true,
+                'sender' => [
+                    'id' => $autoReplyMessage->sender->id,
+                    'name' => $autoReplyMessage->sender->first_name ?? $autoReplyMessage->sender->name,
+                    'profile_picture' => $autoReplyMessage->sender->profile_picture_url,
+                ],
+                'created_at' => $autoReplyMessage->created_at->toISOString(),
+            ],
+        ]);
+    }
+
+    /**
      * Get messages for a conversation (AJAX).
      */
     public function getMessages($userId)
     {
         $user = Auth::user();
 
+        $lastClearedAt = DB::table('chat_resets')
+            ->where('user_id', $user->id)
+            ->where('other_user_id', $userId)
+            ->value('cleared_at');
+
         $messages = Message::conversation($user->id, $userId)
+            ->when($lastClearedAt, function ($query) use ($lastClearedAt) {
+                $query->where('created_at', '>', $lastClearedAt);
+            })
             ->with(['sender', 'receiver'])
             ->get();
 
@@ -156,6 +233,7 @@ class ChatController extends Controller
                     'attachment_type' => $message->attachment_type,
                     'attachment_size' => $message->attachment_size,
                     'is_image' => $message->isImage(),
+                    'is_auto_reply' => $message->is_auto_reply ?? false,
                     'sender' => [
                         'id' => $message->sender->id,
                         'name' => $message->sender->first_name ?? $message->sender->name,
@@ -195,6 +273,29 @@ class ChatController extends Controller
     }
 
     /**
+     * Clear all messages in a conversation.
+     */
+    public function clearConversation($userId)
+    {
+        $user = Auth::user();
+
+        DB::table('chat_resets')->upsert([
+            [
+                'user_id' => $user->id,
+                'other_user_id' => $userId,
+                'cleared_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ], ['user_id', 'other_user_id'], ['cleared_at', 'updated_at']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Conversation cleared for current user.',
+        ]);
+    }
+
+    /**
      * Get admin's conversations.
      */
     private function getAdminConversations()
@@ -204,8 +305,8 @@ class ChatController extends Controller
         // Get all requestors who have messaged this admin or whom this admin has messaged
         $conversations = DB::table('messages')
             ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture')
-            ->selectRaw('MAX(messages.created_at) as last_message_at')
-            ->selectRaw('COUNT(CASE WHEN messages.receiver_id = ? AND messages.read_at IS NULL THEN 1 END) as unread_count', [$userId])
+            ->selectRaw('MAX(CASE WHEN cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at THEN messages.created_at END) as last_message_at')
+            ->selectRaw('COUNT(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) AND messages.receiver_id = ? AND messages.read_at IS NULL THEN 1 END) as unread_count', [$userId])
             ->join('users', function ($join) use ($userId) {
                 $join->on('users.id', '=', 'messages.sender_id')
                     ->where('messages.receiver_id', '=', $userId)
@@ -213,6 +314,10 @@ class ChatController extends Controller
                         $query->on('users.id', '=', 'messages.receiver_id')
                             ->where('messages.sender_id', '=', $userId);
                     });
+            })
+            ->leftJoin('chat_resets as cr', function ($join) use ($userId) {
+                $join->on('cr.other_user_id', '=', 'users.id')
+                    ->where('cr.user_id', '=', $userId);
             })
             ->where('users.role', 'requestor')
             ->where(function ($query) use ($userId) {
@@ -236,8 +341,8 @@ class ChatController extends Controller
         // Get all admins
         $conversations = DB::table('messages')
             ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture')
-            ->selectRaw('MAX(messages.created_at) as last_message_at')
-            ->selectRaw('COUNT(CASE WHEN messages.receiver_id = ? AND messages.read_at IS NULL THEN 1 END) as unread_count', [$userId])
+            ->selectRaw('MAX(CASE WHEN cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at THEN messages.created_at END) as last_message_at')
+            ->selectRaw('COUNT(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) AND messages.receiver_id = ? AND messages.read_at IS NULL THEN 1 END) as unread_count', [$userId])
             ->join('users', function ($join) use ($userId) {
                 $join->on('users.id', '=', 'messages.sender_id')
                     ->where('messages.receiver_id', '=', $userId)
@@ -245,6 +350,10 @@ class ChatController extends Controller
                         $query->on('users.id', '=', 'messages.receiver_id')
                             ->where('messages.sender_id', '=', $userId);
                     });
+            })
+            ->leftJoin('chat_resets as cr', function ($join) use ($userId) {
+                $join->on('cr.other_user_id', '=', 'users.id')
+                    ->where('cr.user_id', '=', $userId);
             })
             ->where('users.role', 'admin')
             ->where(function ($query) use ($userId) {

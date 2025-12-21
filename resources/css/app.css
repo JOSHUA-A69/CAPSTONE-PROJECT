@@ -180,18 +180,21 @@
 	   FORM COMPONENTS
 	   ======================================== */
 	.form-input {
-		@apply w-full px-4 py-3
-		       border border-gray-300 dark:border-gray-600
+		@apply w-full px-4 py-3.5
+		       border-2 border-gray-300 dark:border-gray-600
 		       bg-white dark:bg-gray-900
 		       text-gray-900 dark:text-gray-100
-		       rounded-lg shadow-sm
-		       focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500
-		       transition-colors duration-200
+		       text-base
+		       rounded-xl shadow-sm
+		       focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500
+		       hover:border-gray-400 dark:hover:border-gray-500
+		       transition-all duration-200
+		       placeholder:text-gray-400 dark:placeholder:text-gray-500
 		       disabled:bg-gray-100 disabled:cursor-not-allowed dark:disabled:bg-gray-800;
 	}
 
 	.form-label {
-		@apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
+		@apply block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2;
 	}
 
 	.form-error {
@@ -209,7 +212,7 @@
 	}
 
 	.form-helper {
-		@apply mt-2 text-sm text-gray-600 dark:text-gray-400;
+		@apply mt-2 text-xs text-gray-500 dark:text-gray-400 italic;
 	}
 
 	/* ========================================
@@ -655,3 +658,189 @@ body:has([x-show][style*="display: block"]) {
 	overflow: visible;
 }
 
+/* ========================================
+   ENHANCED LOADING STATES
+   ======================================== */
+
+/* Skeleton Loader */
+.skeleton {
+	background: linear-gradient(
+		90deg,
+		#f0f0f0 25%,
+		#e0e0e0 50%,
+		#f0f0f0 75%
+	);
+	background-size: 200% 100%;
+	animation: skeleton-loading 1.5s infinite;
+	border-radius: 0.5rem;
+}
+
+.dark .skeleton {
+	background: linear-gradient(
+		90deg,
+		#374151 25%,
+		#4b5563 50%,
+		#374151 75%
+	);
+	background-size: 200% 100%;
+}
+
+@keyframes skeleton-loading {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
+
+/* Skeleton variants */
+.skeleton-text {
+	height: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.skeleton-title {
+	height: 1.5rem;
+	width: 60%;
+	margin-bottom: 0.75rem;
+}
+
+.skeleton-avatar {
+	width: 3rem;
+	height: 3rem;
+	border-radius: 50%;
+}
+
+.skeleton-card {
+	height: 200px;
+	border-radius: 1rem;
+}
+
+/* Button Loading State */
+.btn-loading {
+	position: relative;
+	color: transparent !important;
+	pointer-events: none;
+}
+
+.btn-loading::after {
+	content: '';
+	position: absolute;
+	width: 1.25rem;
+	height: 1.25rem;
+	top: 50%;
+	left: 50%;
+	margin-left: -0.625rem;
+	margin-top: -0.625rem;
+	border: 2px solid currentColor;
+	border-radius: 50%;
+	border-right-color: transparent;
+	animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+	to { transform: rotate(360deg); }
+}
+
+/* Pulse Animation for loading indicators */
+.pulse-loading {
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
+}
+
+/* ========================================
+   MICRO-INTERACTIONS
+   ======================================== */
+
+/* Subtle hover lift */
+.hover-lift {
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Scale on tap (mobile) */
+.tap-scale:active {
+	transform: scale(0.98);
+}
+
+/* Icon rotation on hover */
+.icon-rotate-hover:hover svg {
+	transform: rotate(12deg);
+	transition: transform 0.3s ease;
+}
+
+/* Underline animation */
+.underline-animated {
+	position: relative;
+}
+
+.underline-animated::after {
+	content: '';
+	position: absolute;
+	bottom: -2px;
+	left: 0;
+	width: 0;
+	height: 2px;
+	background: currentColor;
+	transition: width 0.3s ease;
+}
+
+.underline-animated:hover::after {
+	width: 100%;
+}
+
+/* ========================================
+   ENHANCED FORM FEEDBACK
+   ======================================== */
+
+/* Success state */
+.input-success {
+	border-color: #10b981 !important;
+	box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Error shake animation */
+.input-error-shake {
+	animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+	0%, 100% { transform: translateX(0); }
+	10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+	20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+/* ========================================
+   GLASSMORPHISM UTILITIES
+   ======================================== */
+
+.glass-effect {
+	background: rgba(255, 255, 255, 0.7);
+	backdrop-filter: blur(10px);
+	-webkit-backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass-effect {
+	background: rgba(31, 41, 55, 0.7);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ========================================
+   SCROLL INDICATOR
+   ======================================== */
+
+.scroll-indicator {
+	position: fixed;
+	top: 0;
+	left: 0;
+	height: 3px;
+	background: linear-gradient(90deg, #10b981, #3b82f6);
+	z-index: 9999;
+	transition: width 0.1s ease;
+}

@@ -40,7 +40,7 @@
                         @endif
                     @endif
 
-                    @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'requestor']))
+                    @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'requestor', 'priest', 'staff', 'adviser']))
                         <x-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')"
                                     role="menuitem"
                                     x-data="{ unreadCount: 0 }"
@@ -54,13 +54,19 @@
                                                 .then(data => unreadCount = data.count);
                                         }, 30000);
                                     ">
-                            <span class="relative inline-flex items-center">
-                                💬 {{ __('Messages') }}
-                                <span x-show="unreadCount > 0"
-                                      x-text="unreadCount > 9 ? '9+' : unreadCount"
-                                      class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full"
-                                      role="status"
-                                      aria-label="Unread messages"></span>
+                            <span class="inline-flex items-center gap-1.5">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                <span class="relative">
+                                    {{ __('Messages') }}
+                                    <span x-show="unreadCount > 0"
+                                          x-cloak
+                                          x-text="unreadCount > 9 ? '9+' : unreadCount"
+                                          class="absolute -top-1 -right-3 inline-flex items-center justify-center min-w-[18px] h-[18px] text-[10px] font-bold leading-none text-white bg-red-500 rounded-full"
+                                          role="status"
+                                          aria-label="Unread messages"></span>
+                                </span>
                             </span>
                         </x-nav-link>
                     @endif
@@ -142,16 +148,18 @@
                     window.addEventListener('notification-update', () => updateCount());
                 ">
             <button @click="open = !open; if (open) loadNotifications()" 
-                class="relative flex items-center justify-center h-8 w-8 text-white/85 hover:text-white focus:text-white hover:bg-emerald-700/40 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/60">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    title="View notifications"
+                    class="relative flex items-center justify-center h-10 w-10 text-white hover:text-white focus:text-white bg-white/10 hover:bg-white/20 focus:bg-white/20 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/60 group">
+                        <svg class="h-6 w-6 transition-transform group-hover:scale-110 duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
-                        <!-- Notification Count Badge - Professional Clean Design -->
+                        <!-- Notification Count Badge - Enhanced Design -->
                         <span x-show="count > 0" 
                               x-cloak
-                              class="absolute -top-1 -right-1 inline-flex items-center justify-center px-1 py-0.5 text-xs font-medium leading-none text-white bg-red-500 rounded-full border border-white dark:border-gray-800 shadow-sm"
+                              x-transition
+                              class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-white/30 dark:ring-gray-700/30 animate-pulse"
                               x-text="count > 99 ? '99+' : count"
-                              style="min-width: 1rem; font-size: 0.6rem;">
+                              style="min-width: 1.5rem;">
                         </span>
                     </button>
 
@@ -168,10 +176,14 @@
                          style="display: none;">
                         <div>
                             <!-- Header - Enhanced -->
-                            <div class="px-6 py-4 flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 border-b-2 border-blue-200 dark:border-blue-800">
-                                <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Notifications</h3>
-                                <p x-show="count > 0" class="ml-3 text-xs text-gray-600 dark:text-gray-400" x-text="count === 1 ? '1 unread message' : count + ' unread messages'"></p>
-                                  <!-- Removed red notification count badge -->
+                            <div class="px-6 py-4 flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 border-b-2 border-blue-200 dark:border-blue-800">
+                                <div class="flex items-center gap-3">
+                                    <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                    </svg>
+                                    <h3 class="text-base font-bold text-gray-900 dark:text-gray-100">Notifications</h3>
+                                </div>
+                                <p x-show="count > 0" class="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 px-2.5 py-1 rounded-full" x-text="count === 1 ? '1 unread' : count + ' unread'"></p>
                             </div>
 
                             <!-- Notification List - Enhanced -->
