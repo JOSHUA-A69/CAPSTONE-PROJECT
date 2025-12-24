@@ -11,6 +11,7 @@
                 ? asset('storage/' . $conversation->profile_picture)
                 : asset('images/default-avatar.svg'),
             'unread_count' => $conversation->unread_count ?? 0,
+            'message_count' => $conversation->message_count ?? 0,
             'last_message' => $conversation->last_message ?? '',
             'last_message_at' => $conversation->last_message_at
                 ? Carbon::parse($conversation->last_message_at)->toIso8601String()
@@ -62,13 +63,18 @@
                                                  :alt="conversation.full_name"
                                                  class="w-10 h-10 rounded-full object-cover border-2"
                                                  :class="isSelected(conversation) ? 'border-white/80' : 'border-[#f3e9ff]'">
-                                            <span x-show="conversation.unread_count > 0 && !isSelected(conversation)"
-                                                  class="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold bg-red-500 text-white shadow-lg ring-2 ring-white animate-pulse"
+                                              <span x-show="conversation.unread_count > 0 && !isSelected(conversation)"
+                                                  class="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[14px] h-[14px] px-[3px] rounded-full text-[9px] font-semibold bg-red-600 text-white shadow ring-1 ring-white/70"
                                                   x-text="conversation.unread_count > 9 ? '9+' : conversation.unread_count"></span>
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="flex items-center justify-between gap-2">
-                                                <p class="text-sm font-semibold truncate" x-text="conversation.full_name"></p>
+                                                <p class="text-sm font-semibold truncate flex items-center gap-2">
+                                                    <span x-text="conversation.full_name"></span>
+                                                        <span x-show="conversation.message_count > 0" class="inline-flex items-center justify-center px-[3px] h-[14px] rounded-full text-[9px] font-semibold bg-gray-200 text-gray-700"
+                                                          :class="isSelected(conversation) ? 'bg-white/25 text-white' : 'bg-gray-200 text-gray-700'"
+                                                          x-text="conversation.message_count > 999 ? '999+' : conversation.message_count"></span>
+                                                </p>
                                                 <span class="text-xs" :class="isSelected(conversation) ? 'text-white/80' : 'text-gray-400'" x-text="formatListTime(conversation.last_message_at)"></span>
                                             </div>
                                             <p class="text-xs truncate mt-1" :class="isSelected(conversation) ? 'text-white/80' : 'text-gray-500'"
@@ -92,9 +98,14 @@
                                              :alt="selectedConversation.full_name"
                                              class="w-10 h-10 rounded-full object-cover border border-gray-200">
                                     </template>
-                                    <p class="font-semibold transition-colors duration-200"
-                                       :class="darkMode ? 'text-white' : 'text-gray-900'"
-                                       x-text="selectedConversation ? selectedConversation.full_name : 'Admin Support Chat'"></p>
+                                    <p class="font-semibold transition-colors duration-200 flex items-center gap-2"
+                                       :class="darkMode ? 'text-white' : 'text-gray-900'">
+                                        <span x-text="selectedConversation ? selectedConversation.full_name : 'Admin Support Chat'"></span>
+                                            <span x-show="selectedConversation"
+                                                class="inline-flex items-center justify-center px-[3px] h-[14px] rounded-full text-[9px] font-semibold bg-gray-200 text-gray-700"
+                                              :class="darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-700'"
+                                              x-text="messages.length > 999 ? '999+' : messages.length"></span>
+                                    </p>
                                 </div>
                                 <button type="button"
                                         x-show="selectedConversation"
@@ -628,7 +639,7 @@
                     if (!this.selectedConversation) return;
 
                     try {
-                        const response = await fetch(`/chat/messages/${this.selectedConversation.id}`);
+                        const response = await fetch(`/chat/messages/${this.selectedConversation.id}?t=${Date.now()}`, { cache: 'no-store' });
                         const data = await response.json();
                         this.messages = data.messages || [];
                     } catch (error) {
@@ -641,7 +652,7 @@
                     if (!this.selectedConversation) return;
 
                     try {
-                        const response = await fetch(`/chat/messages/${this.selectedConversation.id}`);
+                        const response = await fetch(`/chat/messages/${this.selectedConversation.id}?t=${Date.now()}`, { cache: 'no-store' });
                         const data = await response.json();
 
                         if (!Array.isArray(data.messages)) {
@@ -670,6 +681,12 @@
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                             },
                         });
+                        // Immediately update global unread badge
+                        try {
+                            const res = await fetch(`/chat/unread/count?t=${Date.now()}`, { cache: 'no-store' });
+                            const data = await res.json();
+                            window.dispatchEvent(new CustomEvent('chat:unread-updated', { detail: { count: data.count } }));
+                        } catch (_) {}
                     } catch (error) {
                         console.warn('Failed to mark messages as read', error);
                     }

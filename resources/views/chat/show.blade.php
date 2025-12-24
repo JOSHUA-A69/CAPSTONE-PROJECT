@@ -16,8 +16,11 @@
                     <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></span>
                 </div>
                 <div>
-                    <h2 class="font-semibold text-base text-gray-900 dark:text-white">
+                    <h2 class="font-semibold text-base text-gray-900 dark:text-white flex items-center gap-2">
                         {{ $otherUser->first_name }} {{ $otherUser->last_name }}
+                        <span class="inline-flex items-center justify-center px-[3px] h-[14px] rounded-full text-[9px] font-semibold bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                            {{ min($messages->count(), 999) }}@if($messages->count() > 999)+@endif
+                        </span>
                     </h2>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         {{ ucfirst($otherUser->role) }} • Active
@@ -37,7 +40,7 @@
 
 
                 <!-- Messages Container -->
-                <div class="flex-1 overflow-y-auto px-4 py-6 space-y-6 bg-white dark:bg-gray-800"
+                 <div class="flex-1 overflow-y-auto px-4 py-6 space-y-6 bg-gray-50 dark:bg-gray-800"
                      x-ref="messagesContainer"
                      @scroll="handleScroll">
 
@@ -79,7 +82,7 @@
                                                     ? 'bg-transparent p-0'
                                                     : message.sender_id === currentUserId
                                                         ? 'bg-blue-600 text-white rounded-3xl rounded-br-md px-4 py-2.5'
-                                                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-3xl rounded-bl-md px-4 py-2.5'
+                                                        : 'bg-indigo-50 text-indigo-900 dark:bg-gray-700 dark:text-gray-100 rounded-3xl rounded-bl-md px-4 py-2.5 border border-indigo-100'
                                             ]">
 
 
@@ -125,7 +128,7 @@
 
 
                                         <!-- Message text -->
-                                        <p x-show="message.message" class="text-[15px] leading-relaxed whitespace-pre-wrap break-words"
+                                                     <p x-show="message.message" class="text-[15px] leading-relaxed whitespace-pre-wrap break-words"
                                            x-text="message.message"></p>
                                     </div>
                                 </div>
@@ -333,7 +336,7 @@
                 async loadMessages() {
                     try {
                         this.loading = true;
-                        const response = await fetch(`/chat/messages/${this.otherUserId}`);
+                            const response = await fetch(`/chat/messages/${this.otherUserId}?t=${Date.now()}`, { cache: 'no-store' });
                         const data = await response.json();
                         this.messages = data.messages;
                     } catch (err) {
@@ -449,6 +452,12 @@
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                             }
                         });
+                        // Refresh global unread badge immediately
+                        try {
+                                const res = await fetch(`/chat/unread/count?t=${Date.now()}`, { cache: 'no-store' });
+                            const data = await res.json();
+                            window.dispatchEvent(new CustomEvent('chat:unread-updated', { detail: { count: data.count } }));
+                        } catch (_) {}
                     } catch (err) {
                         console.error('Failed to mark messages as read:', err);
                     }
@@ -465,7 +474,7 @@
 
                 async pollNewMessages() {
                     try {
-                        const response = await fetch(`/chat/messages/${this.otherUserId}`);
+                        const response = await fetch(`/chat/messages/${this.otherUserId}?t=${Date.now()}`, { cache: 'no-store' });
                         const data = await response.json();
 
 

@@ -252,11 +252,29 @@ class ChatController extends Controller
      */
     public function unreadCount()
     {
-        $count = Message::where('receiver_id', Auth::id())
-            ->whereNull('read_at')
-            ->count();
+        $userId = Auth::id();
 
-        return response()->json(['count' => $count]);
+        // Exclude messages cleared via chat resets (per-conversation clear)
+        $count = DB::table('messages')
+            ->leftJoin('chat_resets as cr', function ($join) use ($userId) {
+                $join->on('cr.other_user_id', '=', 'messages.sender_id')
+                     ->where('cr.user_id', '=', $userId);
+            })
+            ->where('messages.receiver_id', $userId)
+            // Only count messages sent by other users
+            ->where('messages.sender_id', '<>', $userId)
+            ->whereNull('messages.read_at')
+            ->where(function ($q) {
+                $q->whereNull('cr.cleared_at')
+                  ->orWhereColumn('messages.created_at', '>', 'cr.cleared_at');
+            })
+            // Use DISTINCT to avoid any accidental duplicates from joins
+            ->distinct()
+            ->count('messages.id');
+
+        return response()->json(['count' => $count])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache');
     }
 
     /**
@@ -296,6 +314,87 @@ class ChatController extends Controller
     }
 
     /**
+     * Debug unread messages for current user (admin-only).
+     * Returns the distinct IDs counted plus raw unread rows for comparison.
+     */
+    public function debugUnread()
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'admin') {
+            abort(403, 'Unauthorized');
+        }
+
+        $userId = $user->id;
+
+        $base = DB::table('messages')
+            ->leftJoin('chat_resets as cr', function ($join) use ($userId) {
+                $join->on('cr.other_user_id', '=', 'messages.sender_id')
+                     ->where('cr.user_id', '=', $userId);
+            })
+            ->where('messages.receiver_id', $userId)
+            ->where('messages.sender_id', '<>', $userId)
+            ->whereNull('messages.read_at')
+            ->where(function ($q) {
+                $q->whereNull('cr.cleared_at')
+                  ->orWhereColumn('messages.created_at', '>', 'cr.cleared_at');
+            })
+            ->select([
+                'messages.id',
+                'messages.sender_id',
+                'messages.receiver_id',
+                'messages.created_at',
+                'cr.cleared_at',
+            ]);
+
+        $count = (clone $base)->distinct()->count('messages.id');
+        $counted = (clone $base)->distinct()->orderBy('messages.id')->get();
+
+        $rawUnread = DB::table('messages')
+            ->where('receiver_id', $userId)
+            ->where('sender_id', '<>', $userId)
+            ->whereNull('read_at')
+            ->orderBy('id')
+            ->get(['id', 'sender_id', 'receiver_id', 'created_at']);
+
+        $senderIds = $counted->pluck('sender_id')->merge($rawUnread->pluck('sender_id'))->unique()->values();
+        $senders = DB::table('users')
+            ->whereIn('id', $senderIds)
+            ->get(['id', 'first_name', 'last_name', 'email']);
+
+        return response()->json([
+            'count' => $count,
+            'counted' => $counted,
+            'raw_unread_total' => $rawUnread->count(),
+            'raw_unread' => $rawUnread,
+            'senders' => $senders,
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+          ->header('Pragma', 'no-cache');
+    }
+
+    /**
+     * Debug action: mark all unread messages for the current user as read (admin-only).
+     */
+    public function debugMarkAllUnreadAsRead()
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'admin') {
+            abort(403, 'Unauthorized');
+        }
+
+        $affected = DB::table('messages')
+            ->where('receiver_id', $user->id)
+            ->where('sender_id', '<>', $user->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return response()->json([
+            'success' => true,
+            'updated' => $affected,
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+          ->header('Pragma', 'no-cache');
+    }
+
+    /**
      * Get admin's conversations.
      */
     private function getAdminConversations()
@@ -307,6 +406,7 @@ class ChatController extends Controller
             ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture')
             ->selectRaw('MAX(CASE WHEN cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at THEN messages.created_at END) as last_message_at')
             ->selectRaw('COUNT(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) AND messages.receiver_id = ? AND messages.read_at IS NULL THEN 1 END) as unread_count', [$userId])
+            ->selectRaw('SUM(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) THEN 1 ELSE 0 END) as message_count')
             ->join('users', function ($join) use ($userId) {
                 $join->on('users.id', '=', 'messages.sender_id')
                     ->where('messages.receiver_id', '=', $userId)
@@ -343,6 +443,7 @@ class ChatController extends Controller
             ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture')
             ->selectRaw('MAX(CASE WHEN cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at THEN messages.created_at END) as last_message_at')
             ->selectRaw('COUNT(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) AND messages.receiver_id = ? AND messages.read_at IS NULL THEN 1 END) as unread_count', [$userId])
+            ->selectRaw('SUM(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) THEN 1 ELSE 0 END) as message_count')
             ->join('users', function ($join) use ($userId) {
                 $join->on('users.id', '=', 'messages.sender_id')
                     ->where('messages.receiver_id', '=', $userId)
@@ -370,6 +471,7 @@ class ChatController extends Controller
                 ->select('id', 'first_name', 'last_name', 'email', 'profile_picture')
                 ->selectRaw('NULL as last_message_at')
                 ->selectRaw('0 as unread_count')
+                ->selectRaw('0 as message_count')
                 ->get();
         }
 

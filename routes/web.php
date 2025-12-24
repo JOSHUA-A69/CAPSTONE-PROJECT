@@ -125,9 +125,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::get('/chat/{userId}', [ChatController::class, 'show'])->name('chat.show');
     Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
+    // FAQ auto-reply endpoint used by chat index view
+    Route::post('/chat/send-faq', [ChatController::class, 'sendFaqAutoReply'])->name('chat.send-faq');
     Route::get('/chat/messages/{userId}', [ChatController::class, 'getMessages'])->name('chat.messages');
     Route::get('/chat/unread/count', [ChatController::class, 'unreadCount'])->name('chat.unread.count');
     Route::post('/chat/mark-read/{userId}', [ChatController::class, 'markAsRead'])->name('chat.mark-read');
+    // Temporary debug endpoint to inspect unread sources (admin-only)
+    Route::get('/dev/chat/unread/debug', [ChatController::class, 'debugUnread'])->name('chat.unread.debug');
+    // Temporary debug endpoint to mark ALL unread as read for current user (admin-only)
+    Route::post('/dev/chat/unread/mark-all', [ChatController::class, 'debugMarkAllUnreadAsRead'])->name('chat.unread.mark-all');
 });
 
 // Authentication routes (Laravel Breeze/Jetstream/etc.)

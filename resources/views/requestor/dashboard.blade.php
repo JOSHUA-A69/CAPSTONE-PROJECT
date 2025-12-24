@@ -17,11 +17,11 @@
                 <div class="space-y-6">
                     <!-- Welcome Section - No Card Background -->
                     <div>
-                        <h3 class="text-4xl font-bold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
-                            Welcome! <span class="text-5xl">☀️</span>
+                        <h3 class="text-2xl sm:text-3xl font-bold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
+                            Welcome, <span class="text-3xl sm:text-4xl">{{ Auth::user()->full_name }} !</span>
                         </h3>
                         <p class="text-gray-600 dark:text-gray-300 text-base leading-relaxed">
-                            Manage your requests, review updates, and stay connected with the community."
+                            Manage your requests, review updates, and stay connected with the community.
                         </p>
                     </div>
 

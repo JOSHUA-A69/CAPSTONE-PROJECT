@@ -87,6 +87,26 @@
 
 @layer components {
 	/* ========================================
+	   NAV BADGE (Unread counter for Messages)
+	   ======================================== */
+	.nav-badge {
+		position: absolute;
+		top: -0.5rem;
+		right: -0.5rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 16px;
+		height: 16px;
+		padding: 0 4px;
+		font-size: 10px;
+		line-height: 1;
+		color: #fff;
+		background-color: var(--er-danger);
+		border-radius: 9999px;
+		box-shadow: 0 0 0 1px rgba(255,255,255,.7);
+	}
+	/* ========================================
 	   BUTTON COMPONENTS - Consistent Styling
 	   ======================================== */
 	.btn-primary {

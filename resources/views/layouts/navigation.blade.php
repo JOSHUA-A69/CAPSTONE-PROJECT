@@ -40,32 +40,47 @@
                         @endif
                     @endif
 
-                    @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'requestor', 'priest', 'staff', 'adviser']))
+                    @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'requestor']))
                         <x-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')"
                                     role="menuitem"
-                                    x-data="{ unreadCount: 0 }"
+                                    x-data="{ unreadCount: 0, _seq: 0 }"
                                     x-init="
-                                        fetch('{{ route('chat.unread.count') }}')
-                                            .then(res => res.json())
-                                            .then(data => unreadCount = data.count);
-                                        setInterval(() => {
-                                            fetch('{{ route('chat.unread.count') }}')
+                                        const updateUnread = () => {
+                                            const seq = ++_seq;
+                                            fetch(`{{ route('chat.unread.count') }}?t=${Date.now()}` , { cache: 'no-store' })
                                                 .then(res => res.json())
-                                                .then(data => unreadCount = data.count);
-                                        }, 30000);
+                                                .then(data => {
+                                                    if (seq !== _seq) return; // ignore stale responses
+                                                    const n = Number(data?.count ?? 0);
+                                                    unreadCount = isNaN(n) ? 0 : n;
+                                                })
+                                                .catch(() => {});
+                                        };
+                                        updateUnread();
+                                        setInterval(updateUnread, 15000);
+                                        window.addEventListener('chat:unread-updated', (e) => {
+                                            if (e?.detail && typeof e.detail.count !== 'undefined') {
+                                                const n = Number(e.detail.count);
+                                                unreadCount = isNaN(n) ? 0 : n;
+                                            } else {
+                                                updateUnread();
+                                            }
+                                        });
+                                        window.addEventListener('focus', updateUnread);
                                     ">
                             <span class="inline-flex items-center gap-1.5">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                 </svg>
-                                <span class="relative">
-                                    {{ __('Messages') }}
-                                    <span x-show="unreadCount > 0"
-                                          x-cloak
-                                          x-text="unreadCount > 9 ? '9+' : unreadCount"
-                                          class="absolute -top-1 -right-3 inline-flex items-center justify-center min-w-[18px] h-[18px] text-[10px] font-bold leading-none text-white bg-red-500 rounded-full"
-                                          role="status"
-                                          aria-label="Unread messages"></span>
+                                <span class="inline-flex items-center">
+                                    <span>{{ __('Messages') }}</span>
+                                    <span x-show="Number(unreadCount) > 0"
+                                        x-cloak
+                                        x-text="Number(unreadCount) > 9 ? '9+' : unreadCount"
+                                        class="ml-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none bg-red-600 text-white rounded-full"
+                                        role="status"
+                                        aria-label="Unread messages"
+                                        style="min-width: 1.5rem;"></span>
                                 </span>
                             </span>
                         </x-nav-link>
