@@ -39,18 +39,18 @@ class PriestSeeder extends Seeder
         ];
 
         foreach ($priests as $priestData) {
-            User::updateOrCreate(
-                ['email' => $priestData['email']], // Find by email
-                [
+            $existing = User::where('email', $priestData['email'])->first();
+            if (!$existing) {
+                User::create([
                     'first_name' => $priestData['first_name'],
                     'last_name' => $priestData['last_name'],
+                    'email' => $priestData['email'],
                     'password' => Hash::make($priestData['password']),
                     'role' => $priestData['role'],
                     'email_verified_at' => now(),
-                    // Our schema uses a single 'status' column to denote account state
                     'status' => 'active',
-                ]
-            );
+                ]);
+            }
         }
 
         $this->command->info('✅ 3 Priest users created successfully!');

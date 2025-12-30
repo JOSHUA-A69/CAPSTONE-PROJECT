@@ -22,19 +22,20 @@ class CreateRoleTestUsersSeeder extends Seeder
         ];
 
         foreach ($roles as $role => $data) {
-            User::updateOrCreate(
-                ['email' => $data['email']],
-                [
+            $existing = User::where('email', $data['email'])->first();
+            if (!$existing) {
+                User::create([
                     'first_name' => $data['first_name'],
                     'middle_name' => $data['middle_name'],
                     'last_name' => $data['last_name'],
                     'phone' => $data['phone'],
                     'role' => $role,
+                    'email' => $data['email'],
                     'password' => Hash::make('password'),
                     'email_verified_at' => now(),
                     'status' => 'active',
-                ]
-            );
+                ]);
+            }
         }
     }
 }

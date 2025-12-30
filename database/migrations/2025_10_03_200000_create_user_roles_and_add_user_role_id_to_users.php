@@ -40,7 +40,8 @@ return new class extends Migration
         });
 
         // Map existing users.role (enum) to the new user_role_id
-        DB::statement("UPDATE users u JOIN user_roles r ON u.role = r.role_name SET u.user_role_id = r.user_role_id");
+        // Use a correlated subquery for cross-database compatibility (works on SQLite & MySQL)
+        DB::statement("UPDATE users SET user_role_id = (SELECT user_role_id FROM user_roles WHERE user_roles.role_name = users.role)");
     }
 
     /**

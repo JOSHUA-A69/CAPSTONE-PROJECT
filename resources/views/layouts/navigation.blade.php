@@ -103,6 +103,11 @@
                             {{ __('Cancellations') }}
                         </x-nav-link>
                     @endif
+                    @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser']))
+                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" role="menuitem">
+                            {{ __('Generate Report') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
@@ -383,6 +388,11 @@
                         {{ __('View Calendar') }}
                     </x-responsive-nav-link>
                 @endif
+            @endif
+            @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser']))
+                <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                    {{ __('Generate Report') }}
+                </x-responsive-nav-link>
             @endif
             @if(auth()->check() && auth()->user()->role === 'admin')
                 <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users*')">

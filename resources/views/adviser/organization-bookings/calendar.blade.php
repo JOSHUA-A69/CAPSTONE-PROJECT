@@ -263,6 +263,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
+        timeZone: 'Asia/Manila',
         height: 'auto',
         headerToolbar: {
             left: '',

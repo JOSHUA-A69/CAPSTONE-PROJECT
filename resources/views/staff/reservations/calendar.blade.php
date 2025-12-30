@@ -80,17 +80,21 @@
 
         function extractTimePart(value) {
             if (!value) return null;
-            if (typeof value === 'string') {
-                if (value.includes('T')) {
-                    const fragment = value.split('T')[1] || '';
-                    return fragment.replace(/Z$/, '').slice(0, 8) || null;
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                if (typeof value === 'string') {
+                    if (value.includes('T')) {
+                        const fragment = value.split('T')[1] || '';
+                        return fragment.replace(/Z$/, '').slice(0, 8) || null;
+                    }
+                    if (value.includes(' ')) {
+                        const fragment = value.split(' ')[1] || '';
+                        return fragment.slice(0, 8) || null;
+                    }
                 }
-                if (value.includes(' ')) {
-                    const fragment = value.split(' ')[1] || '';
-                    return fragment.slice(0, 8) || null;
-                }
+                return null;
             }
-            return null;
+            return date.toTimeString().slice(0, 8);
         }
 
         function combineDateAndTime(dateValue, timeValue) {
@@ -118,6 +122,15 @@
             }
 
             return { category: 'other', color: CATEGORY_COLORS.other };
+        }
+
+        function formatLocalDate(date) {
+            const d = date instanceof Date ? date : new Date(date);
+            if (Number.isNaN(d.getTime())) return extractDatePart(date);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
         }
 
         function formatLabel(value) {
@@ -224,9 +237,11 @@
             };
         });
 
-        // Map organization bookings to calendar events
+        // Map organization bookings to calendar events (timezone-aware)
         const orgBookingEvents = rawOrgBookings.map(booking => {
-            const start = booking.requested_date;
+            const startDate = new Date(booking.requested_date);
+            const start = Number.isNaN(startDate.getTime()) ? (booking.requested_date || null) : startDate;
+            const scheduleTime = !Number.isNaN(startDate.getTime()) ? startDate.toTimeString().slice(0, 8) : extractTimePart(booking.requested_date);
             return {
                 id: `org-${booking.id}`,
                 title: booking.activity_name || (booking.organization?.org_name ? `${booking.organization.org_name} Booking` : 'Organization Booking'),
@@ -239,8 +254,8 @@
                     entryLabel: 'Organization Booking',
                     category: 'other',
                     categoryLabel: CATEGORY_LABELS.other,
-                    scheduleDate: extractDatePart(booking.requested_date),
-                    scheduleTime: extractTimePart(booking.requested_date),
+                    scheduleDate: Number.isNaN(startDate.getTime()) ? extractDatePart(booking.requested_date) : formatLocalDate(startDate),
+                    scheduleTime: scheduleTime,
                     venue: booking.requested_venue,
                     service: booking.activity_name,
                     status: booking.status,

@@ -2,12 +2,14 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\ReportController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 /*
+use App\Http\Controllers\ReportController;
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
@@ -29,6 +31,12 @@ Route::middleware(['auth'])->prefix('api/availability')->name('api.availability.
 
 Route::get('/', [\App\Http\Controllers\WelcomeController::class, 'index']);
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::post('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
+    Route::get('/reports/download', [ReportController::class, 'download'])->name('reports.download');
+    Route::get('/reports/view', [ReportController::class, 'view'])->name('reports.view');
+});
 // Public Calendar Route (accessible to everyone)
 Route::get('/calendar', [\App\Http\Controllers\PublicCalendarController::class, 'index'])->name('calendar.public');
 Route::get('/calendar/schedules', [\App\Http\Controllers\PublicCalendarController::class, 'getSchedules'])->name('calendar.public.schedules');
@@ -312,6 +320,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::get('/services', [\App\Http\Controllers\Admin\ServiceController::class, 'index'])->name('services.index');
     // Unified calendar route replaces old services.calendar for admin
     Route::get('/calendar', [\App\Http\Controllers\Admin\CalendarController::class, 'index'])->name('calendar.index');
+    // Backwards-compatible alias expected by tests
+    Route::get('/services/calendar', [\App\Http\Controllers\Admin\CalendarController::class, 'index'])->name('services.calendar');
     Route::get('/services/declined', [\App\Http\Controllers\Admin\ServiceController::class, 'declined'])->name('services.declined');
     
     // Service Management Routes (MUST be before parameterized routes)

@@ -37,10 +37,16 @@ class BaselineOrganizationsSeeder extends Seeder
                 if ($existing->trashed()) {
                     $existing->restore();
                 }
-                $existing->update([
-                    'org_desc' => $data['org_desc'],
-                    'adviser_id' => $adviser?->id,
-                ]);
+                $updates = [];
+                if (empty($existing->org_desc)) {
+                    $updates['org_desc'] = $data['org_desc'];
+                }
+                if (!$existing->adviser_id && $adviser?->id) {
+                    $updates['adviser_id'] = $adviser->id;
+                }
+                if (!empty($updates)) {
+                    $existing->update($updates);
+                }
             } else {
                 Organization::create([
                     'org_name' => $data['org_name'],

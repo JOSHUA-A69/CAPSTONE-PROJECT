@@ -351,11 +351,11 @@ class ReservationController extends Controller
                 ->with('error', 'This priest already has an assignment at this date and time.');
         }
 
-        // Assign priest and update status (standardize to admin_approved pending priest confirmation)
+        // Assign priest and update status to pending priest confirmation
         $alreadyNotified = !is_null($reservation->priest_notified_at);
         $reservation->update([
             'officiant_id' => $priest->id,
-            'status' => 'admin_approved', // unified awaiting priest confirmation state
+            'status' => 'pending_priest_confirmation',
             'priest_notified_at' => now(),
             'priest_confirmation' => 'pending',
         ]);

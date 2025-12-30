@@ -158,31 +158,48 @@ class OrganizationBookingController extends Controller
     /**
      * Get organization booking requests data for AJAX calendar.
      */
-    public function calendarData()
+    public function calendarData(Request $request)
     {
         // Get organizations where this adviser is assigned
         $adviserOrganizations = Auth::user()->organizations->pluck('org_id');
 
-        $requests = OrganizationBookingRequest::with(['requestor', 'organization'])
-            ->whereIn('organization_id', $adviserOrganizations)
-            ->where('status', 'approved')
-            ->get();
+        $filter = (string) $request->query('filter', '');
+        $startParam = $request->query('start');
+        $endParam = $request->query('end');
+
+        $q = OrganizationBookingRequest::with(['requestor', 'organization'])
+            ->whereIn('organization_id', $adviserOrganizations);
+
+        // Status filter
+        if (in_array($filter, ['pending','approved','rejected'])) {
+            $q->where('status', $filter);
+        } elseif ($filter === 'past') {
+            $q->where('status', 'approved')->whereDate('requested_date', '<', now()->toDateString());
+        }
+
+        // Date range (FullCalendar passes ISO date strings)
+        if ($startParam && $endParam) {
+            $q->whereBetween('requested_date', [$startParam, $endParam]);
+        }
+
+        $requests = $q->orderBy('requested_date')->get();
 
         $events = [];
-
-        foreach ($requests as $request) {
+        foreach ($requests as $r) {
             $events[] = [
-                'id' => $request->id,
-                'title' => $request->activity_name,
-                'start' => $request->requested_date->toISOString(),
-                'backgroundColor' => '#10b981', // green for approved
-                'borderColor' => '#059669',
+                'id' => $r->id,
+                'title' => $r->activity_name,
+                // Use stored datetime as-is (no timezone mutation)
+                'start' => optional($r->requested_date)->toIso8601String(),
                 'extendedProps' => [
-                    'organization' => $request->organization->org_name,
-                    'requestor' => $request->requestor->full_name ?? $request->requestor->name,
-                    'participants' => $request->estimated_participants,
-                    'venue' => $request->requested_venue,
-                    'purpose' => $request->purpose,
+                    'id' => $r->id,
+                    'status' => $r->status,
+                    'is_overdue' => method_exists($r, 'getIsOverdueAttribute') ? $r->is_overdue : false,
+                    'organization' => optional($r->organization)->org_name,
+                    'requestor' => optional($r->requestor)->full_name ?? optional($r->requestor)->name,
+                    'participants' => $r->estimated_participants,
+                    'venue' => $r->requested_venue,
+                    'purpose' => $r->purpose,
                 ],
             ];
         }

@@ -153,8 +153,8 @@ class ReservationController extends Controller
             })
             ->findOrFail($reservation_id);
 
-        // Only confirm if status is adviser_approved or admin_approved (reassignment) and not yet confirmed
-        if (!in_array($reservation->status, ['adviser_approved', 'admin_approved'])) {
+        // Allow confirmation when awaiting priest confirmation or approved by adviser/admin
+        if (!in_array($reservation->status, ['adviser_approved', 'admin_approved', 'pending_priest_confirmation'])) {
             return Redirect::back()
                 ->with('error', 'This reservation is not ready for confirmation.');
         }
@@ -221,17 +221,17 @@ class ReservationController extends Controller
             $confirmedCount = $reservation->confirmedPriestCount();
 
             if ($allPriestsConfirmed || $totalPriests <= 1) {
-                // All priests confirmed OR single priest - move to admin approval stage
+                // All priests confirmed OR single priest - mark approved
                 $reservation->update([
                     'priest_confirmation' => 'confirmed',
                     'priest_confirmed_at' => now(),
-                    'status' => 'admin_approved', // Ready for final admin approval
+                    'status' => 'approved',
                 ]);
 
                 // Notify admin that all priests confirmed and reservation is ready
                 $this->notificationService->notifyAllPriestsConfirmed($reservation);
 
-                $message = "You have confirmed your availability. All priests have confirmed - awaiting final admin approval.";
+                $message = "You have confirmed your availability. Reservation is now approved.";
             } else {
                 // Still waiting for other priests
                 // Update legacy field for this priest if they're the officiant
@@ -295,8 +295,8 @@ class ReservationController extends Controller
         // Check if this is a cancellation of already confirmed reservation
         $isCancellation = ($reservation->priest_confirmation === 'confirmed');
 
-        // Allow decline for: adviser_approved, admin_approved, OR approved (confirmed)
-        if (!in_array($reservation->status, ['adviser_approved', 'admin_approved', 'approved'])) {
+        // Allow decline for: pending_priest_confirmation, adviser_approved, admin_approved, OR approved (confirmed)
+        if (!in_array($reservation->status, ['pending_priest_confirmation', 'adviser_approved', 'admin_approved', 'approved'])) {
             return Redirect::back()
                 ->with('error', 'This reservation cannot be declined at this stage.');
         }

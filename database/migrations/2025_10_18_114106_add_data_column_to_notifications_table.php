@@ -18,7 +18,9 @@ return new class extends Migration
             }
 
             // Update type enum to include more notification types
-            DB::statement("ALTER TABLE notifications MODIFY COLUMN type ENUM('Approval', 'Reminder', 'System Alert', 'Priest Declined', 'Assignment', 'Update') NULL");
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement("ALTER TABLE notifications MODIFY COLUMN type ENUM('Approval', 'Reminder', 'System Alert', 'Priest Declined', 'Assignment', 'Update') NULL");
+            }
         });
     }
 
@@ -33,7 +35,9 @@ return new class extends Migration
             }
 
             // Revert to original enum
-            DB::statement("ALTER TABLE notifications MODIFY COLUMN type ENUM('Approval', 'Reminder', 'System Alert') NULL");
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement("ALTER TABLE notifications MODIFY COLUMN type ENUM('Approval', 'Reminder', 'System Alert') NULL");
+            }
         });
     }
 };

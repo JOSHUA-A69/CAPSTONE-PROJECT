@@ -12,14 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Change org_name from ENUM to VARCHAR to allow custom organization names
-        DB::statement('ALTER TABLE organizations MODIFY org_name VARCHAR(255) NOT NULL');
+        // Only apply MySQL-specific ALTERs on MySQL; SQLite does not support MODIFY/DROP INDEX in the same way
+        if (DB::getDriverName() === 'mysql') {
+            // Change org_name from ENUM to VARCHAR to allow custom organization names
+            DB::statement('ALTER TABLE organizations MODIFY org_name VARCHAR(255) NOT NULL');
 
-        // Remove the unique constraint if it exists
-        try {
-            DB::statement('ALTER TABLE organizations DROP INDEX org_name');
-        } catch (\Exception $e) {
-            // Index might not exist, continue
+            // Remove the unique constraint if it exists
+            try {
+                DB::statement('ALTER TABLE organizations DROP INDEX org_name');
+            } catch (\Exception $e) {
+                // Index might not exist, continue
+            }
         }
     }
 
@@ -28,17 +31,19 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert back to ENUM (only if you want to support rollback)
-        $allowedValues = [
-            'Himig Diwa Chorale',
-            'Acolytes and Lectors',
-            'Children of Mary',
-            'Student Catholic Action',
-            'Young Missionaries Club',
-            'Catechetical Organization',
-        ];
+        if (DB::getDriverName() === 'mysql') {
+            // Revert back to ENUM (only if you want to support rollback)
+            $allowedValues = [
+                'Himig Diwa Chorale',
+                'Acolytes and Lectors',
+                'Children of Mary',
+                'Student Catholic Action',
+                'Young Missionaries Club',
+                'Catechetical Organization',
+            ];
 
-        $enumList = "'" . implode("','", $allowedValues) . "'";
-        DB::statement("ALTER TABLE organizations MODIFY org_name ENUM($enumList) NOT NULL");
+            $enumList = "'" . implode("','", $allowedValues) . "'";
+            DB::statement("ALTER TABLE organizations MODIFY org_name ENUM($enumList) NOT NULL");
+        }
     }
 };

@@ -73,8 +73,8 @@ class CalendarController extends Controller
             'external_priest_contact' => 'nullable|string|max:100',
             // Accept legacy event types to allow editing old records; new UI uses the first two
             'event_type' => 'required|in:institutional_mass,non_institutional_mass,mass,confession,adoration,retreat,seminar,meeting,celebration,other',
-            // Mass subtype only required for the two new mass categories
-            'mass_subtype' => 'nullable|required_if:event_type,institutional_mass,non_institutional_mass|string|max:255',
+            // Mass subtype optional; UI may leave this empty
+            'mass_subtype' => 'nullable|string|max:255',
             'is_public' => 'boolean',
         ]);
 
@@ -154,7 +154,7 @@ class CalendarController extends Controller
             'external_priest_name' => 'nullable|string|max:100',
             'external_priest_contact' => 'nullable|string|max:100',
             'event_type' => 'required|in:institutional_mass,non_institutional_mass,mass,confession,adoration,retreat,seminar,meeting,celebration,other',
-            'mass_subtype' => 'nullable|required_if:event_type,institutional_mass,non_institutional_mass|string|max:255',
+            'mass_subtype' => 'nullable|string|max:255',
             'is_public' => 'boolean',
         ]);
 

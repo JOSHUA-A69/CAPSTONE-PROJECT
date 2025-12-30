@@ -10,26 +10,28 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Add 'priest_cancelled_confirmation' to the action enum
-        DB::statement("ALTER TABLE reservation_history MODIFY COLUMN action ENUM(
-            'created',
-            'updated',
-            'submitted',
-            'approved',
-            'adviser_approved',
-            'admin_approved',
-            'rejected',
-            'cancelled',
-            'contacted_requestor',
-            'requestor_confirmed',
-            'approved_by_staff',
-            'priest_confirmed',
-            'priest_declined',
-            'priest_cancelled_confirmation',
-            'priest_reassigned',
-            'staff_followed_up',
-            'status_updated'
-        )");
+        if (DB::getDriverName() === 'mysql') {
+            // Add 'priest_cancelled_confirmation' to the action enum
+            DB::statement("ALTER TABLE reservation_history MODIFY COLUMN action ENUM(
+                'created',
+                'updated',
+                'submitted',
+                'approved',
+                'adviser_approved',
+                'admin_approved',
+                'rejected',
+                'cancelled',
+                'contacted_requestor',
+                'requestor_confirmed',
+                'approved_by_staff',
+                'priest_confirmed',
+                'priest_declined',
+                'priest_cancelled_confirmation',
+                'priest_reassigned',
+                'staff_followed_up',
+                'status_updated'
+            )");
+        }
     }
 
     /**
@@ -37,25 +39,27 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert to previous enum without 'priest_cancelled_confirmation'
-        DB::statement("ALTER TABLE reservation_history MODIFY COLUMN action ENUM(
-            'created',
-            'updated',
-            'submitted',
-            'approved',
-            'adviser_approved',
-            'admin_approved',
-            'rejected',
-            'cancelled',
-            'contacted_requestor',
-            'requestor_confirmed',
-            'approved_by_staff',
-            'priest_confirmed',
-            'priest_declined',
-            'priest_reassigned',
-            'staff_followed_up',
-            'status_updated'
-        )");
+        if (DB::getDriverName() === 'mysql') {
+            // Revert to previous enum without 'priest_cancelled_confirmation'
+            DB::statement("ALTER TABLE reservation_history MODIFY COLUMN action ENUM(
+                'created',
+                'updated',
+                'submitted',
+                'approved',
+                'adviser_approved',
+                'admin_approved',
+                'rejected',
+                'cancelled',
+                'contacted_requestor',
+                'requestor_confirmed',
+                'approved_by_staff',
+                'priest_confirmed',
+                'priest_declined',
+                'priest_reassigned',
+                'staff_followed_up',
+                'status_updated'
+            )");
+        }
     }
 };
 
