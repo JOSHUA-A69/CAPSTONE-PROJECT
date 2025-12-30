@@ -33,10 +33,21 @@ class ReportController extends Controller
 
         // Adviser-friendly: preselect their organizations
         $myOrganizations = [];
+        $allOrganizations = collect();
+        $advisers = collect();
         if ($role === 'adviser') {
             $myOrganizations = \App\Models\Organization::where('adviser_id', $user->id)
                 ->orderBy('org_name')
                 ->get(['org_id', 'org_name']);
+        } else {
+            // Admin/Staff: need dropdown with all organizations and advisers
+            $allOrganizations = \App\Models\Organization::orderBy('org_name')
+                ->get(['org_id', 'org_name']);
+            $advisers = \App\Models\User::where('role', 'adviser')
+                ->where('status', 'active')
+                ->orderBy('first_name')
+                ->orderBy('last_name')
+                ->get(['id', 'first_name', 'last_name']);
         }
 
         // Common lists for simple selects
@@ -49,6 +60,8 @@ class ReportController extends Controller
             'defaultTo' => $defaultTo,
             'role' => $role,
             'myOrganizations' => $myOrganizations,
+            'allOrganizations' => $allOrganizations,
+            'advisers' => $advisers,
             'services' => $services,
         ]);
     }

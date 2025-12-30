@@ -55,8 +55,13 @@
                     </div>
                 @else
                     <div>
-                        <label class="block text-sm">Organization IDs</label>
-                        <input type="text" name="organizations" placeholder="e.g. 1,2,3" class="mt-1 w-full border rounded p-2" />
+                        <label class="block text-sm">Organization</label>
+                        <select name="organizations" class="mt-1 w-full border rounded p-2">
+                            <option value="">All</option>
+                            @foreach(($allOrganizations ?? collect()) as $org)
+                                <option value="{{ $org->org_id }}">{{ $org->org_name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 @endif
 
@@ -72,8 +77,13 @@
 
                 @if($role !== 'adviser')
                 <div>
-                    <label class="block text-sm">Adviser ID</label>
-                    <input type="number" name="adviser_id" placeholder="User ID" class="mt-1 w-full border rounded p-2" />
+                    <label class="block text-sm">Adviser</label>
+                    <select name="adviser_id" class="mt-1 w-full border rounded p-2">
+                        <option value="">All</option>
+                        @foreach(($advisers ?? collect()) as $adv)
+                            <option value="{{ $adv->id }}">{{ trim(($adv->first_name ?? '').' '.($adv->last_name ?? '')) }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 @endif
 
