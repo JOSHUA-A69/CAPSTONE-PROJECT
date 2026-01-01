@@ -372,9 +372,9 @@
         const rawOrgBookings = orgBookingsNode ? JSON.parse(orgBookingsNode.textContent || '[]') : [];
 
         const orgBookingEvents = rawOrgBookings.map(booking => {
-            const startDate = new Date(booking.requested_date);
-            const start = Number.isNaN(startDate.getTime()) ? (booking.requested_date || null) : startDate;
-            const scheduleTime = !Number.isNaN(startDate.getTime()) ? startDate.toTimeString().slice(0, 8) : extractTimePart(booking.requested_date);
+            const datePart = extractDatePart(booking.requested_date);
+            const timePart = extractTimePart(booking.requested_date);
+            const start = combineDateAndTime(datePart, timePart) || datePart;
             return {
                 id: `org-${booking.id}`,
                 title: booking.activity_name || (booking.organization?.org_name ? `${booking.organization.org_name} Booking` : 'Organization Booking'),
@@ -387,8 +387,8 @@
                     entryLabel: 'Organization Booking',
                     category: 'other',
                     categoryLabel: CATEGORY_LABELS.other,
-                    scheduleDate: Number.isNaN(startDate.getTime()) ? extractDatePart(booking.requested_date) : formatLocalDate(startDate),
-                    scheduleTime: scheduleTime,
+                    scheduleDate: datePart,
+                    scheduleTime: timePart,
                     venue: booking.requested_venue,
                     service: booking.activity_name,
                     status: booking.status,
@@ -402,6 +402,7 @@
         const calendar = new Calendar(calendarHost, {
             plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
             initialView: 'dayGridMonth',
+            timeZone: APP_TIMEZONE,
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',

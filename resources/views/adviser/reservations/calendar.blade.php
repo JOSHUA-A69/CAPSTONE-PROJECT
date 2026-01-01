@@ -224,9 +224,11 @@
             };
         });
 
-        // Organization bookings mapped to events
+        // Organization bookings mapped to events (normalize to local date+time)
         const orgBookingEvents = rawOrgBookings.map(booking => {
-            const start = booking.requested_date;
+            const datePart = extractDatePart(booking.requested_date);
+            const timePart = extractTimePart(booking.requested_date);
+            const start = combineDateAndTime(datePart, timePart) || datePart;
             return {
                 id: `org-${booking.id}`,
                 title: booking.activity_name || (booking.organization?.org_name ? `${booking.organization.org_name} Booking` : 'Organization Booking'),
@@ -239,8 +241,8 @@
                     entryLabel: 'Organization Booking',
                     category: 'other',
                     categoryLabel: CATEGORY_LABELS.other,
-                    scheduleDate: extractDatePart(booking.requested_date),
-                    scheduleTime: extractTimePart(booking.requested_date),
+                    scheduleDate: datePart,
+                    scheduleTime: timePart,
                     venue: booking.requested_venue,
                     service: booking.activity_name,
                     status: booking.status,
@@ -254,6 +256,7 @@
         const calendar = new Calendar(calendarHost, {
             plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
             initialView: 'dayGridMonth',
+            timeZone: "{{ config('app.timezone') }}",
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',

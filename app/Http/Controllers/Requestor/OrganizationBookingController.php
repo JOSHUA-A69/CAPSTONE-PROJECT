@@ -55,6 +55,17 @@ class OrganizationBookingController extends Controller
         $data = $request->validated();
         $data['requestor_id'] = Auth::id();
         $data['submitted_at'] = now();
+        
+        // Combine separate date + time inputs into a single datetime when applicable
+        if (isset($data['requested_date'])) {
+            $time = $request->input('requested_time');
+            if ($time) {
+                $data['requested_date'] = \Carbon\Carbon::parse($data['requested_date'].' '.$time, config('app.timezone'));
+            } else {
+                $data['requested_date'] = \Carbon\Carbon::parse($data['requested_date'], config('app.timezone'));
+            }
+        }
+        unset($data['requested_time']);
 
         $bookingRequest = OrganizationBookingRequest::create($data);
 
@@ -155,6 +166,17 @@ class OrganizationBookingController extends Controller
         }
 
         $organizationBookingRequest->delete();
+        
+        // Support both create-style (date + time) and edit-style (datetime-local) inputs
+        if (isset($data['requested_date'])) {
+            $time = $request->input('requested_time');
+            if ($time) {
+                $data['requested_date'] = \Carbon\Carbon::parse($data['requested_date'].' '.$time, config('app.timezone'));
+            } else {
+                $data['requested_date'] = \Carbon\Carbon::parse($data['requested_date'], config('app.timezone'));
+            }
+        }
+        unset($data['requested_time']);
 
         return Redirect::route('requestor.organization-bookings.index')
             ->with('status', 'organization-booking-deleted')

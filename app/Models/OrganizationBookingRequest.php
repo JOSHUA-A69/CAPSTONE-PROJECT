@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use DateTimeInterface;
 
 /**
  * Organization Booking Request Model
@@ -46,6 +47,15 @@ class OrganizationBookingRequest extends Model
         'staff_reminded_at' => 'datetime',
         'estimated_participants' => 'integer',
     ];
+
+    /**
+     * Ensure JSON serialization emits local, timezone-naive datetimes
+     * to prevent UTC shifts on the client calendar.
+     */
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->setTimezone(config('app.timezone'))->format('Y-m-d\TH:i:s');
+    }
 
     // ===========================
     // Relationships

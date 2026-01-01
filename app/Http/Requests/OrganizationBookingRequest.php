@@ -27,6 +27,9 @@ class OrganizationBookingRequest extends FormRequest
             'purpose' => 'required|string|max:1000|min:10',
             'activity_details' => 'nullable|string|max:2000',
             'requested_date' => 'required|date|after:today',
+            // When creating, the form may send a separate time field.
+            // Make it optional so update forms using datetime-local still pass.
+            'requested_time' => 'nullable|date_format:H:i',
             'requested_venue' => 'nullable|string|max:255',
             'estimated_participants' => 'nullable|integer|min:1|max:10000',
             'special_requirements' => 'nullable|string|max:1000',
