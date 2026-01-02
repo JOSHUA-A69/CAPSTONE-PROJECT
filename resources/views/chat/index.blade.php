@@ -107,15 +107,29 @@
                                               x-text="messages.length > 999 ? '999+' : messages.length"></span>
                                     </p>
                                 </div>
-                                <button type="button"
-                                        x-show="selectedConversation"
-                                        @click="showClearConfirmation = true"
-                                        class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
-                                        title="Delete conversation">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
+                                <div class="flex items-center gap-1">
+                                    <!-- Add FAQ Button (Admin Only) -->
+                                    @if(auth()->user()->role === 'admin')
+                                    <button type="button"
+                                            x-show="selectedConversation"
+                                            @click="openFaqModal()"
+                                            class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-[#7050ff] hover:text-white hover:bg-[#7050ff] transition-all duration-200"
+                                            title="Add new FAQ">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                    </button>
+                                    @endif
+                                    <button type="button"
+                                            x-show="selectedConversation"
+                                            @click="showClearConfirmation = true"
+                                            class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                                            title="Delete conversation">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -350,36 +364,38 @@
                                      :class="darkMode 
                                          ? 'bg-gray-800/80 border-gray-700' 
                                          : 'bg-white/80 border-purple-100'">
-                                    <button type="button" 
-                                            @click="sendFaqQuestion('advance_booking'); showFaqPanel = false"
-                                            class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center gap-2"
-                                            :class="darkMode 
-                                                ? 'hover:bg-purple-900/40 text-gray-300 hover:text-purple-300' 
-                                                : 'hover:bg-purple-50 text-gray-600 hover:text-purple-700'">
-                                        <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                                              :class="darkMode ? 'bg-purple-900/60 text-purple-400' : 'bg-purple-100 text-purple-600'">1</span>
-                                        How far in advance should I request a Mass or event?
-                                    </button>
-                                    <button type="button" 
-                                            @click="sendFaqQuestion('edit_cancel'); showFaqPanel = false"
-                                            class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center gap-2"
-                                            :class="darkMode 
-                                                ? 'hover:bg-blue-900/40 text-gray-300 hover:text-blue-300' 
-                                                : 'hover:bg-blue-50 text-gray-600 hover:text-blue-700'">
-                                        <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                                              :class="darkMode ? 'bg-blue-900/60 text-blue-400' : 'bg-blue-100 text-blue-600'">2</span>
-                                        Can I edit or cancel my reservation after submitting it?
-                                    </button>
-                                    <button type="button" 
-                                            @click="sendFaqQuestion('pending_contact'); showFaqPanel = false"
-                                            class="w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center gap-2"
-                                            :class="darkMode 
-                                                ? 'hover:bg-green-900/40 text-gray-300 hover:text-green-300' 
-                                                : 'hover:bg-green-50 text-gray-600 hover:text-green-700'">
-                                        <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
-                                              :class="darkMode ? 'bg-green-900/60 text-green-400' : 'bg-green-100 text-green-600'">3</span>
-                                        Who do I contact if my reservation is still pending?
-                                    </button>
+                                    <!-- Dynamic FAQs from Database -->
+                                    <template x-for="(faq, index) in allFaqs" :key="faq.id">
+                                        <div class="flex items-center gap-1">
+                                            <button type="button" 
+                                                    @click="sendFaqQuestionById(faq.id); showFaqPanel = false"
+                                                    class="flex-1 text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center gap-2"
+                                                    :class="darkMode 
+                                                        ? 'hover:bg-purple-900/40 text-gray-300 hover:text-purple-300' 
+                                                        : 'hover:bg-purple-50 text-gray-600 hover:text-purple-700'">
+                                                <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                                                      :class="darkMode ? 'bg-purple-900/60 text-purple-400' : 'bg-purple-100 text-purple-600'"
+                                                      x-text="index + 1"></span>
+                                                <span x-text="faq.question" class="line-clamp-2"></span>
+                                            </button>
+                                            <!-- Delete FAQ Button (Admin Only) -->
+                                            @if(auth()->user()->role === 'admin')
+                                            <button type="button"
+                                                    x-show="typeof faq.id === 'number'"
+                                                    @click.stop="deleteFaq(faq.id)"
+                                                    class="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                                                    title="Delete FAQ">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                            @endif
+                                        </div>
+                                    </template>
+                                    <!-- No FAQs message -->
+                                    <div x-show="allFaqs.length === 0" class="text-center py-4 text-gray-500 text-sm">
+                                        No FAQ questions available.
+                                    </div>
                                 </div>
                             </div>
                             @endif
@@ -497,6 +513,264 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- FAQ Management Modal (Admin Only) -->
+                @if(auth()->user()->role === 'admin')
+                <div x-show="showFaqModal"
+                     x-cloak
+                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                     @click.self="closeFaqModal()"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0">
+                    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden transform transition-all max-h-[90vh] flex flex-col"
+                         @click.stop
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95">
+                        <!-- Modal Header -->
+                        <div class="bg-gradient-to-r from-[#6f48ff] to-[#8f63ff] px-6 py-4 flex-shrink-0">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span x-text="editingFaq ? 'Edit FAQ' : 'FAQ Management'"></span>
+                                </h3>
+                                <button type="button" @click="closeFaqModal()" class="text-white/80 hover:text-white transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <!-- Tabs -->
+                            <div class="flex gap-2 mt-3" x-show="!editingFaq">
+                                <button type="button"
+                                        @click="faqModalTab = 'list'"
+                                        :class="faqModalTab === 'list' ? 'bg-white text-[#6f48ff]' : 'bg-white/20 text-white hover:bg-white/30'"
+                                        class="px-4 py-1.5 rounded-lg text-sm font-semibold transition">
+                                    Existing FAQs
+                                </button>
+                                <button type="button"
+                                        @click="faqModalTab = 'create'"
+                                        :class="faqModalTab === 'create' ? 'bg-white text-[#6f48ff]' : 'bg-white/20 text-white hover:bg-white/30'"
+                                        class="px-4 py-1.5 rounded-lg text-sm font-semibold transition flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    Add New
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Modal Body -->
+                        <div class="flex-1 overflow-y-auto">
+                            <!-- Error Message -->
+                            <div x-show="faqFormError" x-cloak class="mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                                <span x-text="faqFormError"></span>
+                            </div>
+
+                            <!-- Existing FAQs List Tab -->
+                            <div x-show="faqModalTab === 'list' && !editingFaq" class="p-5">
+                                <div x-show="dynamicFaqs.length === 0" class="text-center py-8">
+                                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
+                                        <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-gray-500 text-sm">No FAQs created yet.</p>
+                                    <button type="button" @click="faqModalTab = 'create'" class="mt-3 text-[#6f48ff] text-sm font-semibold hover:underline">
+                                        Create your first FAQ →
+                                    </button>
+                                </div>
+
+                                <div x-show="dynamicFaqs.length > 0" class="space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                                    <template x-for="(faq, index) in dynamicFaqs" :key="faq.id">
+                                        <div class="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+                                            <!-- Title Row with Actions -->
+                                            <div class="flex items-start justify-between mb-2">
+                                                <span class="font-semibold text-gray-900 text-sm" x-text="faq.title || 'Untitled'"></span>
+                                                <div class="flex items-center gap-1 ml-3">
+                                                    <button type="button" @click="startEditFaq(faq)" class="p-1.5 text-gray-400 hover:text-[#6f48ff] rounded transition-colors" title="Edit">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                                        </svg>
+                                                    </button>
+                                                    <button type="button" 
+                                                            @click.stop.prevent="confirmDeleteFaq(faq)" 
+                                                            class="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors" 
+                                                            title="Delete">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <!-- Question -->
+                                            <p class="text-sm text-gray-800 mb-2" x-text="faq.question"></p>
+                                            <!-- Response Preview -->
+                                            <p class="text-xs text-gray-500 line-clamp-2" x-text="faq.response"></p>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Create/Edit FAQ Form Tab -->
+                            <div x-show="faqModalTab === 'create' || editingFaq" class="p-6 space-y-5">
+                                <!-- Back button when editing -->
+                                <button x-show="editingFaq" 
+                                        type="button" 
+                                        @click="cancelEditFaq()"
+                                        class="flex items-center gap-1 text-sm text-gray-500 hover:text-[#6f48ff] transition mb-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                    Back to list
+                                </button>
+
+                                <!-- FAQ Title (Optional) -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Short Title <span class="text-gray-400 font-normal">(optional)</span>
+                                    </label>
+                                    <input type="text"
+                                           x-model="faqForm.title"
+                                           maxlength="100"
+                                           placeholder="e.g., Booking Advance"
+                                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-sm">
+                                </div>
+
+                                <!-- FAQ Question -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        FAQ Question <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea x-model="faqForm.question"
+                                              rows="3"
+                                              maxlength="500"
+                                              placeholder="Enter the question users will see and click..."
+                                              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-sm resize-none"></textarea>
+                                    <p class="text-xs text-gray-400 mt-1" x-text="(faqForm.question?.length || 0) + '/500'"></p>
+                                </div>
+
+                                <!-- Auto Response -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        Auto Response <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea x-model="faqForm.response"
+                                              rows="5"
+                                              maxlength="2000"
+                                              placeholder="Enter the automated response that will be sent..."
+                                              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-sm resize-none"></textarea>
+                                    <p class="text-xs text-gray-400 mt-1" x-text="(faqForm.response?.length || 0) + '/2000'"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modal Footer -->
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 flex-shrink-0">
+                            <button type="button"
+                                    @click="closeFaqModal()"
+                                    class="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition">
+                                Close
+                            </button>
+                            <button type="button"
+                                    x-show="faqModalTab === 'create' || editingFaq"
+                                    @click="editingFaq ? updateFaq() : submitFaq()"
+                                    :disabled="faqFormLoading || !faqForm.question?.trim() || !faqForm.response?.trim()"
+                                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#6f48ff] to-[#8f63ff] text-white font-semibold hover:from-[#5f38ef] hover:to-[#7f53ef] disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-purple-500/25">
+                                <span x-show="!faqFormLoading" class="flex items-center gap-2">
+                                    <svg x-show="!editingFaq" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    <svg x-show="editingFaq" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span x-text="editingFaq ? 'Update FAQ' : 'Create FAQ'"></span>
+                                </span>
+                                <span x-show="faqFormLoading" class="flex items-center justify-center gap-2">
+                                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span x-text="editingFaq ? 'Updating...' : 'Creating...'"></span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Delete FAQ Confirmation Modal -->
+                @if(auth()->user()->role === 'admin')
+                <div x-show="showDeleteFaqConfirm"
+                     x-cloak
+                     class="fixed inset-0 flex items-center justify-center p-4 bg-black/50"
+                     style="z-index: 9999 !important;"
+                     @click.self="showDeleteFaqConfirm = false; faqToDelete = null;"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0"
+                     x-transition:enter-end="opacity-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0">
+                    <!-- Modal -->
+                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8"
+                         @click.stop
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95">
+                        <!-- Warning Icon -->
+                        <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
+                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+
+                        <!-- Title -->
+                        <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Delete FAQ?</h3>
+                        
+                        <!-- Description -->
+                        <p class="text-sm text-gray-500 text-center mb-6">
+                            Are you sure you want to delete this FAQ? This action cannot be undone.
+                        </p>
+
+                        <!-- FAQ Preview -->
+                        <div x-show="faqToDelete" class="mb-6 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                            <p class="text-sm text-gray-700 font-medium line-clamp-2" x-text="faqToDelete?.question"></p>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex gap-3">
+                            <button type="button"
+                                    @click="showDeleteFaqConfirm = false; faqToDelete = null;"
+                                    class="flex-1 px-5 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition">
+                                Cancel
+                            </button>
+                            <button type="button"
+                                    @click="executeDeleteFaq()"
+                                    :disabled="faqFormLoading"
+                                    class="flex-1 px-5 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
+                                <svg x-show="faqFormLoading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span x-text="faqFormLoading ? 'Deleting...' : 'Delete'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -572,11 +846,30 @@
                 clearing: false,
                 darkMode: false,
                 showFaqPanel: false,
+                // FAQ Management (Admin only)
+                showFaqModal: false,
+                faqFormLoading: false,
+                faqFormError: '',
+                faqForm: {
+                    id: null,
+                    title: '',
+                    question: '',
+                    response: ''
+                },
+                dynamicFaqs: [],
+                faqsLoaded: false,
+                faqModalTab: 'list',
+                editingFaq: null,
+                showDeleteFaqConfirm: false,
+                faqToDelete: null,
 
                 init() {
                     // Load dark mode preference from localStorage
                     this.darkMode = localStorage.getItem('chatDarkMode') === 'true';
                     window.addEventListener('beforeunload', () => this.cleanup());
+                    
+                    // Load dynamic FAQs from database
+                    this.loadFaqs();
                     
                     // Auto-select first conversation for requestors (they usually only chat with admin)
                     @if(auth()->user()->role === 'requestor')
@@ -586,6 +879,242 @@
                         });
                     }
                     @endif
+                },
+
+                async loadFaqs() {
+                    try {
+                        const response = await fetch('/faqs');
+                        const data = await response.json();
+                        if (data.success && data.faqs) {
+                            this.dynamicFaqs = data.faqs;
+                            this.faqsLoaded = true;
+                        }
+                    } catch (error) {
+                        console.warn('Failed to load FAQs', error);
+                    }
+                },
+
+                openFaqModal() {
+                    this.faqForm = { id: null, title: '', question: '', response: '' };
+                    this.faqFormError = '';
+                    this.editingFaq = null;
+                    this.faqModalTab = 'list';
+                    this.showFaqModal = true;
+                },
+
+                closeFaqModal() {
+                    this.showFaqModal = false;
+                    this.faqFormError = '';
+                    this.editingFaq = null;
+                    this.faqToDelete = null;
+                    this.showDeleteFaqConfirm = false;
+                },
+
+                startEditFaq(faq) {
+                    this.editingFaq = faq;
+                    this.faqForm = {
+                        id: faq.id,
+                        title: faq.title || '',
+                        question: faq.question,
+                        response: faq.response
+                    };
+                    this.faqFormError = '';
+                },
+
+                cancelEditFaq() {
+                    this.editingFaq = null;
+                    this.faqForm = { id: null, title: '', question: '', response: '' };
+                    this.faqFormError = '';
+                    this.faqModalTab = 'list';
+                },
+
+                async deleteFaqWithConfirm(faq) {
+                    // Show native confirmation dialog
+                    const confirmed = confirm(`Delete FAQ?\n\nAre you sure you want to delete this FAQ?\n\n"${faq.question}"\n\nThis action cannot be undone.`);
+                    
+                    if (!confirmed) return;
+
+                    // Proceed with deletion
+                    this.faqFormLoading = true;
+                    this.faqFormError = '';
+
+                    try {
+                        const response = await fetch(`/admin/faqs/${faq.id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                            },
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            // Remove from list
+                            this.dynamicFaqs = this.dynamicFaqs.filter(f => f.id !== faq.id);
+                            // Show success (optional - could add a toast notification)
+                        } else {
+                            alert('Failed to delete FAQ: ' + (data.error || 'Unknown error'));
+                            this.faqFormError = data.error || 'Failed to delete FAQ.';
+                        }
+                    } catch (error) {
+                        console.error('Failed to delete FAQ', error);
+                        alert('An error occurred while deleting the FAQ. Please try again.');
+                        this.faqFormError = 'An error occurred. Please try again.';
+                    } finally {
+                        this.faqFormLoading = false;
+                    }
+                },
+
+                confirmDeleteFaq(faq) {
+                    console.log('confirmDeleteFaq called with:', faq);
+                    this.faqToDelete = faq;
+                    this.showDeleteFaqConfirm = true;
+                    console.log('showDeleteFaqConfirm is now:', this.showDeleteFaqConfirm);
+                },
+
+                async executeDeleteFaq() {
+                    if (!this.faqToDelete) return;
+
+                    this.faqFormLoading = true;
+                    this.faqFormError = '';
+                    const faqId = this.faqToDelete.id;
+
+                    try {
+                        const response = await fetch(`/admin/faqs/${faqId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                            },
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.dynamicFaqs = this.dynamicFaqs.filter(f => f.id !== faqId);
+                            this.showDeleteFaqConfirm = false;
+                            this.faqToDelete = null;
+                        } else {
+                            this.faqFormError = data.error || 'Failed to delete FAQ.';
+                            this.showDeleteFaqConfirm = false;
+                            this.faqToDelete = null;
+                        }
+                    } catch (error) {
+                        console.error('Failed to delete FAQ', error);
+                        this.faqFormError = 'An error occurred. Please try again.';
+                        this.showDeleteFaqConfirm = false;
+                        this.faqToDelete = null;
+                    } finally {
+                        this.faqFormLoading = false;
+                    }
+                },
+
+                async updateFaq() {
+                    if (!this.editingFaq || !this.faqForm.question?.trim() || !this.faqForm.response?.trim()) {
+                        this.faqFormError = 'Question and response are required.';
+                        return;
+                    }
+
+                    this.faqFormLoading = true;
+                    this.faqFormError = '';
+
+                    try {
+                        const response = await fetch(`/admin/faqs/${this.editingFaq.id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                title: this.faqForm.title?.trim() || '',
+                                question: this.faqForm.question.trim(),
+                                response: this.faqForm.response.trim(),
+                            }),
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            // Update in the list
+                            const index = this.dynamicFaqs.findIndex(f => f.id === this.editingFaq.id);
+                            if (index !== -1) {
+                                this.dynamicFaqs[index] = data.faq;
+                            }
+                            this.cancelEditFaq();
+                        } else {
+                            this.faqFormError = data.error || 'Failed to update FAQ.';
+                        }
+                    } catch (error) {
+                        console.error('Failed to update FAQ', error);
+                        this.faqFormError = 'An error occurred. Please try again.';
+                    } finally {
+                        this.faqFormLoading = false;
+                    }
+                },
+
+                async submitFaq() {
+                    if (!this.faqForm.question?.trim() || !this.faqForm.response?.trim()) {
+                        this.faqFormError = 'Question and response are required.';
+                        return;
+                    }
+
+                    this.faqFormLoading = true;
+                    this.faqFormError = '';
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('title', this.faqForm.title?.trim() || '');
+                        formData.append('question', this.faqForm.question.trim());
+                        formData.append('response', this.faqForm.response.trim());
+
+                        const response = await fetch('/admin/faqs', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                            body: formData,
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            // Add to dynamic FAQs
+                            this.dynamicFaqs.push(data.faq);
+                            // Reset form and go back to list
+                            this.faqForm = { id: null, title: '', question: '', response: '' };
+                            this.faqModalTab = 'list';
+                        } else {
+                            this.faqFormError = data.error || 'Failed to create FAQ.';
+                        }
+                    } catch (error) {
+                        console.error('Failed to submit FAQ', error);
+                        this.faqFormError = 'An error occurred. Please try again.';
+                    } finally {
+                        this.faqFormLoading = false;
+                    }
+                },
+
+                async deleteFaq(faqId) {
+                    if (!confirm('Are you sure you want to delete this FAQ?')) return;
+
+                    try {
+                        const response = await fetch(`/admin/faqs/${faqId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.dynamicFaqs = this.dynamicFaqs.filter(f => f.id !== faqId);
+                        }
+                    } catch (error) {
+                        console.error('Failed to delete FAQ', error);
+                    }
                 },
 
                 toggleDarkMode() {
@@ -641,7 +1170,8 @@
                     try {
                         const response = await fetch(`/chat/messages/${this.selectedConversation.id}?t=${Date.now()}`, { cache: 'no-store' });
                         const data = await response.json();
-                        this.messages = data.messages || [];
+                        // Sort by ID to ensure correct chronological order
+                        this.messages = (data.messages || []).sort((a, b) => a.id - b.id);
                     } catch (error) {
                         console.error('Failed to load messages', error);
                         this.error = 'Unable to load messages right now.';
@@ -650,6 +1180,8 @@
 
                 async pollNewMessages() {
                     if (!this.selectedConversation) return;
+                    // Skip polling while sending (prevents race conditions with FAQ)
+                    if (this.sending) return;
 
                     try {
                         const response = await fetch(`/chat/messages/${this.selectedConversation.id}?t=${Date.now()}`, { cache: 'no-store' });
@@ -659,11 +1191,14 @@
                             return;
                         }
 
-                        const lastId = this.messages.length ? this.messages[this.messages.length - 1].id : 0;
-                        const incoming = data.messages.filter(message => message.id > lastId);
+                        // Get existing message IDs to avoid duplicates
+                        const existingIds = new Set(this.messages.map(m => m.id));
+                        const incoming = data.messages.filter(message => !existingIds.has(message.id));
 
                         if (incoming.length) {
                             this.messages.push(...incoming);
+                            // Sort by ID to ensure correct chronological order
+                            this.messages.sort((a, b) => a.id - b.id);
                             this.scrollToBottom();
                             this.markAsRead();
                         }
@@ -745,7 +1280,7 @@
                     }
                 },
 
-                // FAQ Auto-Reply System
+                // FAQ Auto-Reply System - Default fallback FAQs
                 faqResponses: {
                     advance_booking: {
                         question: "How far in advance should I request a Mass or event?",
@@ -758,6 +1293,76 @@
                     pending_contact: {
                         question: "Who do I contact if my reservation is still pending?",
                         answer: "If your reservation is still pending, please message us through the Admin Support Chat in your dashboard. Our CREaM team usually responds within 72 hours and can provide an update, answer questions, and guide you on the next steps."
+                    }
+                },
+
+                // Get combined FAQs (dynamic from DB + fallback defaults)
+                get allFaqs() {
+                    // If we have dynamic FAQs from DB, use those; otherwise use defaults
+                    if (this.dynamicFaqs.length > 0) {
+                        return this.dynamicFaqs;
+                    }
+                    // Convert default faqResponses to array format
+                    return Object.entries(this.faqResponses).map(([key, value]) => ({
+                        id: key,
+                        title: key.replace('_', ' '),
+                        question: value.question,
+                        response: value.answer
+                    }));
+                },
+
+                async sendFaqQuestionById(faqId) {
+                    if (!this.selectedConversation || this.sending) return;
+                    
+                    // Find FAQ by ID (could be dynamic or default key)
+                    let faq = this.dynamicFaqs.find(f => f.id === faqId);
+                    if (!faq && this.faqResponses[faqId]) {
+                        faq = {
+                            question: this.faqResponses[faqId].question,
+                            response: this.faqResponses[faqId].answer
+                        };
+                    }
+                    if (!faq) return;
+
+                    this.sending = true;
+                    this.error = '';
+
+                    try {
+                        const faqFormData = new FormData();
+                        faqFormData.append('receiver_id', this.selectedConversation.id);
+                        faqFormData.append('question', faq.question);
+                        faqFormData.append('answer', faq.response);
+
+                        const response = await fetch('{{ route('chat.send-faq') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            },
+                            body: faqFormData,
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            this.messages.push(data.question);
+                            this.scrollToBottom();
+                            this.selectedConversation.last_message = data.question.message;
+                            this.selectedConversation.last_message_at = data.question.created_at;
+
+                            await new Promise(resolve => setTimeout(resolve, 800));
+
+                            this.messages.push(data.auto_reply);
+                            this.scrollToBottom();
+                            this.selectedConversation.last_message = '🤖 Automated FAQ Response';
+                            this.selectedConversation.last_message_at = data.auto_reply.created_at;
+                        } else {
+                            this.error = data.error || 'Failed to send FAQ question.';
+                        }
+                    } catch (error) {
+                        console.error('Failed to send FAQ question', error);
+                        this.error = 'Failed to send message. Please try again.';
+                    } finally {
+                        this.sending = false;
                     }
                 },
 
@@ -788,22 +1393,17 @@
                         const data = await response.json();
 
                         if (data.success) {
-                            // Add question message
                             this.messages.push(data.question);
                             this.scrollToBottom();
 
-                            // Update conversation preview with question
                             this.selectedConversation.last_message = data.question.message;
                             this.selectedConversation.last_message_at = data.question.created_at;
 
-                            // Small delay before showing auto-reply (feels more natural)
                             await new Promise(resolve => setTimeout(resolve, 800));
 
-                            // Add automated reply message
                             this.messages.push(data.auto_reply);
                             this.scrollToBottom();
 
-                            // Update conversation preview with auto-reply
                             this.selectedConversation.last_message = '🤖 Automated FAQ Response';
                             this.selectedConversation.last_message_at = data.auto_reply.created_at;
                         } else {
@@ -825,7 +1425,7 @@
 
                     try {
                         const response = await fetch(`/chat/clear/${this.selectedConversation.id}`, {
-                            method: 'DELETE',
+                            method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                                 'Accept': 'application/json',

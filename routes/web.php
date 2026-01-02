@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\ReportController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -138,6 +139,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chat/messages/{userId}', [ChatController::class, 'getMessages'])->name('chat.messages');
     Route::get('/chat/unread/count', [ChatController::class, 'unreadCount'])->name('chat.unread.count');
     Route::post('/chat/mark-read/{userId}', [ChatController::class, 'markAsRead'])->name('chat.mark-read');
+    Route::post('/chat/clear/{userId}', [ChatController::class, 'clearConversation'])->name('chat.clear');
+    
+    // FAQ Management Routes
+    Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
+    Route::post('/admin/faqs', [FaqController::class, 'store'])->name('faqs.store');
+    Route::put('/admin/faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
+    Route::delete('/admin/faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
+    Route::post('/admin/faqs/reorder', [FaqController::class, 'reorder'])->name('faqs.reorder');
+    
     // Temporary debug endpoint to inspect unread sources (admin-only)
     Route::get('/dev/chat/unread/debug', [ChatController::class, 'debugUnread'])->name('chat.unread.debug');
     // Temporary debug endpoint to mark ALL unread as read for current user (admin-only)
@@ -347,6 +357,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
 
     // Organizations (read-only admin view)
     Route::get('/organizations', [\App\Http\Controllers\Admin\OrganizationController::class, 'index'])->name('organizations.index');
+
+    // Elevated Code Management (Admin only)
+    Route::get('/elevated-code', [\App\Http\Controllers\Admin\ElevatedCodeController::class, 'index'])->name('elevated-code.index');
+    Route::put('/elevated-code', [\App\Http\Controllers\Admin\ElevatedCodeController::class, 'update'])->name('elevated-code.update');
 
     // Organization Booking Routes (Admin oversight and management)
     Route::get('/organization-bookings', [\App\Http\Controllers\Admin\OrganizationBookingController::class, 'index'])->name('organization-bookings.index');

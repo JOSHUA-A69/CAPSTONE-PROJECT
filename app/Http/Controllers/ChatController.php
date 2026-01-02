@@ -161,6 +161,9 @@ class ChatController extends Controller
         ]);
         $questionMessage->load(['sender', 'receiver']);
 
+        // Small delay to ensure auto-reply has a later timestamp
+        usleep(100000); // 100ms delay
+
         // 2. Send the automated reply (from admin to requestor)
         $autoReplyMessage = Message::create([
             'sender_id' => $receiverId, // Admin/receiver sends the auto-reply
@@ -438,9 +441,9 @@ class ChatController extends Controller
     {
         $userId = Auth::id();
 
-        // Get all admins
-        $conversations = DB::table('messages')
-            ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture')
+        // Get all admins with their conversation stats
+        $adminsWithConversations = DB::table('messages')
+            ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture', 'users.role')
             ->selectRaw('MAX(CASE WHEN cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at THEN messages.created_at END) as last_message_at')
             ->selectRaw('COUNT(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) AND messages.receiver_id = ? AND messages.read_at IS NULL THEN 1 END) as unread_count', [$userId])
             ->selectRaw('SUM(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) THEN 1 ELSE 0 END) as message_count')
@@ -461,19 +464,40 @@ class ChatController extends Controller
                 $query->where('messages.sender_id', $userId)
                     ->orWhere('messages.receiver_id', $userId);
             })
-            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture')
-            ->orderBy('last_message_at', 'desc')
+            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture', 'users.role')
+            ->get()
+            ->keyBy('id');
+
+        // Get ALL admins (including those without conversations)
+        $allAdmins = User::where('role', 'admin')
+            ->select('id', 'first_name', 'last_name', 'email', 'profile_picture', 'role')
             ->get();
 
-        // If no conversations yet, get all admins
-        if ($conversations->isEmpty()) {
-            $conversations = User::where('role', 'admin')
-                ->select('id', 'first_name', 'last_name', 'email', 'profile_picture')
-                ->selectRaw('NULL as last_message_at')
-                ->selectRaw('0 as unread_count')
-                ->selectRaw('0 as message_count')
-                ->get();
-        }
+        // Merge: use conversation data if exists, otherwise use defaults
+        $conversations = $allAdmins->map(function ($admin) use ($adminsWithConversations) {
+            if ($adminsWithConversations->has($admin->id)) {
+                return $adminsWithConversations->get($admin->id);
+            }
+            
+            // Admin with no conversation yet
+            return (object) [
+                'id' => $admin->id,
+                'first_name' => $admin->first_name,
+                'last_name' => $admin->last_name,
+                'email' => $admin->email,
+                'profile_picture' => $admin->profile_picture,
+                'role' => $admin->role,
+                'last_message_at' => null,
+                'unread_count' => 0,
+                'message_count' => 0,
+            ];
+        });
+
+        // Sort: admins with recent messages first, then alphabetically
+        $conversations = $conversations->sortBy([
+            ['last_message_at', 'desc'],
+            ['first_name', 'asc'],
+        ])->values();
 
         return $conversations;
     }
