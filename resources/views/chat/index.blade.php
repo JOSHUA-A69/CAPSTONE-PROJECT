@@ -967,10 +967,8 @@
                 },
 
                 confirmDeleteFaq(faq) {
-                    console.log('confirmDeleteFaq called with:', faq);
                     this.faqToDelete = faq;
                     this.showDeleteFaqConfirm = true;
-                    console.log('showDeleteFaqConfirm is now:', this.showDeleteFaqConfirm);
                 },
 
                 async executeDeleteFaq() {
