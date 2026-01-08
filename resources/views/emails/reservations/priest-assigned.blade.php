@@ -1,114 +1,76 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Priest Assignment</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: #7c3aed;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 5px 5px 0 0;
-        }
-        .content {
-            background-color: #f8f9fa;
-            padding: 30px;
-            border-radius: 0 0 5px 5px;
-        }
-        .highlight {
-            background-color: #ede9fe;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 20px 0;
-            text-align: center;
-            border-left: 4px solid #7c3aed;
-        }
-        .details {
-            background-color: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 5px;
-        }
-        .details-row {
-            margin: 10px 0;
-        }
-        .label {
-            font-weight: bold;
-            color: #555;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #666;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>⛪ Assignment to Officiate Service</h1>
-    </div>
-    <div class="content">
-        <p>Dear {{ $priest->first_name }},</p>
+@extends('emails.layouts.default')
 
-        <div class="highlight">
+@section('title', 'Assignment to Officiate Service')
+
+@section('content')
+    <h1 style="color: #333333; font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 24px;">
+        Assignment to Officiate Service
+    </h1>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        Dear {{ $priest->first_name }},
+    </p>
+
+    <div style="background-color: #ede9fe; border-left: 4px solid #7c3aed; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+        <p style="margin: 0; color: #5b21b6; font-weight: 500;">
             <strong>You have been assigned to officiate a religious service.</strong><br>
             Please confirm your availability as soon as possible.
-        </div>
-
-        <div class="details">
-            <h3>Service Details</h3>
-            <div class="details-row">
-                <span class="label">Service Type:</span> {{ $service->service_name }}
-            </div>
-            <div class="details-row">
-                <span class="label">Date & Time:</span> {{ $reservation->schedule_date->format('l, F d, Y - h:i A') }}
-            </div>
-            <div class="details-row">
-                <span class="label">Venue:</span>
-                @if($reservation->custom_venue_name)
-                    📍 {{ $reservation->custom_venue_name }} <em>(Custom Location)</em>
-                @else
-                    {{ $venue->name }}
-                @endif
-            </div>
-            <div class="details-row">
-                <span class="label">Organization:</span> {{ $reservation->organization->org_name ?? 'N/A' }}
-            </div>
-            <div class="details-row">
-                <span class="label">Requestor:</span> {{ $reservation->user->full_name }}
-            </div>
-            <div class="details-row">
-                <span class="label">Purpose:</span><br>
-                {{ $reservation->purpose }}
-            </div>
-            @if($reservation->participants_count)
-            <div class="details-row">
-                <span class="label">Expected Participants:</span> {{ $reservation->participants_count }}
-            </div>
-            @endif
-        </div>
-
-        <p><strong>Action Required:</strong></p>
-        <p>Please log in to the eReligiousServices portal to confirm or decline this assignment.</p>
-
-        <p>If you have any conflicts or questions, please contact the CREaM office immediately.</p>
-
-        <div class="footer">
-            <p>Center for Religious Education and Mission (CREaM)<br>
-            Holy Name University<br>
-            Tagbilaran City, Bohol</p>
-        </div>
+        </p>
     </div>
-</body>
-</html>
+
+    <div style="background-color: #f3f4f6; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #333333; font-size: 18px; font-weight: bold; margin-top: 0; margin-bottom: 16px;">
+            Service Details
+        </h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666; width: 140px;">Service Type:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $service->service_name }}</td>
+            </tr>
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Date & Time:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->schedule_date->format('l, F d, Y - h:i A') }}</td>
+            </tr>
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Venue:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">
+                    @if($reservation->custom_venue_name)
+                        {{ $reservation->custom_venue_name }} (Custom Location)
+                    @else
+                        {{ $venue->name }}
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Organization:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->organization->org_name ?? 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Requestor:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->user->full_name }}</td>
+            </tr>
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666; vertical-align: top;">Purpose:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->purpose }}</td>
+            </tr>
+            @if($reservation->participants_count)
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Expected Participants:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->participants_count }}</td>
+            </tr>
+            @endif
+        </table>
+    </div>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 16px;">
+        <strong>Action Required:</strong>
+    </p>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        Please log in to the <a href="{{ config('app.url') }}" style="color: #2563eb; text-decoration: none;">eReligiousServices portal</a> to confirm or decline this assignment.
+    </p>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        If you have any conflicts or questions, please contact the CREaM office immediately.
+    </p>
+@endsection

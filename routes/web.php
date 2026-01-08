@@ -458,3 +458,184 @@ Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\H
 Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('venues', \App\Http\Controllers\Admin\VenueController::class);
 });
+
+// Email Preview Routes (For Development/Testing)
+if (app()->environment('local')) {
+    Route::prefix('dev/emails')->group(function () {
+        
+        $getDummyReservation = function () {
+            $user = new \App\Models\User([
+                'first_name' => 'John', 'last_name' => 'Doe', 'email' => 'john@example.com'
+            ]);
+            $service = new \App\Models\Service(['service_name' => 'Baptism']);
+            $venue = new \App\Models\Venue(['name' => 'Main Church']);
+            $org = new \App\Models\Organization(['name' => 'Knights of Columbus']);
+            $reservation = new \App\Models\Reservation([
+                'schedule_date' => now()->addDays(5)->setHour(10)->setMinute(0),
+                'status' => 'pending',
+                'rejection_reason' => 'Schedule conflict',
+                'purpose' => 'Thanksgiving Mass',
+                'custom_venue_name' => null,
+            ]);
+            $reservation->reservation_id = 123;
+            $reservation->setRelation('user', $user);
+            $reservation->setRelation('service', $service);
+            $reservation->setRelation('venue', $venue);
+            $reservation->setRelation('organization', $org);
+            return $reservation;
+        };
+
+        $getDummyOrgBooking = function () {
+            $user = new \App\Models\User([
+                'first_name' => 'Jane', 'last_name' => 'Smith', 'email' => 'jane@org.com'
+            ]);
+            $adviser = new \App\Models\User([
+                'first_name' => 'Prof.', 'last_name' => 'Adviser', 'email' => 'adviser@school.edu'
+            ]);
+            $org = new \App\Models\Organization(['name' => 'Catholic Youth Ministry']);
+            $booking = new \App\Models\OrganizationBookingRequest([
+                'activity_name' => 'Youth Fellowship',
+                'requested_date' => now()->addDays(10)->setHour(14)->setMinute(0),
+                'status' => 'pending',
+                'rejection_reason' => 'Venue maintenance',
+            ]);
+            $booking->created_at = now();
+            $booking->id = 789;
+            $booking->setRelation('requestor', $user);
+            $booking->setRelation('organization', $org);
+            $org->setRelation('adviser', $adviser);
+            
+            return [$booking, $adviser, $org, $user];
+        };
+
+        Route::get('/', function () {
+            $links = [
+                'Login Verification' => '/dev/emails/auth/login-verification',
+                'Account Activated' => '/dev/emails/auth/account-activated',
+                '---' => '#',
+                'Reservation: Submitted' => '/dev/emails/reservation/submitted',
+                'Reservation: Adviser Approved' => '/dev/emails/reservation/adviser-approved',
+                'Reservation: Adviser Rejected' => '/dev/emails/reservation/adviser-rejected',
+                'Reservation: Priest Assigned' => '/dev/emails/reservation/priest-assigned',
+                'Reservation: Priest Declined' => '/dev/emails/reservation/priest-declined',
+                'Reservation: Cancelled' => '/dev/emails/reservation/cancelled',
+                '---' => '#',
+                'Org Booking: Adviser Notification' => '/dev/emails/org/adviser-notification',
+                'Org Booking: Approved' => '/dev/emails/org/approved',
+                'Org Booking: Rejected' => '/dev/emails/org/rejected',
+                'Org Booking: Staff Reminder' => '/dev/emails/org/staff-reminder',
+            ];
+            $html = '<div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">';
+            $html .= '<h1 style="color: #333;">Email Styling Previews</h1>';
+            $html .= '<p>Click to view the rendered email templates with dummy data.</p><ul style="line-height: 1.8;">';
+            foreach($links as $text => $url) {
+                 if($text === '---') { $html .= '<hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">'; continue; }
+                 $html .= "<li><a href='$url' target='_blank' style='color: #2563eb; text-decoration: none;'>$text</a></li>";
+            }
+            $html .= '</ul></div>';
+            return $html;
+        });
+
+        Route::get('/reservation/submitted', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.submitted', [
+                'reservation' => $r, 'requestor' => $r->user, 'service' => $r->service, 'venue' => $r->venue, 'organization' => $r->organization
+            ]);
+        });
+        Route::get('/reservation/adviser-approved', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            return view('emails.reservations.adviser-approved', [
+                'reservation' => $r, 
+                'requestor' => $r->user, 
+                'service' => $r->service, 
+                'adviser' => $adviser,
+                'remarks' => 'Everything looks good. Proceed.'
+            ]);
+        });
+        Route::get('/reservation/adviser-rejected', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            return view('emails.reservations.adviser-rejected', [
+                'reservation' => $r, 
+                'requestor' => $r->user, 
+                'service' => $r->service, 
+                'adviser' => $adviser,
+                'reason' => 'Scheduling conflict with another event.'
+            ]);
+        });
+        Route::get('/reservation/priest-assigned', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $priest = new \App\Models\User(['first_name' => 'Fr. Michael', 'last_name' => 'Torres']);
+            return view('emails.reservations.priest-assigned', [
+                'reservation' => $r, 
+                'priest' => $priest, 
+                'service' => $r->service,
+                'venue' => $r->venue
+            ]);
+        });
+        Route::get('/reservation/priest-declined', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $priest = new \App\Models\User(['first_name' => 'Fr. Michael', 'last_name' => 'Torres', 'email' => 'fr.michael@example.com']);
+            return view('emails.reservations.priest-declined', [
+                'reservation' => $r, 
+                'priest' => $priest, 
+                'service' => $r->service,
+                'venue' => $r->venue,
+                'reason' => 'Health issues'
+            ]);
+        });
+        Route::get('/reservation/cancelled', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.cancelled', [
+                'reservation' => $r, 
+                'service' => $r->service,
+                'cancelledBy' => 'Admin (Staff Name)',
+                'reason' => 'Duplicate booking.'
+            ]);
+        });
+
+        Route::get('/org/adviser-notification', function () use ($getDummyOrgBooking) {
+            list($b, $adviser, $org, $user) = $getDummyOrgBooking();
+            return view('emails.organization-booking.adviser-notification', ['request' => $b, 'organization' => $org, 'requestor' => $b->requestor]);
+        });
+        Route::get('/org/approved', function () use ($getDummyOrgBooking) {
+            list($b, $adviser, $org, $user) = $getDummyOrgBooking();
+            return view('emails.organization-booking.approval-notification', [
+                'request' => $b, 
+                'requestor' => $b->requestor,
+                'organization' => $org,
+                'adviser' => $adviser,
+                'comments' => 'Have a great event!'
+            ]);
+        });
+        Route::get('/org/rejected', function () use ($getDummyOrgBooking) {
+            list($b, $adviser, $org, $user) = $getDummyOrgBooking();
+            return view('emails.organization-booking.rejection-notification', [
+                'request' => $b, 'organization' => $org, 'adviser' => $adviser, 
+                'reason' => 'Venue is under maintenance.', 'comments' => 'Please reschedule.'
+            ]);
+        });
+        Route::get('/org/staff-reminder', function () use ($getDummyOrgBooking) {
+            list($b, $adviser, $org, $user) = $getDummyOrgBooking();
+            $b->adviser_notified_at = now()->subDays(3);
+            return view('emails.organization-booking.staff-reminder', [
+                'request' => $b,
+                'organization' => $org,
+                'adviser' => $adviser,
+                'requestor' => $b->requestor,
+                'daysPending' => 3
+            ]);
+        });
+
+        Route::get('/auth/login-verification', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.login-verification-code', ['code' => '123456', 'user' => $r->user]);
+        });
+        
+        Route::get('/auth/account-activated', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.account-activated', ['user' => $r->user]);
+        });
+    });
+}
