@@ -135,7 +135,8 @@
             @if(in_array($reservation->status, ['adviser_approved', 'approved']))
                 @php
                     // Calculate days until the mass
-                    $daysUntilMass = now()->diffInDays($reservation->schedule_date, false);
+                    // Round up to the nearest whole number (e.g., 5.8 days becomes 6 days)
+                    $daysUntilMass = (int) ceil(now()->diffInDays($reservation->schedule_date, false));
                     $canCancel = $daysUntilMass >= 6; // Can only cancel if 6 or more days before
                 @endphp
                 

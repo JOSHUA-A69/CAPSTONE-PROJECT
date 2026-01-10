@@ -25,22 +25,50 @@ class ReservationController extends Controller
         $this->availabilityService = $availabilityService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         // Get organizations where this adviser is assigned
         $adviserOrgs = Auth::user()->organizations->pluck('org_id');
 
+        // Start building the query
+        $query = Reservation::with(['user', 'service', 'venue', 'organization'])
+            ->whereIn('org_id', $adviserOrgs);
+
+        // Apply filters
+        if ($request->has('filter')) {
+            $filter = $request->input('filter');
+            switch ($filter) {
+                case 'pending':
+                    $query->where('status', 'pending');
+                    break;
+                case 'adviser_approved':
+                    $query->where('status', 'adviser_approved');
+                    break;
+                case 'upcoming':
+                    $query->whereIn('status', ['admin_approved', 'approved'])
+                          ->where('schedule_date', '>=', now());
+                    break;
+                case 'unnoticed':
+                    $query->unnoticedByAdviser();
+                    break;
+                default:
+                    $query->whereIn('status', ['pending', 'adviser_approved', 'admin_approved', 'approved', 'rejected']);
+                    break;
+            }
+        } else {
+            // Default view
+            $query->whereIn('status', ['pending', 'adviser_approved', 'admin_approved', 'approved', 'rejected']);
+        }
+
         // Get reservations linked to those organizations
-        $reservations = Reservation::with(['user', 'service', 'venue', 'organization'])
-            ->whereIn('org_id', $adviserOrgs)
-            ->whereIn('status', ['pending', 'adviser_approved', 'admin_approved', 'approved', 'rejected'])
-            ->orderByRaw("CASE
+        $reservations = $query->orderByRaw("CASE
                 WHEN status = 'pending' THEN 1
                 WHEN status = 'adviser_approved' THEN 2
                 ELSE 3
             END")
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         // Get count of unnoticed requests (>24 hours old)
         $unnoticedCount = Reservation::whereIn('org_id', $adviserOrgs)
