@@ -24,7 +24,8 @@ class ReportEmpty extends Notification
     {
         return (new MailMessage)
             ->subject('No Data Found for Report')
-            ->line('We generated your report but no matching data was found for the selected filters.')
-            ->line('Try expanding the date range or removing filters.');
+            ->view('emails.reports.empty', [
+                'result' => $this->result,
+            ]);
     }
 }

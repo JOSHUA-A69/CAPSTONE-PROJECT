@@ -42,6 +42,16 @@
                             ->where('priest_confirmation', 'confirmed')
                             ->where('schedule_date', '>=', now())
                             ->count();
+
+                        // Pending Cancellations
+                        $cancellationCount = \App\Models\ReservationCancellation::whereHas('reservation', function($q) use ($user) {
+                                $q->where('officiant_id', $user->id)
+                                  ->orWhereHas('priests', function($pq) use ($user) {
+                                      $pq->where('users.id', $user->id);
+                                  });
+                            })
+                            ->whereNull('priest_confirmed_at')
+                            ->count();
                     @endphp
 
                     <h3 class="text-2xl font-bold mb-2 text-heading">Welcome, {{ $displayName }}!</h3>
@@ -50,13 +60,13 @@
             </div>
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Pending Confirmations -->
                 <div class="card border-l-4 border-yellow-500">
                     <div class="card-body">
                         <div class="flex items-center justify-between">
                             <div>
-                                <p class="text-sm font-medium text-muted mb-1">Pending Confirmations</p>
+                                <p class="text-sm font-medium text-muted mb-1">Pending Assignments</p>
                                 <p class="text-4xl font-bold text-heading">{{ $pendingCount }}</p>
                             </div>
                             <div class="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-full">
@@ -68,7 +78,7 @@
                         @if($pendingCount > 0)
                         <div class="mt-4 pt-4 border-t">
                             <a href="{{ route('priest.reservations.index', ['status' => 'pending_priest_confirmation']) }}" class="btn-secondary inline-flex">
-                                View Pending Assignments
+                                View Assignments
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
@@ -104,6 +114,37 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Cancellation Requests -->
+                <a href="{{ route('priest.cancellations.index') }}" class="block w-full group">
+                    <div class="card border-l-4 border-red-500 group-hover:shadow-md transition-shadow">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-muted mb-1">Cancellation Requests</p>
+                                    <p class="text-4xl font-bold text-heading">{{ $cancellationCount }}</p>
+                                </div>
+                                <div class="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                                    <svg class="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            @if($cancellationCount > 0)
+                            <div class="mt-4 pt-4 border-t">
+                                <span class="btn-secondary inline-flex">
+                                    Review Requests
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                            @else
+                            <p class="mt-4 text-sm text-muted">No pending cancellations</p>
+                            @endif
+                        </div>
+                    </div>
+                </a>
             </div>
 
             <!-- Quick Actions -->

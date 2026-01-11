@@ -186,6 +186,23 @@
                 </div>
             @elseif($reservation->status === 'pending')
             <div class="border-t pt-6 mt-6">
+                @php
+                    $currentUser = auth()->user();
+                    $currentAdviserOrgs = $currentUser->organizations->pluck('org_id');
+                    // Find the relevant organization pivot for this adviser
+                    $relevantOrg = $reservation->organizations->whereIn('org_id', $currentAdviserOrgs)->first();
+                    $hasApproved = $relevantOrg && $relevantOrg->pivot->approval_status === 'approved';
+                @endphp
+
+                @if($hasApproved)
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 text-center">
+                        <svg class="w-12 h-12 mx-auto text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold text-blue-700 dark:text-blue-300">You have approved this reservation</h3>
+                        <p class="text-blue-600 dark:text-blue-400 mt-1">Waiting for other advisers to approve.</p>
+                    </div>
+                @else
                 <div class="max-w-4xl mx-auto space-y-6">
                     <!-- Approve Form -->
                     <form method="POST" action="{{ route('adviser.reservations.approve', $reservation->reservation_id) }}" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -225,6 +242,7 @@
                         </button>
                     </div>
                 </div>
+                @endif
             </div>
             @else
             <div class="border-t dark:border-gray-700 pt-6 mt-6">

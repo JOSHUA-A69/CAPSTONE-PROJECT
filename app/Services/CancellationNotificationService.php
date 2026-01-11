@@ -6,6 +6,7 @@ use App\Models\Reservation;
 use App\Models\ReservationCancellation;
 use App\Models\User;
 use App\Models\Notification;
+use App\Mail\ReservationCancellationConfirmed;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use App\Support\Notifications as NotificationHelper;
@@ -47,20 +48,13 @@ class CancellationNotificationService
             // Send email
             if ($user->email) {
                 try {
-                    Mail::raw(
-                        "Cancellation Request Received\n\n" .
-                        "{$requestorName} has requested to cancel their reservation.\n\n" .
-                        "Reservation Details:\n" .
-                        "Service: {$serviceName}\n" .
-                        "Date & Time: {$scheduleDate}\n" .
-                        "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n\n" .
-                        "Reason:\n{$cancellation->reason}\n\n" .
-                        "Please log in to the system to confirm this cancellation.\n\n" .
-                        "CREaM - eReligiousServices Management System",
-                        function ($message) use ($user, $requestorName) {
-                            $message->to($user->email)
-                                ->subject("🚫 Cancellation Request from {$requestorName}");
-                        }
+                    Mail::to($user->email)->send(
+                        new \App\Mail\ReservationCancellationRequested(
+                            $reservation, 
+                            $cancellation, 
+                            $requestorName,
+                            $user->first_name // Personalize for staff
+                        )
                     );
                 } catch (\Exception $e) {
                     Log::error('Failed to send cancellation email to staff/admin: ' . $e->getMessage());
@@ -101,19 +95,13 @@ class CancellationNotificationService
         // Send email
         if ($adviser->email) {
             try {
-                Mail::raw(
-                    "Dear {$adviser->first_name},\n\n" .
-                    "{$requestorName} from your organization has requested to cancel their reservation.\n\n" .
-                    "Reservation Details:\n" .
-                    "Service: {$serviceName}\n" .
-                    "Date & Time: {$scheduleDate}\n\n" .
-                    "Reason:\n{$cancellation->reason}\n\n" .
-                    "Please log in to confirm this cancellation within the next few minutes.\n\n" .
-                    "CREaM - eReligiousServices Management System",
-                    function ($message) use ($adviser, $requestorName) {
-                        $message->to($adviser->email)
-                            ->subject("🚫 Cancellation Request from {$requestorName}");
-                    }
+                Mail::to($adviser->email)->send(
+                    new \App\Mail\ReservationCancellationRequested(
+                        $reservation, 
+                        $cancellation, 
+                        $requestorName,
+                        $adviser->first_name
+                    )
                 );
             } catch (\Exception $e) {
                 Log::error('Failed to send cancellation email to adviser: ' . $e->getMessage());
@@ -154,19 +142,13 @@ class CancellationNotificationService
         // Send email
         if ($priest->email) {
             try {
-                Mail::raw(
-                    "Dear Fr. {$priest->first_name},\n\n" .
-                    "{$requestorName} has requested to cancel the reservation for which you were assigned.\n\n" .
-                    "Reservation Details:\n" .
-                    "Service: {$serviceName}\n" .
-                    "Date & Time: {$scheduleDate}\n\n" .
-                    "Reason:\n{$cancellation->reason}\n\n" .
-                    "Please log in to acknowledge this cancellation.\n\n" .
-                    "CREaM - eReligiousServices Management System",
-                    function ($message) use ($priest, $requestorName) {
-                        $message->to($priest->email)
-                            ->subject("🚫 Cancellation: Assignment Cancelled by {$requestorName}");
-                    }
+                Mail::to($priest->email)->send(
+                    new \App\Mail\ReservationCancellationRequested(
+                        $reservation, 
+                        $cancellation, 
+                        $requestorName,
+                        'Fr. ' . $priest->first_name
+                    )
                 );
             } catch (\Exception $e) {
                 Log::error('Failed to send cancellation email to priest: ' . $e->getMessage());
@@ -226,22 +208,12 @@ class CancellationNotificationService
             // Send email
             if ($staffMember->email) {
                 try {
-                    Mail::raw(
-                        "⚠️ FOLLOW-UP REQUIRED\n\n" .
-                        "The {$contactInfo['role']} has not responded to a cancellation request within 1 minute.\n\n" .
-                        "Contact Information:\n" .
-                        "Name: {$contactInfo['name']}\n" .
-                        "Email: {$contactInfo['email']}\n" .
-                        "Phone: {$contactInfo['phone']}\n\n" .
-                        "Reservation Details:\n" .
-                        "Service: {$reservation->service->service_name}\n" .
-                        "Date: {$reservation->schedule_date->format('F d, Y - h:i A')}\n\n" .
-                        "Please follow up with them via phone or email.\n\n" .
-                        "CREaM - eReligiousServices Management System",
-                        function ($message) use ($staffMember, $role) {
-                            $message->to($staffMember->email)
-                                ->subject("⚠️ Unresponsive " . ucfirst($role) . " - Follow-up Needed");
-                        }
+                    Mail::to($staffMember->email)->send(
+                        new \App\Mail\ReservationCancellationUnresponsive(
+                            $reservation,
+                            $role,
+                            $contactInfo
+                        )
                     );
                 } catch (\Exception $e) {
                     Log::error('Failed to send escalation email to staff: ' . $e->getMessage());
@@ -285,19 +257,8 @@ class CancellationNotificationService
         // Notify requestor
         if ($requestor->email) {
             try {
-                Mail::raw(
-                    "Dear {$requestor->first_name},\n\n" .
-                    "Your cancellation request has been confirmed by all parties.\n\n" .
-                    "Reservation Details:\n" .
-                    "Service: {$reservation->service->service_name}\n" .
-                    "Original Date: {$reservation->schedule_date->format('F d, Y - h:i A')}\n\n" .
-                    "The reservation has been cancelled.\n\n" .
-                    "CREaM - eReligiousServices Management System",
-                    function ($message) use ($requestor) {
-                        $message->to($requestor->email)
-                            ->subject("✓ Cancellation Confirmed");
-                    }
-                );
+                Mail::to($requestor->email)
+                    ->send(new ReservationCancellationConfirmed($reservation));
             } catch (\Exception $e) {
                 Log::error('Failed to send completion email to requestor: ' . $e->getMessage());
             }

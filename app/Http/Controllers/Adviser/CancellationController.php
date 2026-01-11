@@ -20,6 +20,27 @@ class CancellationController extends Controller
     }
 
     /**
+     * List cancellation requests
+     */
+    public function index()
+    {
+        $adviserOrgIds = Auth::user()->organizations->pluck('org_id');
+
+        $cancellations = ReservationCancellation::whereHas('reservation', function($q) use ($adviserOrgIds) {
+                $q->whereIn('org_id', $adviserOrgIds)
+                  ->orWhereHas('organizations', function($sq) use ($adviserOrgIds) {
+                      $sq->whereIn('organizations.org_id', $adviserOrgIds);
+                  });
+            })
+            ->with(['reservation.organization', 'requestor'])
+            ->orderByRaw('adviser_confirmed_at IS NULL DESC') // Pending first
+            ->latest()
+            ->paginate(10);
+
+        return view('adviser.cancellations.index', compact('cancellations'));
+    }
+
+    /**
      * Show cancellation details
      */
     public function show($id)

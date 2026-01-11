@@ -292,6 +292,7 @@ Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App
     Route::get('/notifications/{id}', [\App\Http\Controllers\Adviser\NotificationController::class, 'show'])->name('notifications.show');
 
     // Cancellation Routes
+    Route::get('/cancellations', [\App\Http\Controllers\Adviser\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Adviser\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Adviser\CancellationController::class, 'confirm'])->name('cancellations.confirm');
 
@@ -433,6 +434,7 @@ Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\H
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Priest\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
 
     // Cancellation Routes
+    Route::get('/cancellations', [\App\Http\Controllers\Priest\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Priest\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Priest\CancellationController::class, 'confirm'])->name('cancellations.confirm');
 
@@ -478,6 +480,7 @@ if (app()->environment('local')) {
                 'custom_venue_name' => null,
             ]);
             $reservation->reservation_id = 123;
+            $reservation->created_at = now(); // Ensure created_at is set for templates that use it
             $reservation->setRelation('user', $user);
             $reservation->setRelation('service', $service);
             $reservation->setRelation('venue', $venue);
@@ -512,18 +515,43 @@ if (app()->environment('local')) {
             $links = [
                 'Login Verification' => '/dev/emails/auth/login-verification',
                 'Account Activated' => '/dev/emails/auth/account-activated',
+                'Password Reset' => '/dev/emails/auth/password-reset',
+                'Verify Email' => '/dev/emails/auth/verify-email',
                 '---' => '#',
                 'Reservation: Submitted' => '/dev/emails/reservation/submitted',
+                'Reservation: Admin Rejected' => '/dev/emails/reservation/admin-rejected',
+                'Reservation: Cancellation Request' => '/dev/emails/reservation/cancellation-requested',
+                'Reservation: Unresponsive Escalation' => '/dev/emails/reservation/cancellation-unresponsive',
                 'Reservation: Adviser Approved' => '/dev/emails/reservation/adviser-approved',
                 'Reservation: Adviser Rejected' => '/dev/emails/reservation/adviser-rejected',
                 'Reservation: Priest Assigned' => '/dev/emails/reservation/priest-assigned',
                 'Reservation: Priest Declined' => '/dev/emails/reservation/priest-declined',
                 'Reservation: Cancelled' => '/dev/emails/reservation/cancelled',
+                'Reservation: Requestor Confirmation' => '/dev/emails/reservation/requestor-confirmation',
+                'Reservation: Full Approval' => '/dev/emails/reservation/final-approved',
+                'Reservation: Priest Confirmed (To User)' => '/dev/emails/reservation/confirmed',
+                'Reservation: Adviser Pending (Reminder)' => '/dev/emails/reservation/adviser-pending',
+                'Reservation: Priest Confirmed (To Adviser)' => '/dev/emails/reservation/adviser-priest-confirmed',
+                'Reservation: Unnoticed Alert (24h)' => '/dev/emails/reservation/unnoticed-alert',
+                'Reservation: Priest Confirmed (To Admin)' => '/dev/emails/reservation/priest-confirmed-admin',
+                'Reservation: All Priests Confirmed' => '/dev/emails/reservation/all-priests-confirmed',
+                'Reservation: Requestor Confirmed (To Admin)' => '/dev/emails/reservation/requestor-confirmed-admin',
+                'Reservation: Priest Cancelled (To Requestor)' => '/dev/emails/reservation/priest-cancelled-requestor',
+                'Reservation: Priest Cancelled (To Admin)' => '/dev/emails/reservation/priest-cancelled-admin',
+                'Reservation: Cancellation Confirmed' => '/dev/emails/reservation/cancellation-confirmed',
+                'Reservation: Reassigned (To Requestor)' => '/dev/emails/reservation/requestor-reassigned',
+                'Reservation: Priest Restored (To Admin)' => '/dev/emails/reservation/priest-restored-admin',
+                'Reservation: Final Approval (To Adviser)' => '/dev/emails/reservation/final-approval-adviser',
+                'Reservation: Final Approval (To Priest)' => '/dev/emails/reservation/final-approval-priest',
                 '---' => '#',
                 'Org Booking: Adviser Notification' => '/dev/emails/org/adviser-notification',
                 'Org Booking: Approved' => '/dev/emails/org/approved',
                 'Org Booking: Rejected' => '/dev/emails/org/rejected',
                 'Org Booking: Staff Reminder' => '/dev/emails/org/staff-reminder',
+                '---' => '#',
+                'Report: Ready' => '/dev/emails/reports/ready',
+                'Report: Empty' => '/dev/emails/reports/empty',
+                'Report: Failed' => '/dev/emails/reports/failed',
             ];
             $html = '<div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">';
             $html .= '<h1 style="color: #333;">Email Styling Previews</h1>';
@@ -595,6 +623,51 @@ if (app()->environment('local')) {
             ]);
         });
 
+
+        Route::get('/reservation/requestor-confirmation', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.requestor-confirmation', [
+                'reservation' => $r, 
+                'confirmationUrl' => '#',
+            ]);
+        });
+        
+        Route::get('/reservation/final-approved', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.final-approved', [
+                'reservation' => $r,
+                'priestNames' => 'Fr. John Doe, Fr. Jane Smith',
+            ]);
+        });
+        
+        Route::get('/reservation/confirmed', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.confirmed', [
+                'reservation' => $r,
+                'priestName' => 'Fr. John Doe',
+            ]);
+        });
+        
+        Route::get('/reservation/adviser-pending', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof. Pending', 'last_name' => 'Adviser']);
+            $r->organization->setRelation('adviser', $adviser);
+            return view('emails.reservations.adviser-pending', [
+                'reservation' => $r,
+                'adviser' => $adviser,
+            ]);
+        });
+        
+        Route::get('/reservation/adviser-priest-confirmed', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            return view('emails.reservations.adviser-priest-confirmed', [
+                'reservation' => $r,
+                'adviser' => $adviser,
+                'priestName' => 'Fr. John Doe',
+            ]);
+        });
+
         Route::get('/org/adviser-notification', function () use ($getDummyOrgBooking) {
             list($b, $adviser, $org, $user) = $getDummyOrgBooking();
             return view('emails.organization-booking.adviser-notification', ['request' => $b, 'organization' => $org, 'requestor' => $b->requestor]);
@@ -636,6 +709,192 @@ if (app()->environment('local')) {
         Route::get('/auth/account-activated', function () use ($getDummyReservation) {
             $r = $getDummyReservation();
             return view('emails.account-activated', ['user' => $r->user]);
+        });
+
+        // Report Notifications
+        Route::get('/reports/ready', function () {
+            return view('emails.reports.ready', [
+                'rowsCount' => 45,
+                'url' => '#', 
+            ]);
+        });
+        
+        Route::get('/reports/empty', function () {
+            return view('emails.reports.empty');
+        });
+
+        Route::get('/reports/failed', function () {
+            return view('emails.reports.failed', [
+                'errorMessage' => 'Database connection timeout occurred during query execution.'
+            ]);
+        });
+
+        Route::get('/auth/password-reset', function () {
+            $user = new \App\Models\User(['first_name' => 'John', 'last_name' => 'Doe', 'email' => 'john@example.com']);
+            return view('emails.auth.password-reset', [
+                'user' => $user,
+                'url' => 'http://localhost/reset-password/token123',
+            ]);
+        });
+
+        Route::get('/auth/verify-email', function () {
+            $user = new \App\Models\User(['first_name' => 'Jane', 'last_name' => 'Smith']);
+            return view('emails.auth.verify-email', [
+                'user' => $user,
+                'url' => 'http://localhost/verify-email/hash123',
+            ]);
+        });
+        
+        Route::get('/reservation/admin-rejected', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.admin-rejected', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'reason' => 'Schedule conflict with parish event',
+                'adminName' => 'Admin User'
+            ]);
+        });
+
+        Route::get('/reservation/cancellation-requested', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $cancellation = new \App\Models\ReservationCancellation([
+                'reason' => 'Emergency family matter'
+            ]);
+            return view('emails.reservations.cancellation-requested', [
+                'reservation' => $r,
+                'cancellation' => $cancellation,
+                'requestorName' => $r->user->full_name,
+                'recipientName' => 'Fr. John / Adviser',
+                'reason' => $cancellation->reason
+            ]);
+        });
+
+        Route::get('/reservation/cancellation-unresponsive', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.cancellation-unresponsive', [
+                'reservation' => $r,
+                'role' => 'priest',
+                'contactInfo' => [
+                    'name' => 'Fr. John Doe',
+                    'email' => 'priest@example.com',
+                    'phone' => '09123456789',
+                    'role' => 'Assigned Priest'
+                ]
+            ]);
+        });
+
+        Route::get('/reservation/unnoticed-alert', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User([
+                'first_name' => 'Prof.', 'last_name' => 'Adviser', 
+                'email' => 'adviser@school.edu',
+                'phone' => '09123456789'
+            ]);
+            return view('emails.reservations.unnoticed-alert', [
+                'reservation' => $r,
+                'hoursPending' => 26,
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
+                'orgName' => $r->organization->org_name ?? 'Catholic Youth Ministry',
+                'adviserName' => $adviser->first_name . ' ' . $adviser->last_name,
+                'adviserEmail' => $adviser->email,
+                'adviserPhone' => $adviser->phone
+            ]);
+        });
+
+        Route::get('/reservation/priest-confirmed-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $priest = new \App\Models\User(['first_name' => 'Fr. Michael', 'last_name' => 'Torres']);
+            return view('emails.reservations.priest-confirmed-admin', [
+                'reservation' => $r,
+                'priestName' => $priest->first_name . ' ' . $priest->last_name,
+                'venueName' => $r->venue->name ?? 'Main Venue',
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name
+            ]);
+        });
+
+        Route::get('/reservation/all-priests-confirmed', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.all-priests-confirmed', [
+                'reservation' => $r,
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
+                'priestNames' => 'Fr. John Doe, Fr. Michael Torres'
+            ]);
+        });
+
+        Route::get('/reservation/requestor-confirmed-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.requestor-confirmed-admin', [
+                'reservation' => $r,
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name
+            ]);
+        });
+        
+        Route::get('/reservation/priest-cancelled-requestor', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.priest-cancelled-confirmation-requestor', [
+                'reservation' => $r,
+                'priestName' => 'Fr. John Doe',
+                'reason' => 'Emergency personal matter',
+                'venueName' => $r->venue->name ?? 'Main Venue',
+                'requestor' => $r->user
+            ]);
+        });
+
+        Route::get('/reservation/priest-cancelled-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.priest-cancelled-confirmation-admin', [
+                'reservation' => $r,
+                'priestName' => 'Fr. John Doe',
+                'reason' => 'Emergency personal matter',
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name
+            ]);
+        });
+
+        Route::get('/reservation/cancellation-confirmed', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.cancellation-confirmed', [
+                'reservation' => $r,
+                'requestor' => $r->user
+            ]);
+        });
+
+        Route::get('/reservation/requestor-reassigned', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.requestor-priest-reassigned', [
+                'reservation' => $r,
+                'oldPriestName' => 'Fr. Old Priest',
+                'newPriestName' => 'Fr. New Priest',
+                'requestorName' => $r->user->first_name
+            ]);
+        });
+
+        Route::get('/reservation/priest-restored-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.priest-restored-admin', [
+                'reservation' => $r,
+                'priestName' => 'Fr. Restored Priest',
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name
+            ]);
+        });
+
+        Route::get('/reservation/final-approval-adviser', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.final-approval-adviser', [
+                'reservation' => $r,
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
+                'venueName' => $r->venue->name ?? 'Main Venue'
+            ]);
+        });
+
+        Route::get('/reservation/final-approval-priest', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.final-approval-priest', [
+                'reservation' => $r,
+                'priestName' => 'Fr. John Doe',
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
+                'venueName' => $r->venue->name ?? 'Main Venue',
+                'isMainPriest' => true
+            ]);
         });
     });
 }

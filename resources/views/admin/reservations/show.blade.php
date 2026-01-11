@@ -287,10 +287,11 @@
                     </div>
                     @endif
 
-                    <!-- Assign Priest Form (only shown when priest has declined/rejected) -->
+                    <!-- Assign Priest Form (only shown when priest has declined/rejected OR when pending assignment) -->
                     @php $authIsAssignedPriest = auth()->id() === optional($reservation->officiant)->id; @endphp
                     @if($reservation->priest_selection_type !== 'external'
-                        && in_array($reservation->status, ['priest_declined', 'pending_priest_reassignment'])
+                        && (in_array($reservation->status, ['priest_declined', 'pending_priest_reassignment'])
+                            || ($reservation->status === 'adviser_approved' && !$reservation->officiant_id))
                         && !$authIsAssignedPriest)
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
@@ -298,6 +299,10 @@
                             @if(in_array($reservation->status, ['priest_declined','pending_priest_reassignment']))
                                 <div class="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded text-sm text-purple-800 dark:text-purple-300">
                                     This reservation's priest slot is open due to a prior decline. Please assign a new priest.
+                                </div>
+                            @elseif($reservation->status === 'adviser_approved')
+                                <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded text-sm text-blue-800 dark:text-blue-300">
+                                    Requestor selected "Any Available Priest". Please assign a priest to proceed.
                                 </div>
                             @endif
 

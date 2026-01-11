@@ -11,6 +11,16 @@ use App\Mail\ReservationAdviserRejected;
 use App\Mail\ReservationPriestAssigned;
 use App\Mail\ReservationCancelled;
 use App\Mail\ReservationPriestDeclined;
+use App\Mail\ReservationUnnoticedAlert;
+use App\Mail\ReservationPriestConfirmedToAdmin;
+use App\Mail\ReservationAllPriestsConfirmed;
+use App\Mail\ReservationPriestRestoredToAdmin;
+use App\Mail\RequestorConfirmedToAdmin;
+use App\Mail\PriestCancelledConfirmationToRequestor;
+use App\Mail\PriestCancelledConfirmationToAdmin;
+use App\Mail\RequestorPriestReassigned;
+use App\Mail\ReservationFinalApprovalToAdviser;
+use App\Mail\ReservationFinalApprovalToPriest;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -422,16 +432,11 @@ class ReservationNotificationService
     {
         $adminName = $actor ? ($actor->first_name . ' ' . $actor->last_name) : 'an administrator';
 
-        // Email to requestor (simple raw notification to avoid incorrect adviser wording)
+        // Email to requestor (using styled mailable)
         if ($reservation->user && $reservation->user->email) {
             try {
-                \Illuminate\Support\Facades\Mail::raw(
-                    "Your reservation for {$reservation->service->service_name} was not approved by {$adminName}.\nReason: {$reason}",
-                    function ($message) use ($reservation) {
-                        $message->to($reservation->user->email)
-                            ->subject('Reservation Not Approved by Admin');
-                    }
-                );
+                Mail::to($reservation->user->email)
+                    ->send(new \App\Mail\ReservationAdminRejected($reservation, $reason, $adminName));
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('Failed to send admin reject email to requestor: ' . $e->getMessage());
             }
@@ -859,31 +864,8 @@ class ReservationNotificationService
         foreach ($staffMembers as $staff) {
             if ($staff->email) {
                 try {
-                    Mail::raw(
-                        "⚠️ UNNOTICED RESERVATION ALERT\n\n" .
-                        "A reservation request has been pending for over 24 hours without adviser action.\n\n" .
-                        "RESERVATION DETAILS:\n" .
-                        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" .
-                        "Reservation ID: #{$reservation->reservation_id}\n" .
-                        "Service: {$serviceName}\n" .
-                        "Schedule: {$scheduleDate}\n" .
-                        "Requestor: {$requestorName}\n" .
-                        "Organization: {$orgName}\n" .
-                        "Hours Pending: {$hoursPending} hours\n\n" .
-                        "ADVISER CONTACT INFORMATION:\n" .
-                        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" .
-                        "Name: {$adviserName}\n" .
-                        "Email: {$adviserEmail}\n" .
-                        "Phone: {$adviserPhone}\n\n" .
-                        "Please consider contacting the adviser or taking appropriate action.\n\n" .
-                        "---\n" .
-                        "CREaM - eReligiousServices Management System\n" .
-                        "Holy Name University",
-                        function ($message) use ($staff, $reservation) {
-                            $message->to($staff->email)
-                                ->subject("⚠️ Unnoticed Reservation #{$reservation->reservation_id} - Adviser No Response (24h+)");
-                        }
-                    );
+                    Mail::to($staff->email)
+                        ->send(new ReservationUnnoticedAlert($reservation, $adviser, $hoursPending));
                 } catch (\Exception $e) {
                     Log::warning('Failed to send unnoticed reservation email to staff: ' . $e->getMessage());
                 }
@@ -925,27 +907,7 @@ class ReservationNotificationService
         // 3. Send reminder EMAIL to adviser
         if ($adviser && $adviser->email) {
             try {
-                Mail::raw(
-                    "📋 RESERVATION PENDING YOUR APPROVAL\n\n" .
-                    "Dear {$adviserName},\n\n" .
-                    "A reservation request from your organization has been waiting for your approval for over 24 hours.\n\n" .
-                    "RESERVATION DETAILS:\n" .
-                    "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" .
-                    "Service: {$serviceName}\n" .
-                    "Schedule: {$scheduleDate}\n" .
-                    "Requestor: {$requestorName}\n" .
-                    "Organization: {$orgName}\n" .
-                    "Submitted: {$reservation->created_at->format('F d, Y - h:i A')}\n\n" .
-                    "Please log in to the eReligiousServices system to review and approve/reject this request.\n\n" .
-                    "If you have any questions, please contact the CREaM Office.\n\n" .
-                    "---\n" .
-                    "CREaM - eReligiousServices Management System\n" .
-                    "Holy Name University",
-                    function ($message) use ($adviser, $reservation) {
-                        $message->to($adviser->email)
-                            ->subject("⏰ Action Required: Pending Reservation #{$reservation->reservation_id}");
-                    }
-                );
+                Mail::to($adviser->email)->send(new \App\Mail\AdviserPendingReservation($reservation, $adviser));
             } catch (\Exception $e) {
                 Log::warning('Failed to send reminder email to adviser: ' . $e->getMessage());
             }
@@ -1018,25 +980,13 @@ class ReservationNotificationService
         foreach ($admins as $admin) {
             // Email notification
             if ($admin->email) {
-                // Create simple email notification
-                Mail::raw(
-                    "Good news!\n\n" .
-                    "{$priestName} has CONFIRMED their availability for the following reservation:\n\n" .
-                    "Service: {$reservation->service->service_name}\n" .
-                    "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                    "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n" .
-                    "Requestor: {$requestorName}\n\n" .
-                    "✓ The priest has confirmed their availability and the reservation is now approved.\n" .
-                    "No further action required.\n\n" .
-                    "Please check the eReligiousServices system for details.\n\n" .
-                    "---\n" .
-                    "CREaM - eReligiousServices Management System\n" .
-                    "Holy Name University",
-                    function ($message) use ($admin, $priestName, $reservation) {
-                        $message->to($admin->email)
-                            ->subject("✓ {$priestName} Confirmed Availability - Reservation #{$reservation->reservation_id}");
-                    }
-                );
+                // Create styled email notification
+                try {
+                    Mail::to($admin->email)
+                        ->send(new ReservationPriestConfirmedToAdmin($reservation, $priestName));
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send priest confirmation email to admin: ' . $e->getMessage());
+                }
             }
 
             // Create in-app notification for each admin
@@ -1117,24 +1067,7 @@ class ReservationNotificationService
         // Send email to requestor
         try {
             if ($reservation->user->email) {
-                Mail::raw(
-                    "Dear {$requestorName},\n\n" .
-                    "Great news! Your reservation has been confirmed.\n\n" .
-                    "Reservation Details:\n" .
-                    "Service: {$reservation->service->service_name}\n" .
-                    "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                    "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n" .
-                    "Officiant: {$priestName}\n\n" .
-                    "✓ Your reservation is now approved and confirmed.\n\n" .
-                    "Thank you for using eReligiousServices.\n\n" .
-                    "---\n" .
-                    "CREaM - eReligiousServices Management System\n" .
-                    "Holy Name University",
-                    function ($message) use ($reservation, $priestName) {
-                        $message->to($reservation->user->email)
-                            ->subject("✓ Reservation Confirmed - {$reservation->service->service_name}");
-                    }
-                );
+                Mail::to($reservation->user->email)->send(new \App\Mail\ReservationConfirmed($reservation, $priestName));
             }
         } catch (\Exception $e) {
             Log::warning('Failed to send requestor confirmation email: ' . $e->getMessage());
@@ -1161,22 +1094,8 @@ class ReservationNotificationService
             // Email notification
             try {
                 if ($admin->email) {
-                    Mail::raw(
-                        "All Priests Confirmed - Ready for Final Approval\n\n" .
-                        "All assigned priests have confirmed their availability for the following reservation:\n\n" .
-                        "Service: {$reservation->service->service_name}\n" .
-                        "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                        "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n" .
-                        "Requestor: {$requestorName}\n" .
-                        "Priests: {$priestNames}\n\n" .
-                        "ACTION REQUIRED: Please review and give final approval.\n\n" .
-                        "---\n" .
-                        "CREaM - eReligiousServices Management System",
-                        function ($message) use ($admin, $reservation) {
-                            $message->to($admin->email)
-                                ->subject("✓ All Priests Confirmed - Ready for Approval - Reservation #{$reservation->reservation_id}");
-                        }
-                    );
+                    Mail::to($admin->email)
+                        ->send(new ReservationAllPriestsConfirmed($reservation, $requestorName, $priestNames));
                 }
             } catch (\Exception $e) {
                 Log::warning('Failed to send all-priests-confirmed email: ' . $e->getMessage());
@@ -1226,25 +1145,13 @@ class ReservationNotificationService
         $admins = User::whereIn('role', ['admin', 'staff'])->get();
         foreach ($admins as $admin) {
             if ($admin->email) {
-                // Create simple email notification
-                Mail::raw(
-                    "Good news!\n\n" .
-                    "{$priestName} has restored their assignment for the following reservation:\n\n" .
-                    "Service: {$reservation->service->service_name}\n" .
-                    "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                    "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n" .
-                    "Requestor: {$reservation->user->first_name} {$reservation->user->last_name}\n\n" .
-                    "The priest previously declined this assignment but has now undone their decline.\n" .
-                    "The priest will need to confirm their availability.\n\n" .
-                    "Please check the eReligiousServices system for details.\n\n" .
-                    "---\n" .
-                    "CREaM - eReligiousServices Management System\n" .
-                    "Holy Name University",
-                    function ($message) use ($admin, $priestName, $reservation) {
-                        $message->to($admin->email)
-                            ->subject("✓ {$priestName} Restored Assignment - Reservation #{$reservation->reservation_id}");
-                    }
-                );
+                try {
+                // Create styled email notification
+                Mail::to($admin->email)
+                    ->send(new ReservationPriestRestoredToAdmin($reservation, $priestName));
+                 } catch (\Exception $e) {
+                    Log::warning('Failed to send priest restored email: ' . $e->getMessage());
+                }
             }
         }
 
@@ -1284,20 +1191,7 @@ class ReservationNotificationService
         // Email to requestor with confirmation link
         try {
             if ($reservation->user && $reservation->user->email) {
-                Mail::raw(
-                    "Hello {$reservation->user->first_name},\n\n" .
-                    "Please confirm your availability for the following reservation:\n\n" .
-                    "Service: {$reservation->service->service_name}\n" .
-                    "Date & Time: " . optional($reservation->schedule_date)->format('F d, Y - h:i A') . "\n" .
-                    "Venue: " . ($reservation->custom_venue_name ?? optional($reservation->venue)->name ?? 'N/A') . "\n\n" .
-                    "Click the link below to confirm or decline:\n" .
-                    $confirmationUrl . "\n\n" .
-                    "Thank you.\n\n---\nCREaM - eReligiousServices Management System\nHoly Name University",
-                    function ($message) use ($reservation) {
-                        $message->to($reservation->user->email)
-                            ->subject('Please Confirm Your Reservation');
-                    }
-                );
+                Mail::to($reservation->user->email)->send(new \App\Mail\RequestorConfirmation($reservation, $confirmationUrl));
             }
         } catch (\Throwable $e) {
             Log::warning('Failed to send requestor confirmation email: ' . $e->getMessage());
@@ -1353,19 +1247,8 @@ class ReservationNotificationService
             // Email
             try {
                 if ($admin->email) {
-                    Mail::raw(
-                        "Requestor confirmed availability.\n\n" .
-                        "Reservation #{$reservation->reservation_id}\n" .
-                        "Service: {$reservation->service->service_name}\n" .
-                        "Date & Time: " . optional($reservation->schedule_date)->format('F d, Y - h:i A') . "\n" .
-                        "Venue: " . ($reservation->custom_venue_name ?? optional($reservation->venue)->name ?? 'N/A') . "\n" .
-                        "Requestor: {$requestorName}\n\n" .
-                        "Next step: Review and approve in Staff panel to notify the priest for confirmation.",
-                        function ($message) use ($admin, $reservation) {
-                            $message->to($admin->email)
-                                ->subject('Requestor Confirmed - Reservation #' . $reservation->reservation_id);
-                        }
-                    );
+                    Mail::to($admin->email)
+                        ->send(new RequestorConfirmedToAdmin($reservation));
                 }
             } catch (\Throwable $e) {
                 Log::warning('Failed to send admin/staff email (requestor confirmed): ' . $e->getMessage());
@@ -1428,26 +1311,8 @@ class ReservationNotificationService
             // Send email to requestor
             if ($requestor->email) {
                 try {
-                    Mail::raw(
-                        "Reservation Cancellation Notice\n\n" .
-                        "Dear {$requestor->first_name},\n\n" .
-                        "We regret to inform you that {$priestName} has cancelled their confirmation for your reservation:\n\n" .
-                        "Service: {$reservation->service->service_name}\n" .
-                        "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                        "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n\n" .
-                        "Reason for cancellation:\n" .
-                        "{$reason}\n\n" .
-                        "Our administrators have been notified and will work to assign another priest for your reservation.\n" .
-                        "You will receive a notification once a new priest is assigned.\n\n" .
-                        "We apologize for any inconvenience this may cause.\n\n" .
-                        "---\n" .
-                        "CREaM - eReligiousServices Management System\n" .
-                        "Holy Name University",
-                        function ($message) use ($requestor, $priestName, $reservation) {
-                            $message->to($requestor->email)
-                                ->subject("Reservation Cancellation - {$priestName} Cancelled #{$reservation->reservation_id}");
-                        }
-                    );
+                    Mail::to($requestor->email)
+                        ->send(new PriestCancelledConfirmationToRequestor($reservation, $priestName, $reason));
                 } catch (\Exception $e) {
                     Log::error('Failed to send cancellation email to requestor: ' . $e->getMessage());
                 }
@@ -1488,26 +1353,12 @@ class ReservationNotificationService
         foreach ($admins as $admin) {
             if ($admin->email) {
                 // Create email notification
-                Mail::raw(
-                    "URGENT: Confirmed Reservation Cancelled\n\n" .
-                    "{$priestName} has CANCELLED their previously confirmed reservation:\n\n" .
-                    "Service: {$reservation->service->service_name}\n" .
-                    "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                    "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n" .
-                    "Requestor: {$reservation->user->first_name} {$reservation->user->last_name}\n\n" .
-                    "Reason for cancellation:\n" .
-                    "{$reason}\n\n" .
-                    "⚠️ This priest had already confirmed their availability but has now cancelled.\n" .
-                    "Action Required: Please reassign another priest immediately.\n\n" .
-                    "Please check the eReligiousServices system to reassign this reservation.\n\n" .
-                    "---\n" .
-                    "CREaM - eReligiousServices Management System\n" .
-                    "Holy Name University",
-                    function ($message) use ($admin, $priestName, $reservation) {
-                        $message->to($admin->email)
-                            ->subject("⚠️ URGENT: {$priestName} Cancelled Confirmed Reservation #{$reservation->reservation_id}");
-                    }
-                );
+                try {
+                    Mail::to($admin->email)
+                        ->send(new PriestCancelledConfirmationToAdmin($reservation, $priestName, $reason));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send cancellation email to admin: ' . $e->getMessage());
+                }
             }
 
             // Create in-app notification for each admin
@@ -1626,21 +1477,7 @@ class ReservationNotificationService
 
         // Email to requestor
         if ($reservation->user->email) {
-            Mail::raw(
-                "Good news!\n\n" .
-                "{$priestName} has confirmed their availability for your reservation:\n\n" .
-                "Service: {$reservation->service->service_name}\n" .
-                "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n\n" .
-                "Your reservation is now confirmed! We look forward to serving you.\n\n" .
-                "---\n" .
-                "CREaM - eReligiousServices Management System\n" .
-                "Holy Name University",
-                function ($message) use ($reservation, $priestName) {
-                    $message->to($reservation->user->email)
-                        ->subject("✓ Priest Confirmed - Your Reservation #{$reservation->reservation_id}");
-                }
-            );
+            Mail::to($reservation->user->email)->send(new \App\Mail\ReservationConfirmed($reservation, $priestName));
         }
 
         // In-app notification
@@ -1692,22 +1529,11 @@ class ReservationNotificationService
 
         // Email to adviser
         if ($adviser->email) {
-            Mail::raw(
-                "Hello,\n\n" .
-                "{$priestName} has confirmed availability for a reservation from your organization:\n\n" .
-                "Organization: {$reservation->organization->org_name}\n" .
-                "Service: {$reservation->service->service_name}\n" .
-                "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                "Requestor: {$reservation->user->first_name} {$reservation->user->last_name}\n\n" .
-                "The reservation is now confirmed.\n\n" .
-                "---\n" .
-                "CREaM - eReligiousServices Management System\n" .
-                "Holy Name University",
-                function ($message) use ($adviser, $reservation, $priestName) {
-                    $message->to($adviser->email)
-                        ->subject("✓ {$priestName} Confirmed - Reservation #{$reservation->reservation_id}");
-                }
-            );
+            try {
+                Mail::to($adviser->email)->send(new \App\Mail\AdviserPriestConfirmed($reservation, $priestName, $adviser));
+            } catch (\Exception $e) {
+                Log::warning('Failed to send priest confirmation email to adviser: ' . $e->getMessage());
+            }
         }
 
         // In-app notification
@@ -1747,22 +1573,12 @@ class ReservationNotificationService
 
         // Email to requestor
         if ($reservation->user->email) {
-            Mail::raw(
-                "Hello,\n\n" .
-                "There has been a change in priest assignment for your reservation:\n\n" .
-                "Service: {$reservation->service->service_name}\n" .
-                "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n\n" .
-                "Previous Priest: {$oldPriestName}\n" .
-                "New Priest: {$newPriestName}\n\n" .
-                "The new priest will confirm their availability soon.\n\n" .
-                "---\n" .
-                "CREaM - eReligiousServices Management System\n" .
-                "Holy Name University",
-                function ($message) use ($reservation) {
-                    $message->to($reservation->user->email)
-                        ->subject("Priest Reassignment - Reservation #{$reservation->reservation_id}");
-                }
-            );
+            try {
+                Mail::to($reservation->user->email)
+                    ->send(new RequestorPriestReassigned($reservation, $oldPriestName, $newPriestName));
+            } catch (\Exception $e) {
+                Log::error('Failed to send priest reassigned email to requestor: ' . $e->getMessage());
+            }
         }
 
         // In-app notification
@@ -1841,22 +1657,12 @@ class ReservationNotificationService
 
         // Email to priest
         if ($priest->email) {
-            Mail::raw(
-                "Hello {$priestName},\n\n" .
-                "You have been assigned to officiate a service:\n\n" .
-                "Service: {$reservation->service->service_name}\n" .
-                "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                "Venue: " . ($reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A') . "\n" .
-                "Requestor: {$reservation->user->first_name} {$reservation->user->last_name}\n\n" .
-                "Please log in to eReligiousServices to confirm your availability.\n\n" .
-                "---\n" .
-                "CREaM - eReligiousServices Management System\n" .
-                "Holy Name University",
-                function ($message) use ($priest, $reservation) {
-                    $message->to($priest->email)
-                        ->subject("New Service Assignment - Reservation #{$reservation->reservation_id}");
-                }
-            );
+            try {
+                Mail::to($priest->email)
+                    ->send(new \App\Mail\ReservationPriestAssigned($reservation));
+            } catch (\Exception $e) {
+                Log::error('Failed to send priest assignment email: ' . $e->getMessage());
+            }
         }
 
         // In-app notification
@@ -2004,21 +1810,7 @@ class ReservationNotificationService
         // Email notification to requestor
         if ($requestor->email) {
             try {
-                Mail::raw(
-                    "Great news!\n\n" .
-                    "Your reservation has been fully approved by the CREaM Office.\n\n" .
-                    "Reservation Details:\n" .
-                    "Service: {$reservation->service->service_name}\n" .
-                    "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                    "Venue: {$venueName}\n" .
-                    (!empty($priestNames) ? "Priest(s) Assigned: {$priestNames}\n" : "") .
-                    "\nYour reservation is now confirmed and complete. Please ensure all preparations are in place.\n\n" .
-                    "Thank you for using the CREaM Reservation System.",
-                    function ($message) use ($requestor, $reservation) {
-                        $message->to($requestor->email)
-                            ->subject('Reservation Approved - ' . $reservation->service->service_name);
-                    }
-                );
+                Mail::to($requestor->email)->send(new \App\Mail\ReservationFinalApproved($reservation, $priestNames));
             } catch (\Exception $e) {
                 Log::warning('Failed to send final approval email to requestor: ' . $e->getMessage());
             }
@@ -2045,21 +1837,8 @@ class ReservationNotificationService
         foreach ($reservation->organizations as $organization) {
             if ($organization->adviser && $organization->adviser->email) {
                 try {
-                    Mail::raw(
-                        "Hello,\n\n" .
-                        "A reservation you approved has received final approval from the CREaM Office.\n\n" .
-                        "Reservation Details:\n" .
-                        "Organization: {$organization->organization_name}\n" .
-                        "Service: {$reservation->service->service_name}\n" .
-                        "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                        "Venue: {$venueName}\n" .
-                        "Requestor: {$requestor->first_name} {$requestor->last_name}\n\n" .
-                        "The reservation is now fully confirmed.",
-                        function ($message) use ($organization, $reservation) {
-                            $message->to($organization->adviser->email)
-                                ->subject('Reservation Fully Approved - ' . $reservation->service->service_name);
-                        }
-                    );
+                    Mail::to($organization->adviser->email)
+                        ->send(new ReservationFinalApprovalToAdviser($reservation));
                 } catch (\Exception $e) {
                     Log::warning('Failed to send final approval email to adviser: ' . $e->getMessage());
                 }
@@ -2083,20 +1862,8 @@ class ReservationNotificationService
         foreach ($reservation->priests as $priest) {
             if ($priest->email) {
                 try {
-                    Mail::raw(
-                        "Hello Fr. {$priest->first_name},\n\n" .
-                        "A reservation you confirmed has received final approval from the CREaM Office.\n\n" .
-                        "Reservation Details:\n" .
-                        "Service: {$reservation->service->service_name}\n" .
-                        "Date & Time: {$reservation->schedule_date->format('F d, Y - h:i A')}\n" .
-                        "Venue: {$venueName}\n" .
-                        "Requestor: {$requestor->first_name} {$requestor->last_name}\n\n" .
-                        "The reservation is now fully confirmed. Please ensure your availability.",
-                        function ($message) use ($priest, $reservation) {
-                            $message->to($priest->email)
-                                ->subject('Reservation Confirmed - ' . $reservation->service->service_name);
-                        }
-                    );
+                    Mail::to($priest->email)
+                        ->send(new ReservationFinalApprovalToPriest($reservation, $priest->first_name . ' ' . $priest->last_name));
                 } catch (\Exception $e) {
                     Log::warning('Failed to send final approval email to priest: ' . $e->getMessage());
                 }

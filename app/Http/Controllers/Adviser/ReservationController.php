@@ -31,8 +31,14 @@ class ReservationController extends Controller
         $adviserOrgs = Auth::user()->organizations->pluck('org_id');
 
         // Start building the query
+        // Check both direct org_id (legacy) and many-to-many relationship
         $query = Reservation::with(['user', 'service', 'venue', 'organization'])
-            ->whereIn('org_id', $adviserOrgs);
+            ->where(function ($q) use ($adviserOrgs) {
+                $q->whereIn('org_id', $adviserOrgs)
+                  ->orWhereHas('organizations', function ($subQ) use ($adviserOrgs) {
+                      $subQ->whereIn('organizations.org_id', $adviserOrgs);
+                  });
+            });
 
         // Apply filters
         if ($request->has('filter')) {
@@ -71,7 +77,12 @@ class ReservationController extends Controller
             ->withQueryString();
 
         // Get count of unnoticed requests (>24 hours old)
-        $unnoticedCount = Reservation::whereIn('org_id', $adviserOrgs)
+        $unnoticedCount = Reservation::where(function ($q) use ($adviserOrgs) {
+                $q->whereIn('org_id', $adviserOrgs)
+                  ->orWhereHas('organizations', function ($subQ) use ($adviserOrgs) {
+                      $subQ->whereIn('organizations.org_id', $adviserOrgs);
+                  });
+            })
             ->unnoticedByAdviser()
             ->count();
 
@@ -84,7 +95,12 @@ class ReservationController extends Controller
         $adviserOrgs = Auth::user()->organizations->pluck('org_id');
 
         $reservation = Reservation::with(['user', 'service', 'venue', 'organization', 'history'])
-            ->whereIn('org_id', $adviserOrgs)
+            ->where(function ($q) use ($adviserOrgs) {
+                $q->whereIn('org_id', $adviserOrgs)
+                  ->orWhereHas('organizations', function ($subQ) use ($adviserOrgs) {
+                      $subQ->whereIn('organizations.org_id', $adviserOrgs);
+                  });
+            })
             ->findOrFail($reservation_id);
 
         return view('adviser.reservations.show', compact('reservation'));

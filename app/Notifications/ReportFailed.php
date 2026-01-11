@@ -23,7 +23,8 @@ class ReportFailed extends Notification
     {
         return (new MailMessage)
             ->subject('Report generation failed')
-            ->line('The report could not be generated.')
-            ->line('Reason: ' . $this->message);
+            ->view('emails.reports.failed', [
+                'errorMessage' => $this->message,
+            ]);
     }
 }

@@ -7,21 +7,41 @@
                 $orgIds = $user->organizations->pluck('org_id');
 
                 // Core counts
-                $pendingCount = \App\Models\Reservation::whereIn('org_id', $orgIds)
+                $pendingCount = \App\Models\Reservation::where(function($q) use ($orgIds) {
+                        $q->whereIn('org_id', $orgIds)
+                          ->orWhereHas('organizations', function($sq) use ($orgIds) {
+                              $sq->whereIn('organizations.org_id', $orgIds);
+                          });
+                    })
                     ->where('status', 'pending')
                     ->count();
 
-                $adviserApprovedCount = \App\Models\Reservation::whereIn('org_id', $orgIds)
+                $adviserApprovedCount = \App\Models\Reservation::where(function($q) use ($orgIds) {
+                        $q->whereIn('org_id', $orgIds)
+                          ->orWhereHas('organizations', function($sq) use ($orgIds) {
+                              $sq->whereIn('organizations.org_id', $orgIds);
+                          });
+                    })
                     ->where('status', 'adviser_approved')
                     ->count();
 
-                $approvedUpcomingCount = \App\Models\Reservation::whereIn('org_id', $orgIds)
+                $approvedUpcomingCount = \App\Models\Reservation::where(function($q) use ($orgIds) {
+                        $q->whereIn('org_id', $orgIds)
+                          ->orWhereHas('organizations', function($sq) use ($orgIds) {
+                              $sq->whereIn('organizations.org_id', $orgIds);
+                          });
+                    })
                     ->whereIn('status', ['admin_approved', 'approved'])
                     ->where('schedule_date', '>=', now())
                     ->count();
 
                 // Unnoticed > 24h old still pending
-                $unnoticedCount = \App\Models\Reservation::whereIn('org_id', $orgIds)
+                $unnoticedCount = \App\Models\Reservation::where(function($q) use ($orgIds) {
+                        $q->whereIn('org_id', $orgIds)
+                          ->orWhereHas('organizations', function($sq) use ($orgIds) {
+                              $sq->whereIn('organizations.org_id', $orgIds);
+                          });
+                    })
                     ->unnoticedByAdviser()
                     ->count();
 
@@ -34,8 +54,23 @@
                     ->where('status', 'approved')
                     ->count();
 
+                // Pending Cancellations
+                $cancellationCount = \App\Models\ReservationCancellation::whereHas('reservation', function($q) use ($orgIds) {
+                        $q->whereIn('org_id', $orgIds)
+                          ->orWhereHas('organizations', function($sq) use ($orgIds) {
+                              $sq->whereIn('organizations.org_id', $orgIds);
+                          });
+                    })
+                    ->whereNull('adviser_confirmed_at')
+                    ->count();
+
                 // Next upcoming service
-                $nextService = \App\Models\Reservation::whereIn('org_id', $orgIds)
+                $nextService = \App\Models\Reservation::where(function($q) use ($orgIds) {
+                        $q->whereIn('org_id', $orgIds)
+                          ->orWhereHas('organizations', function($sq) use ($orgIds) {
+                              $sq->whereIn('organizations.org_id', $orgIds);
+                          });
+                    })
                     ->whereIn('status', ['admin_approved', 'approved'])
                     ->where('schedule_date', '>=', now())
                     ->orderBy('schedule_date', 'asc')
@@ -115,6 +150,24 @@
                         <div>
                             <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Pending Requests</h3>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Requires your review</p>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Cancellation Requests -->
+                <a href="{{ route('adviser.cancellations.index') }}" class="group">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700 group-hover:border-red-200 dark:group-hover:border-red-600 group-hover:-translate-y-1">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="bg-red-50 dark:bg-red-900/20 p-3 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                                <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ $cancellationCount }}</div>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900 dark:text-white mb-1">Cancellation Requests</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Waiting for confirmation</p>
                         </div>
                     </div>
                 </a>

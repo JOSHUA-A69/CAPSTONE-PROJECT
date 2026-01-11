@@ -262,9 +262,14 @@
             <!-- Actions Card (if applicable) -->
             @php
                 $daysUntilEvent = $reservation->schedule_date ? now()->diffInDays($reservation->schedule_date, false) : -9999;
-                $canCancel = $daysUntilEvent >= 7
-                    && in_array($reservation->status, ['pending', 'adviser_approved', 'admin_approved', 'pending_priest_confirmation', 'approved'])
-                    && !$reservation->cancellation_reason;
+                
+                // Allow cancellation if:
+                // 1. It is pending (can cancel anytime)
+                // 2. OR it is in an approved state AND the event is 7+ days away
+                $canCancel = (!$reservation->cancellation_reason) && (
+                    ($reservation->status === 'pending') ||
+                    ($daysUntilEvent >= 7 && in_array($reservation->status, ['adviser_approved', 'admin_approved', 'pending_priest_confirmation', 'approved']))
+                );
             @endphp
             @if($reservation->status !== 'cancelled' && $reservation->status !== 'rejected' && $reservation->status !== 'completed')
             <div class="card">
@@ -273,7 +278,7 @@
                 </div>
                 <div class="card-body">
                     @if($canCancel)
-                    <button onclick="document.getElementById('cancelForm').classList.toggle('hidden')" class="btn-danger">
+                    <button type="button" id="btnShowCancelForm" class="btn-danger">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -282,8 +287,14 @@
 
                     <form id="cancelForm" method="POST" action="{{ route('requestor.reservations.cancel', $reservation->reservation_id) }}" class="hidden mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                         @csrf
-                        <label class="form-label mb-2">Note that if you cancel a reservation, your cancellation will be reported to all actors, admin, priest, and adviser.</label>
-                        <textarea name="reason" rows="3" required minlength="10" class="form-input" placeholder="Please provide a reason...">{{ old('reason') }}</textarea>
+                        <label class="form-label mb-2">
+                        @if($reservation->status === 'pending')
+                            You are cancelling a pending reservation. This action is immediate and cannot be undone.
+                        @else
+                            You are requesting a cancellation. Your request will be reviewed by the administration.
+                        @endif
+                        </label>
+                        <textarea name="reason" rows="3" required class="form-input" placeholder="Please provide a reason (at least 10 characters)...">{{ old('reason') }}</textarea>
                         @error('reason')
                             <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                         @enderror
@@ -292,12 +303,12 @@
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Confirm Cancellation
+                                Submit Cancellation
                             </button>
-                            <button type="button" onclick="document.getElementById('cancelForm').classList.add('hidden')" class="btn-secondary">Cancel</button>
+                            <button type="button" id="btnHideCancelForm" class="btn-secondary">Keep Reservation</button>
                         </div>
                     </form>
-                    @elseif($daysUntilEvent < 7 && $daysUntilEvent >= 0)
+                    @elseif($reservation->status !== 'pending' && $daysUntilEvent < 7 && $daysUntilEvent >= 0)
                         <div class="mt-2 text-sm text-muted">Cannot cancel within 7 days of the event.</div>
                     @endif
 
@@ -344,5 +355,26 @@
             if (el) el.classList.remove('hidden');
         });
     @endif
+
+    // Toggle cancel form visibility
+    document.addEventListener('DOMContentLoaded', function() {
+        const showBtn = document.getElementById('btnShowCancelForm');
+        const hideBtn = document.getElementById('btnHideCancelForm');
+        const form = document.getElementById('cancelForm');
+
+        if (showBtn && form) {
+            showBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                form.classList.toggle('hidden');
+            });
+        }
+
+        if (hideBtn && form) {
+            hideBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                form.classList.add('hidden');
+            });
+        }
+    });
 </script>
 @endpush

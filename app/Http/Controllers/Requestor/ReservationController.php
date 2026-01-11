@@ -397,6 +397,33 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation cannot be cancelled as it is already ' . $reservation->status);
         }
 
+        // Allow immediate cancellation if status is pending (no approvals yet)
+        if ($reservation->status === 'pending') {
+            $reservation->update([
+                'status' => 'cancelled',
+                'cancellation_reason' => $request->input('reason'),
+                'cancelled_by' => Auth::id(),
+            ]);
+
+            $reservation->history()->create([
+                'performed_by' => Auth::id(),
+                'action' => 'cancelled',
+                'remarks' => 'Cancelled by requestor (while pending). Reason: ' . $request->input('reason'),
+                'performed_at' => now(),
+            ]);
+
+            // Notify staff
+            $this->notificationService->notifyCancellation(
+                $reservation,
+                $request->input('reason'),
+                Auth::user()->full_name
+            );
+
+            return Redirect::route('requestor.reservations.index')
+                ->with('status', 'reservation-cancelled')
+                ->with('message', 'Reservation cancelled successfully.');
+        }
+
         // Check if there's already a pending cancellation request
         $existingCancellation = \App\Models\ReservationCancellation::where('reservation_id', $reservation_id)
             ->whereIn('status', ['pending', 'confirmed_by_staff', 'confirmed_by_admin'])
