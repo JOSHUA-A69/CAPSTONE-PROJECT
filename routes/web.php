@@ -523,12 +523,16 @@ if (app()->environment('local')) {
                 'Verify Email' => '/dev/emails/auth/verify-email',
                 '---' => '#',
                 'Reservation: Submitted' => '/dev/emails/reservation/submitted',
+                'Reservation: Submitted (To Adviser)' => '/dev/emails/reservation/submitted-adviser',
                 'Reservation: Admin Rejected' => '/dev/emails/reservation/admin-rejected',
                 'Reservation: Cancellation Request' => '/dev/emails/reservation/cancellation-requested',
                 'Reservation: Unresponsive Escalation' => '/dev/emails/reservation/cancellation-unresponsive',
                 'Reservation: Adviser Approved' => '/dev/emails/reservation/adviser-approved',
+                'Reservation: Adviser Approved (To Admin)' => '/dev/emails/reservation/adviser-approved-admin',
                 'Reservation: Adviser Rejected' => '/dev/emails/reservation/adviser-rejected',
+                'Reservation: Adviser Rejected (To Admin)' => '/dev/emails/reservation/adviser-rejected-admin',
                 'Reservation: Priest Assigned' => '/dev/emails/reservation/priest-assigned',
+                'Reservation: Priest Assigned (To Requestor)' => '/dev/emails/reservation/priest-assigned-requestor',
                 'Reservation: Priest Declined' => '/dev/emails/reservation/priest-declined',
                 'Reservation: Cancelled' => '/dev/emails/reservation/cancelled',
                 'Reservation: Requestor Confirmation' => '/dev/emails/reservation/requestor-confirmation',
@@ -898,6 +902,55 @@ if (app()->environment('local')) {
                 'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
                 'venueName' => $r->venue->name ?? 'Main Venue',
                 'isMainPriest' => true
+            ]);
+        });
+
+        Route::get('/reservation/submitted-adviser', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            return view('emails.reservations.submitted-adviser', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'service' => $r->service,
+                'venue' => $r->venue,
+                'organization' => $r->organization,
+                'adviser' => $adviser
+            ]);
+        });
+
+        Route::get('/reservation/adviser-approved-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            $r->organization->setRelation('adviser', $adviser);
+            return view('emails.reservations.adviser-approved-admin', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'adviser' => $adviser,
+                'remarks' => 'Everything is in order.'
+            ]);
+        });
+
+        Route::get('/reservation/adviser-rejected-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            $r->organization->setRelation('adviser', $adviser);
+            return view('emails.reservations.adviser-rejected-admin', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'adviser' => $adviser,
+                'reason' => 'Schedule conflict with another university event.'
+            ]);
+        });
+
+        Route::get('/reservation/priest-assigned-requestor', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $priest = new \App\Models\User(['first_name' => 'Fr. Michael', 'last_name' => 'Torres']);
+            return view('emails.reservations.priest-assigned-requestor', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'priest' => $priest,
+                'service' => $r->service,
+                'venue' => $r->venue
             ]);
         });
     });

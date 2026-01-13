@@ -88,7 +88,7 @@ class ReservationNotificationService
 
             try {
                 if ($adviser->email) {
-                    Mail::to($adviser->email)->send(new ReservationSubmitted($reservation));
+                    Mail::to($adviser->email)->send(new \App\Mail\ReservationSubmittedToAdviser($reservation, $adviser));
                     Log::info('Email sent to adviser: ' . $adviser->email);
                 }
             } catch (\Throwable $e) {
@@ -237,7 +237,7 @@ class ReservationNotificationService
             foreach ($admins as $admin) {
                 if ($admin->email) {
                     Mail::to($admin->email)
-                        ->send(new ReservationAdviserApproved($reservation, $remarks));
+                        ->send(new \App\Mail\AdviserApprovedToAdmin($reservation, $remarks));
                 }
             }
         } catch (\Throwable $e) {
@@ -376,7 +376,7 @@ class ReservationNotificationService
             foreach ($staff as $member) {
                 if ($member->email) {
                     Mail::to($member->email)
-                        ->send(new ReservationAdviserRejected($reservation, $reason));
+                        ->send(new \App\Mail\AdviserRejectedToAdmin($reservation, $reason));
                 }
             }
         } catch (\Throwable $e) {
@@ -593,7 +593,7 @@ class ReservationNotificationService
         // Email to requestor (update)
         if ($reservation->user->email) {
             Mail::to($reservation->user->email)
-                ->send(new ReservationPriestAssigned($reservation));
+                ->send(new \App\Mail\PriestAssignedToRequestor($reservation));
         }
     }
 
