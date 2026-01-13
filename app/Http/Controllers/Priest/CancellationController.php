@@ -114,6 +114,52 @@ class CancellationController extends Controller
     }
 
     /**
+     * Reject cancellation
+     */
+    public function reject($id)
+    {
+        $cancellation = ReservationCancellation::with('reservation')->findOrFail($id);
+
+        // Ensure this priest is the assigned priest
+        $reservation = $cancellation->reservation;
+        $isAssigned = $reservation->officiant_id === Auth::id() || 
+                      $reservation->priests()->where('users.id', Auth::id())->exists();
+
+        if (!$isAssigned) {
+            abort(403, 'Unauthorized access to this cancellation.');
+        }
+
+        // Check if already processed
+        if ($cancellation->status === 'rejected') {
+            return redirect()->route('priest.cancellations.show', $id)
+                ->with('info', 'This cancellation has already been rejected.');
+        }
+
+        // Mark as rejected
+        $cancellation->update([
+            'status' => 'rejected',
+        ]);
+
+        // Add to history
+        ReservationHistory::create([
+            'reservation_id' => $cancellation->reservation_id,
+            'action' => 'cancellation_rejected_by_priest',
+            'details' => 'Cancellation request rejected by priest ' . Auth::user()->name,
+            'performed_by' => Auth::id(),
+        ]);
+
+        // Send notification
+        $this->cancellationService->notifyCancellationRejected(
+            $cancellation, 
+            Auth::user()->name, // Or formatted displayName if available, but Auth::user()->name is standard
+            'Priest'
+        );
+
+        return redirect()->route('priest.cancellations.show', $id)
+            ->with('success', 'Cancellation request rejected. The reservation remains active.');
+    }
+
+    /**
      * Complete the cancellation process
      */
     private function completeCancellation(ReservationCancellation $cancellation)

@@ -244,12 +244,28 @@
             </div>
 
             <!-- Actions -->
-            @if($cancellation->needsAdviserConfirmation())
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+            @if($cancellation->status === 'rejected')
+            <div class="bg-gray-50 dark:bg-gray-700/50 border-l-4 border-gray-500 p-4 rounded-r-lg mb-6">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-gray-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-800 dark:text-gray-300">Request Rejected</h3>
+                        <p class="text-sm text-gray-700 dark:text-gray-400 mt-1">
+                            This cancellation request has been rejected and the reservation remains active.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            @if($cancellation->needsAdviserConfirmation() || $cancellation->status === 'rejected')
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg {{ $cancellation->status === 'rejected' ? 'opacity-60 grayscale' : '' }}">
                 <div class="p-6">
-                    <form action="{{ route('adviser.cancellations.confirm', $cancellation->cancellation_id) }}" method="POST">
-                        @csrf
-                        <div class="flex items-center justify-between">
+                    <div class="flex flex-col space-y-6">
+                        <!-- Confirm Cancellation Form -->
+                        <div class="flex items-center justify-between border-b pb-6 border-gray-100 dark:border-gray-700">
                             <div>
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Confirm Cancellation</h3>
                                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
@@ -257,12 +273,34 @@
                                     <span class="text-red-600 dark:text-red-400 font-medium">Please respond within 1 minute.</span>
                                 </p>
                             </div>
-                            <button type="submit" 
-                                    class="ml-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200">
-                                Confirm Cancellation
-                            </button>
+                            <form action="{{ route('adviser.cancellations.confirm', $cancellation->cancellation_id) }}" method="POST">
+                                @csrf
+                                <button type="submit" 
+                                        {{ $cancellation->status === 'rejected' ? 'disabled' : '' }}
+                                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 {{ $cancellation->status === 'rejected' ? 'cursor-not-allowed opacity-50 hover:bg-red-600' : '' }}">
+                                    Confirm Cancellation
+                                </button>
+                            </form>
                         </div>
-                    </form>
+
+                        <!-- Reject Cancellation Form -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Reject Request</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    Deny the cancellation request. The reservation will remain active.
+                                </p>
+                            </div>
+                            <form action="{{ route('adviser.cancellations.reject', $cancellation->cancellation_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to reject this cancellation request? The reservation will remain active.');">
+                                @csrf
+                                <button type="submit" 
+                                        {{ $cancellation->status === 'rejected' ? 'disabled' : '' }}
+                                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 {{ $cancellation->status === 'rejected' ? 'cursor-not-allowed opacity-50 hover:bg-gray-500' : '' }}">
+                                    Reject Request
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
             @elseif($cancellation->isAdviserConfirmed())

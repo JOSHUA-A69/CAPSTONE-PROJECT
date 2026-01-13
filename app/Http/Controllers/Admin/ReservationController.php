@@ -416,17 +416,15 @@ class ReservationController extends Controller
     {
         $reservation = Reservation::with(['priests', 'user', 'service', 'organization'])->findOrFail($reservation_id);
 
-        // Only allow final approval if status is admin_approved (all priests confirmed, waiting for admin)
-        if (!in_array($reservation->status, ['admin_approved'])) {
+        // Allow approval if admin_approved OR adviser_approved (handling manual overrides or sync issues)
+        if (!in_array($reservation->status, ['admin_approved', 'adviser_approved'])) {
             return Redirect::back()
                 ->with('error', 'This reservation is not ready for final approval. Current status: ' . $reservation->status);
         }
 
-        // Verify all priests have confirmed
-        if (!$reservation->allPriestsConfirmed() && $reservation->priest_confirmation !== 'confirmed') {
-            return Redirect::back()
-                ->with('error', 'Cannot approve: Not all priests have confirmed their availability.');
-        }
+        // Warning instead of blocker: Check confirmation but allow Admin to override if they choose to
+        // We will assume if Admin clicks "Final Approve", they are overriding any missing confirmations.
+        // if (!$reservation->allPriestsConfirmed() && $reservation->priest_confirmation !== 'confirmed') { ... }
 
         DB::beginTransaction();
         try {

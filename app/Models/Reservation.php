@@ -92,6 +92,8 @@ class Reservation extends Model
         'priest_notified_at',
         'priest_confirmation',
         'priest_confirmed_at',
+        'approved_by',
+        'rejected_by',
         'cancellation_reason',
         'cancelled_by',
     ];
@@ -502,7 +504,7 @@ class Reservation extends Model
         // Admin has approved, waiting for final priest confirmation
         if ($this->status === 'admin_approved') {
             if ($this->priest_confirmation === 'confirmed' || $this->allPriestsConfirmed()) {
-                return 'Approved by Admin';
+                return 'Awaiting Admin';
             }
             return 'Awaiting Priest';
         }

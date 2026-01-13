@@ -50,8 +50,12 @@
                 
                 $statusLabel = match($reservation->status) {
                     'approved' => 'Approved by Admin',
-                    'admin_approved' => 'Awaiting Admin (All Priests Confirmed)',
-                    'adviser_approved' => 'Awaiting Priest',
+                    'admin_approved' => ($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed()) 
+                        ? 'Ready for Final Approval' 
+                        : 'Awaiting Priest Confirmation',
+                    'adviser_approved' => ($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed())
+                        ? 'Ready for Final Approval (Status Pending)' 
+                        : 'Awaiting Priest',
                     'pending' => 'Awaiting Adviser',
                     'confirmed' => 'Confirmed',
                     'completed' => 'Completed',
@@ -403,20 +407,27 @@
                     @endif
 
                     <!-- Final Approve Button - When all priests have confirmed and reservation is awaiting admin final approval -->
-                    @if($reservation->status === 'admin_approved')
+                    @if($reservation->status === 'admin_approved' || ($reservation->status === 'adviser_approved' && ($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed() || $reservation->officiant_id || $reservation->priests->isNotEmpty())))
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg border-2 border-green-500 dark:border-green-400">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 text-green-700 dark:text-green-300 flex items-center">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Final Approval Required
+                                Final Approval {{ $reservation->status === 'adviser_approved' ? '(Override)' : 'Required' }}
                             </h3>
 
+                            @if(!($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed()))
+                            <div class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-300">
+                                <p class="font-medium mb-1">⚠️ Note: Priest confirmation is still pending.</p>
+                                <p>You can force-approve this reservation if you have confirmed the schedule offline.</p>
+                            </div>
+                            @elseif($reservation->status === 'admin_approved' || ($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed()))
                             <div class="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded text-sm text-green-800 dark:text-green-300">
                                 <p class="font-medium mb-2">✅ All priests have confirmed their availability</p>
-                                <p>This reservation is ready for your final approval. Review the details and click the button below to complete the approval process.</p>
+                                <p>This reservation is ready for your final approval. Review the details and click the button below.</p>
                             </div>
+                            @endif
 
                             @if($reservation->priests->isNotEmpty())
                             <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
@@ -456,6 +467,8 @@
 
                     <!-- Reject Button -->
                     @if($reservation->status === 'pending_priest_assignment' || $reservation->status === 'adviser_approved')
+                    {{-- Only show Reject button if not waiting for final approval --}}
+                    @if(!($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed()))
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Reject Reservation</h3>
@@ -483,6 +496,7 @@
                             </form>
                         </div>
                     </div>
+                    @endif
                     @endif
 
                     <!-- Cancel Reservation -->

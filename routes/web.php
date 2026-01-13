@@ -295,6 +295,7 @@ Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App
     Route::get('/cancellations', [\App\Http\Controllers\Adviser\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Adviser\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Adviser\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+    Route::post('/cancellations/{id}/reject', [\App\Http\Controllers\Adviser\CancellationController::class, 'reject'])->name('cancellations.reject');
 
     // Reservation Routes
     Route::get('/reservations', [\App\Http\Controllers\Adviser\ReservationController::class, 'index'])->name('reservations.index');
@@ -349,6 +350,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Admin\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Admin\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+    Route::post('/cancellations/{id}/reject', [\App\Http\Controllers\Admin\CancellationController::class, 'reject'])->name('cancellations.reject');
 
     // Change Request Routes (for reservation edits)
     Route::get('/change-requests', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'index'])->name('change-requests.index');
@@ -406,6 +408,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Staff\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Staff\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+    Route::post('/cancellations/{id}/reject', [\App\Http\Controllers\Staff\CancellationController::class, 'reject'])->name('cancellations.reject');
 
     // Services Management (Staff can edit only; no add/delete)
     Route::get('/services/manage', [\App\Http\Controllers\Staff\ServiceManagementController::class, 'index'])->name('services.manage');
@@ -437,6 +440,7 @@ Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\H
     Route::get('/cancellations', [\App\Http\Controllers\Priest\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Priest\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Priest\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+    Route::post('/cancellations/{id}/reject', [\App\Http\Controllers\Priest\CancellationController::class, 'reject'])->name('cancellations.reject');
 
     // History routes
     Route::post('/history/{historyId}/archive', [\App\Http\Controllers\Priest\HistoryController::class, 'archive'])->name('history.archive');

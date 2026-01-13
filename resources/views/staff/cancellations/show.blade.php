@@ -260,24 +260,47 @@
             </div>
 
             <!-- Actions -->
-            @if(!$cancellation->isStaffConfirmed())
+            @if($cancellation->status === 'rejected')
+            <div class="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-lg">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                    <div>
+                        <h3 class="text-sm font-medium text-red-800 dark:text-red-300">Request Rejected</h3>
+                        <p class="text-sm text-red-700 dark:text-red-400 mt-1">
+                            This cancellation request has been rejected.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            @elseif(!$cancellation->isStaffConfirmed())
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <form action="{{ route('staff.cancellations.confirm', $cancellation->cancellation_id) }}" method="POST">
-                        @csrf
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Confirm Cancellation</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    By confirming, you acknowledge that you have reviewed this cancellation request.
-                                </p>
-                            </div>
-                            <button type="submit" 
-                                    class="ml-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200">
-                                Confirm Cancellation
-                            </button>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Review Request</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                Please review this cancellation request and choose an action.
+                            </p>
                         </div>
-                    </form>
+                        <div class="flex space-x-3">
+                            <form action="{{ route('staff.cancellations.reject', $cancellation->cancellation_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to reject this cancellation request?');">
+                                @csrf
+                                <button type="submit" 
+                                        class="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg shadow-md transition-colors duration-200">
+                                    Reject
+                                </button>
+                            </form>
+                            <form action="{{ route('staff.cancellations.confirm', $cancellation->cancellation_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to confirm this cancellation request?');">
+                                @csrf
+                                <button type="submit" 
+                                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200">
+                                    Confirm Cancellation
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
             @else

@@ -212,26 +212,33 @@ class ReservationController extends Controller
                 'performed_at' => now(),
             ]);
 
-            // Reload reservation with fresh priests data
-            $reservation->load('priests');
+            // Perform a robust check: properly reload relations + direct DB check
+            $reservation->refresh(); 
+            
+            // Check if there are any unconfirmed priests for this reservation
+            $hasUnconfirmed = DB::table('reservation_priest')
+                ->where('reservation_id', $reservation->reservation_id)
+                ->where('confirmation_status', '!=', 'confirmed')
+                ->exists();
 
-            // Check if all priests have now confirmed
-            $allPriestsConfirmed = $reservation->allPriestsConfirmed();
-            $totalPriests = $reservation->priests->count();
-            $confirmedCount = $reservation->confirmedPriestCount();
-
-            if ($allPriestsConfirmed || $totalPriests <= 1) {
-                // All priests confirmed OR single priest - mark approved
+            if (!$hasUnconfirmed) {
+                // All priests confirmed - update confirmation status
+                // Status moves to 'admin_approved' so Admin can give Final Approval
                 $reservation->update([
                     'priest_confirmation' => 'confirmed',
                     'priest_confirmed_at' => now(),
-                    'status' => 'approved',
+                    'status' => 'admin_approved',
                 ]);
 
-                // Notify admin that all priests confirmed and reservation is ready
-                $this->notificationService->notifyAllPriestsConfirmed($reservation);
+                // Notify admin that all priests confirmed and reservation is ready for final approval
+                try {
+                    $this->notificationService->notifyAllPriestsConfirmed($reservation);
+                } catch (\Exception $e) {
+                     // Log but don't fail the transaction
+                     \Log::warning('Failed to notify admin of all priests confirmed: ' . $e->getMessage());
+                }
 
-                $message = "You have confirmed your availability. Reservation is now approved.";
+                $message = "You have confirmed your availability. The Admin will now finalize the reservation.";
             } else {
                 // Still waiting for other priests
                 // Update legacy field for this priest if they're the officiant

@@ -247,6 +247,50 @@ class CancellationNotificationService
     }
 
     /**
+     * Notify requestor when cancellation request is rejected
+     */
+    public function notifyCancellationRejected(ReservationCancellation $cancellation, string $rejectorName, string $rejectorRole): void
+    {
+        $reservation = $cancellation->reservation;
+        $requestor = $cancellation->requestor; // The user who made the cancellation request
+
+        // Notify requestor in-app
+        NotificationHelper::make([
+            'user_id' => $requestor->id,
+            'reservation_id' => $reservation->reservation_id,
+            'message' => "Your cancellation request for <strong>{$reservation->service->service_name}</strong> has been rejected by {$rejectorRole} {$rejectorName}. The reservation remains active.",
+            'type' => NotificationHelper::TYPE_UPDATE, // Or add a specific constant if preferred
+            'sent_at' => now(),
+            'data' => [
+                'cancellation_id' => $cancellation->cancellation_id,
+                'action' => 'cancellation_rejected',
+                'service_name' => $reservation->service->service_name,
+                'rejector_name' => $rejectorName,
+                'rejector_role' => $rejectorRole
+            ],
+        ]);
+        
+        // Notify Staff/Admin that it was rejected (for tracking)
+        $staffAndAdmin = User::whereIn('role', ['staff', 'admin'])->where('status', 'active')->get();
+        foreach ($staffAndAdmin as $user) {
+            NotificationHelper::make([
+                'user_id' => $user->id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => "Cancellation request for <strong>{$reservation->service->service_name}</strong> was rejected by {$rejectorRole} {$rejectorName}",
+                'type' => NotificationHelper::TYPE_UPDATE,
+                'sent_at' => now(),
+                'data' => [
+                    'cancellation_id' => $cancellation->cancellation_id,
+                    'action' => 'cancellation_rejected',
+                    'service_name' => $reservation->service->service_name,
+                    'rejector_name' => $rejectorName,
+                    'rejector_role' => $rejectorRole
+                ],
+            ]);
+        }
+    }
+
+    /**
      * Notify all parties when cancellation is confirmed
      */
     public function notifyCancellationCompleted(Reservation $reservation, ReservationCancellation $cancellation): void

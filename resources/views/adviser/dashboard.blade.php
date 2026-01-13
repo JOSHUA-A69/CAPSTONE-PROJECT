@@ -61,6 +61,7 @@
                               $sq->whereIn('organizations.org_id', $orgIds);
                           });
                     })
+                    ->whereNotIn('status', ['rejected', 'completed'])
                     ->whereNull('adviser_confirmed_at')
                     ->count();
 

@@ -50,6 +50,7 @@
                                       $pq->where('users.id', $user->id);
                                   });
                             })
+                            ->whereNotIn('status', ['rejected', 'completed'])
                             ->whereNull('priest_confirmed_at')
                             ->count();
                     @endphp
