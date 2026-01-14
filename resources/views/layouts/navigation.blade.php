@@ -86,14 +86,7 @@
                         </x-nav-link>
                     @endif
 
-                    @if(auth()->check() && auth()->user()->role === 'staff')
-                        <x-nav-link :href="route('staff.organizations.index')" :active="request()->routeIs('staff.organizations*')" role="menuitem">
-                            {{ __('Organizations') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('staff.cancellations.index')" :active="request()->routeIs('staff.cancellations*')" role="menuitem">
-                            {{ __('Cancellations') }}
-                        </x-nav-link>
-                    @endif
+                    {{-- Staff links removed as per request --}}
                     @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser']))
                         <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" role="menuitem">
                             {{ __('Generate Report') }}
@@ -400,14 +393,7 @@
                 </x-responsive-nav-link>
             @endif
 
-            @if(auth()->check() && auth()->user()->role === 'staff')
-                <x-responsive-nav-link :href="route('staff.organizations.index')" :active="request()->routeIs('staff.organizations*')">
-                    {{ __('Manage Organizations') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('staff.cancellations.index')" :active="request()->routeIs('staff.cancellations*')">
-                    {{ __('Cancellations') }}
-                </x-responsive-nav-link>
-            @endif
+            {{-- Staff links removed as per request --}}
         </div>
 
         <!-- Responsive Settings Options -->

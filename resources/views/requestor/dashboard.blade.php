@@ -56,7 +56,7 @@
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Action Buttons -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <a href="{{ route('requestor.reservations.create') }}" class="group inline-flex items-center justify-center gap-3 px-6 py-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-3xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
+                        <a href="{{ route('requestor.reservations.create') }}" class="group inline-flex items-center justify-center gap-3 px-6 py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-3xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
                             <div class="bg-white/20 p-2 rounded-xl group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
@@ -64,7 +64,7 @@
                             </div>
                             <span class="text-base font-semibold">New Service Request</span>
                         </a>
-                        <a href="{{ route('requestor.organization-bookings.create') }}" class="group inline-flex items-center justify-center gap-3 px-6 py-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold rounded-3xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
+                        <a href="{{ route('requestor.organization-bookings.create') }}" class="group inline-flex items-center justify-center gap-3 px-6 py-5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-3xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300">
                             <div class="bg-white/20 p-2 rounded-xl group-hover:bg-white/30 group-hover:scale-110 transition-all duration-300">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
