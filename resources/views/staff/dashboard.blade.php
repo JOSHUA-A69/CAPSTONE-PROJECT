@@ -16,7 +16,7 @@
                     @endphp
 
                     <h3 class="text-2xl sm:text-3xl font-bold mb-2 text-heading">
-                        Welcome, {{ $displayName }}! 👋
+                        Welcome, {{ $displayName }}! 
                     </h3>
                     <p class="text-muted">
                         Manage reservations, organizations, and support the spiritual activities program.

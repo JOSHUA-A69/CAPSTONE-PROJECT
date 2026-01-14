@@ -195,7 +195,11 @@
         function extractDatePart(value) {
             if (!value) return null;
             if (value instanceof Date) {
-                return value.toISOString().split('T')[0];
+               // Use local time components explicitly to avoid UTC shift
+               const y = value.getFullYear();
+               const m = String(value.getMonth() + 1).padStart(2, '0');
+               const d = String(value.getDate()).padStart(2, '0');
+               return `${y}-${m}-${d}`;
             }
             if (typeof value === 'string') {
                 if (value.includes('T')) {
@@ -210,21 +214,34 @@
 
         function extractTimePart(value) {
             if (!value) return null;
-            const date = value instanceof Date ? value : new Date(value);
-            if (Number.isNaN(date.getTime())) {
-                if (typeof value === 'string') {
-                    if (value.includes('T')) {
-                        const fragment = value.split('T')[1] || '';
-                        return fragment.replace(/Z$/, '').slice(0, 8) || null;
-                    }
-                    if (value.includes(' ')) {
-                        const fragment = value.split(' ')[1] || '';
-                        return fragment.slice(0, 8) || null;
-                    }
+            
+            // Prefer string manipulation to preserve raw time if possible
+            if (typeof value === 'string') {
+                if (value.includes('T')) {
+                    // Handle ISO strings (e.g., 2026-02-15T06:30:00+08:00)
+                    const timeFragment = value.split('T')[1] || '';
+                    // Remove Z or timezone offsets like +08:00 or -05:00
+                    return timeFragment.split(/[Z+\-]/)[0];
                 }
-                return null;
+                if (value.includes(' ')) {
+                    // Handle SQL datetime (2026-02-15 06:30:00)
+                    return value.split(' ')[1] || null;
+                }
+                // If it's just a time string "06:30:00"
+                if (value.includes(':')) {
+                    return value;
+                }
             }
-            return date.toTimeString().slice(0, 8);
+
+            // Fallback for Date objects
+            const date = value instanceof Date ? value : new Date(value);
+            if (!Number.isNaN(date.getTime())) {
+                const h = String(date.getHours()).padStart(2, '0');
+                const m = String(date.getMinutes()).padStart(2, '0');
+                const s = String(date.getSeconds()).padStart(2, '0');
+                return `${h}:${m}:${s}`;
+            }
+            return null;
         }
 
         function combineDateAndTime(dateValue, timeValue) {

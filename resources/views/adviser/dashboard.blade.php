@@ -96,7 +96,7 @@
                 <div class="flex items-center justify-between flex-wrap gap-6">
                     <div class="flex-1">
                         <h3 class="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
-                            Welcome, {{ $displayName }}! 👋
+                            Welcome, {{ $displayName }}! 
                         </h3>
                         <p class="text-gray-600 dark:text-gray-300 text-lg leading-relaxed max-w-2xl">
                             Review and triage reservation requests for your assigned organizations.

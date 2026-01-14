@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-heading font-semibold text-xl leading-tight">
-            ✏️ Review Change Request #{{ $changeRequest->change_id }}
+             Review Change Request #{{ $changeRequest->change_id }}
         </h2>
     </x-slot>
 

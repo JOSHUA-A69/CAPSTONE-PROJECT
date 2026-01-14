@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="text-heading font-semibold text-xl leading-tight">
-            ✏️ Reservation Change Requests
+             Reservation Change Requests
         </h2>
     </x-slot>
 

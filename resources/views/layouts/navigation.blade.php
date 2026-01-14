@@ -86,15 +86,6 @@
                         </x-nav-link>
                     @endif
 
-                    @if(auth()->check() && auth()->user()->role === 'admin')
-                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users*')" role="menuitem">
-                            {{ __('User Accounts') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('admin.cancellations.index')" :active="request()->routeIs('admin.cancellations*')" role="menuitem">
-                            {{ __('Cancellations') }}
-                        </x-nav-link>
-                    @endif
-
                     @if(auth()->check() && auth()->user()->role === 'staff')
                         <x-nav-link :href="route('staff.organizations.index')" :active="request()->routeIs('staff.organizations*')" role="menuitem">
                             {{ __('Organizations') }}
@@ -406,14 +397,6 @@
             @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser']))
                 <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                     {{ __('Generate Report') }}
-                </x-responsive-nav-link>
-            @endif
-            @if(auth()->check() && auth()->user()->role === 'admin')
-                <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users*')">
-                    {{ __('Manage Users') }}
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.cancellations.index')" :active="request()->routeIs('admin.cancellations*')">
-                    {{ __('Cancellations') }}
                 </x-responsive-nav-link>
             @endif
 

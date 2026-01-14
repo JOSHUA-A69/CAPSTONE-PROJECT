@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                    ❌ Declined Services
+                     Declined Services
                 </h2>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Services you declined or were recorded as declined will appear here.

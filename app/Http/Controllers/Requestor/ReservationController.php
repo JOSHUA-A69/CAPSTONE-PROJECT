@@ -166,6 +166,9 @@ class ReservationController extends Controller
             $data = $request->validated();
             $data['user_id'] = Auth::id();
 
+            // Note: schedule_date and schedule_time are already merged in ReservationRequest::prepareForValidation
+            // format is 'Y-m-d H:i' or 'Y-m-d H:i:s'
+
             // Always start at pending status for adviser approval
             $data['status'] = 'pending';
             $data['adviser_notified_at'] = now(); // Adviser is notified immediately (email + in-app)

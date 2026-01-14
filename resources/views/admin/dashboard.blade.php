@@ -37,7 +37,7 @@
                             ->count();
                     @endphp
 
-                    <h3 class="text-2xl font-bold mb-2 text-heading">Welcome, {{ $displayName }}! 🔧</h3>
+                    <h3 class="text-2xl font-bold mb-2 text-heading">Welcome, {{ $displayName }}! </h3>
                     <p class="text-muted">Administrator Dashboard - Manage the entire CREaM system</p>
                 </div>
             </div>
