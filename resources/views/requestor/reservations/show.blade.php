@@ -198,6 +198,14 @@
                                     @endforeach
                                 </ul>
                             </div>
+                            @elseif($reservation->priest_selection_type === 'external' && $reservation->external_priest_name)
+                            <div>
+                                <label class="form-label">External Priest</label>
+                                <p class="mt-1 text-base font-semibold text-heading">{{ $reservation->external_priest_name }} <span class="text-xs text-gray-500 font-normal">(External)</span></p>
+                                @if($reservation->external_priest_contact)
+                                    <p class="text-sm text-gray-500">{{ $reservation->external_priest_contact }}</p>
+                                @endif
+                            </div>
                             @elseif($reservation->officiant)
                             <div>
                                 <label class="form-label">Assigned Priest</label>

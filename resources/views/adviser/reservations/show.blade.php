@@ -88,6 +88,34 @@
                         <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->custom_venue_name }}</p>
                     </div>
                     @endif
+
+                    @php
+                        $assignedPriests = isset($reservation->priests) ? $reservation->priests : collect();
+                    @endphp
+                    
+                    @if($assignedPriests->count() > 0)
+                        <div class="md:col-span-2">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Assigned Priests</p>
+                            <ul class="list-disc list-inside">
+                                @foreach($assignedPriests as $p)
+                                    <li class="font-medium text-gray-900 dark:text-white">{{ $p->full_name }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @elseif($reservation->priest_selection_type === 'external' && $reservation->external_priest_name)
+                        <div class="md:col-span-2">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">External Priest <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 ml-2">External</span></p>
+                            <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->external_priest_name }}</p>
+                            @if($reservation->external_priest_contact)
+                                <p class="text-sm text-gray-500 mt-1">{{ $reservation->external_priest_contact }}</p>
+                            @endif
+                        </div>
+                    @elseif($reservation->officiant)
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Assigned Priest</p>
+                            <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->officiant->full_name }}</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 

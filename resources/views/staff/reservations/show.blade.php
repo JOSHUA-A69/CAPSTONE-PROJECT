@@ -218,6 +218,24 @@
                                         @endforeach
                                     </ul>
                                 </div>
+                                @elseif($reservation->priest_selection_type === 'external' && $reservation->external_priest_name)
+                                <div class="md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <label class="form-label">External Priest</label>
+                                    <div class="mt-3 flex items-center">
+                                        <svg class="w-10 h-10 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        <div>
+                                            <p class="text-heading text-lg">{{ $reservation->external_priest_name }}</p>
+                                            @if($reservation->external_priest_contact)
+                                                <p class="text-muted">{{ $reservation->external_priest_contact }}</p>
+                                            @endif
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 mt-1">
+                                                External
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                                 @elseif($reservation->officiant)
                                 <div class="md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <label class="form-label">Assigned Priest/Officiant</label>
