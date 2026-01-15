@@ -175,6 +175,22 @@ class Reservation extends Model
         return $this->belongsTo(User::class, 'cancelled_by');
     }
 
+    /**
+     * User who rejected this reservation
+     */
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    /**
+     * User who approved this reservation
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
     public function history()
     {
         return $this->hasMany(ReservationHistory::class, 'reservation_id', 'reservation_id')

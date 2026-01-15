@@ -113,6 +113,11 @@
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusClasses }}">
                                     {{ $statusLabel }}
                                 </span>
+                                @if($r->status === 'rejected' && $r->rejectedBy)
+                                    <div class="text-xs text-red-600 dark:text-red-400 mt-1">
+                                        by {{ $r->rejectedBy->first_name ?? '' }} {{ $r->rejectedBy->last_name ?? '' }}
+                                    </div>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <a href="{{ route('admin.reservations.show', $r->reservation_id) }}" 

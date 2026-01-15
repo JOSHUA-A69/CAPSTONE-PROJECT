@@ -202,7 +202,7 @@
             }
         </style>
     </head>
-    <body class="antialiased bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 text-[#1b1b18] full-animations">
+    <body class="antialiased bg-gray-50 dark:bg-gray-900 text-[#1b1b18] full-animations">
         <!-- Header -->
     <header class="site-header text-white dark:text-white/90 border-b border-[#27c165] shadow-lg">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -259,12 +259,6 @@
 
         <!-- Hero Section -->
         <main class="relative overflow-hidden">
-            <!-- Background Decoration - Enhanced with morphing blobs -->
-            <div class="absolute inset-0 overflow-hidden pointer-events-none">
-                <div class="absolute top-20 right-0 w-96 h-96 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 morph-blob-1"></div>
-                <div class="absolute bottom-0 left-0 w-96 h-96 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 morph-blob-2"></div>
-                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-green-200/10 to-emerald-200/10 rounded-full filter blur-3xl animate-pulse"></div>
-            </div>
 
             <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
                 <!-- Hero Content -->
