@@ -84,6 +84,18 @@ SELECT * FROM reservations ORDER BY created_at DESC LIMIT 5;
 Reservation::latest()->take(5)->get();
 ```
 
+**Get Cancelled and Rejected Reservations**
+
+**SQL:**
+```sql
+SELECT * FROM reservations WHERE status IN ('cancelled', 'rejected') ORDER BY created_at DESC LIMIT 5;
+```
+
+**Eloquent:**
+```php
+Reservation::whereIn('status', ['cancelled', 'rejected'])->latest()->take(5)->get();
+```
+
 ### 7. Reservation History
 Get the most recent actions taken on reservations.
 
