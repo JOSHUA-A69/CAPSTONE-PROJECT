@@ -34,6 +34,7 @@
                         <option value="">All</option>
                         <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="adviser_approved" {{ request('status') === 'adviser_approved' ? 'selected' : '' }}>Adviser Approved</option>
+                        <option value="pending_priest_reassignment" {{ request('status') === 'pending_priest_reassignment' ? 'selected' : '' }}>Priest Declined (Reassign)</option>
                         <option value="admin_approved" {{ request('status') === 'admin_approved' ? 'selected' : '' }}>Admin Approved</option>
                         <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
                         <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
