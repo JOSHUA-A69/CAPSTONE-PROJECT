@@ -322,6 +322,7 @@ class ReservationController extends Controller
                 // Single org - reject the whole reservation
                 $reservation->update([
                     'status' => 'rejected',
+                    'rejected_by' => $adviser->id,
                     'adviser_responded_at' => now(),
                 ]);
                 $message = 'Reservation has been rejected.';

@@ -492,6 +492,85 @@ class ReservationNotificationService
     }
 
     /**
+     * Send notification when staff rejects a reservation
+     */
+    public function notifyStaffRejected(Reservation $reservation, string $reason, ?User $actor = null): void
+    {
+        $staffName = $actor ? ($actor->first_name . ' ' . $actor->last_name) : 'a staff member';
+
+        // 1. Notify Requestor (using AdminRejected mailable as generic management rejection)
+        if ($reservation->user && $reservation->user->email) {
+            try {
+                Mail::to($reservation->user->email)
+                    ->send(new \App\Mail\ReservationAdminRejected($reservation, $reason, $staffName));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send staff reject email to requestor: ' . $e->getMessage());
+            }
+        }
+
+        // In-app notification for requestor
+        try {
+            $message = "Your reservation was rejected by staff ({$staffName})";
+            $notificationData = [
+                'user_id' => $reservation->user_id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => $message,
+                'type' => NotificationHelper::TYPE_UPDATE,
+                'sent_at' => now(),
+            ];
+            if (\Illuminate\Support\Facades\Schema::hasColumn('notifications', 'data')) {
+                $notificationData['data'] = [
+                    'reason' => $reason,
+                    'action' => 'staff_rejected',
+                    'staff_name' => $staffName,
+                ];
+            }
+            NotificationHelper::make($notificationData);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to create requestor in-app notification (staff rejected): ' . $e->getMessage());
+        }
+
+        // 2. Notify Advisers
+        try {
+            $advisersToNotify = collect([]);
+            if ($reservation->organizations->isNotEmpty()) {
+                foreach ($reservation->organizations as $org) {
+                    if ($org->adviser) $advisersToNotify->push($org->adviser);
+                }
+            } elseif ($reservation->organization && $reservation->organization->adviser) {
+                $advisersToNotify->push($reservation->organization->adviser);
+            }
+
+            foreach ($advisersToNotify->unique('id') as $adviser) {
+                NotificationHelper::make([
+                    'user_id' => $adviser->id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => "Reservation for {$reservation->service->service_name} was rejected by staff: {$staffName}",
+                    'type' => NotificationHelper::TYPE_UPDATE,
+                    'sent_at' => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to notify advisers of staff rejection: ' . $e->getMessage());
+        }
+
+        // 3. Notify Priest (if assigned)
+        try {
+            if ($reservation->officiant_id) {
+                NotificationHelper::make([
+                    'user_id' => $reservation->officiant_id,
+                    'reservation_id' => $reservation->reservation_id,
+                    'message' => "Reservation for {$reservation->service->service_name} (scheduled {$reservation->schedule_date->format('M d, Y')}) was rejected by staff.",
+                    'type' => NotificationHelper::TYPE_UPDATE,
+                    'sent_at' => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to notify priest of staff rejection: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Send notification when priest is assigned
      */
     public function notifyPriestAssigned(Reservation $reservation): void

@@ -280,6 +280,7 @@ class ReservationController extends Controller
 
         $reservation->update([
             'status' => 'rejected',
+            'rejected_by' => Auth::id(),
         ]);
 
         $reservation->history()->create([
@@ -288,6 +289,9 @@ class ReservationController extends Controller
             'remarks' => 'Marked as not available by staff: ' . $reason,
             'performed_at' => now(),
         ]);
+
+        // Notify all parties of the rejection
+        $this->notificationService->notifyStaffRejected($reservation, $reason, Auth::user());
 
         return Redirect::back()->with('status', 'reservation-not-available');
     }
