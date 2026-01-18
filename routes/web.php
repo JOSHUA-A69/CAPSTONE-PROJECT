@@ -326,6 +326,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Admin\ReservationController::class, 'reject'])->name('reservations.reject');
     Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Admin\ReservationController::class, 'cancel'])->name('reservations.cancel');
     Route::post('/reservations/{reservation_id}/confirm-external', [\App\Http\Controllers\Admin\ReservationController::class, 'confirmExternal'])->name('reservations.confirm-external');
+    Route::post('/reservations/{reservation_id}/decline-assignment', [\App\Http\Controllers\Admin\ReservationController::class, 'declineAssignment'])->name('reservations.decline-assignment');
     Route::post('/reservations/{reservation_id}/final-approve', [\App\Http\Controllers\Admin\ReservationController::class, 'finalApprove'])->name('reservations.final-approve');
 
     // Admin Service Routes (when admin is assigned as priest)

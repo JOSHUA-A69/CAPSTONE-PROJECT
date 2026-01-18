@@ -59,10 +59,26 @@
                                         </thead>
                                         <tbody>
                                             @foreach($changes as $field => $diff)
+                                                @php
+                                                    $oldVal = $diff['old'] ?? '—';
+                                                    $newVal = $diff['new'] ?? '—';
+                                                    
+                                                    // Resolve Priest/Officiant Name from ID
+                                                    if ($field === 'officiant_id') {
+                                                        if (is_numeric($oldVal) && $oldVal > 0) {
+                                                            $u = \App\Models\User::find($oldVal);
+                                                            $oldVal = $u ? "Fr. " . $u->first_name . ' ' . $u->last_name : $oldVal;
+                                                        }
+                                                        if (is_numeric($newVal) && $newVal > 0) {
+                                                            $u = \App\Models\User::find($newVal);
+                                                            $newVal = $u ? "Fr. " . $u->first_name . ' ' . $u->last_name : $newVal;
+                                                        }
+                                                    }
+                                                @endphp
                                                 <tr class="border-b last:border-0">
                                                     <td class="py-2 pr-4 font-medium text-heading">{{ ucwords(str_replace('_',' ', $field)) }}</td>
-                                                    <td class="py-2 pr-4 text-gray-600">{{ is_array($diff['old'] ?? null) ? json_encode($diff['old']) : ($diff['old'] ?? '—') }}</td>
-                                                    <td class="py-2 pr-4 text-heading font-semibold">{{ is_array($diff['new'] ?? null) ? json_encode($diff['new']) : ($diff['new'] ?? '—') }}</td>
+                                                    <td class="py-2 pr-4 text-gray-600">{{ is_array($oldVal) ? json_encode($oldVal) : $oldVal }}</td>
+                                                    <td class="py-2 pr-4 text-heading font-semibold">{{ is_array($newVal) ? json_encode($newVal) : $newVal }}</td>
                                                 </tr>
                                             @endforeach
                                         </tbody>

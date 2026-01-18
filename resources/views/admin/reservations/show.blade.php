@@ -291,15 +291,76 @@
                     </div>
                     @endif
 
+                    <!-- Admin/Priest Decline Action -->
+                    @php 
+                        $authIsAssignedPriest = auth()->id() === optional($reservation->officiant)->id 
+                                             || $reservation->priests->contains('id', auth()->id());
+                        
+                        // Check if I have already declined
+                        $myPivot = $reservation->priests->where('id', auth()->id())->first();
+                        $hasDeclined = $reservation->status === 'priest_declined' 
+                                    || ($myPivot && $myPivot->pivot->confirmation_status === 'declined');
+                    @endphp
+
+                    @if($authIsAssignedPriest && !$hasDeclined && !in_array($reservation->status, ['cancelled', 'rejected', 'completed', 'approved']))
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6 border-l-4 border-red-500">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Decline Assignment
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                You are currently assigned to this reservation. If you cannot make it, please decline to allow reassignment.
+                            </p>
+                            
+                            <form action="{{ route('admin.reservations.decline-assignment', $reservation->reservation_id) }}" method="POST"
+                                  onsubmit="return confirm('Are you sure you want to decline this assignment?');">
+                                @csrf
+                                <div class="mb-4">
+                                    <label for="decline_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reason (Required)</label>
+                                    <textarea name="reason" id="decline_reason" rows="2" required 
+                                              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-red-500 focus:ring-red-500"
+                                              placeholder="Why are you declining?"></textarea>
+                                    @error('reason')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div class="mb-4">
+                                    <label for="replacement_priest_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Replacement (Optional)</label>
+                                    <select name="replacement_priest_id" id="replacement_priest_id" 
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <option value="">-- I will assign later --</option>
+                                        @foreach($availablePriests as $priest)
+                                            @if($priest->is_available && $priest->id !== auth()->id())
+                                                <option value="{{ $priest->id }}">Fr. {{ $priest->first_name }} {{ $priest->last_name }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                    @error('replacement_priest_id')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">If you select a replacement, they will be assigned immediately.</p>
+                                </div>
+                                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700 transition">
+                                    Decline & Reassign
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
+
                     <!-- Assign Priest Form (only shown when priest has declined/rejected OR when pending assignment) -->
-                    @php $authIsAssignedPriest = auth()->id() === optional($reservation->officiant)->id; @endphp
                     @if($reservation->priest_selection_type !== 'external'
                         && (in_array($reservation->status, ['priest_declined', 'pending_priest_reassignment'])
                             || ($reservation->status === 'adviser_approved' && !$reservation->officiant_id))
-                        && !$authIsAssignedPriest)
+                        )
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
-                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Assign Priest</h3>
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                                Assign Priest
+                            </h3>
                             @if(in_array($reservation->status, ['priest_declined','pending_priest_reassignment']))
                                 <div class="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded text-sm text-purple-800 dark:text-purple-300">
                                     This reservation's priest slot is open due to a prior decline. Please assign a new priest.
