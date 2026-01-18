@@ -63,15 +63,56 @@
                                                     $oldVal = $diff['old'] ?? '—';
                                                     $newVal = $diff['new'] ?? '—';
                                                     
-                                                    // Resolve Priest/Officiant Name from ID
-                                                    if ($field === 'officiant_id') {
+                                                    // Resolve Users (Officiant, Requestor, Admin actions)
+                                                    if (in_array($field, ['officiant_id', 'user_id', 'approved_by', 'rejected_by', 'cancelled_by'])) {
                                                         if (is_numeric($oldVal) && $oldVal > 0) {
                                                             $u = \App\Models\User::find($oldVal);
-                                                            $oldVal = $u ? "Fr. " . $u->first_name . ' ' . $u->last_name : $oldVal;
+                                                            if ($u) {
+                                                                $prefix = ($field === 'officiant_id') ? "Fr. " : "";
+                                                                $name = $u->full_name ?? ($u->first_name . ' ' . $u->last_name);
+                                                                $oldVal = $prefix . $name;
+                                                            }
                                                         }
                                                         if (is_numeric($newVal) && $newVal > 0) {
                                                             $u = \App\Models\User::find($newVal);
-                                                            $newVal = $u ? "Fr. " . $u->first_name . ' ' . $u->last_name : $newVal;
+                                                            if ($u) {
+                                                                $prefix = ($field === 'officiant_id') ? "Fr. " : "";
+                                                                $name = $u->full_name ?? ($u->first_name . ' ' . $u->last_name);
+                                                                $newVal = $prefix . $name;
+                                                            }
+                                                        }
+                                                    }
+                                                    // Resolve Venue
+                                                    elseif ($field === 'venue_id') {
+                                                        if (is_numeric($oldVal) && $oldVal > 0) {
+                                                            $v = \App\Models\Venue::find($oldVal);
+                                                            $oldVal = $v ? $v->name : $oldVal;
+                                                        }
+                                                        if (is_numeric($newVal) && $newVal > 0) {
+                                                            $v = \App\Models\Venue::find($newVal);
+                                                            $newVal = $v ? $v->name : $newVal;
+                                                        }
+                                                    }
+                                                    // Resolve Service
+                                                    elseif ($field === 'service_id') {
+                                                        if (is_numeric($oldVal) && $oldVal > 0) {
+                                                            $s = \App\Models\Service::find($oldVal);
+                                                            $oldVal = $s ? $s->service_name : $oldVal;
+                                                        }
+                                                        if (is_numeric($newVal) && $newVal > 0) {
+                                                            $s = \App\Models\Service::find($newVal);
+                                                            $newVal = $s ? $s->service_name : $newVal;
+                                                        }
+                                                    }
+                                                    // Resolve Organization
+                                                    elseif ($field === 'org_id') {
+                                                        if (is_numeric($oldVal) && $oldVal > 0) {
+                                                            $o = \App\Models\Organization::find($oldVal);
+                                                            $oldVal = $o ? $o->org_name : $oldVal;
+                                                        }
+                                                        if (is_numeric($newVal) && $newVal > 0) {
+                                                            $o = \App\Models\Organization::find($newVal);
+                                                            $newVal = $o ? $o->org_name : $newVal;
                                                         }
                                                     }
                                                 @endphp
