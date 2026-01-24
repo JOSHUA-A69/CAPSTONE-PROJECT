@@ -10,49 +10,60 @@ class OrganizationBookingRequestsQuery implements ReportQuery
 {
     public function run(ReportFilter $filter): array
     {
-        $q = OBR::query()
+        $query = OBR::query()
             ->select([
-                DB::raw("DATE_FORMAT(COALESCE(submitted_at, requested_date), '%Y-%m') as period"),
-                DB::raw("SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved"),
-                DB::raw("SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected"),
-                DB::raw("SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending"),
-                DB::raw('COUNT(*) as total'),
-                // Average response time (hours) for those with adviser_responded_at
-                DB::raw('ROUND(AVG(CASE WHEN adviser_responded_at IS NOT NULL AND submitted_at IS NOT NULL THEN TIMESTAMPDIFF(HOUR, submitted_at, adviser_responded_at) END), 2) as avg_response_hours'),
+                'organization_booking_requests.*',
+                'organizations.org_name',
+                DB::raw("CONCAT(COALESCE(req.first_name,''), ' ', COALESCE(req.last_name,'')) as requestor_name"),
             ])
-            ->leftJoin('organizations', 'organizations.org_id', '=', 'organization_booking_requests.organization_id')
-            ->groupBy('period')
-            ->orderBy('period');
+            ->join('organizations', 'organizations.org_id', '=', 'organization_booking_requests.organization_id')
+            ->leftJoin('users as req', 'req.id', '=', 'organization_booking_requests.requestor_id')
+            ->orderBy('organization_booking_requests.submitted_at', 'desc');
 
         // Filters
         if ($filter->date_from) {
-            $q->where(DB::raw('COALESCE(submitted_at, requested_date)'), '>=', $filter->date_from);
+            $query->where(DB::raw('COALESCE(submitted_at, requested_date)'), '>=', $filter->date_from);
         }
         if ($filter->date_to) {
-            $q->where(DB::raw('COALESCE(submitted_at, requested_date)'), '<=', $filter->date_to);
+            $query->where(DB::raw('COALESCE(submitted_at, requested_date)'), '<=', $filter->date_to);
         }
         if (!empty($filter->organizations)) {
-            $q->whereIn('organization_booking_requests.organization_id', $filter->organizations);
+            $query->whereIn('organization_booking_requests.organization_id', $filter->organizations);
         }
-        // services filter does not apply (no service_id column); ignore gracefully
         if (!empty($filter->status)) {
-            $q->where('organization_booking_requests.status', $filter->status);
+            $query->where('organization_booking_requests.status', $filter->status);
         }
         if (!empty($filter->adviser_id)) {
-            $q->where('organizations.adviser_id', '=', $filter->adviser_id);
+            $query->where('organizations.adviser_id', '=', $filter->adviser_id);
         }
 
-        $rows = $q->get()->map(function ($row) {
-            $total = max((int) $row->total, 1);
-            $approved = (int) $row->approved;
+        $rows = $query->limit(1000)->get()->map(function ($row) {
+            $dateStr = $row->requested_date ? \Carbon\Carbon::parse($row->requested_date)->format('Y-m-d') : '—';
+            $statusLabel = ucwords($row->status);
+            $orgName = $row->org_name ?? '—';
+            $activity = $row->activity_name ?: 'Event';
+            
+            // Build Description / Details
+            $descriptionParts = [];
+            if ($row->requestor_name) {
+                $descriptionParts[] = "Requested by: {$row->requestor_name}";
+            }
+            if ($row->requested_venue) {
+                $descriptionParts[] = "Venue: {$row->requested_venue}";
+            }
+            // Removed response time as it is a metric, not a descriptive detail
+            if ($row->rejection_reason) {
+                $descriptionParts[] = "Reason: {$row->rejection_reason}";
+            }
+            
+            $details = implode(' | ', $descriptionParts);
+
             return [
-                'period' => (string) $row->period,
-                'approved' => $approved,
-                'rejected' => (int) $row->rejected,
-                'pending' => (int) $row->pending,
-                'total' => (int) $row->total,
-                'approval_rate_pct' => round(($approved / $total) * 100, 2),
-                'avg_response_hours' => $row->avg_response_hours !== null ? (float) $row->avg_response_hours : null,
+                'Date' => $dateStr,
+                'Organization' => $orgName,
+                'Activity' => $activity,
+                'Status' => $statusLabel,
+                'Details' => $details,
             ];
         })->toArray();
 

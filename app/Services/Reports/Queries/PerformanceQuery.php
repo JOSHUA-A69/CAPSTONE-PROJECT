@@ -46,15 +46,35 @@ class PerformanceQuery implements ReportQuery
 
         $rows = $query->get()->map(function ($row) {
             $total = max((int) $row->total, 1);
+            $approved = (int) $row->approved;
+            $rejected = (int) $row->rejected;
+            $cancelled = (int) $row->cancelled;
+
+            $approvalRate = round(($approved / $total) * 100, 1);
+            $cancellationRate = round(($cancelled / $total) * 100, 1);
+            $avgLead = round((float) $row->avg_lead_days, 1);
+            
+            $orgName = (string) $row->org_name;
+
+            // Consolidated "Volume" string
+            $volumeStr = "{$total} Total";
+            $breakdown = [];
+            if ($approved > 0) $breakdown[] = "{$approved} Aprv";
+            if ($rejected > 0) $breakdown[] = "{$rejected} Rej";
+            if ($cancelled > 0) $breakdown[] = "{$cancelled} Canc";
+            
+            if (!empty($breakdown)) {
+                $volumeStr .= " (" . implode(', ', $breakdown) . ")";
+            }
+
+            // Consolidated "Efficiency" string
+            $efficiencyStr = "Approval Rate: {$approvalRate}% | Canc. Rate: {$cancellationRate}% | Lead Time: {$avgLead} days";
+
             return [
-                'organization' => (string) $row->org_name,
-                'approved' => (int) $row->approved,
-                'rejected' => (int) $row->rejected,
-                'cancelled' => (int) $row->cancelled,
-                'total' => (int) $row->total,
-                'approval_rate_pct' => round(((int) $row->approved / $total) * 100, 2),
-                'cancellation_rate_pct' => round(((int) $row->cancelled / $total) * 100, 2),
-                'avg_lead_days' => round((float) $row->avg_lead_days, 2),
+                'Organization' => $orgName,
+                'Request Volume' => $volumeStr,
+                'Efficiency Metrics' => $efficiencyStr,
+                'Performance Narrative' => "{$orgName} processed {$total} requests. {$approvalRate}% were approved, averaging {$avgLead} days lead time.",
             ];
         })->toArray();
 

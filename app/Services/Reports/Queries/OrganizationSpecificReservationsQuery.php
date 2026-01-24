@@ -17,7 +17,7 @@ class OrganizationSpecificReservationsQuery implements ReportQuery
                 'reservations.status',
                 'organizations.org_name as organization',
                 'services.service_name as service',
-                'venues.name as venue',
+                DB::raw("COALESCE(venues.name, reservations.custom_venue_name) as venue"),
                 DB::raw("CONCAT(COALESCE(requester.first_name,''),' ',COALESCE(requester.last_name,'')) as requester"),
                 DB::raw("CONCAT(COALESCE(officiant.first_name,''),' ',COALESCE(officiant.last_name,'')) as officiant"),
                 'reservations.activity_name as activity',
@@ -50,24 +50,37 @@ class OrganizationSpecificReservationsQuery implements ReportQuery
             $query->where('organizations.adviser_id', '=', $filter->adviser_id);
         }
 
-        $rows = $query->limit(10000)->get()->map(function ($row) {
+        $rows = $query->limit(1000)->get()->map(function ($row) {
+            $dateFull = \Carbon\Carbon::parse($row->date . ' ' . $row->time);
+            $dateStr = $dateFull->format('M d, Y h:i A');
+
             $statusRaw = (string) ($row->status ?? '');
-            $status = $statusRaw !== ''
-                ? ucwords(str_replace('_', ' ', strtolower($statusRaw)))
-                : '—';
-            $time = $row->time ? substr((string) $row->time, 0, 5) : '';
+            $status = $statusRaw !== '' ? ucwords(str_replace('_', ' ', $statusRaw)) : '—';
+            
+            $org = (string) ($row->organization ?? '—');
+            $serviceName = $row->service ?? 'Event';
+            $activity = (string) ($row->activity ?? $serviceName);
+            
+            $venue = (string) ($row->venue ?? '—');
+            $requester = trim((string) ($row->requester ?? '')) ?: 'Unknown User';
+            $officiant = trim((string) ($row->officiant ?? '')) ?: '—';
+            $purpose = (string) ($row->purpose ?? '');
+
+            // Consolidate minor details
+            $detailsList = [];
+            if ($venue !== '—') $detailsList[] = "Venue: {$venue}";
+            if ($requester !== 'Unknown User') $detailsList[] = "By: {$requester}";
+            if ($officiant !== '—') $detailsList[] = "Officiant: {$officiant}";
+            if ($purpose) $detailsList[] = "Purpose: {$purpose}";
+
+            $detailsStr = implode(' | ', $detailsList);
 
             return [
-                'Date' => (string) ($row->date ?? ''),
-                'Time' => (string) $time,
-                'Organization' => (string) ($row->organization ?? '—'),
-                'Service' => (string) ($row->service ?? '—'),
-                'Venue' => (string) ($row->venue ?? '—'),
-                'Requester' => trim((string) ($row->requester ?? '')) ?: '—',
-                'Officiant' => trim((string) ($row->officiant ?? '')) ?: '—',
+                'Date' => $dateStr,
+                'Organization' => $org,
+                'Activity' => $activity,
                 'Status' => $status,
-                'Activity' => (string) ($row->activity ?? '—'),
-                'Purpose' => (string) ($row->purpose ?? '—'),
+                'Details' => $detailsStr,
             ];
         })->toArray();
 

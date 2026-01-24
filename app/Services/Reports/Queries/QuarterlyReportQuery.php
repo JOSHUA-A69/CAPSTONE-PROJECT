@@ -12,17 +12,18 @@ class QuarterlyReportQuery implements ReportQuery
     {
         $query = Reservation::query()
             ->select([
-                DB::raw('YEAR(reservations.schedule_date) as year'),
-                DB::raw('QUARTER(reservations.schedule_date) as quarter'),
-                DB::raw("SUM(CASE WHEN reservations.status = 'approved' THEN 1 ELSE 0 END) as approved"),
-                DB::raw("SUM(CASE WHEN reservations.status = 'rejected' THEN 1 ELSE 0 END) as rejected"),
-                DB::raw("SUM(CASE WHEN reservations.status = 'cancelled' THEN 1 ELSE 0 END) as cancelled"),
-                DB::raw("SUM(CASE WHEN reservations.status IN ('pending','adviser_approved','admin_approved') THEN 1 ELSE 0 END) as pending"),
-                DB::raw('COUNT(*) as total'),
+                'reservations.schedule_date',
+                'reservations.status',
+                'reservations.activity_name',
+                'reservations.purpose',
+                'services.service_name',
+                'organizations.org_name',
+                DB::raw("CONCAT(COALESCE(users.first_name,''), ' ', COALESCE(users.last_name,'')) as requester_name"),
             ])
-            ->groupBy('year', 'quarter')
-            ->orderBy('year')
-            ->orderBy('quarter');
+            ->leftJoin('organizations', 'organizations.org_id', '=', 'reservations.org_id')
+            ->leftJoin('users', 'users.id', '=', 'reservations.user_id')
+            ->leftJoin('services', 'services.service_id', '=', 'reservations.service_id')
+            ->orderBy('reservations.schedule_date');
 
         if ($filter->date_from) {
             $query->where('reservations.schedule_date', '>=', $filter->date_from);
@@ -40,17 +41,59 @@ class QuarterlyReportQuery implements ReportQuery
             $query->where('reservations.status', $filter->status);
         }
 
-        $rows = $query->get()->map(function ($row) {
-            return [
-                'period' => sprintf('%d-Q%d', (int) $row->year, (int) $row->quarter),
-                'approved' => (int) $row->approved,
-                'rejected' => (int) $row->rejected,
-                'cancelled' => (int) $row->cancelled,
-                'pending' => (int) $row->pending,
-                'total' => (int) $row->total,
-            ];
-        })->toArray();
+        $allReservations = $query->get();
 
-        return $rows;
+        // Group by Year-Quarter
+        $grouped = $allReservations->groupBy(function ($item) {
+            $date = \Carbon\Carbon::parse($item->schedule_date);
+            return $date->year . '-' . $date->quarter;
+        });
+
+        $finalRows = [];
+
+        foreach ($grouped as $key => $items) {
+            list($year, $quarter) = explode('-', $key);
+            $periodLabel = "Q{$quarter} {$year}";
+
+            // Calculate stats for this quarter
+            $total = $items->count();
+            $approved = $items->where('status', 'approved')->count();
+            $rejected = $items->where('status', 'rejected')->count();
+            $cancelled = $items->where('status', 'cancelled')->count();
+            $pending = $items->whereIn('status', ['pending', 'adviser_approved', 'admin_approved'])->count();
+
+            // 1. Add Summary Row for the Quarter
+            $finalRows[] = [
+                'Period' => $periodLabel,
+                'Type' => 'PERIOD SUMMARY',
+                'Activity / Details' => "Total: {$total} | Approved: {$approved} | Rejected: {$rejected} | Cancelled: {$cancelled} | Pending: {$pending}",
+                'Date' => '',
+                'Organization' => '',
+                'Status' => '',
+            ];
+
+            // 2. Add Detail Rows
+            foreach ($items as $item) {
+                $statusLabel = ucwords(str_replace('_', ' ', $item->status));
+                $activity = $item->activity_name ?: $item->service_name ?: 'Event';
+                $date = \Carbon\Carbon::parse($item->schedule_date)->format('M d, Y');
+                
+                $finalRows[] = [
+                    'Period' => $periodLabel,
+                    'Type' => 'Reservation',
+                    'Activity / Details' => $activity,
+                    'Date' => $date,
+                    'Organization' => $item->org_name ?? '—',
+                    'Status' => $statusLabel,
+                ];
+            }
+            
+            // Add a spacer row (empty) for readability between quarters in Excel/CSV
+            $finalRows[] = [
+                'Period' => '', 'Type' => '', 'Activity / Details' => '', 'Date' => '', 'Organization' =>'', 'Status' => ''
+            ];
+        }
+
+        return $finalRows;
     }
 }

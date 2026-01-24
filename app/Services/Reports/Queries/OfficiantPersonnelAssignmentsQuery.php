@@ -99,6 +99,7 @@ class OfficiantPersonnelAssignmentsQuery implements ReportQuery
         // Finalize totals
         $rows = array_values(array_map(function ($row) {
             $row['total_assignments'] = (int) $row['reservations'] + (int) $row['schedules'];
+            $row['assignment_summary'] = $row['officiant'] . " had " . $row['total_assignments'] . " assignments (" . $row['reservations'] . " reservations, " . $row['schedules'] . " liturgical schedules).";
             return $row;
         }, $map));
 

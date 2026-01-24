@@ -13,15 +13,18 @@ class ApprovalsRejectionsQuery implements ReportQuery
     {
         $query = Reservation::query()
             ->select([
-                DB::raw("DATE_FORMAT(reservations.schedule_date, '%Y-%m') as period"),
-                DB::raw("SUM(CASE WHEN reservations.status = 'approved' THEN 1 ELSE 0 END) as approved"),
-                DB::raw("SUM(CASE WHEN reservations.status = 'rejected' THEN 1 ELSE 0 END) as rejected"),
-                DB::raw("SUM(CASE WHEN reservations.status = 'pending' THEN 1 ELSE 0 END) as pending"),
-                DB::raw("COUNT(*) as total"),
+                'reservations.schedule_date',
+                'reservations.status',
+                'reservations.activity_name',
+                'services.service_name',
+                'organizations.org_name',
+                DB::raw("CONCAT(COALESCE(users.first_name,''), ' ', COALESCE(users.last_name,'')) as requester_name"),
             ])
             ->leftJoin('organizations', 'organizations.org_id', '=', 'reservations.org_id')
-            ->groupBy('period')
-            ->orderBy('period');
+            ->leftJoin('users', 'users.id', '=', 'reservations.user_id')
+            ->leftJoin('services', 'services.service_id', '=', 'reservations.service_id')
+            ->whereIn('reservations.status', ['approved', 'rejected']) // Focus on approvals/rejections
+            ->orderBy('reservations.schedule_date');
 
         // Filters
         if ($filter->date_from) {
@@ -40,26 +43,59 @@ class ApprovalsRejectionsQuery implements ReportQuery
             $query->where('organizations.adviser_id', '=', $filter->adviser_id);
         }
 
-        // Optional status filter narrows the set but still returns columns
-        if (!empty($filter->status)) {
-            $query->where('reservations.status', $filter->status);
+        $allReservations = $query->get();
+
+        // Group by Month
+        $grouped = $allReservations->groupBy(function ($item) {
+            return \Carbon\Carbon::parse($item->schedule_date)->format('Y-m');
+        });
+
+        $finalRows = [];
+
+        foreach ($grouped as $monthKey => $items) {
+            $monthLabel = \Carbon\Carbon::createFromFormat('Y-m', $monthKey)->format('F Y');
+
+            $total = $items->count();
+            $approved = $items->where('status', 'approved')->count();
+            $rejected = $items->where('status', 'rejected')->count();
+            
+            $approvalRate = $total > 0 ? round(($approved / $total) * 100, 1) : 0;
+
+            // 1. Summary Row
+            $finalRows[] = [
+                'Period' => $monthLabel,
+                'Type' => 'PERIOD SUMMARY',
+                'Details / Reason' => "Total Decisions: {$total} | Approved: {$approved} | Rejected: {$rejected} | Approval Rate: {$approvalRate}%",
+                'Date' => '',
+                'Organization' => '',
+                'Status' => '',
+            ];
+
+            // 2. Detail Rows
+            foreach ($items as $item) {
+                $statusLabel = ucwords($item->status);
+                $activity = $item->activity_name ?: $item->service_name ?: 'Event';
+                $date = \Carbon\Carbon::parse($item->schedule_date)->format('M d, Y');
+                
+                // For rejections, we might add a generic reason or formatted text if we had the history column here,
+                // but for now keeping it simple as per schema.
+                
+                $finalRows[] = [
+                    'Period' => $monthLabel,
+                    'Type' => 'Reservation Decision',
+                    'Details / Reason' => $activity,
+                    'Date' => $date,
+                    'Organization' => $item->org_name ?? '—',
+                    'Status' => $statusLabel,
+                ];
+            }
+
+            // Spacer
+            $finalRows[] = [
+                'Period' => '', 'Type' => '', 'Details / Reason' => '', 'Date' => '', 'Organization' => '', 'Status' => ''
+            ];
         }
 
-        $rows = $query->get()->map(function ($row) {
-            $approved = (int) $row->approved;
-            $rejected = (int) $row->rejected;
-            $total = max((int) $row->total, 1);
-            $rate = round(($approved / $total) * 100, 2);
-            return [
-                'period' => $row->period,
-                'approved' => $approved,
-                'rejected' => $rejected,
-                'pending' => (int) $row->pending,
-                'total' => (int) $row->total,
-                'approval_rate_pct' => $rate,
-            ];
-        })->toArray();
-
-        return $rows;
+        return $finalRows;
     }
 }
