@@ -238,10 +238,11 @@ class Reservation extends Model
      */
     public function scopeAwaitingPriestConfirmation(Builder $query): Builder
     {
-        return $query->whereIn('status', ['adviser_approved', 'admin_approved'])
+        return $query->whereIn('status', ['pending', 'adviser_approved', 'admin_approved', 'pending_priest_confirmation'])
             ->where(function ($q) {
                 $q->whereNull('priest_confirmation')
-                    ->orWhere('priest_confirmation', 'pending');
+                    ->orWhere('priest_confirmation', 'pending')
+                    ->orWhere('priest_confirmation', '!=', 'confirmed');
             });
     }
 

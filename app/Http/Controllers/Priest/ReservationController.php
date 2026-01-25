@@ -32,7 +32,11 @@ class ReservationController extends Controller
     public function index(Request $request)
     {
         $status = $request->input('status');
-        $timeFilter = $request->input('time', 'upcoming'); // upcoming or past
+        
+        // Default time filter: 'upcoming' normally, but 'all' (null) if checking pending confirmations
+        // This ensures priests see ALL assignments needing action, even if the date has passed
+        $defaultTime = ($status === 'pending_priest_confirmation') ? null : 'upcoming';
+        $timeFilter = $request->input('time', $defaultTime);
 
         $query = Reservation::with(['user', 'service', 'venue', 'organization'])
             ->forPriest(Auth::id());
