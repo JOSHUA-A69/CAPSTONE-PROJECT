@@ -218,19 +218,36 @@
                         <!-- Specific Priest Selection -->
                         <div id="specific_priest_div" class="hidden mt-3 space-y-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Choose Priest(s) <span class="text-red-500">*</span></label>
-                            <div class="bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 checkbox-list">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                    @foreach($priests as $priest)
-                                        <label class="flex items-center space-x-3 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer checkbox-item">
-                                            <input type="checkbox" name="priest_ids[]" value="{{ $priest->id }}"
-                                                @if(is_array(old('priest_ids')) && in_array($priest->id, old('priest_ids'))) checked @endif
-                                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
-                                            <span class="text-sm text-gray-700 dark:text-gray-300">{{ $priest->full_name }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                @foreach($priests as $priest)
+                                    <label class="relative flex items-center p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all cursor-pointer group shadow-sm">
+                                        <div class="flex items-center gap-3 w-full">
+                                            <div class="flex-shrink-0">
+                                                <img class="h-12 w-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-600 group-hover:border-indigo-200 dark:group-hover:border-indigo-500 transition-colors" 
+                                                     src="{{ $priest->profile_picture_url }}" 
+                                                     alt="{{ $priest->full_name }}">
+                                            </div>
+                                            <div class="flex-1 min-w-0 pr-6">
+                                                <p class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-indigo-700 dark:group-hover:text-indigo-300">
+                                                    {{ $priest->full_name }}
+                                                </p>
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">SVD Priest</p>
+                                            </div>
+                                            <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                                <input type="checkbox" name="priest_ids[]" value="{{ $priest->id }}"
+                                                    @if(is_array(old('priest_ids')) && in_array($priest->id, old('priest_ids'))) checked @endif
+                                                    class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors">
+                                            </div>
+                                        </div>
+                                    </label>
+                                @endforeach
                             </div>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">💡 Check multiple priests if co-celebration is needed</p>
+                            
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Check multiple priests if co-celebration is needed
+                            </p>
                         </div>
 
                         <!-- External Priest -->
