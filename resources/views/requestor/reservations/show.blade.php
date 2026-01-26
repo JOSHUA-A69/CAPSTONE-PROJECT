@@ -81,6 +81,14 @@
                             <span class="badge-danger">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
                         @elseif($reservation->status === 'approved')
                             <span class="badge-success bg-green-100 text-green-800 px-4 py-2 rounded-full font-semibold shadow-sm border border-green-300">Approved by Admin</span>
+                        @elseif($reservation->status === 'adviser_approved')
+                            <span class="badge-warning">
+                                @if($reservation->priest_selection_type === 'external')
+                                    Awaiting Admin
+                                @else
+                                    Awaiting Priest
+                                @endif
+                            </span>
                         @else
                             <span class="badge-warning">{{ ucfirst(str_replace('_', ' ', $reservation->status)) }}</span>
                         @endif

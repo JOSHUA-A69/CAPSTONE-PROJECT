@@ -43,7 +43,7 @@ class ReservationRequest extends FormRequest
             'service_id' => ['nullable', 'integer', Rule::exists('services', 'service_id')],
             'service_category' => ['required', 'in:institutional_mass,non_institutional_mass,other_services'],
             'venue_id' => ['required'],
-            'organization_ids' => ['required', 'array', 'min:1'],
+            'organization_ids' => ['nullable', 'array'],
             'organization_ids.*' => ['integer', Rule::exists('organizations', 'org_id')],
             'priest_selection_type' => ['required', 'in:specific,any_available,external'],
             'schedule_date' => ['required', 'date', 'after:now'],

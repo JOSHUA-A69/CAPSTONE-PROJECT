@@ -169,9 +169,17 @@ class ReservationController extends Controller
             // Note: schedule_date and schedule_time are already merged in ReservationRequest::prepareForValidation
             // format is 'Y-m-d H:i' or 'Y-m-d H:i:s'
 
-            // Always start at pending status for adviser approval
-            $data['status'] = 'pending';
-            $data['adviser_notified_at'] = now(); // Adviser is notified immediately (email + in-app)
+            $organizationIds = $request->input('organization_ids', []);
+
+            if (empty($organizationIds)) {
+                $data['status'] = 'adviser_approved';
+                $data['adviser_notified_at'] = null;
+                $data['adviser_responded_at'] = now();
+                $data['admin_notified_at'] = now();
+            } else {
+                $data['status'] = 'pending';
+                $data['adviser_notified_at'] = now();
+            }
 
             // Handle custom venue
             if ($request->venue_id === 'custom') {
@@ -203,7 +211,6 @@ class ReservationController extends Controller
             }
 
             // Keep the first organization for backwards compatibility
-            $organizationIds = $request->input('organization_ids', []);
             $data['org_id'] = !empty($organizationIds) ? $organizationIds[0] : null;
 
             // Handle priest selection based on type
@@ -259,7 +266,12 @@ class ReservationController extends Controller
             }
 
             // Create history record with appropriate message
-            $historyRemarks = 'Reservation request submitted by requestor - pending adviser review';
+            $historyRemarks = 'Reservation request submitted by requestor';
+            if (empty($organizationIds)) {
+                $historyRemarks .= ' - pending admin review';
+            } else {
+                $historyRemarks .= ' - pending adviser review';
+            }
             if ($data['priest_selection_type'] === 'any_available') {
                 $historyRemarks .= ' (Admin will assign priest)';
             } elseif ($data['priest_selection_type'] === 'external') {

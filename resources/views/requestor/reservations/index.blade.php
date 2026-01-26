@@ -173,7 +173,11 @@
                                     @elseif($r->status === 'adviser_approved')
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800">
                                             <span class="w-1.5 h-1.5 bg-yellow-500 rounded-full mr-1.5 animate-pulse"></span>
-                                            Wait for Priest
+                                            @if($r->priest_selection_type === 'external')
+                                                Awaiting Admin
+                                            @else
+                                                Awaiting Priest
+                                            @endif
                                         </span>
                                     @elseif($r->status === 'pending')
                                         @php

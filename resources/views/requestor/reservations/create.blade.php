@@ -152,7 +152,7 @@
                          <!-- Requesting Group -->
                          <div class="col-span-1 md:col-span-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Requesting Office/Group <span class="text-red-500">*</span>
+                                Requesting Office/Group <span class="text-gray-400 text-xs font-normal">(Optional)</span>
                             </label>
                             <div class="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700 max-h-48 overflow-y-auto checkbox-list">
                                 @if($organizations->isEmpty())
@@ -571,28 +571,15 @@
             }
         }
 
-        // Validate Organization Selection (Must select at least one)
+        // Validate Organization Selection (Optional now)
         const orgCheckboxes = document.querySelectorAll('input[name="organization_ids[]"]');
         if (orgCheckboxes.length > 0) {
-            let oneOrgChecked = false;
-            orgCheckboxes.forEach(cb => {
-                if (cb.checked) oneOrgChecked = true;
-            });
-            
-            if (!oneOrgChecked) {
-                const orgContainer = orgCheckboxes[0].closest('.checkbox-list');
-                if (orgContainer) {
-                    orgContainer.classList.add('border-red-500', 'bg-red-50');
-                }
-                errorMessages.push('Please select at least one Requesting Office/Group');
-                isValid = false;
-            } else {
-                 const orgContainer = orgCheckboxes[0].closest('.checkbox-list');
-                 if (orgContainer) {
-                    orgContainer.classList.remove('border-red-500', 'bg-red-50');
-                 }
-            }
+             const orgContainer = orgCheckboxes[0].closest('.checkbox-list');
+             if (orgContainer) {
+                orgContainer.classList.remove('border-red-500', 'bg-red-50');
+             }
         }
+
 
         // Validate Priest Selection based on Type
         const priestTypeSelect = document.getElementById('priest_selection_type');

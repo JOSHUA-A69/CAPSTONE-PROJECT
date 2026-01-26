@@ -442,7 +442,13 @@
                     const displayTime = extendedProps.scheduleTime || raw.schedule_time;
                     rows.push(`<strong>Time:</strong> ${displayTime ? escapeHtml(displayTime) : formatTimeDisplay(info.event.start)}`);
                     rows.push(`<strong>Service:</strong> ${escapeHtml(extendedProps.service || '—')}`);
-                    rows.push(`<strong>Status:</strong> ${escapeHtml(formatLabel(extendedProps.status))}`);
+                    
+                    let statusLabel = formatLabel(extendedProps.status);
+                    if (extendedProps.status === 'adviser_approved') {
+                         statusLabel = (raw.priest_selection_type === 'external') ? 'Awaiting Admin' : 'Awaiting Priest';
+                    }
+                    rows.push(`<strong>Status:</strong> ${escapeHtml(statusLabel)}`);
+                    
                     if (raw.purpose) rows.push(`<strong>Purpose:</strong> ${escapeHtml(raw.purpose)}`);
                     if (raw.theme) rows.push(`<strong>Theme:</strong> ${escapeHtml(raw.theme)}`);
                     if (raw.details) rows.push(`<strong>Details:</strong> ${escapeHtml(raw.details)}`);
@@ -604,6 +610,11 @@
                         statusDiv.style.backgroundColor = 'rgba(59, 130, 246, 0.9)';
                         statusDiv.style.color = 'white';
                         statusDiv.innerHTML = '✓ Admin Approved';
+                    } else if (status === 'adviser_approved') {
+                        statusDiv.style.backgroundColor = 'rgba(234, 179, 8, 0.9)'; // yellow-500
+                        statusDiv.style.color = 'white';
+                        const label = (extendedProps.raw && extendedProps.raw.priest_selection_type === 'external') ? 'Awaiting Admin' : 'Awaiting Priest';
+                        statusDiv.innerHTML = '⏳ ' + escapeHtml(label);
                     } else if (status === 'pending') {
                         statusDiv.style.backgroundColor = 'rgba(251, 191, 36, 0.9)';
                         statusDiv.style.color = 'white';
