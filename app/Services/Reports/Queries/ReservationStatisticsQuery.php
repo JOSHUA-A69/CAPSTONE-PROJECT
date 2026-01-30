@@ -64,19 +64,19 @@ class ReservationStatisticsQuery implements ReportQuery
             ->get();
 
         $rows = [
-            ['metric' => 'total', 'label' => 'Total Reservations', 'value' => $total, 'description' => 'Total number of reservations processed matching the criteria.'],
-            ['metric' => 'approved', 'label' => 'Approved', 'value' => $approved, 'description' => 'Number of reservations that have been approved.'],
-            ['metric' => 'rejected', 'label' => 'Rejected', 'value' => $rejected, 'description' => 'Number of reservations that have been rejected.'],
-            ['metric' => 'cancelled', 'label' => 'Cancelled', 'value' => $cancelled, 'description' => 'Number of reservations that have been cancelled.'],
-            ['metric' => 'pending', 'label' => 'Pending', 'value' => $pending, 'description' => 'Number of reservations currently pending approval.'],
-            ['metric' => 'approval_rate_pct', 'label' => 'Approval Rate (%)', 'value' => $total > 0 ? round(($approved / $total) * 100, 2) : 0, 'description' => 'Percentage of total reservations that were approved.'],
-            ['metric' => 'cancellation_rate_pct', 'label' => 'Cancellation Rate (%)', 'value' => $total > 0 ? round(($cancelled / $total) * 100, 2) : 0, 'description' => 'Percentage of total reservations that were cancelled.'],
-            ['metric' => 'avg_lead_days', 'label' => 'Avg Lead Time (Days)', 'value' => $avgLeadDays, 'description' => 'Average number of days between reservation creation and the scheduled date.'],
+            ['metric' => 'Total', 'label' => 'Total Reservations', 'value' => $total, 'description' => 'Total number of reservations processed matching the criteria.'],
+            ['metric' => 'Approved', 'label' => 'Approved', 'value' => $approved, 'description' => 'Number of reservations that have been approved.'],
+            ['metric' => 'Rejected', 'label' => 'Rejected', 'value' => $rejected, 'description' => 'Number of reservations that have been rejected.'],
+            ['metric' => 'Cancelled', 'label' => 'Cancelled', 'value' => $cancelled, 'description' => 'Number of reservations that have been cancelled.'],
+            ['metric' => 'Pending', 'label' => 'Pending', 'value' => $pending, 'description' => 'Number of reservations currently pending approval.'],
+            ['metric' => 'Approval Rate', 'label' => 'Approval Rate (%)', 'value' => $total > 0 ? round(($approved / $total) * 100, 2) : 0, 'description' => 'Percentage of total reservations that were approved.'],
+            ['metric' => 'Cancellation Rate', 'label' => 'Cancellation Rate (%)', 'value' => $total > 0 ? round(($cancelled / $total) * 100, 2) : 0, 'description' => 'Percentage of total reservations that were cancelled.'],
+            ['metric' => 'Avg Lead Days', 'label' => 'Avg Lead Time (Days)', 'value' => $avgLeadDays, 'description' => 'Average number of days between reservation creation and the scheduled date.'],
         ];
 
         foreach ($dow as $row) {
             $rows[] = [
-                'metric' => 'day_of_week', 
+                'metric' => 'Day of Week', 
                 'label' => (string) $row->day, 
                 'value' => (int) $row->cnt,
                 'description' => "Number of reservations scheduled on " . (string) $row->day . "s."

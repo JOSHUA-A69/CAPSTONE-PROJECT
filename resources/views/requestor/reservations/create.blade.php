@@ -234,10 +234,10 @@
                                                 </p>
                                                 <p class="text-xs text-gray-500 dark:text-gray-400 truncate">SVD Priest</p>
                                             </div>
-                                            <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                            <div class="absolute right-2 top-2">
                                                 <input type="checkbox" name="priest_ids[]" value="{{ $priest->id }}"
                                                     @if(is_array(old('priest_ids')) && in_array($priest->id, old('priest_ids'))) checked @endif
-                                                    class="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors">
+                                                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors">
                                             </div>
                                         </div>
                                     </label>

@@ -108,6 +108,17 @@ class OfficiantPersonnelAssignmentsQuery implements ReportQuery
             return [$a['period'], $a['officiant']] <=> [$b['period'], $b['officiant']];
         });
 
-        return $rows;
+        // Convert to friendly keys
+        return array_map(function ($row) {
+            return [
+                'Period' => $row['period'],
+                'Officiant' => $row['officiant'],
+                'Total Assignments' => $row['total_assignments'],
+                'Reservations' => $row['reservations'],
+                'Approved Reservations' => $row['approved_reservations'],
+                'Liturgical Schedules' => $row['schedules'],
+                'Details' => $row['assignment_summary'],
+            ];
+        }, $rows);
     }
 }
