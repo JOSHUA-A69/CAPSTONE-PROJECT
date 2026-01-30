@@ -342,6 +342,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/services/manage', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'store'])->name('services.manage.store');
     Route::put('/services/manage/{id}', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'update'])->name('services.manage.update');
     Route::delete('/services/manage/{id}', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'destroy'])->name('services.manage.destroy');
+    Route::post('/services/manage/{id}/restore', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'restore'])->name('services.manage.restore');
     
     // Parameterized service routes (MUST be after specific routes)
     Route::post('/services/{reservation_id}/confirm', [\App\Http\Controllers\Admin\ServiceController::class, 'confirm'])->name('services.confirm');

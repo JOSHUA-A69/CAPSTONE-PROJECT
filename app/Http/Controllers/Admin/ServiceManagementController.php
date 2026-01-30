@@ -14,13 +14,24 @@ class ServiceManagementController extends Controller
     /**
      * Display a listing of all services.
      */
-    public function index()
+    public function index(Request $request)
     {
     Log::info('ServiceManagementController index method called');
-        $services = Service::orderBy('service_name', 'asc')->get();
+        
+        $query = Service::orderBy('service_name', 'asc');
+
+        if ($request->has('archived')) {
+            $query->onlyTrashed();
+            $showingArchived = true;
+        } else {
+            $showingArchived = false;
+        }
+
+        $services = $query->get();
+
     Log::info('Services count: ' . $services->count());
         $categories = $this->getCategories();
-        return view('admin.services.manage', compact('services', 'categories'));
+        return view('admin.services.manage', compact('services', 'categories', 'showingArchived'));
     }
 
     /**
@@ -79,25 +90,29 @@ class ServiceManagementController extends Controller
     }
 
     /**
-     * Remove the specified service from storage.
+     * Archive the specified service.
      */
     public function destroy($id)
     {
         $service = Service::findOrFail($id);
         
-        // Check if service is being used in any reservations
-        $reservationCount = DB::table('reservations')
-            ->where('service_id', $id)
-            ->count();
-
-        if ($reservationCount > 0) {
-            return redirect()->route('admin.services.manage')
-                ->with('error', 'Cannot delete this service. It is currently being used in ' . $reservationCount . ' reservation(s).');
-        }
-
+        // Archiving (soft delete) allows keeping history, so we don't need to block
+        // if reservations exist.
         $service->delete();
 
         return redirect()->route('admin.services.manage')
-            ->with('success', 'Service deleted successfully!');
+            ->with('success', 'Service archived successfully!');
+    }
+
+    /**
+     * Restore the specified archived service.
+     */
+    public function restore($id)
+    {
+        $service = Service::onlyTrashed()->findOrFail($id);
+        $service->restore();
+
+        return redirect()->route('admin.services.manage', ['archived' => 1])
+            ->with('success', 'Service restored successfully!');
     }
 }

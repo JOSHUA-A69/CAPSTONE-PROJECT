@@ -51,7 +51,7 @@ class ReportController extends Controller
         }
 
         // Common lists for simple selects
-        $services = \App\Models\Service::orderBy('service_name')->get(['service_id', 'service_name']);
+        $services = \App\Models\Service::withTrashed()->orderBy('service_name')->get(['service_id', 'service_name']);
 
         return view('reports.index', [
             'types' => $allowed,
