@@ -13,7 +13,7 @@
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                     <tr>
                         <td align="center" style="padding-bottom: 30px;">
-                            <img src="{{ config('app.url') }}/images/ers-logo.png" alt="eReligiousServices" width="80" height="80" style="display: block;">
+                            <img src="{{ asset('images/ers-logo.png') }}" alt="eReligiousServices" width="80" height="80" style="display: block;">
                             <h1 style="margin: 20px 0 0 0; color: #1f2937; font-size: 24px; font-weight: 600;">@yield('heading')</h1>
                         </td>
                     </tr>
