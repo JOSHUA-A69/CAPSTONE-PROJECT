@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: eReligiousServices
+    env: docker
+    dockerfilePath: docker/prod/Dockerfile
+    context: .
+    envVars:
+      - key: APP_NAME
+        value: eReligiousServices
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        sync: false
+      - key: APP_KEY
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: ers-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: ers-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: ers-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: ers-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: ers-db
+          property: password
+
+databases:
+  - name: ers-db
+    databaseName: ers_db
+    user: ers_user
+    plan: free # Be explicit for testing, they can upgrade later
