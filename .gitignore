@@ -41,3 +41,5 @@ zznotes/
 
 # Personal development notes
 /ZzNotes/
+
+.env.prod.secrets
