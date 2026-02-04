@@ -3,7 +3,7 @@ services:
     name: eReligiousServices
     env: docker
     dockerfilePath: docker/prod/Dockerfile
-    context: .
+    dockerContext: .
     envVars:
       - key: APP_NAME
         value: eReligiousServices
