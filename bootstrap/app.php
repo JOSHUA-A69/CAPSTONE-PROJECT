@@ -11,6 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Trust Render's Load Balancer for HTTPS generation
+        $middleware->trustProxies(at: '*');
+
         // Add performance headers middleware
         $middleware->web(append: [
             \App\Http\Middleware\SetPerformanceHeaders::class,
