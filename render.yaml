@@ -30,8 +30,9 @@ services:
 
   - type: pserv
     name: mysql
-    env: image
-    image: mysql:8.0
+    env: docker
+    dockerfilePath: docker/mysql/Dockerfile
+    dockerContext: .
     disk:
       name: mysql-data
       mountPath: /var/lib/mysql
