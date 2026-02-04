@@ -30,7 +30,7 @@ services:
 
   - type: pserv
     name: mysql
-    env: docker
+    env: image
     image: mysql:8.0
     disk:
       name: mysql-data
