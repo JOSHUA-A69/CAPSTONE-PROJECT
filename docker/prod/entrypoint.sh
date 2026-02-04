@@ -18,5 +18,13 @@ fi
 # Link storage (idempotent)
 php artisan storage:link
 
+# Run migrations automatically (Required for Free Tier with no Shell access)
+echo "Running migrations..."
+php artisan migrate --force
+
+# Run seeds automatically
+echo "Running seeds..."
+php artisan db:seed --force
+
 # Start Apache
 exec docker-php-entrypoint apache2-foreground
