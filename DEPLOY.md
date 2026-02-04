@@ -6,31 +6,34 @@ This project is configured for deployment on [Render](https://render.com) using 
 1. A Render account.
 2. This repository connected to your Render account.
 
-## Deployment Steps (Blueprint - Recommended)
+## Deployment Steps (Blueprint)
 
-We have included a `render.yaml` Blueprint file which automates the setup of the web service and database.
+We have included a `render.yaml` Blueprint file which automates the setup.
 
 1. Go to your Render Dashboard.
 2. Click **New +** and select **Blueprint**.
 3. Connect this repository.
 4. Render will detect `render.yaml` and propose creating:
    - **eReligiousServices** (Web Service)
-   - **ers-db** (PostgreSQL Database)
+   - **mysql** (Private Service - Docker MySQL 8.0)
 5. Click **Apply**.
+
+**Note on MySQL:**
+We are using a "Private Service" with a persistent Disk for MySQL, as Render does not offer managed MySQL. **This typically requires a paid Render plan** to support the persistent disk.
 
 ## Configuration
 
-The Blueprint automatically links the database credentials. However, you need to manually set the `APP_KEY`.
+The Blueprint links these services automatically using the service name `mysql`.
 
-1. **Generate App Key**:
-   Locally run: `php artisan key:generate --show`
-   Copy the output (e.g., `base64:xyz...`).
+1. **App Key**:
+   Create the environment variable `APP_KEY` in the **eReligiousServices** service settings (Generate one locally with `php artisan key:generate --show`).
 
-2. **Set Environment Variable**:
-   - Go to the **eReligiousServices** service in Render Dashboard.
-   - Go to **Environment**.
-   - Add/Update `APP_KEY` with the value you generated.
-   - Add/Update `APP_URL` with the URL Render assigned to your service (e.g., `https://ereligiousservices.onrender.com`).
+2. **Database Password**:
+   The `render.yaml` uses a default placeholder password (`change_this_password_in_dashboard`).
+   **For Security:**
+   - Go to your **mysql** service -> Environment. Update `MYSQL_PASSWORD`.
+   - Go to your **eReligiousServices** service -> Environment. Update `DB_PASSWORD` to match.
+   - Triger a manual deploy if needed.
 
 ## Manual Deployment (Docker)
 

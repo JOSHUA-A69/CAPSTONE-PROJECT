@@ -16,30 +16,34 @@ services:
       - key: APP_KEY
         sync: false
       - key: DB_CONNECTION
-        value: pgsql
+        value: mysql
       - key: DB_HOST
-        fromDatabase:
-          name: ers-db
-          property: host
+        value: mysql
       - key: DB_PORT
-        fromDatabase:
-          name: ers-db
-          property: port
+        value: 3306
       - key: DB_DATABASE
-        fromDatabase:
-          name: ers-db
-          property: database
+        value: ers_db
       - key: DB_USERNAME
-        fromDatabase:
-          name: ers-db
-          property: user
+        value: ers_user
       - key: DB_PASSWORD
-        fromDatabase:
-          name: ers-db
-          property: password
+        value: change_this_password_in_dashboard
 
-databases:
-  - name: ers-db
-    databaseName: ers_db
-    user: ers_user
-    plan: free # Be explicit for testing, they can upgrade later
+  - type: pserv
+    name: mysql
+    env: docker
+    image: mysql:8.0
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MYSQL_DATABASE
+        value: ers_db
+      - key: MYSQL_USER
+        value: ers_user
+      - key: MYSQL_PASSWORD
+        value: change_this_password_in_dashboard
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+
+# databases: (Removed - using self-hosted MySQL above)
