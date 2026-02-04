@@ -6,36 +6,40 @@ This project is configured for deployment on [Render](https://render.com) using 
 1. A Render account.
 2. This repository connected to your Render account.
 
-## Deployment Steps (Blueprint)
+## Deployment Steps (Blueprint with TiDB Cloud)
 
-We have included a `render.yaml` Blueprint file which automates the setup.
+1. **Setup Database first (TiDB Cloud)**
+   - Go to [TiDB Cloud](https://tidbcloud.com/) and sign up (Free).
+   - Create a new **Serverless Tier** cluster.
+   - Once created, click **Connect**.
+   - Select **PHP / PDO** or just copy the parameters:
+     - **Host**: (e.g., `gateway01.us-west-2.prod.aws.tidbcloud.com`)
+     - **Port**: `4000`
+     - **User**: (e.g., `2SeE...prefix.root`)
+     - **Password**: (The one you generated)
+     - **Database**: `test` (or create a new one named `ers_db`)
 
-1. Go to your Render Dashboard.
-2. Click **New +** and select **Blueprint**.
-3. Connect this repository.
-4. Render will detect `render.yaml` and propose creating:
-   - **eReligiousServices** (Web Service)
-   - **mysql** (Private Service - Docker MySQL 8.0)
-5. Click **Apply**.
+2. **Deploy to Render**
+   - Go to Render Dashboard -> **New +** -> **Blueprint**.
+   - Connect this repository.
+   - Render will detect `render.yaml`.
+   - It will ask for the environment variables defined in the file (`DB_HOST`, `DB_USERNAME`, etc.).
+   - Paste the values from TiDB Cloud.
+     - `DB_PORT`: `4000`
+     - `MYSQL_ATTR_SSL_CA`: `/etc/ssl/certs/ca-certificates.crt` (Pre-filled)
+   - Click **Apply**.
 
-**Note on MySQL:**
-We are using a "Private Service" with a persistent Disk for MySQL, as Render does not offer managed MySQL. **This typically requires a paid Render plan** to support the persistent disk.
+3. **Post-Deployment**
+   - Render will build the app.
+   - Once "Live", go to the **Shell** tab in Render.
+   - Run migrations: `php artisan migrate --force`
+   - Run seeders (optional): `php artisan db:seed --force`
 
-## Configuration
+## Manual Configuration Notes
 
-The Blueprint links these services automatically using the service name `mysql`.
-
-1. **App Key**:
-   Create the environment variable `APP_KEY` in the **eReligiousServices** service settings (Generate one locally with `php artisan key:generate --show`).
-
-2. **Database Password**:
-   The `render.yaml` uses a default placeholder password (`change_this_password_in_dashboard`).
-   **For Security:**
-   - Go to your **mysql** service -> Environment. Update `MYSQL_PASSWORD`.
-   - Go to your **eReligiousServices** service -> Environment. Update `DB_PASSWORD` to match.
-   - Triger a manual deploy if needed.
-
-## Manual Deployment (Docker)
+If you are not using the Blueprint:
+ensure you set `MYSQL_ATTR_SSL_CA` to `/etc/ssl/certs/ca-certificates.crt`.
+TiDB requires an SSL connection, and the standard Linux CA bundle covers this.
 
 If you prefer not to use Blueprints:
 
