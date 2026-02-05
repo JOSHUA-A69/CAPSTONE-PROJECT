@@ -10,6 +10,14 @@ set -e
 # Cache configuration, routes, and views for production performance
 # (Ensure APP_KEY is set in environment)
 if [ -n "$APP_KEY" ]; then
+    echo "Debugging: Checking Environment Variables..."
+    echo "MAIL_HOST is set to: ${MAIL_HOST:-'NOT SET'}"
+    echo "MAIL_USERNAME is set to: ${MAIL_USERNAME:-'NOT SET'}"
+    
+    echo "Clearing caches..."
+    php artisan config:clear
+    
+    echo "Caching configuration..."
     php artisan config:cache
     php artisan route:cache
     php artisan view:cache
