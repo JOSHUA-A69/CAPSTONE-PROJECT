@@ -152,27 +152,42 @@ class ChatController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // 1. Send the question first
-        $questionMessage = Message::create([
-            'sender_id' => $user->id,
-            'receiver_id' => $receiverId,
-            'message' => $request->question,
-            'is_auto_reply' => false,
-        ]);
-        $questionMessage->load(['sender', 'receiver']);
+        // Create both messages at once using DB transaction for better performance
+        DB::beginTransaction();
+        try {
+            $now = now();
+            
+            // 1. Send the question first
+            $questionMessage = Message::create([
+                'sender_id' => $user->id,
+                'receiver_id' => $receiverId,
+                'message' => $request->question,
+                'is_auto_reply' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
 
-        // Small delay to ensure auto-reply has a later timestamp
-        usleep(100000); // 100ms delay
+            // 2. Send the automated reply immediately after (with microsecond difference)
+            $autoReplyMessage = Message::create([
+                'sender_id' => $receiverId,
+                'receiver_id' => $user->id,
+                'message' => "🤖 **Automated FAQ Response:**\n\n" . $request->answer . "\n\n_If you need further assistance, please type your question below and an admin will respond shortly._",
+                'is_auto_reply' => true,
+                'read_at' => $now,
+                'created_at' => $now->copy()->addMicroseconds(1000), // Minimal delay for ordering
+                'updated_at' => $now->copy()->addMicroseconds(1000),
+            ]);
 
-        // 2. Send the automated reply (from admin to requestor)
-        $autoReplyMessage = Message::create([
-            'sender_id' => $receiverId, // Admin/receiver sends the auto-reply
-            'receiver_id' => $user->id, // To the requestor
-            'message' => "🤖 **Automated FAQ Response:**\n\n" . $request->answer . "\n\n_If you need further assistance, please type your question below and an admin will respond shortly._",
-            'is_auto_reply' => true,
-            'read_at' => now(), // Mark as read immediately since it's automated
-        ]);
-        $autoReplyMessage->load(['sender', 'receiver']);
+            DB::commit();
+
+            // Load relationships efficiently in batch
+            $questionMessage->load(['sender:id,first_name,last_name,profile_picture', 'receiver:id,first_name,last_name,profile_picture']);
+            $autoReplyMessage->load(['sender:id,first_name,last_name,profile_picture', 'receiver:id,first_name,last_name,profile_picture']);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['error' => 'Failed to send FAQ response'], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -257,23 +272,17 @@ class ChatController extends Controller
     {
         $userId = Auth::id();
 
-        // Exclude messages cleared via chat resets (per-conversation clear)
-        $count = DB::table('messages')
-            ->leftJoin('chat_resets as cr', function ($join) use ($userId) {
-                $join->on('cr.other_user_id', '=', 'messages.sender_id')
-                     ->where('cr.user_id', '=', $userId);
-            })
-            ->where('messages.receiver_id', $userId)
-            // Only count messages sent by other users
-            ->where('messages.sender_id', '<>', $userId)
-            ->whereNull('messages.read_at')
-            ->where(function ($q) {
-                $q->whereNull('cr.cleared_at')
-                  ->orWhereColumn('messages.created_at', '>', 'cr.cleared_at');
-            })
-            // Use DISTINCT to avoid any accidental duplicates from joins
-            ->distinct()
-            ->count('messages.id');
+        // Cache for 10 seconds to reduce database load
+        $cacheKey = "chat.unread.{$userId}";
+        
+        $count = cache()->remember($cacheKey, 10, function () use ($userId) {
+            // Simplified query - avoid complex JOIN for better performance
+            return DB::table('messages')
+                ->where('receiver_id', $userId)
+                ->where('sender_id', '<>', $userId)
+                ->whereNull('read_at')
+                ->count();
+        });
 
         return response()->json(['count' => $count])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

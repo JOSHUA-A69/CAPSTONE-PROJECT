@@ -90,7 +90,7 @@
             </div>
         @endif
 
-        <!-- Reservations Table -->
+        <!-- Reservations Card -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-2xl border border-gray-100 dark:border-gray-700">
             @if($reservations->isEmpty())
                 <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -108,7 +108,8 @@
                     </a>
                 </div>
             @else
-                <div class="overflow-x-auto">
+                <!-- Desktop Table View -->
+                <div class="hidden lg:block overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700/50">
                             <tr>
@@ -267,6 +268,148 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile & Tablet Card View -->
+                <div class="lg:hidden divide-y divide-gray-200 dark:divide-gray-700">
+                    @foreach($reservations as $r)
+                        @php
+                            $daysUntilEvent = now()->diffInDays($r->schedule_date, false);
+                            $canCancel = $daysUntilEvent >= 7 &&
+                                        in_array($r->status, ['pending', 'adviser_approved', 'admin_approved', 'approved']) &&
+                                        !$r->cancellation_reason;
+                            $canConfirmInline = $r->status === 'adviser_approved'
+                                && $r->contacted_at
+                                && !$r->requestor_confirmed_at
+                                && !empty($r->requestor_confirmation_token);
+                        @endphp
+                        <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                            <!-- Card Header -->
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                            {{ $r->service->service_name ?? 'Service' }}
+                                        </h3>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                            @if($r->venue)
+                                                {{ $r->venue->name }}
+                                            @elseif($r->custom_venue_name)
+                                                {{ $r->custom_venue_name }}
+                                            @else
+                                                No venue
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- Status Badge -->
+                                <div class="flex-shrink-0">
+                                    @if($r->status === 'approved' || $r->status === 'confirmed')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                                            <span class="w-1 h-1 bg-green-500 rounded-full mr-1"></span>
+                                            Approved
+                                        </span>
+                                    @elseif($r->status === 'admin_approved')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                                            <span class="w-1 h-1 bg-yellow-500 rounded-full mr-1 animate-pulse"></span>
+                                            Wait Final
+                                        </span>
+                                    @elseif($r->status === 'adviser_approved')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                                            <span class="w-1 h-1 bg-yellow-500 rounded-full mr-1 animate-pulse"></span>
+                                            {{ $r->priest_selection_type === 'external' ? 'Await Admin' : 'Await Priest' }}
+                                        </span>
+                                    @elseif($r->status === 'pending')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                                            <span class="w-1 h-1 bg-orange-500 rounded-full mr-1 animate-pulse"></span>
+                                            Pending
+                                        </span>
+                                    @elseif($r->status === 'completed')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                            Completed
+                                        </span>
+                                    @elseif($r->status === 'cancelled')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                            Cancelled
+                                        </span>
+                                    @elseif($r->status === 'rejected')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                                            Rejected
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                            {{ ucwords(str_replace('_', ' ', $r->status)) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Card Body - Info Grid -->
+                            <div class="grid grid-cols-2 gap-2 mb-4">
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5">
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">Schedule</span>
+                                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ optional($r->schedule_date)->format('M d, Y') }}</span>
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400">{{ optional($r->schedule_date)->format('h:i A') }}</span>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5">
+                                    <span class="block text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">Assigned To</span>
+                                    @if($r->priest_selection_type === 'external' && $r->external_priest_name)
+                                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->external_priest_name }}</span>
+                                        <span class="block text-xs text-gray-500 italic">External</span>
+                                    @elseif($r->officiant)
+                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Fr. {{ $r->officiant->first_name }}</span>
+                                    @elseif($r->priests && $r->priests->isNotEmpty())
+                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Fr. {{ $r->priests->first()->first_name }}</span>
+                                    @else
+                                        <span class="text-sm text-gray-400 dark:text-gray-500 italic">Unassigned</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            @if($r->status === 'rejected' && $r->rejectedBy)
+                                <div class="text-xs text-red-600 dark:text-red-400 mb-3 bg-red-50 dark:bg-red-900/20 rounded-lg px-2.5 py-1.5">
+                                    Rejected by {{ $r->rejectedBy->first_name }}
+                                </div>
+                            @endif
+
+                            <!-- Card Actions -->
+                            <div class="flex flex-wrap gap-2">
+                                <a href="{{ route('requestor.reservations.show', $r->reservation_id) }}" 
+                                   class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    Details
+                                </a>
+                                
+                                @if($canConfirmInline)
+                                    <a href="{{ route('requestor.reservations.show-confirmation', ['reservation_id' => $r->reservation_id, 'token' => $r->requestor_confirmation_token]) }}" 
+                                       class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Confirm
+                                    </a>
+                                @endif
+
+                                @if($canCancel)
+                                    <button onclick='showCancelModal({{ $r->reservation_id }}, @json($r->service->service_name), @json(optional($r->schedule_date)->format("F d, Y h:i A")))'
+                                            class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-white dark:bg-gray-700 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium rounded-lg transition-colors">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Cancel
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
             @endif
         </div>

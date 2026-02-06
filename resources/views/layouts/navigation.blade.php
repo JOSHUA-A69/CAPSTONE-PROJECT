@@ -1,18 +1,18 @@
 <nav x-data="{ open: false }" class="bg-[#2ecc71] dark:bg-dark-bg border-b border-[#27c165] text-white relative z-50" role="navigation" aria-label="Main navigation">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
-            <div class="flex">
+            <div class="flex items-center gap-0.5 sm:gap-4 lg:gap-8 flex-1 min-w-0">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" aria-label="Go to dashboard home">
-                        <x-application-logo class="block h-9 w-auto fill-current text-white" />
+                        <x-application-logo class="block h-8 sm:h-9 w-auto fill-current text-white" />
                     </a>
                 </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:ms-10 sm:flex items-center" role="menubar">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" role="menuitem">
+                <!-- Navigation Links - Mobile & Desktop with improved responsiveness -->
+                <div class="flex items-center gap-0.5 sm:gap-3 lg:gap-8 overflow-hidden flex-1 min-w-0" role="menubar">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap">
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
@@ -28,16 +28,11 @@
                             };
                         @endphp
                         @if($calendarRoute)
-                            <x-nav-link :href="route($calendarRoute)" :active="request()->routeIs(str_replace('.','.*',$calendarRoute))" role="menuitem">
-                                {{ __('View Calendar') }}
+                            <x-nav-link :href="route($calendarRoute)" :active="request()->routeIs(str_replace('.','.*',$calendarRoute))" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                                {{ __('Calendar') }}
                             </x-nav-link>
                         @endif
 
-                        @if(auth()->user()->role === 'requestor')
-                            <x-nav-link :href="route('requestor.organization-bookings.create')" :active="request()->routeIs('requestor.organization-bookings.*')" role="menuitem">
-                                {{ __('Organization Request') }}
-                            </x-nav-link>
-                        @endif
                     @endif
 
                     @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'requestor']))
@@ -57,7 +52,7 @@
                                                 .catch(() => {});
                                         };
                                         updateUnread();
-                                        setInterval(updateUnread, 15000);
+                                        setInterval(updateUnread, 60000);
                                         window.addEventListener('chat:unread-updated', (e) => {
                                             if (e?.detail && typeof e.detail.count !== 'undefined') {
                                                 const n = Number(e.detail.count);
@@ -67,29 +62,30 @@
                                             }
                                         });
                                         window.addEventListener('focus', updateUnread);
-                                    ">
-                            <span class="inline-flex items-center gap-1.5">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                    "
+                                    class="text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                            <span class="inline-flex items-center gap-0.5 sm:gap-1">
+                                <svg class="w-3 h-3 sm:w-4 sm:h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                 </svg>
                                 <span class="inline-flex items-center">
-                                    <span>{{ __('Messages') }}</span>
+                                    {{ __('Messages') }}
                                     <span x-show="Number(unreadCount) > 0"
                                         x-cloak
                                         x-text="Number(unreadCount) > 9 ? '9+' : unreadCount"
-                                        class="ml-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none bg-red-600 text-white rounded-full"
+                                        class="ml-0.5 sm:ml-1 inline-flex items-center justify-center px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-xs font-bold leading-none bg-red-600 text-white rounded-full"
                                         role="status"
                                         aria-label="Unread messages"
-                                        style="min-width: 1.5rem;"></span>
+                                        style="min-width: 1rem; font-size: 0.6rem;"></span>
                                 </span>
                             </span>
                         </x-nav-link>
                     @endif
 
-                    {{-- Staff links removed as per request --}}
-                    @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser']))
-                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" role="menuitem">
-                            {{ __('Generate Report') }}
+                    {{-- Generate Report link - Full text with font scaling --}}
+                    @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser','admin']))
+                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                            {{ __('Report') }}
                         </x-nav-link>
                     @endif
                 </div>
@@ -151,14 +147,14 @@
                     window.addEventListener('focus', () => updateCount());
                     window.addEventListener('notification-update', () => updateCount());
                 ">
-            <button @click="open = !open; if (open) loadNotifications()" 
+            <button @click="open = !open; if (open) loadNotifications()"
                     title="View notifications"
                     class="relative flex items-center justify-center h-10 w-10 text-white hover:text-white focus:text-white bg-white/10 hover:bg-white/20 focus:bg-white/20 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/60 group">
                         <svg class="h-6 w-6 transition-transform group-hover:scale-110 duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
                         <!-- Notification Count Badge - Enhanced Design -->
-                        <span x-show="count > 0" 
+                        <span x-show="count > 0"
                               x-cloak
                               x-transition
                               class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-white/30 dark:ring-gray-700/30 animate-pulse"
@@ -168,15 +164,15 @@
                     </button>
 
                     <!-- Notification Dropdown - Enhanced Design -->
-                    <div x-show="open" 
+                    <div x-show="open"
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 transform scale-95 -translate-y-2"
                          x-transition:enter-end="opacity-100 transform scale-100 translate-y-0"
                          x-transition:leave="transition ease-in duration-150"
                          x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
                          x-transition:leave-end="opacity-0 transform scale-95 -translate-y-2"
-                         @click.away="open = false" 
-                         class="absolute top-full right-0 mt-2 w-[400px] max-w-[calc(100vw-24px)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-[9999]" 
+                         @click.away="open = false"
+                         class="absolute top-full right-0 mt-2 w-[400px] max-w-[calc(100vw-24px)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-[9999]"
                          style="display: none;">
                         <div>
                             <!-- Header - Enhanced -->
@@ -308,8 +304,15 @@
                         @endif
 
                         <!-- Archived Notifications Link (For Admin, Staff, Adviser, Priest) -->
-                        @if(Auth::user()->role === 'admin' || Auth::user()->role === 'staff')
+                        @if(Auth::user()->role === 'admin')
                         <x-dropdown-link :href="route('admin.notifications.archived')" class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            {{ __('Archived Notifications') }}
+                        </x-dropdown-link>
+                        @elseif(Auth::user()->role === 'staff')
+                        <x-dropdown-link :href="route('staff.notifications.archived')" class="flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
                             </svg>
@@ -353,13 +356,136 @@
             </div>
 
             <!-- Hamburger -->
-            <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-900 focus:text-gray-500 dark:focus:text-gray-400 transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <div class="-me-2 flex items-center sm:hidden" x-data="{ mobileMenuOpen: false }">
+                <button @click="mobileMenuOpen = !mobileMenuOpen"
+                        class="inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-white/10 focus:outline-none focus:bg-white/10 transition duration-150 ease-in-out">
+                    <svg class="h-6 w-6" :class="{'hidden': mobileMenuOpen, 'inline-flex': !mobileMenuOpen}" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    <svg class="h-6 w-6" :class="{'hidden': !mobileMenuOpen, 'inline-flex': mobileMenuOpen}" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
+
+                <!-- Mobile User Dropdown Menu -->
+                <div x-show="mobileMenuOpen"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 transform scale-95 -translate-y-2"
+                     x-transition:enter-end="opacity-100 transform scale-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
+                     x-transition:leave-end="opacity-0 transform scale-95 -translate-y-2"
+                     @click.away="mobileMenuOpen = false"
+                     class="absolute top-full right-0 mt-1 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-50"
+                     style="display: none;">
+
+                    <!-- User Info Header -->
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center gap-3 mb-3">
+                            <img
+                                src="{{ Auth::user()->profile_picture_url }}"
+                                alt="{{ Auth::user()->full_name }}"
+                                class="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-gray-600 shadow-md"
+                            >
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-gray-900 dark:text-white truncate">
+                                    {{ Auth::user()->full_name }}
+                                </p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                    {{ Auth::user()->email }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Menu Items -->
+                    <div class="py-2 space-y-1">
+                        <!-- Dark Mode Toggle -->
+                        <button id="darkModeToggleMobile"
+                                @click="mobileMenuOpen = false"
+                                class="w-full text-left px-6 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-3"
+                                onclick="toggleDarkMode(this)">
+                            <svg class="w-5 h-5 flex-shrink-0 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                            </svg>
+                            <span class="dark-mode-text font-medium">Dark Mode</span>
+                        </button>
+
+                        <!-- Profile Link -->
+                        <a href="{{ route('profile.edit') }}"
+                           @click="mobileMenuOpen = false"
+                           class="w-full text-left px-6 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            <span class="font-medium">Profile</span>
+                        </a>
+
+                        <!-- Archived Notifications Link -->
+                        @if(Auth::user()->role === 'admin')
+                        <a href="{{ route('admin.notifications.archived') }}"
+                           @click="mobileMenuOpen = false"
+                           class="w-full text-left px-6 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            <span class="font-medium">Archived Notifications</span>
+                        </a>
+                        @elseif(Auth::user()->role === 'staff')
+                        <a href="{{ route('staff.notifications.archived') }}"
+                           @click="mobileMenuOpen = false"
+                           class="w-full text-left px-6 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            <span class="font-medium">Archived Notifications</span>
+                        </a>
+                        @elseif(Auth::user()->role === 'adviser')
+                        <a href="{{ route('adviser.notifications.archived') }}"
+                           @click="mobileMenuOpen = false"
+                           class="w-full text-left px-6 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            <span class="font-medium">Archived Notifications</span>
+                        </a>
+                        @elseif(Auth::user()->role === 'priest')
+                        <a href="{{ route('priest.notifications.archived') }}"
+                           @click="mobileMenuOpen = false"
+                           class="w-full text-left px-6 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            <span class="font-medium">Archived Notifications</span>
+                        </a>
+                        @elseif(Auth::user()->role === 'requestor')
+                        <a href="{{ route('requestor.notifications.archived') }}"
+                           @click="mobileMenuOpen = false"
+                           class="w-full text-left px-6 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150 flex items-center gap-3">
+                            <svg class="w-5 h-5 flex-shrink-0 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                            </svg>
+                            <span class="font-medium">Archived Notifications</span>
+                        </a>
+                        @endif
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="border-t border-gray-200 dark:border-gray-600"></div>
+
+                    <!-- Log Out -->
+                    <form method="POST" action="{{ route('logout') }}" class="w-full">
+                        @csrf
+                        <button type="submit"
+                                @click="mobileMenuOpen = false"
+                                class="w-full text-left px-6 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150 flex items-center gap-3 font-medium">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                            Log Out
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -367,8 +493,14 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')"
+                class="text-white hover:text-violet-300 {{ request()->routeIs('dashboard') ? 'text-violet-400 bg-violet-500/10' : '' }}">
+                <span class="flex items-center gap-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                    {{ __('Dashboard') }}
+                </span>
             </x-responsive-nav-link>
             @if(auth()->check())
                 @php
@@ -382,14 +514,73 @@
                     };
                 @endphp
                 @if($calendarRoute)
-                    <x-responsive-nav-link :href="route($calendarRoute)" :active="request()->routeIs(str_replace('.','.*',$calendarRoute))">
-                        {{ __('View Calendar') }}
+                    <x-responsive-nav-link :href="route($calendarRoute)" :active="request()->routeIs(str_replace('.','.*',$calendarRoute))"
+                        class="text-white hover:text-violet-300 {{ request()->routeIs(str_replace('.','.*',$calendarRoute)) ? 'text-violet-400 bg-violet-500/10' : '' }}">
+                        <span class="flex items-center gap-3">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            {{ __('View Calendar') }}
+                        </span>
+                    </x-responsive-nav-link>
+                @endif
+
+
+                {{-- Messages for Admin and Requestor --}}
+                @if(in_array(auth()->user()->role, ['admin', 'requestor']))
+                    <x-responsive-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')"
+                        class="text-white hover:text-violet-300 {{ request()->routeIs('chat.*') ? 'text-violet-400 bg-violet-500/10' : '' }}"
+                        x-data="{ unreadCount: 0, _seq: 0 }"
+                        x-init="
+                            const updateUnread = () => {
+                                const seq = ++_seq;
+                                fetch(`{{ route('chat.unread.count') }}?t=${Date.now()}`, { cache: 'no-store' })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (seq !== _seq) return;
+                                        const n = Number(data?.count ?? 0);
+                                        unreadCount = isNaN(n) ? 0 : n;
+                                    })
+                                    .catch(() => {});
+                            };
+                            updateUnread();
+                            setInterval(updateUnread, 60000);
+                            window.addEventListener('chat:unread-updated', (e) => {
+                                if (e?.detail && typeof e.detail.count !== 'undefined') {
+                                    const n = Number(e.detail.count);
+                                    unreadCount = isNaN(n) ? 0 : n;
+                                } else {
+                                    updateUnread();
+                                }
+                            });
+                            window.addEventListener('focus', updateUnread);
+                        ">
+                        <span class="flex items-center justify-between w-full">
+                            <span class="flex items-center gap-3">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                </svg>
+                                {{ __('Messages') }}
+                            </span>
+                            <span x-show="Number(unreadCount) > 0"
+                                  x-cloak
+                                  x-text="Number(unreadCount) > 9 ? '9+' : unreadCount"
+                                  class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold leading-none bg-red-600 text-white rounded-full shadow-sm"
+                                  style="min-width: 1.5rem;">
+                            </span>
+                        </span>
                     </x-responsive-nav-link>
                 @endif
             @endif
-            @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser']))
-                <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
-                    {{ __('Generate Report') }}
+            @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser','admin']))
+                <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')"
+                    class="text-white hover:text-violet-300 {{ request()->routeIs('reports.*') ? 'text-violet-400 bg-violet-500/10' : '' }}">
+                    <span class="flex items-center gap-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        {{ __('Generate Report') }}
+                    </span>
                 </x-responsive-nav-link>
             @endif
 
@@ -399,12 +590,13 @@
         <!-- Responsive Settings Options -->
         <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
             <div class="px-4">
-                <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="font-medium text-base text-white">{{ Auth::user()->name }}</div>
+                <div class="font-medium text-sm text-gray-300">{{ Auth::user()->email }}</div>
             </div>
 
             <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">
+                <x-responsive-nav-link :href="route('profile.edit')"
+                    class="text-white hover:text-violet-300 {{ request()->routeIs('profile.*') ? 'text-violet-400 bg-violet-500/10' : '' }}">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
 
@@ -413,6 +605,7 @@
                     @csrf
 
                     <x-responsive-nav-link :href="route('logout')"
+                            class="text-white hover:text-violet-300"
                             onclick="event.preventDefault();
                                         this.closest('form').submit();">
                         {{ __('Log Out') }}

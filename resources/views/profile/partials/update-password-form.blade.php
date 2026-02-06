@@ -20,17 +20,17 @@
     @endif
 
     <div class="card-header">
-        <div class="flex items-start gap-3">
-            <div class="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+        <div class="flex flex-col space-y-3 sm:flex-row sm:items-start sm:gap-4 sm:space-y-0">
+            <div class="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl self-start">
                 <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                 </svg>
             </div>
-            <div>
-                <h2 class="text-lg font-semibold text-heading">
+            <div class="flex-1 min-w-0">
+                <h2 class="text-lg sm:text-xl font-semibold text-heading mb-1">
                     {{ __('Update Password') }}
                 </h2>
-                <p class="mt-1 text-sm text-muted">
+                <p class="text-sm text-muted leading-relaxed">
                     {{ __('Ensure your account is using a strong password to stay secure.') }}
                 </p>
             </div>
@@ -51,14 +51,14 @@
                         name="current_password"
                         type="password"
                         x-bind:type="showCurrentPassword ? 'text' : 'password'"
-                        class="pr-10"
+                        class="w-full pr-12"
                         autocomplete="current-password"
                         required
                         placeholder="Enter your current password" />
                     <button
                         type="button"
                         @click="showCurrentPassword = !showCurrentPassword"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none"
+                        class="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
                         tabindex="-1">
                         <svg x-show="!showCurrentPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -81,7 +81,7 @@
                         name="password"
                         type="password"
                         x-bind:type="showNewPassword ? 'text' : 'password'"
-                        class="pr-10"
+                        class="w-full pr-12"
                         autocomplete="new-password"
                         required
                         @input="checkPasswordStrength($event.target.value); checkPasswordMatch()"
@@ -89,7 +89,7 @@
                     <button
                         type="button"
                         @click="showNewPassword = !showNewPassword"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none"
+                        class="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
                         tabindex="-1">
                         <svg x-show="!showNewPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -123,39 +123,39 @@
                 </div>
 
                 <!-- Password Requirements -->
-                <div class="mt-3 space-y-2">
-                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Password must contain:</p>
-                    <div class="space-y-1">
+                <div class="mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <p class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-3">Password must contain:</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div class="flex items-center gap-2 text-xs" :class="requirements.length ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" x-show="requirements.length"></path>
                                 <circle cx="12" cy="12" r="10" stroke-width="2" x-show="!requirements.length"></circle>
                             </svg>
                             <span>At least 8 characters</span>
                         </div>
                         <div class="flex items-center gap-2 text-xs" :class="requirements.uppercase ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" x-show="requirements.uppercase"></path>
                                 <circle cx="12" cy="12" r="10" stroke-width="2" x-show="!requirements.uppercase"></circle>
                             </svg>
                             <span>One uppercase letter (A-Z)</span>
                         </div>
                         <div class="flex items-center gap-2 text-xs" :class="requirements.lowercase ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" x-show="requirements.lowercase"></path>
                                 <circle cx="12" cy="12" r="10" stroke-width="2" x-show="!requirements.lowercase"></circle>
                             </svg>
                             <span>One lowercase letter (a-z)</span>
                         </div>
                         <div class="flex items-center gap-2 text-xs" :class="requirements.number ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" x-show="requirements.number"></path>
                                 <circle cx="12" cy="12" r="10" stroke-width="2" x-show="!requirements.number"></circle>
                             </svg>
                             <span>One number (0-9)</span>
                         </div>
-                        <div class="flex items-center gap-2 text-xs" :class="requirements.special ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center gap-2 text-xs sm:col-span-2" :class="requirements.special ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">
+                            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" x-show="requirements.special"></path>
                                 <circle cx="12" cy="12" r="10" stroke-width="2" x-show="!requirements.special"></circle>
                             </svg>
@@ -176,7 +176,7 @@
                         name="password_confirmation"
                         type="password"
                         x-bind:type="showConfirmPassword ? 'text' : 'password'"
-                        class="pr-10"
+                        class="w-full pr-12"
                         autocomplete="new-password"
                         required
                         @input="checkPasswordMatch()"
@@ -184,7 +184,7 @@
                     <button
                         type="button"
                         @click="showConfirmPassword = !showConfirmPassword"
-                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 focus:outline-none"
+                        class="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
                         tabindex="-1">
                         <svg x-show="!showConfirmPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -230,8 +230,8 @@
             </div>
 
             <!-- Actions -->
-            <div class="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <x-primary-button>
+            <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <x-primary-button class="sm:w-auto w-full justify-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
                     </svg>
@@ -241,11 +241,11 @@
                 <button
                     type="button"
                     onclick="this.closest('form').reset()"
-                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="inline-flex items-center justify-center px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs sm:text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-25 transition ease-in-out duration-150 w-full sm:w-auto">
+                    <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg>
-                    {{ __('Cancel') }}
+                    <span class="whitespace-nowrap">{{ __('Cancel') }}</span>
                 </button>
             </div>
         </form>
@@ -272,7 +272,7 @@ function passwordForm() {
 
         checkPasswordStrength(password) {
             let strength = 0;
-            
+
             // Check requirements
             this.requirements.length = password.length >= 8;
             this.requirements.uppercase = /[A-Z]/.test(password);
@@ -289,7 +289,7 @@ function passwordForm() {
 
             // Adjust strength based on length
             if (password.length >= 12) strength = Math.min(strength + 1, 5);
-            
+
             // Normalize to 1-4 scale
             if (strength <= 2) {
                 this.passwordStrength = 1;

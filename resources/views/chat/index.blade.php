@@ -28,24 +28,25 @@
         </h2>
     </x-slot>
 
-    <div class="py-6">
+    <div class="py-4 sm:py-6">
         <div class="max-w-6xl mx-auto px-2 sm:px-4">
-            <div class="h-[calc(100vh-170px)] rounded-3xl bg-gradient-to-br from-[#f1e8ff] via-[#fff6df] to-[#f1e8ff] p-3 sm:p-5 shadow-[0_20px_60px_-35px_rgba(76,29,149,0.55)]"
+            <div class="h-[calc(100vh-140px)] sm:h-[calc(100vh-170px)] rounded-2xl sm:rounded-3xl bg-gradient-to-br from-[#f1e8ff] via-[#fff6df] to-[#f1e8ff] p-2 sm:p-3 md:p-5 shadow-[0_20px_60px_-35px_rgba(76,29,149,0.55)]"
                  x-data="supportMessenger({{ $conversationData->toJson() }}, {{ auth()->id() }})"
                  x-init="init()">
-                <div class="flex h-full gap-3 lg:gap-6">
-                    <!-- Conversations Panel -->
-                    <div class="w-64 md:w-72 flex flex-col bg-white/80 backdrop-blur rounded-3xl shadow-lg border border-white/70 overflow-hidden">
-                        <div class="bg-gradient-to-r from-[#6f48ff] to-[#8f63ff] px-6 py-5">
+                <div class="flex h-full gap-2 sm:gap-3 lg:gap-6">
+                    <!-- Conversations Panel - Hidden on mobile when chat is selected -->
+                    <div class="flex flex-col bg-white/80 backdrop-blur rounded-2xl sm:rounded-3xl shadow-lg border border-white/70 overflow-hidden transition-all duration-300"
+                         :class="selectedConversation ? 'hidden md:flex md:w-64 lg:w-72' : 'w-full md:w-64 lg:w-72'">
+                        <div class="bg-gradient-to-r from-[#6f48ff] to-[#8f63ff] px-4 sm:px-6 py-4 sm:py-5">
                             <div class="flex items-center gap-3">
                                 <div class="text-white">
                                     <p class="text-sm font-semibold">@if(auth()->user()->role === 'requestor') Admin Support @else Requestor Inbox @endif</p>
-                                    
+
                                 </div>
                             </div>
                         </div>
 
-                        <div class="flex-1 overflow-y-auto space-y-2 px-4 py-4 custom-scrollbar">
+                        <div class="flex-1 overflow-y-auto space-y-2 px-3 sm:px-4 py-3 sm:py-4 custom-scrollbar">
                             <template x-if="filteredConversations.length === 0">
                                 <div class="text-center text-sm text-gray-500 pt-6">
                                     No conversations found
@@ -86,36 +87,48 @@
                         </div>
                     </div>
 
-                    <!-- Chat Panel -->
-                    <div class="flex-1 backdrop-blur rounded-3xl shadow-lg border overflow-hidden flex flex-col transition-colors duration-200"
-                         :class="darkMode ? 'bg-gray-900/90 border-gray-700' : 'bg-white/70 border-white/60'">
-                        <div class="px-5 sm:px-8 py-5 border-b transition-colors duration-200"
+                    <!-- Chat Panel - Full width on mobile when selected -->
+                    <div class="flex-1 backdrop-blur rounded-2xl sm:rounded-3xl shadow-lg border overflow-hidden flex-col transition-all duration-300"
+                         :class="[
+                             darkMode ? 'bg-gray-900/90 border-gray-700' : 'bg-white/70 border-white/60',
+                             selectedConversation ? 'flex' : 'hidden md:flex'
+                         ]">
+                        <div class="px-3 sm:px-5 md:px-8 py-3 sm:py-5 border-b transition-colors duration-200"
                              :class="darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'">
-                            <div class="flex items-center justify-between gap-3">
-                                <div class="flex items-center gap-3">
+                            <div class="flex items-center justify-between gap-2 sm:gap-3">
+                                <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                                    <!-- Back button for mobile -->
+                                    <button type="button"
+                                            @click="selectedConversation = null; stopPolling()"
+                                            class="md:hidden flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                            :class="darkMode ? 'text-gray-300' : 'text-gray-600'">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                        </svg>
+                                    </button>
                                     <template x-if="selectedConversation">
                                         <img :src="selectedConversation.profile_picture_url"
                                              :alt="selectedConversation.full_name"
-                                             class="w-10 h-10 rounded-full object-cover border border-gray-200">
+                                             class="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border border-gray-200 flex-shrink-0">
                                     </template>
-                                    <p class="font-semibold transition-colors duration-200 flex items-center gap-2"
+                                    <p class="font-semibold transition-colors duration-200 flex items-center gap-2 truncate text-sm sm:text-base"
                                        :class="darkMode ? 'text-white' : 'text-gray-900'">
-                                        <span x-text="selectedConversation ? selectedConversation.full_name : 'Admin Support Chat'"></span>
+                                        <span class="truncate" x-text="selectedConversation ? selectedConversation.full_name : 'Admin Support Chat'"></span>
                                             <span x-show="selectedConversation"
-                                                class="inline-flex items-center justify-center px-[3px] h-[14px] rounded-full text-[9px] font-semibold bg-gray-200 text-gray-700"
+                                                class="hidden sm:inline-flex items-center justify-center px-[3px] h-[14px] rounded-full text-[9px] font-semibold bg-gray-200 text-gray-700 flex-shrink-0"
                                               :class="darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-700'"
                                               x-text="messages.length > 999 ? '999+' : messages.length"></span>
                                     </p>
                                 </div>
-                                <div class="flex items-center gap-1">
+                                <div class="flex items-center gap-1 flex-shrink-0">
                                     <!-- Add FAQ Button (Admin Only) -->
                                     @if(auth()->user()->role === 'admin')
                                     <button type="button"
                                             x-show="selectedConversation"
                                             @click="openFaqModal()"
-                                            class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-[#7050ff] hover:text-white hover:bg-[#7050ff] transition-all duration-200"
+                                            class="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-[#7050ff] hover:text-white hover:bg-[#7050ff] transition-all duration-200"
                                             title="Add new FAQ">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                                         </svg>
                                     </button>
@@ -123,9 +136,9 @@
                                     <button type="button"
                                             x-show="selectedConversation"
                                             @click="showClearConfirmation = true"
-                                            class="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
+                                            class="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-gray-600 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
                                             title="Delete conversation">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>
@@ -134,7 +147,7 @@
                         </div>
 
                         <div class="flex-1 overflow-hidden">
-                            <div class="h-full overflow-y-auto px-4 sm:px-8 py-6 space-y-4 custom-scrollbar transition-colors duration-200"
+                            <div class="h-full overflow-y-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 space-y-3 sm:space-y-4 custom-scrollbar transition-colors duration-200"
                                  :class="darkMode ? 'bg-gray-900' : 'bg-transparent'"
                                  x-ref="messagesContainer">
                                 <div x-show="!selectedConversation && !loadingMessages" class="flex h-full items-center justify-center text-center">
@@ -168,28 +181,28 @@
                                                 <!-- Mailbox base -->
                                                 <rect x="60" y="80" width="80" height="60" rx="8" fill="#3B82F6" opacity="0.9"/>
                                                 <rect x="90" y="80" width="80" height="60" rx="8" fill="#60A5FA"/>
-                                                
+
                                                 <!-- Mailbox flag -->
                                                 <rect x="155" y="65" width="6" height="35" fill="#3B82F6"/>
                                                 <rect x="155" y="65" width="25" height="15" rx="2" fill="#EF4444"/>
-                                                
+
                                                 <!-- Mailbox door line -->
                                                 <line x1="100" y1="95" x2="160" y2="95" stroke="white" stroke-width="2" opacity="0.5"/>
-                                                
+
                                                 <!-- Bird nest -->
                                                 <ellipse cx="100" cy="120" rx="35" ry="20" fill="#1E3A8A" opacity="0.8"/>
                                                 <ellipse cx="100" cy="118" rx="32" ry="18" fill="#1E40AF"/>
-                                                
+
                                                 <!-- Baby birds -->
                                                 <circle cx="90" cy="110" r="8" fill="white"/>
                                                 <circle cx="110" cy="110" r="8" fill="white"/>
                                                 <circle cx="88" cy="107" r="2" fill="#1F2937"/>
                                                 <circle cx="112" cy="107" r="2" fill="#1F2937"/>
-                                                
+
                                                 <!-- Beaks -->
                                                 <path d="M90 112 L88 115 L92 115 Z" fill="#F59E0B"/>
                                                 <path d="M110 112 L108 115 L112 115 Z" fill="#F59E0B"/>
-                                                
+
                                                 <!-- Decorative sparkles -->
                                                 <path d="M40 50 L42 54 L40 58 L38 54 Z" fill="#60A5FA" opacity="0.6"/>
                                                 <path d="M170 40 L172 44 L170 48 L168 44 Z" fill="#60A5FA" opacity="0.6"/>
@@ -202,17 +215,17 @@
                                         <p class="text-base transition-colors duration-200"
                                            :class="darkMode ? 'text-gray-400' : 'text-gray-600'"
                                            x-text="'{{ auth()->user()->role }}' === 'admin' ? 'Send a message to begin a conversation' : 'Send a message or select a quick question below'"></p>
-                                        
+
                                         @if(auth()->user()->role === 'requestor')
                                         <!-- FAQ Quick Questions for Requestors -->
                                         <div class="mt-6 space-y-2">
                                             <p class="text-xs font-semibold uppercase tracking-wide mb-3"
                                                :class="darkMode ? 'text-gray-500' : 'text-gray-400'">Frequently Asked Questions</p>
-                                            <button type="button" 
+                                            <button type="button"
                                                     @click="sendFaqQuestion('advance_booking')"
                                                     class="w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02]"
-                                                    :class="darkMode 
-                                                        ? 'bg-gray-800 border-purple-500/30 hover:border-purple-400 text-gray-200' 
+                                                    :class="darkMode
+                                                        ? 'bg-gray-800 border-purple-500/30 hover:border-purple-400 text-gray-200'
                                                         : 'bg-white border-purple-200 hover:border-purple-400 text-gray-700 hover:bg-purple-50'">
                                                 <div class="flex items-center gap-3">
                                                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
@@ -223,11 +236,11 @@
                                                     <span class="text-sm font-medium">How far in advance should I request a Mass or event?</span>
                                                 </div>
                                             </button>
-                                            <button type="button" 
+                                            <button type="button"
                                                     @click="sendFaqQuestion('edit_cancel')"
                                                     class="w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02]"
-                                                    :class="darkMode 
-                                                        ? 'bg-gray-800 border-blue-500/30 hover:border-blue-400 text-gray-200' 
+                                                    :class="darkMode
+                                                        ? 'bg-gray-800 border-blue-500/30 hover:border-blue-400 text-gray-200'
                                                         : 'bg-white border-blue-200 hover:border-blue-400 text-gray-700 hover:bg-blue-50'">
                                                 <div class="flex items-center gap-3">
                                                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
@@ -238,11 +251,11 @@
                                                     <span class="text-sm font-medium">Can I edit or cancel my reservation after submitting it?</span>
                                                 </div>
                                             </button>
-                                            <button type="button" 
+                                            <button type="button"
                                                     @click="sendFaqQuestion('pending_contact')"
                                                     class="w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02]"
-                                                    :class="darkMode 
-                                                        ? 'bg-gray-800 border-green-500/30 hover:border-green-400 text-gray-200' 
+                                                    :class="darkMode
+                                                        ? 'bg-gray-800 border-green-500/30 hover:border-green-400 text-gray-200'
                                                         : 'bg-white border-green-200 hover:border-green-400 text-gray-700 hover:bg-green-50'">
                                                 <div class="flex items-center gap-3">
                                                     <span class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
@@ -260,8 +273,8 @@
 
                                 <template x-for="message in messages" :key="message.id">
                                     <div :class="message.sender_id === currentUserId ? 'flex justify-end' : 'flex justify-start'">
-                                        <div class="flex items-start gap-2 max-w-[80%] md:max-w-[65%]">
-                                            <div x-show="message.sender_id !== currentUserId" class="flex-shrink-0 mt-0.5">
+                                        <div class="flex items-start gap-2 max-w-[90%] sm:max-w-[80%] md:max-w-[65%]">
+                                            <div x-show="message.sender_id !== currentUserId" class="flex-shrink-0 mt-0.5 hidden sm:block">
                                                 <img :src="message.sender.profile_picture"
                                                      :alt="message.sender.name"
                                                      class="w-7 h-7 rounded-full object-cover">
@@ -274,7 +287,7 @@
                                                                 ? (darkMode ? 'bg-purple-600 text-white' : 'bg-[#6f52ff] text-white')
                                                                 : (darkMode ? 'bg-gray-700 text-gray-100' : 'bg-[#f0e8ff] text-[#3c2c6b]')
                                                     ]"
-                                                     class="rounded-3xl rounded-br-md px-4 py-2.5 shadow-sm transition-colors duration-200">
+                                                     class="rounded-2xl sm:rounded-3xl rounded-br-md px-3 sm:px-4 py-2 sm:py-2.5 shadow-sm transition-colors duration-200">
                                                     <template x-if="message.attachment_url">
                                                         <div :class="message.is_image ? '' : 'mb-2'">
                                                             <div x-show="message.is_image" class="rounded-2xl overflow-hidden">
@@ -289,8 +302,8 @@
                                                                download
                                                                target="_blank"
                                                                class="flex items-center gap-3 px-3 py-2 rounded-2xl transition-colors duration-200"
-                                                               :class="message.sender_id === currentUserId 
-                                                                   ? 'bg-white/20 text-white' 
+                                                               :class="message.sender_id === currentUserId
+                                                                   ? 'bg-white/20 text-white'
                                                                    : (darkMode ? 'bg-gray-600 text-purple-300' : 'bg-white text-[#6b4dff]')">
                                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
@@ -303,10 +316,10 @@
                                                         </div>
                                                     </template>
 
-                                                    <p x-show="message.message" class="text-[15px] leading-relaxed whitespace-pre-wrap break-words" x-text="message.message"></p>
-                                                    
+                                                    <p x-show="message.message" class="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words" x-text="message.message"></p>
+
                                                     <!-- Auto-Reply Badge -->
-                                                    <div x-show="message.is_auto_reply" 
+                                                    <div x-show="message.is_auto_reply"
                                                          class="mt-2 pt-2 border-t flex items-center gap-1.5 text-xs"
                                                          :class="darkMode ? 'border-gray-600 text-gray-400' : 'border-purple-200 text-purple-600'">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,7 +328,7 @@
                                                         <span class="font-medium">Automated FAQ Response</span>
                                                     </div>
                                                 </div>
-                                                <p class="text-xs transition-colors duration-200" 
+                                                <p class="text-xs transition-colors duration-200"
                                                    :class="[
                                                        message.sender_id === currentUserId ? 'text-right' : 'text-left',
                                                        darkMode ? 'text-gray-500' : 'text-gray-400'
@@ -328,17 +341,17 @@
                             </div>
                         </div>
 
-                        <div class="border-t px-3 sm:px-6 py-4 transition-colors duration-200"
+                        <div class="border-t px-2 sm:px-3 md:px-6 py-3 sm:py-4 transition-colors duration-200"
                              :class="darkMode ? 'border-gray-700 bg-gray-800/70' : 'border-white/50 bg-white/70'">
-                            
+
                             @if(auth()->user()->role === 'requestor')
                             <!-- FAQ Quick Select (Collapsible) - Only show when conversation is selected -->
-                            <div x-show="selectedConversation" class="max-w-3xl mx-auto mb-3">
-                                <button type="button" 
+                            <div x-show="selectedConversation" class="max-w-3xl mx-auto mb-2 sm:mb-3">
+                                <button type="button"
                                         @click="showFaqPanel = !showFaqPanel"
-                                        class="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
-                                        :class="darkMode 
-                                            ? 'bg-gradient-to-r from-purple-900/50 to-indigo-900/50 text-purple-300 hover:from-purple-900/70 hover:to-indigo-900/70 border border-purple-700/50' 
+                                        class="w-full flex items-center justify-between px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-200"
+                                        :class="darkMode
+                                            ? 'bg-gradient-to-r from-purple-900/50 to-indigo-900/50 text-purple-300 hover:from-purple-900/70 hover:to-indigo-900/70 border border-purple-700/50'
                                             : 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 hover:from-purple-100 hover:to-indigo-100 border border-purple-200'">
                                     <span class="flex items-center gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -346,14 +359,14 @@
                                         </svg>
                                         Quick FAQ Questions
                                     </span>
-                                    <svg class="w-4 h-4 transition-transform duration-200" 
+                                    <svg class="w-4 h-4 transition-transform duration-200"
                                          :class="showFaqPanel ? 'rotate-180' : ''"
                                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                                     </svg>
                                 </button>
-                                
-                                <div x-show="showFaqPanel" 
+
+                                <div x-show="showFaqPanel"
                                      x-transition:enter="transition ease-out duration-200"
                                      x-transition:enter-start="opacity-0 -translate-y-2"
                                      x-transition:enter-end="opacity-100 translate-y-0"
@@ -361,17 +374,17 @@
                                      x-transition:leave-start="opacity-100 translate-y-0"
                                      x-transition:leave-end="opacity-0 -translate-y-2"
                                      class="mt-2 p-3 rounded-xl border space-y-2"
-                                     :class="darkMode 
-                                         ? 'bg-gray-800/80 border-gray-700' 
+                                     :class="darkMode
+                                         ? 'bg-gray-800/80 border-gray-700'
                                          : 'bg-white/80 border-purple-100'">
                                     <!-- Dynamic FAQs from Database -->
                                     <template x-for="(faq, index) in allFaqs" :key="faq.id">
                                         <div class="flex items-center gap-1">
-                                            <button type="button" 
+                                            <button type="button"
                                                     @click="sendFaqQuestionById(faq.id); showFaqPanel = false"
                                                     class="flex-1 text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-200 flex items-center gap-2"
-                                                    :class="darkMode 
-                                                        ? 'hover:bg-purple-900/40 text-gray-300 hover:text-purple-300' 
+                                                    :class="darkMode
+                                                        ? 'hover:bg-purple-900/40 text-gray-300 hover:text-purple-300'
                                                         : 'hover:bg-purple-50 text-gray-600 hover:text-purple-700'">
                                                 <span class="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
                                                       :class="darkMode ? 'bg-purple-900/60 text-purple-400' : 'bg-purple-100 text-purple-600'"
@@ -401,13 +414,13 @@
                             @endif
 
                             <form @submit.prevent="sendMessage" class="max-w-3xl mx-auto">
-                                <div class="flex items-center gap-2">
+                                <div class="flex items-center gap-1.5 sm:gap-2">
                                     <button type="button"
                                             @click="$refs.fileInput.click()"
-                                            class="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200"
+                                            class="flex-shrink-0 w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-200"
                                             :class="darkMode ? 'bg-gray-700 text-purple-400 hover:bg-gray-600' : 'bg-[#ede5ff] text-[#6f52ff] hover:bg-[#dfd4ff]'"
                                             title="Attach file">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                         </svg>
                                     </button>
@@ -423,29 +436,29 @@
                                               @input="$el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 140) + 'px'"
                                               placeholder="Type a message…"
                                               rows="1"
-                                              class="flex-1 rounded-2xl border focus:ring-2 text-sm px-4 py-3 resize-none transition-colors duration-200"
-                                              :class="darkMode 
-                                                  ? 'bg-gray-700 border-gray-600 focus:border-purple-500 focus:ring-purple-500/30 text-white placeholder-gray-400' 
+                                              class="flex-1 rounded-xl sm:rounded-2xl border focus:ring-2 text-sm px-3 sm:px-4 py-2.5 sm:py-3 resize-none transition-colors duration-200"
+                                              :class="darkMode
+                                                  ? 'bg-gray-700 border-gray-600 focus:border-purple-500 focus:ring-purple-500/30 text-white placeholder-gray-400'
                                                   : 'bg-white border-[#dacfff] focus:border-[#a68dff] focus:ring-[#a68dff]/30 text-gray-700 placeholder-gray-400'"
-                                              style="min-height: 44px;"></textarea>
+                                              style="min-height: 40px;"></textarea>
 
                                     <button type="submit"
                                             :disabled="(!newMessage.trim() && !selectedFile) || sending || !selectedConversation"
-                                            :class="(newMessage.trim() || selectedFile) && !sending && selectedConversation 
+                                            :class="(newMessage.trim() || selectedFile) && !sending && selectedConversation
                                                 ? (darkMode ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-[#6f52ff] hover:bg-[#5c41ef] text-white')
                                                 : (darkMode ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-[#e2d9ff] text-[#a69ae4] cursor-not-allowed')"
-                                            class="flex-shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200">
-                                        <svg x-show="!sending" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            class="flex-shrink-0 w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all duration-200">
+                                        <svg x-show="!sending" class="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
                                         </svg>
-                                        <svg x-show="sending" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <svg x-show="sending" class="w-4 h-4 sm:w-5 sm:h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
                                     </button>
                                 </div>
 
-                                <div x-show="selectedFile" class="mt-3 p-3 rounded-2xl flex items-center justify-between text-sm transition-colors duration-200"
+                                <div x-show="selectedFile" class="mt-2 sm:mt-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl flex items-center justify-between text-sm transition-colors duration-200"
                                      :class="darkMode ? 'bg-gray-700 text-gray-200' : 'bg-[#f1e8ff] text-[#4a3bb7]'">
                                     <div class="flex items-center gap-3">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -602,9 +615,9 @@
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                         </svg>
                                                     </button>
-                                                    <button type="button" 
-                                                            @click.stop.prevent="confirmDeleteFaq(faq)" 
-                                                            class="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors" 
+                                                    <button type="button"
+                                                            @click.stop.prevent="confirmDeleteFaq(faq)"
+                                                            class="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
                                                             title="Delete">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -624,8 +637,8 @@
                             <!-- Create/Edit FAQ Form Tab -->
                             <div x-show="faqModalTab === 'create' || editingFaq" class="p-6 space-y-5">
                                 <!-- Back button when editing -->
-                                <button x-show="editingFaq" 
-                                        type="button" 
+                                <button x-show="editingFaq"
+                                        type="button"
                                         @click="cancelEditFaq()"
                                         class="flex items-center gap-1 text-sm text-gray-500 hover:text-[#6f48ff] transition mb-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -739,7 +752,7 @@
 
                         <!-- Title -->
                         <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Delete FAQ?</h3>
-                        
+
                         <!-- Description -->
                         <p class="text-sm text-gray-500 text-center mb-6">
                             Are you sure you want to delete this FAQ? This action cannot be undone.
@@ -867,10 +880,10 @@
                     // Load dark mode preference from localStorage
                     this.darkMode = localStorage.getItem('chatDarkMode') === 'true';
                     window.addEventListener('beforeunload', () => this.cleanup());
-                    
+
                     // Load dynamic FAQs from database
                     this.loadFaqs();
-                    
+
                     // Auto-select first conversation for requestors (they usually only chat with admin)
                     @if(auth()->user()->role === 'requestor')
                     if (this.conversations.length > 0) {
@@ -931,7 +944,7 @@
                 async deleteFaqWithConfirm(faq) {
                     // Show native confirmation dialog
                     const confirmed = confirm(`Delete FAQ?\n\nAre you sure you want to delete this FAQ?\n\n"${faq.question}"\n\nThis action cannot be undone.`);
-                    
+
                     if (!confirmed) return;
 
                     // Proceed with deletion
@@ -1159,7 +1172,7 @@
                     if (this.pollHandle) {
                         clearInterval(this.pollHandle);
                     }
-                    this.pollHandle = setInterval(() => this.pollNewMessages(), 4000);
+                    this.pollHandle = setInterval(() => this.pollNewMessages(), 30000);
                 },
 
                 async loadMessages() {
@@ -1311,7 +1324,7 @@
 
                 async sendFaqQuestionById(faqId) {
                     if (!this.selectedConversation || this.sending) return;
-                    
+
                     // Find FAQ by ID (could be dynamic or default key)
                     let faq = this.dynamicFaqs.find(f => f.id === faqId);
                     if (!faq && this.faqResponses[faqId]) {
@@ -1342,15 +1355,12 @@
                         const data = await response.json();
 
                         if (data.success) {
+                            // Add both messages immediately for faster response
                             this.messages.push(data.question);
-                            this.scrollToBottom();
-                            this.selectedConversation.last_message = data.question.message;
-                            this.selectedConversation.last_message_at = data.question.created_at;
-
-                            await new Promise(resolve => setTimeout(resolve, 800));
-
                             this.messages.push(data.auto_reply);
                             this.scrollToBottom();
+
+                            // Update conversation preview with auto-reply
                             this.selectedConversation.last_message = '🤖 Automated FAQ Response';
                             this.selectedConversation.last_message_at = data.auto_reply.created_at;
                         } else {
@@ -1366,7 +1376,7 @@
 
                 async sendFaqQuestion(faqKey) {
                     if (!this.selectedConversation || this.sending) return;
-                    
+
                     const faq = this.faqResponses[faqKey];
                     if (!faq) return;
 
@@ -1391,17 +1401,12 @@
                         const data = await response.json();
 
                         if (data.success) {
+                            // Add both messages immediately for faster response
                             this.messages.push(data.question);
-                            this.scrollToBottom();
-
-                            this.selectedConversation.last_message = data.question.message;
-                            this.selectedConversation.last_message_at = data.question.created_at;
-
-                            await new Promise(resolve => setTimeout(resolve, 800));
-
                             this.messages.push(data.auto_reply);
                             this.scrollToBottom();
 
+                            // Update conversation preview with auto-reply
                             this.selectedConversation.last_message = '🤖 Automated FAQ Response';
                             this.selectedConversation.last_message_at = data.auto_reply.created_at;
                         } else {
@@ -1440,7 +1445,7 @@
                         if (data.success) {
                             // Clear messages locally
                             this.messages = [];
-                            
+
                             // Update conversation in list
                             const convIndex = this.conversations.findIndex(c => c.id === this.selectedConversation.id);
                             if (convIndex !== -1) {
@@ -1450,7 +1455,7 @@
                             }
 
                             this.showClearConfirmation = false;
-                            
+
                             // Show success feedback briefly
                             this.$nextTick(() => {
                                 this.scrollToBottom();

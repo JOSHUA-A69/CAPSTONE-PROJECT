@@ -142,7 +142,8 @@
                             <p class="text-muted">No booking requests found with the current filters.</p>
                         </div>
                     @else
-                        <div class="table-responsive">
+                        <!-- Desktop Table View -->
+                        <div class="d-none d-lg-block table-responsive">
                             <table class="table table-hover">
                                 <thead class="table-light">
                                     <tr>
@@ -255,9 +256,107 @@
                             </table>
                         </div>
 
+                        <!-- Mobile & Tablet Card View -->
+                        <div class="d-lg-none">
+                            @foreach($requests as $request)
+                                <div class="card mb-3 {{ $request->isOverdue() ? 'border-warning' : '' }}">
+                                    <div class="card-body p-3">
+                                        <!-- Card Header -->
+                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <span class="badge bg-secondary">#{{ $request->id }}</span>
+                                                    @if($request->status === 'pending')
+                                                        @if($request->isOverdue())
+                                                            <span class="badge bg-danger">
+                                                                <i class="fas fa-exclamation-triangle"></i> Overdue
+                                                            </span>
+                                                        @else
+                                                            <span class="badge bg-warning text-dark">
+                                                                <i class="fas fa-clock"></i> Pending
+                                                            </span>
+                                                        @endif
+                                                    @elseif($request->status === 'approved')
+                                                        <span class="badge bg-success">
+                                                            <i class="fas fa-check"></i> Approved
+                                                        </span>
+                                                    @elseif($request->status === 'rejected')
+                                                        <span class="badge bg-danger">
+                                                            <i class="fas fa-times"></i> Rejected
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <h6 class="mb-1 fw-bold">{{ $request->organization->name }}</h6>
+                                                <small class="text-muted">{{ $request->requestor->name }}</small>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Body Grid -->
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-6">
+                                                <div class="bg-light rounded p-2">
+                                                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Submitted</small>
+                                                    <span class="fw-medium" style="font-size: 0.85rem;">{{ $request->created_at->format('M d, Y') }}</span>
+                                                    <small class="text-muted d-block">{{ $request->created_at->format('g:i A') }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="bg-light rounded p-2">
+                                                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Response</small>
+                                                    @if($request->status !== 'pending')
+                                                        @php
+                                                            $responseTime = $request->approved_at ?? $request->rejected_at;
+                                                            $hours = $request->created_at->diffInHours($responseTime);
+                                                        @endphp
+                                                        @if($hours < 24)
+                                                            <span class="text-success fw-medium" style="font-size: 0.85rem;">{{ $hours }}h</span>
+                                                        @elseif($hours < 72)
+                                                            <span class="text-warning fw-medium" style="font-size: 0.85rem;">{{ number_format($hours / 24, 1) }}d</span>
+                                                        @else
+                                                            <span class="text-danger fw-medium" style="font-size: 0.85rem;">{{ number_format($hours / 24, 1) }}d</span>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-muted" style="font-size: 0.85rem;">{{ $request->created_at->diffForHumans() }}</span>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="bg-light rounded p-2">
+                                                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Adviser</small>
+                                                    <span class="fw-medium" style="font-size: 0.85rem;">{{ $request->organization->adviser->name ?? 'N/A' }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="bg-light rounded p-2">
+                                                    <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Purpose</small>
+                                                    <span style="font-size: 0.85rem;">{{ Str::limit($request->purpose, 80) }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Actions -->
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ route('staff.organization-bookings.show', $request) }}" 
+                                               class="btn btn-primary btn-sm flex-grow-1">
+                                                <i class="fas fa-eye me-1"></i> View Details
+                                            </a>
+                                            @if($request->status === 'pending' && $request->isOverdue())
+                                                <button type="button" 
+                                                        class="btn btn-warning btn-sm"
+                                                        onclick="sendReminder({{ $request->id }})"
+                                                        title="Send Reminder">
+                                                    <i class="fas fa-bell"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
                         <!-- Pagination -->
-                        <div class="d-flex justify-content-between align-items-center mt-4">
-                            <div class="text-muted">
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-4 gap-2">
+                            <div class="text-muted small">
                                 Showing {{ $requests->firstItem() }} to {{ $requests->lastItem() }} 
                                 of {{ $requests->total() }} results
                             </div>

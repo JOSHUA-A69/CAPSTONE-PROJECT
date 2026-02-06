@@ -250,7 +250,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 </div>
-                                <button type="button" 
+                                <button type="button"
                                         onclick="togglePassword('password', 'eyeIcon1', 'eyeOffIcon1')"
                                         class="text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors focus:outline-none"
                                         aria-label="Toggle password visibility">
@@ -294,7 +294,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 </div>
-                                <button type="button" 
+                                <button type="button"
                                         onclick="togglePassword('password_confirmation', 'eyeIcon2', 'eyeOffIcon2')"
                                         class="text-gray-500 hover:text-purple-600 dark:text-gray-400 dark:hover:text-purple-400 transition-colors focus:outline-none"
                                         aria-label="Toggle password visibility">
@@ -361,7 +361,7 @@
                             class="form-input pr-12"
                             placeholder="••••••••••"
                             aria-describedby="elevated_code_help" />
-                        <button type="button" 
+                        <button type="button"
                                 onclick="togglePassword('elevated_code', 'eyeIcon3', 'eyeOffIcon3')"
                                 class="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-500 hover:text-amber-600 dark:text-gray-400 dark:hover:text-amber-400 transition-colors focus:outline-none"
                                 aria-label="Toggle code visibility">
@@ -386,9 +386,9 @@
 
             <!-- Submit Button -->
             <div class="pt-2">
-                <button type="submit" 
+                <button type="submit"
                         id="submitBtn"
-                        class="w-full inline-flex items-center justify-center gap-2 px-6 py-4 text-base font-bold text-white bg-[#2ecc71] rounded-lg hover:bg-[#27ae60] transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-[1.01] transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg">
+                        class="w-full inline-flex items-center justify-center gap-2 px-6 py-4 text-base font-bold text-white bg-[#2ecc71] rounded-lg transition-all duration-200 shadow-lg opacity-50 cursor-not-allowed">
                     <svg id="submitIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                     </svg>
@@ -438,7 +438,7 @@
             --tw-ring-color: rgba(34, 197, 94, 0.3);
             border-color: #22c55e !important;
         }
-        
+
         /* Shake Animation */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -448,7 +448,7 @@
         .shake {
             animation: shake 0.5s ease-in-out;
         }
-        
+
         /* Fade In Animation */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-5px); }
@@ -467,7 +467,7 @@
             const input = document.getElementById(inputId);
             const eyeIcon = document.getElementById(eyeIconId);
             const eyeOffIcon = document.getElementById(eyeOffIconId);
-            
+
             if (input.type === 'password') {
                 input.type = 'text';
                 eyeIcon.classList.add('hidden');
@@ -486,7 +486,8 @@
             email: false,
             phone: false,
             password: false,
-            password_confirmation: false
+            password_confirmation: false,
+            elevated_code: true // Default to true, will be set to false only if required and invalid
         };
 
         // Validation Rules
@@ -523,6 +524,21 @@
                     return value.length >= 8 && value === password;
                 },
                 message: 'Passwords do not match'
+            },
+            elevated_code: {
+                validate: (value) => {
+                    const role = document.getElementById('role').value;
+                    const elevatedRoles = ['admin', 'staff', 'adviser', 'priest'];
+
+                    // If it's an elevated role, code is required and must be at least 6 characters
+                    if (elevatedRoles.includes(role)) {
+                        return value.trim().length >= 6;
+                    }
+
+                    // If it's not an elevated role, code is optional
+                    return true;
+                },
+                message: 'Elevated code is required for elevated roles and must be at least 6 characters'
             }
         };
 
@@ -532,7 +548,7 @@
             const container = field.closest('.validation-field');
             if (!container) return;
 
-            const input = container.querySelector('input');
+            const input = container.querySelector('input') || container.querySelector('select');
             const validIcon = container.querySelector('.valid-icon');
             const invalidIcon = container.querySelector('.invalid-icon');
             const errorEl = container.querySelector('.validation-error');
@@ -571,13 +587,31 @@
 
             const value = field.value;
             const validator = validators[fieldId];
-            
+
             if (!validator) return;
 
-            // Only validate if field has been touched (has value)
-            if (value.length === 0) {
-                showValidation(fieldId, false, 'This field is required');
-                return;
+            // Special handling for elevated_code
+            if (fieldId === 'elevated_code') {
+                const role = document.getElementById('role').value;
+                const elevatedRoles = ['admin', 'staff', 'adviser', 'priest'];
+
+                if (!elevatedRoles.includes(role)) {
+                    // Not an elevated role, so elevated code is not required
+                    validationState[fieldId] = true;
+                    return;
+                }
+
+                // For elevated roles, validate the code
+                if (value.trim().length === 0) {
+                    showValidation(fieldId, false, 'Elevated code is required for this role');
+                    return;
+                }
+            } else {
+                // For other fields, check if they're empty
+                if (value.length === 0) {
+                    showValidation(fieldId, false, 'This field is required');
+                    return;
+                }
             }
 
             if (validator.validate(value)) {
@@ -590,16 +624,35 @@
         // Update Submit Button State
         function updateSubmitButton() {
             const submitBtn = document.getElementById('submitBtn');
-            const allValid = Object.values(validationState).every(v => v === true);
-            
+
             // Check if all required fields have values
-            const requiredFields = ['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation'];
+            let requiredFields = ['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation'];
+
+            // Add elevated_code to required fields if an elevated role is selected
+            const roleField = document.getElementById('role');
+            const role = roleField ? roleField.value : '';
+            const elevatedRoles = ['admin', 'staff', 'adviser', 'priest'];
+            if (elevatedRoles.includes(role)) {
+                requiredFields.push('elevated_code');
+            }
+
             const allFilled = requiredFields.every(id => {
                 const field = document.getElementById(id);
                 return field && field.value.trim().length > 0;
             });
 
-            submitBtn.disabled = !(allValid && allFilled);
+            // Enable button if all required fields are filled, regardless of validation icons
+            // The form validation will handle errors on submit
+            submitBtn.disabled = !allFilled;
+
+            // Add visual feedback
+            if (allFilled) {
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                submitBtn.classList.add('hover:bg-[#27ae60]', 'hover:shadow-xl', 'hover:scale-[1.01]');
+            } else {
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitBtn.classList.remove('hover:bg-[#27ae60]', 'hover:shadow-xl', 'hover:scale-[1.01]');
+            }
         }
 
         // Phone Number Formatting (strip non-digits on input)
@@ -614,19 +667,21 @@
         // Initialize Validation Listeners
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.querySelector('form');
-            
+
             // Add blur validation to all fields
             Object.keys(validators).forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field) {
                     // Validate on blur
                     field.addEventListener('blur', () => validateField(fieldId));
-                    
+
                     // Validate on input (for real-time feedback after first blur)
                     field.addEventListener('input', () => {
                         if (field.classList.contains('is-invalid') || field.classList.contains('is-valid')) {
                             validateField(fieldId);
                         }
+                        // Always update submit button when any field changes
+                        updateSubmitButton();
                     });
                 }
             });
@@ -636,6 +691,7 @@
             if (phoneField) {
                 phoneField.addEventListener('input', function() {
                     formatPhoneInput(this);
+                    updateSubmitButton();
                 });
             }
 
@@ -647,6 +703,32 @@
                     if (confirmField && (confirmField.classList.contains('is-invalid') || confirmField.classList.contains('is-valid'))) {
                         validateField('password_confirmation');
                     }
+                    updateSubmitButton();
+                });
+            }
+
+            // Role selection - validate elevated code when role changes
+            const roleField = document.getElementById('role');
+            if (roleField) {
+                roleField.addEventListener('change', () => {
+                    const elevatedCodeField = document.getElementById('elevated_code');
+                    const role = roleField.value;
+                    const elevatedRoles = ['admin', 'staff', 'adviser', 'priest'];
+
+                    if (elevatedCodeField) {
+                        // Clear any existing validation state
+                        elevatedCodeField.classList.remove('is-valid', 'is-invalid');
+
+                        // If not an elevated role, reset to valid state
+                        if (!elevatedRoles.includes(role)) {
+                            validationState['elevated_code'] = true;
+                        } else {
+                            // If elevated role, validate the current value
+                            validateField('elevated_code');
+                        }
+                    }
+
+                    updateSubmitButton();
                 });
             }
 
@@ -654,7 +736,18 @@
             form.addEventListener('submit', function(e) {
                 // Validate all fields before submit
                 let hasError = false;
-                Object.keys(validators).forEach(fieldId => {
+                let requiredFields = ['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation'];
+
+                // Add elevated_code to required fields if an elevated role is selected
+                const roleField = document.getElementById('role');
+                const role = roleField ? roleField.value : '';
+                const elevatedRoles = ['admin', 'staff', 'adviser', 'priest'];
+                if (elevatedRoles.includes(role)) {
+                    requiredFields.push('elevated_code');
+                }
+
+                // Validate required fields
+                requiredFields.forEach(fieldId => {
                     const field = document.getElementById(fieldId);
                     if (field) {
                         validateField(fieldId);
@@ -683,14 +776,81 @@
                 const submitArrow = document.getElementById('submitArrow');
 
                 submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                submitBtn.classList.remove('hover:bg-[#27ae60]', 'hover:shadow-xl', 'hover:scale-[1.01]');
                 submitIcon.classList.add('hidden');
                 submitArrow.classList.add('hidden');
                 loadingSpinner.classList.remove('hidden');
                 submitText.textContent = 'CREATING ACCOUNT...';
             });
 
-            // Initial button state
-            updateSubmitButton();
+            // Always reset button from loading state back to normal
+            function resetButtonFromLoadingState() {
+                const submitBtn = document.getElementById('submitBtn');
+                const submitIcon = document.getElementById('submitIcon');
+                const loadingSpinner = document.getElementById('loadingSpinner');
+                const submitText = document.getElementById('submitText');
+                const submitArrow = document.getElementById('submitArrow');
+
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    submitIcon?.classList.remove('hidden');
+                    loadingSpinner?.classList.add('hidden');
+                    submitArrow?.classList.remove('hidden');
+                    if (submitText) {
+                        submitText.textContent = 'CREATE ACCOUNT';
+                    }
+                }
+            }
+
+            // Handle server-side elevated code errors
+            const elevatedCodeField = document.getElementById('elevated_code');
+            if (elevatedCodeField) {
+                // Find server-side error rendered by x-input-error
+                const serverErrorEl = elevatedCodeField.closest('div')?.parentElement?.querySelector('.mt-2:last-child');
+
+                elevatedCodeField.addEventListener('input', () => {
+                    // Hide server-side error message when user starts typing
+                    if (serverErrorEl && serverErrorEl.textContent.trim().length > 0) {
+                        serverErrorEl.style.display = 'none';
+                    }
+                    validateField('elevated_code');
+                    updateSubmitButton();
+                });
+            }
+
+            // Reset button state immediately on page load (handles full page reload after server error)
+            resetButtonFromLoadingState();
+
+            // Also handle browser back-forward cache (bfcache) restoration
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    resetButtonFromLoadingState();
+                    updateSubmitButton();
+                }
+            });
+
+            // Initial button state - enable if there are pre-filled values (from old input)
+            setTimeout(() => {
+                // Initialize validation states for pre-filled or empty fields
+                const fields = ['first_name', 'last_name', 'email', 'phone', 'password', 'password_confirmation', 'role'];
+                fields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    if (field && field.value.trim()) {
+                        // If field has value, validate it
+                        validateField(fieldId);
+                    }
+                });
+
+                // Also check agreement checkbox
+                const agreementField = document.getElementById('agreement');
+                if (agreementField && agreementField.checked) {
+                    validationState.agreement = true;
+                }
+
+                updateSubmitButton();
+            }, 100);
         });
     </script>
     @endpush
