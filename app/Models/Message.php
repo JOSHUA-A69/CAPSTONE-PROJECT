@@ -33,10 +33,14 @@ class Message extends Model
     public function getAttachmentUrlAttribute()
     {
         if ($this->attachment_path) {
-            // Add a cache-busting query param based on last update to avoid stale caches
-            $url = \Illuminate\Support\Facades\Storage::url($this->attachment_path);
-            $version = optional($this->updated_at)->timestamp ?? time();
-            return $url . '?v=' . $version;
+            try {
+                // Add a cache-busting query param based on last update to avoid stale caches
+                $url = \Illuminate\Support\Facades\Storage::url($this->attachment_path);
+                $version = optional($this->updated_at)->timestamp ?? time();
+                return $url . '?v=' . $version;
+            } catch (\Throwable $e) {
+                return null;
+            }
         }
         return null;
     }

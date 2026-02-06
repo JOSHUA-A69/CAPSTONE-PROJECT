@@ -8,9 +8,16 @@
             'first_name' => $conversation->first_name ?? 'User',
             'last_name' => $conversation->last_name ?? '',
             'full_name' => trim(($conversation->first_name ?? 'User') . ' ' . ($conversation->last_name ?? '')),
-            'profile_picture_url' => $conversation->profile_picture
-                ? Storage::url($conversation->profile_picture)
-                : asset('images/default-avatar.svg'),
+            'profile_picture_url' => (function() use ($conversation) {
+                try {
+                    if ($conversation->profile_picture) {
+                        return Storage::url($conversation->profile_picture);
+                    }
+                } catch (\Throwable $e) {
+                    return asset('images/default-avatar.svg');
+                }
+                return asset('images/default-avatar.svg');
+            })(),
             'unread_count' => $conversation->unread_count ?? 0,
             'message_count' => $conversation->message_count ?? 0,
             'last_message' => $conversation->last_message ?? '',
