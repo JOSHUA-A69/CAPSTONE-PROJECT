@@ -75,15 +75,20 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        // Delete old profile picture if exists
-        if ($user->profile_picture) {
-            Storage::delete($user->profile_picture);
+        try {
+            // Delete old profile picture if exists
+            if ($user->profile_picture) {
+                Storage::delete($user->profile_picture);
+            }
+
+            // Store new profile picture
+            $path = $request->file('profile_picture')->store('profile-pictures');
+
+            $user->update(['profile_picture' => $path]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Profile picture upload failed: ' . $e->getMessage());
+            return Redirect::route('profile.edit')->with('error', 'Unable to upload image. Please check storage configuration.');
         }
-
-        // Store new profile picture
-        $path = $request->file('profile_picture')->store('profile-pictures');
-
-        $user->update(['profile_picture' => $path]);
 
         return Redirect::route('profile.edit')->with('status', 'picture-uploaded');
     }
@@ -95,9 +100,14 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        if ($user->profile_picture) {
-            Storage::delete($user->profile_picture);
-            $user->update(['profile_picture' => null]);
+        try {
+            if ($user->profile_picture) {
+                Storage::delete($user->profile_picture);
+                $user->update(['profile_picture' => null]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Profile picture removal failed: ' . $e->getMessage());
+            return Redirect::route('profile.edit')->with('error', 'Unable to remove image. Please check storage configuration.');
         }
 
         return Redirect::route('profile.edit')->with('status', 'picture-removed');
