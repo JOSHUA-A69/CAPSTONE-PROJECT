@@ -146,8 +146,13 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getProfilePictureUrlAttribute(): string
     {
-        if ($this->profile_picture) {
-            return \Illuminate\Support\Facades\Storage::url($this->profile_picture);
+        try {
+            if ($this->profile_picture) {
+                return \Illuminate\Support\Facades\Storage::url($this->profile_picture);
+            }
+        } catch (\Throwable $e) {
+            // Fallback if Cloudinary config is invalid/missing
+            return asset('images/default-avatar.svg');
         }
 
         // Professional default avatar (local asset)
