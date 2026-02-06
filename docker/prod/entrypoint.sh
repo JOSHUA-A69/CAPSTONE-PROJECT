@@ -26,6 +26,13 @@ fi
 # Link storage (idempotent)
 php artisan storage:link
 
+# Fix permissions for storage and cache (Crucial for uploads in prod)
+# Ensure www-data (Apache user) owns the directories
+chown -R www-data:www-data /var/www/html/storage
+chown -R www-data:www-data /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage
+chmod -R 775 /var/www/html/bootstrap/cache
+
 # Run migrations automatically (Required for Free Tier with no Shell access)
 echo "Running migrations..."
 php artisan migrate --force
