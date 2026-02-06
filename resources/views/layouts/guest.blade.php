@@ -13,14 +13,14 @@
 
     <!-- Favicon -->
     <link rel="icon" href="/images/ers-logo.png" />
-    
+
     <!-- Animation Mode: none for auth pages (login/register) -->
     <script>
         window.ANIMATIONS_MODE = 'none';
     </script>
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- Dark Mode Initialization Script -->
     <script>
         // Initialize dark mode from localStorage before page renders
@@ -34,7 +34,7 @@
     <body class="font-sans text-gray-900 dark:text-gray-100 antialiased text-base lg:text-[18px] no-animations">
         <div class="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
             <div class="flex-1 flex flex-col sm:justify-center items-center pt-8 sm:pt-6 pb-12 px-4">
-                <div class="w-full sm:max-w-2xl lg:max-w-3xl mt-6 px-6 sm:px-8 py-8 bg-white dark:bg-gray-800 shadow-xl overflow-hidden sm:rounded-xl border border-gray-200 dark:border-gray-700">
+                <div class="w-full sm:max-w-2xl lg:max-w-3xl mt-6 px-6 sm:px-8 py-8 bg-white dark:bg-gray-950 shadow-xl overflow-hidden sm:rounded-xl border border-gray-200 dark:border-gray-700">
                     @isset($slot)
                         {{ $slot }}
                     @else
@@ -45,7 +45,7 @@
 
             @include('layouts.footer')
         </div>
-        
+
         @stack('scripts')
     </body>
 </html>

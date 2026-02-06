@@ -1,5 +1,8 @@
 <?php
 
+
+
+
 return [
 
     /*
@@ -36,6 +39,10 @@ return [
     */
 
     'mailers' => [
+
+        'sendgrid' => [
+            'transport' => 'sendgrid',
+        ],
 
         'smtp' => [
             'transport' => 'smtp',
@@ -114,5 +121,8 @@ return [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
+
+
+    
 
 ];

@@ -1,10 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
-                My Assigned Services
-            </h2>
-            <p class="text-muted text-sm mt-1">Manage your service assignments and confirmations</p>
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-gray-200 tracking-tight">
+                    My Assigned Services
+                </h2>
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 max-w-lg">
+                    Manage your service assignments and confirmations
+                </p>
+            </div>
+            <!-- Optional: Mobile menu button or additional actions can go here -->
         </div>
     </x-slot>
 
@@ -66,41 +71,85 @@
                 </div>
             @endif
 
-            <!-- Filter Tabs -->
-            <div class="mb-6 flex flex-wrap gap-2 justify-between items-center">
-                <div class="flex flex-wrap gap-2">
+            <!-- Filter Tabs - Enhanced Mobile Responsive Design -->
+            <div class="mb-6">
+                <!-- Mobile: Stacked layout with full-width buttons -->
+                <div class="block sm:hidden">
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <a href="{{ route('priest.reservations.index') }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm {{ !request('status') && !request('time') ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300' }}">
+                            All
+                        </a>
+                        <a href="{{ route('priest.reservations.index', ['status' => 'pending_priest_confirmation']) }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm {{ request('status') === 'pending_priest_confirmation' ? 'bg-yellow-600 text-white shadow-yellow-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:border-yellow-300' }}">
+                            <span class="flex items-center gap-1.5">
+                                Pending
+                                @if($pendingConfirmationCount > 0)
+                                    <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">{{ $pendingConfirmationCount }}</span>
+                                @endif
+                            </span>
+                        </a>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <a href="{{ route('priest.reservations.index', ['time' => 'upcoming']) }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm {{ request('time') === 'upcoming' ? 'bg-green-600 text-white shadow-green-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300' }}">
+                            <span class="flex items-center gap-1">
+                                Upcoming
+                                @if($upcomingCount > 0)
+                                    <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-green-500 rounded-full">{{ $upcomingCount }}</span>
+                                @endif
+                            </span>
+                        </a>
+                        <a href="{{ route('priest.reservations.index', ['time' => 'past']) }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm {{ request('time') === 'past' ? 'bg-gray-600 text-white shadow-gray-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300' }}">
+                            Past
+                        </a>
+                        <a href="{{ route('priest.reservations.declined') }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300">
+                            <span class="flex items-center gap-1">
+                                Declined
+                                @if($declinedCount > 0)
+                                    <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">{{ $declinedCount }}</span>
+                                @endif
+                            </span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Desktop: Horizontal layout -->
+                <div class="hidden sm:flex flex-wrap gap-3 items-center">
                     <a href="{{ route('priest.reservations.index') }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 {{ !request('status') && !request('time') ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] {{ !request('status') && !request('time') ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300' }}">
                         All
                     </a>
                     <a href="{{ route('priest.reservations.index', ['status' => 'pending_priest_confirmation']) }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 {{ request('status') === 'pending_priest_confirmation' ? 'bg-yellow-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        <span class="flex items-center gap-1">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] {{ request('status') === 'pending_priest_confirmation' ? 'bg-yellow-600 text-white shadow-yellow-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:border-yellow-300' }}">
+                        <span class="flex items-center gap-2">
                             Pending Confirmation
                             @if($pendingConfirmationCount > 0)
-                                <span class="badge-warning ml-1">{{ $pendingConfirmationCount }}</span>
+                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">{{ $pendingConfirmationCount }}</span>
                             @endif
                         </span>
                     </a>
                     <a href="{{ route('priest.reservations.index', ['time' => 'upcoming']) }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 {{ request('time') === 'upcoming' ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        <span class="flex items-center gap-1">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] {{ request('time') === 'upcoming' ? 'bg-green-600 text-white shadow-green-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300' }}">
+                        <span class="flex items-center gap-2">
                             Upcoming
                             @if($upcomingCount > 0)
-                                <span class="badge-success ml-1">{{ $upcomingCount }}</span>
+                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-green-500 rounded-full">{{ $upcomingCount }}</span>
                             @endif
                         </span>
                     </a>
                     <a href="{{ route('priest.reservations.index', ['time' => 'past']) }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 {{ request('time') === 'past' ? 'bg-gray-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] {{ request('time') === 'past' ? 'bg-gray-600 text-white shadow-gray-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300' }}">
                         Past Services
                     </a>
                     <a href="{{ route('priest.reservations.declined') }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <span class="flex items-center gap-1">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300">
+                        <span class="flex items-center gap-2">
                             Declined Services
                             @if($declinedCount > 0)
-                                <span class="badge-secondary ml-1">{{ $declinedCount }}</span>
+                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">{{ $declinedCount }}</span>
                             @endif
                         </span>
                     </a>

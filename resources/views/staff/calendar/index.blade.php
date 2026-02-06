@@ -2,6 +2,8 @@
     @vite(['resources/js/app.js', 'resources/css/app.css'])
     
     <style>
+        /* ===== UNIVERSAL RESPONSIVE CALENDAR STYLES ===== */
+        
         /* Critical FullCalendar styles to ensure events display */
         .fc-event, .fc-event-dot {
             display: block !important;
@@ -43,19 +45,641 @@
             display: inline !important;
             color: white !important;
         }
+        
+        /* ===== BASE DESKTOP STYLES (1024px+) ===== */
+        .fc {
+            font-size: 0.875rem;
+        }
+        
+        .fc .fc-toolbar {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .fc .fc-toolbar-title {
+            font-size: 1.25rem !important;
+        }
+        
+        .fc .fc-button-primary {
+            font-size: 0.8125rem !important;
+            padding: 0.375rem 0.75rem !important;
+        }
+        
+        .calendar-page-container {
+            padding: 1rem 2rem;
+        }
+        
+        .calendar-card-body {
+            padding: 1.5rem;
+        }
+
+        /* ===== LARGE SCREENS (1280px+) ===== */
+        @media (min-width: 1280px) {
+            .calendar-page-container {
+                padding: 2rem 3rem;
+            }
+            
+            .fc .fc-toolbar-title {
+                font-size: 1.375rem !important;
+            }
+        }
+
+        /* ===== TABLET (768px - 1023px) ===== */
+        @media (max-width: 1023px) and (min-width: 768px) {
+            .fc {
+                font-size: 0.8125rem;
+            }
+            
+            .fc .fc-toolbar {
+                gap: 0.375rem;
+            }
+            
+            .fc .fc-toolbar-title {
+                font-size: 1.125rem !important;
+            }
+            
+            .fc .fc-button-primary {
+                font-size: 0.75rem !important;
+                padding: 0.3125rem 0.625rem !important;
+            }
+            
+            .fc .fc-daygrid-day {
+                min-height: 60px !important;
+            }
+            
+            .calendar-page-container {
+                padding: 0.75rem 1rem;
+            }
+            
+            .calendar-card-body {
+                padding: 1rem;
+            }
+            
+            .calendar-legend-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* ===== SMALL TABLET / LARGE PHONE (640px - 767px) ===== */
+        @media (max-width: 767px) and (min-width: 640px) {
+            .fc {
+                font-size: 0.75rem;
+            }
+            
+            .fc .fc-toolbar {
+                flex-direction: column;
+                gap: 0.375rem;
+            }
+            
+            .fc .fc-toolbar-chunk {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .fc .fc-toolbar-title {
+                font-size: 1.0625rem !important;
+            }
+            
+            .fc .fc-button-primary {
+                font-size: 0.6875rem !important;
+                padding: 0.25rem 0.5rem !important;
+            }
+            
+            .fc .fc-daygrid-day {
+                min-height: 55px !important;
+            }
+            
+            .fc .fc-col-header-cell-cushion {
+                font-size: 0.625rem !important;
+            }
+            
+            .fc .fc-daygrid-day-number {
+                font-size: 0.6875rem !important;
+            }
+            
+            .calendar-page-container {
+                padding: 0.5rem 0.75rem;
+            }
+            
+            .calendar-card-body {
+                padding: 0.75rem;
+            }
+            
+            .calendar-legend-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            /* Hide sidebar on small tablets */
+            .schedule-sidebar-320 {
+                display: none !important;
+            }
+        }
+
+        /* ===== MOBILE (481px - 639px) ===== */
+        @media (max-width: 639px) and (min-width: 481px) {
+            .fc {
+                font-size: 0.6875rem;
+            }
+            
+            .fc .fc-toolbar {
+                flex-direction: column;
+                gap: 0.3125rem;
+                margin-bottom: 0.3125rem !important;
+            }
+            
+            .fc .fc-toolbar-chunk {
+                width: 100%;
+                justify-content: center;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+            
+            .fc .fc-button-primary {
+                font-size: 0.625rem !important;
+                padding: 0.1875rem 0.375rem !important;
+                min-height: 1.5rem;
+            }
+            
+            .fc .fc-toolbar-title {
+                font-size: 0.9375rem !important;
+            }
+            
+            .fc .fc-daygrid-day {
+                min-height: 45px !important;
+            }
+            
+            .fc .fc-col-header-cell-cushion {
+                font-size: 0.5625rem !important;
+                padding: 2px !important;
+            }
+            
+            .fc .fc-daygrid-day-number {
+                font-size: 0.625rem !important;
+                padding: 1px 2px !important;
+            }
+            
+            .fc-daygrid-event {
+                font-size: 0.5625rem !important;
+                padding: 1px 2px !important;
+            }
+            
+            .calendar-page-container {
+                padding: 0.375rem 0.5rem;
+            }
+            
+            .calendar-card-body {
+                padding: 0.5rem;
+            }
+            
+            .calendar-legend-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .schedule-sidebar-320 {
+                display: none !important;
+            }
+        }
+
+        /* ===== SMALL MOBILE (376px - 480px) ===== */
+        @media (max-width: 480px) and (min-width: 376px) {
+            .fc {
+                font-size: 0.625rem;
+            }
+            
+            .fc .fc-toolbar {
+                display: grid !important;
+                grid-template-columns: 1fr auto !important;
+                grid-template-rows: auto auto !important;
+                gap: 0.125rem !important;
+                margin-bottom: 0.125rem !important;
+                padding: 0.125rem !important;
+            }
+            
+            .fc .fc-toolbar-chunk {
+                display: flex !important;
+                align-items: center !important;
+                gap: 0.125rem !important;
+            }
+            
+            .fc .fc-toolbar-chunk:first-child {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            
+            .fc .fc-toolbar-chunk:nth-child(2) {
+                grid-column: 1 / 3;
+                grid-row: 2;
+                justify-content: center;
+            }
+            
+            .fc .fc-toolbar-chunk:last-child {
+                grid-column: 2;
+                grid-row: 1;
+                justify-content: flex-end;
+            }
+            
+            .fc .fc-button-primary {
+                font-size: 0.5rem !important;
+                padding: 0.125rem 0.25rem !important;
+                min-height: 1.25rem;
+            }
+            
+            .fc .fc-toolbar-title {
+                font-size: 0.8125rem !important;
+                font-weight: 700 !important;
+            }
+            
+            .fc .fc-daygrid-day {
+                min-height: 42px !important;
+            }
+            
+            .fc .fc-col-header-cell-cushion {
+                font-size: 0.5rem !important;
+                padding: 1px !important;
+            }
+            
+            .fc .fc-daygrid-day-number {
+                font-size: 0.5625rem !important;
+                padding: 1px !important;
+            }
+            
+            .fc-daygrid-event {
+                font-size: 0.5rem !important;
+                padding: 0 1px !important;
+            }
+            
+            .fc .fc-daygrid-more-link {
+                font-size: 0.4375rem !important;
+            }
+            
+            .calendar-page-container {
+                padding: 0.25rem !important;
+            }
+            
+            .calendar-card-body {
+                padding: 0.25rem !important;
+            }
+            
+            .legend-card-320 {
+                display: none !important;
+            }
+            
+            .schedule-sidebar-320 {
+                display: none !important;
+            }
+            
+            .calendar-header-320 button {
+                font-size: 0.5625rem !important;
+                padding: 0.1875rem 0.5rem !important;
+            }
+        }
+
+        /* ===== EXTRA SMALL MOBILE (321px - 375px) ===== */
+        @media (max-width: 375px) and (min-width: 321px) {
+            .fc {
+                font-size: 0.5625rem !important;
+            }
+            
+            .fc .fc-toolbar {
+                display: grid !important;
+                grid-template-columns: auto 1fr auto !important;
+                grid-template-rows: auto auto !important;
+                gap: 0.0625rem !important;
+                margin-bottom: 0.0625rem !important;
+                padding: 0.0625rem !important;
+            }
+            
+            .fc .fc-toolbar-chunk {
+                gap: 0.0625rem !important;
+                white-space: nowrap !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+            
+            .fc .fc-toolbar-chunk:first-child {
+                grid-column: 1;
+                grid-row: 1;
+            }
+            
+            .fc .fc-toolbar-chunk:nth-child(2) {
+                grid-column: 1 / 3;
+                grid-row: 2;
+            }
+            
+            .fc .fc-toolbar-chunk:last-child {
+                grid-column: 3;
+                grid-row: 1 / 3;
+                flex-direction: column !important;
+                text-align: right !important;
+            }
+            
+            .fc .fc-button-primary {
+                font-size: 0.4375rem !important;
+                padding: 0.0625rem 0.125rem !important;
+                min-height: 1rem !important;
+                border-radius: 2px !important;
+            }
+            
+            .fc .fc-toolbar-title {
+                font-size: 0.75rem !important;
+                margin: 0 !important;
+                font-weight: 700 !important;
+            }
+            
+            .fc .fc-daygrid-day {
+                min-height: 40px !important;
+                max-height: 44px !important;
+            }
+            
+            .fc .fc-daygrid-day-frame {
+                min-height: 36px !important;
+                max-height: 40px !important;
+                padding: 0 !important;
+            }
+            
+            .fc .fc-col-header-cell {
+                padding: 0 !important;
+            }
+            
+            .fc .fc-col-header-cell-cushion {
+                font-size: 0.4375rem !important;
+                padding: 1px 0 !important;
+                font-weight: 600 !important;
+            }
+            
+            .fc .fc-daygrid-day-number {
+                font-size: 0.5rem !important;
+                padding: 1px !important;
+            }
+            
+            .fc-daygrid-event {
+                font-size: 0.375rem !important;
+                padding: 0 1px !important;
+                margin: 0 !important;
+                line-height: 1 !important;
+            }
+            
+            .fc .fc-daygrid-more-link {
+                font-size: 0.375rem !important;
+            }
+            
+            .calendar-page-container {
+                padding-left: 0.125rem !important;
+                padding-right: 0.125rem !important;
+            }
+            
+            .calendar-card-body {
+                padding: 0.125rem !important;
+            }
+            
+            .legend-card-320 {
+                display: none !important;
+            }
+            
+            .schedule-sidebar-320 {
+                display: none !important;
+            }
+            
+            .calendar-header-320 {
+                margin-bottom: 0.125rem !important;
+            }
+            
+            .calendar-header-320 button {
+                font-size: 0.5rem !important;
+                padding: 0.125rem 0.375rem !important;
+            }
+        }
+
+        /* ===== ULTRA SMALL MOBILE (320px and below) ===== */
+        @media (max-width: 320px) {
+            .fc {
+                font-size: 0.5rem !important;
+            }
+            
+            .fc .fc-toolbar {
+                display: grid !important;
+                grid-template-columns: auto 1fr auto !important;
+                grid-template-rows: auto auto !important;
+                gap: 0.05rem !important;
+                margin-bottom: 0.05rem !important;
+                padding: 0.05rem 0.05rem !important;
+                width: 100% !important;
+                align-items: center !important;
+            }
+            
+            .fc .fc-toolbar-chunk {
+                gap: 0.05rem !important;
+                white-space: nowrap !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+            
+            /* First chunk - Add button (top left) */
+            .fc .fc-toolbar-chunk:first-child {
+                grid-column: 1;
+                grid-row: 1;
+                flex: 0 0 auto !important;
+            }
+            
+            /* Middle chunk - Navigation buttons (bottom left/center) */
+            .fc .fc-toolbar-chunk:nth-child(2) {
+                grid-column: 1 / 3;
+                grid-row: 2;
+                flex: 0 0 auto !important;
+                gap: 0.05rem !important;
+            }
+            
+            /* Right chunk - Date/Month (top right) */
+            .fc .fc-toolbar-chunk:last-child {
+                grid-column: 3;
+                grid-row: 1 / 3;
+                flex: 0 0 auto !important;
+                flex-direction: column !important;
+                gap: 0.02rem !important;
+                text-align: right !important;
+                padding-right: 0.1rem !important;
+            }
+            
+            .fc .fc-button-primary {
+                font-size: 0.35rem !important;
+                padding: 0.05rem 0.1rem !important;
+                min-height: 0.85rem !important;
+                border-radius: 2px !important;
+                white-space: nowrap !important;
+                flex: 0 0 auto !important;
+            }
+            
+            .fc .fc-button-primary:not(.fc-button-active) {
+                background-color: #6366f1 !important;
+                border-color: #6366f1 !important;
+            }
+            
+            .fc .fc-toolbar-title {
+                font-size: 0.65rem !important;
+                margin: 0 !important;
+                font-weight: 700 !important;
+                white-space: nowrap !important;
+                flex: 0 0 auto !important;
+                color: #1f2937 !important;
+            }
+            
+            .fc .fc-view-harness {
+                overflow: hidden !important;
+            }
+            
+            .fc .fc-scrollgrid {
+                width: 100% !important;
+                table-layout: fixed !important;
+            }
+            
+            .fc .fc-scrollgrid-section > td,
+            .fc .fc-scrollgrid-section > th {
+                padding: 0 !important;
+            }
+            
+            .fc .fc-daygrid-day {
+                min-height: 38px !important;
+                max-height: 42px !important;
+            }
+            
+            .fc .fc-daygrid-day-frame {
+                min-height: 34px !important;
+                max-height: 38px !important;
+                padding: 0 !important;
+            }
+            
+            .fc .fc-col-header-cell {
+                padding: 0 !important;
+            }
+            
+            .fc .fc-col-header-cell-cushion {
+                font-size: 0.45rem !important;
+                padding: 1px 0 !important;
+                font-weight: 600 !important;
+            }
+            
+            .fc .fc-daygrid-day-number {
+                font-size: 0.5rem !important;
+                padding: 1px !important;
+            }
+            
+            .fc .fc-daygrid-day-top {
+                flex-direction: row !important;
+                justify-content: center !important;
+            }
+            
+            .fc-daygrid-event {
+                font-size: 0.35rem !important;
+                padding: 0 1px !important;
+                margin: 0 !important;
+                line-height: 1 !important;
+                border-radius: 2px !important;
+            }
+            
+            .fc .fc-daygrid-more-link {
+                font-size: 0.35rem !important;
+            }
+            
+            .fc .fc-scrollgrid-section-header th {
+                padding: 0 !important;
+            }
+            
+            .fc-scrollgrid-sync-table {
+                margin: 0 !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+            }
+            
+            .fc-scrollgrid-sync-table td,
+            .fc-scrollgrid-sync-table th {
+                width: calc(100% / 7) !important;
+            }
+            
+            .fc .fc-daygrid-body {
+                width: 100% !important;
+            }
+            
+            .fc .fc-daygrid-body-balanced {
+                width: 100% !important;
+            }
+            
+            .fc-popover {
+                max-width: 260px !important;
+                font-size: 0.6rem !important;
+            }
+            
+            .calendar-page-container {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            
+            .calendar-card-body {
+                padding: 0.1rem !important;
+            }
+            
+            /* Hide sidebar on ultra-small screens to fit calendar in one frame */
+            .schedule-sidebar-320 {
+                display: none !important;
+            }
+            
+            /* Hide legend completely on 320px to save space */
+            .legend-card-320 {
+                display: none !important;
+            }
+            
+            /* Compact header section */
+            .calendar-header-320 {
+                margin-bottom: 0.25rem !important;
+            }
+            
+            .calendar-header-320 button {
+                font-size: 0.5rem !important;
+                padding: 0.125rem 0.5rem !important;
+            }
+            
+            /* Card shadows reduced */
+            .card {
+                box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+            }
+            
+            /* Hide success/error alerts on 320px to save space */
+            #successAlert, .validation-error-alert {
+                display: none !important;
+            }
+        }
+
+        /* ===== POPOVER RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .fc-popover {
+                max-width: 300px !important;
+            }
+            
+            .fc-popover-header {
+                padding: 0.25rem 0.5rem !important;
+                font-size: 0.7rem !important;
+            }
+            
+            .fc-popover-body {
+                padding: 0.25rem !important;
+                max-height: 150px !important;
+                overflow-y: auto !important;
+            }
+        }
     </style>
 
     <x-slot name="header">
         <div>
-            <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
-                Manage Liturgical Calendar
+            <h2 class="text-heading text-[11px] sm:text-lg lg:text-xl text-gray-800 dark:text-gray-200">
+                <span class="sm:hidden">Calendar</span>
+                <span class="hidden sm:inline">Manage Liturgical Calendar</span>
             </h2>
-            <p class="text-muted text-sm mt-1">Add and manage public liturgical schedules and activities</p>
+            <p class="text-muted text-[8px] sm:text-xs lg:text-sm mt-0 sm:mt-1 hidden sm:block">Add and manage public liturgical schedules and activities</p>
         </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="py-1 sm:py-8 lg:py-12">
+        <div class="max-w-[1600px] mx-auto px-0 sm:px-4 lg:px-8 calendar-page-container">
             
             <!-- Validation Errors -->
             @if($errors->any())
@@ -109,52 +733,53 @@
             @endif
 
             <!-- Enhanced Add Schedule Button -->
-            <div class="mb-6 flex justify-between items-center">
+            <div class="mb-1 sm:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-4 calendar-header-320">
                 <button onclick="openAddModal()" 
-                        class="btn-primary shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="btn-primary shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center gap-0.5 sm:gap-2 text-[8px] sm:text-sm px-1.5 sm:px-4 py-1 sm:py-2">
+                    <svg class="w-2.5 h-2.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
-                    <span class="font-semibold">Add New Schedule</span>
+                    <span class="font-semibold">Add Schedule</span>
                 </button>
-                <div class="text-sm text-muted">
+                <div class="text-[8px] sm:text-xs lg:text-sm text-muted hidden sm:block">
                     Click on any date in the calendar to quickly add a schedule
                 </div>
             </div>
 
             <!-- Calendar and Schedules -->
-            <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 xl:grid-cols-4 gap-2 sm:gap-6 lg:gap-8">
                 <!-- FullCalendar View -->
                 <div class="xl:col-span-3">
-                    <div class="card shadow-xl">
-                        <div class="card-body p-6">
+                    <div class="card shadow-lg sm:shadow-xl overflow-hidden">
+                        <div class="card-body p-1 sm:p-4 lg:p-6 calendar-card-body">
                             <div id="fullcalendar"></div>
                         </div>
                     </div>
                     
                     <!-- Legend -->
-                    <div class="card mt-6 shadow-lg">
-                        <div class="card-header bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="card mt-2 sm:mt-6 shadow-md sm:shadow-lg legend-card-320">
+                        <div class="card-header bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-2 sm:p-4 legend-card-header-hide">
+                            <h3 class="text-xs sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-1 sm:gap-2">
+                                <svg class="w-3 h-3 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                                 </svg>
-                                Event Types
+                                <span class="sm:hidden">Legend</span>
+                                <span class="hidden sm:inline">Event Types</span>
                             </h3>
                         </div>
-                        <div class="card-body p-6">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #8B5CF6;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Institutional Mass</span>
+                        <div class="card-body p-2 sm:p-4 lg:p-6 legend-card-body-minimal">
+                            <div class="grid grid-cols-3 gap-1 sm:gap-4 calendar-legend-grid calendar-legend-320">
+                                <div class="flex items-center gap-1 sm:gap-2">
+                                    <div class="w-2.5 h-2.5 sm:w-4 sm:h-4 rounded flex-shrink-0" style="background-color: #8B5CF6;"></div>
+                                    <span class="text-[8px] sm:text-xs lg:text-sm text-gray-700 dark:text-gray-300 truncate">Institutional</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #3B82F6;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Non-Institutional Mass</span>
+                                <div class="flex items-center gap-1 sm:gap-2">
+                                    <div class="w-2.5 h-2.5 sm:w-4 sm:h-4 rounded flex-shrink-0" style="background-color: #3B82F6;"></div>
+                                    <span class="text-[8px] sm:text-xs lg:text-sm text-gray-700 dark:text-gray-300 truncate">Non-Inst.</span>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-4 h-4 rounded" style="background-color: #FCF3CF;"></div>
-                                    <span class="text-sm text-gray-700 dark:text-gray-300">Today's Date</span>
+                                <div class="flex items-center gap-1 sm:gap-2">
+                                    <div class="w-2.5 h-2.5 sm:w-4 sm:h-4 rounded flex-shrink-0" style="background-color: #FCF3CF; border: 1px solid #d4af37;"></div>
+                                    <span class="text-[8px] sm:text-xs lg:text-sm text-gray-700 dark:text-gray-300 truncate">Today</span>
                                 </div>
                             </div>
                         </div>
@@ -162,97 +787,96 @@
                 </div>
 
                 <!-- Schedules List Sidebar -->
-                <div class="xl:col-span-1">
-                    <div class="card shadow-xl">
-                        <div class="card-header bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30">
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                                <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="xl:col-span-1 schedule-sidebar-320">
+                    <div class="card shadow-lg sm:shadow-xl">
+                        <div class="card-header bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 p-2 sm:p-4">
+                            <h3 class="text-xs sm:text-base lg:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-1 sm:gap-2">
+                                <svg class="w-3 h-3 sm:w-5 sm:h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                 </svg>
-                                All Schedules
+                                <span class="sm:hidden">Schedules</span>
+                                <span class="hidden sm:inline">All Schedules</span>
                             </h3>
                         </div>
-                        <div class="card-body p-4">
-                            <div class="space-y-4 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="card-body p-1.5 sm:p-4">
+                            <div class="space-y-1.5 sm:space-y-4 max-h-[300px] sm:max-h-[600px] xl:max-h-[800px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
                                 @forelse($schedules as $schedule)
-                                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
-                                        <div class="flex items-start justify-between mb-2">
-                                            <h4 class="font-semibold text-gray-900 dark:text-white">{{ $schedule->title }}</h4>
-                                            <span class="px-2 py-1 text-xs rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200">
+                                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-md sm:rounded-lg p-1.5 sm:p-4 border border-gray-200 dark:border-gray-600">
+                                        <div class="flex items-start justify-between mb-0.5 sm:mb-2">
+                                            <h4 class="font-semibold text-[10px] sm:text-sm lg:text-base text-gray-900 dark:text-white truncate flex-1 mr-1">{{ $schedule->title }}</h4>
+                                            <span class="px-1 sm:px-2 py-0.5 text-[6px] sm:text-xs rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 whitespace-nowrap flex-shrink-0">
                                                 {{ ucfirst($schedule->event_type) }}
                                             </span>
                                         </div>
                                         
-                                        <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-3">
-                                            <div class="flex items-center gap-2">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="text-[8px] sm:text-sm text-gray-600 dark:text-gray-400 space-y-0.5 mb-1 sm:mb-3">
+                                            <div class="flex items-center gap-0.5 sm:gap-2">
+                                                <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                 </svg>
                                                 {{ $schedule->schedule_date->format('M d, Y') }}
                                             </div>
-                                            <div class="flex items-center gap-2">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div class="flex items-center gap-0.5 sm:gap-2">
+                                                <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                 </svg>
-                                                {{ \Carbon\Carbon::parse($schedule->start_time)->format('g:i A') }}
-                                                @if($schedule->end_time)
-                                                    - {{ \Carbon\Carbon::parse($schedule->end_time)->format('g:i A') }}
-                                                @endif
+                                                {{ \Carbon\Carbon::parse($schedule->start_time)->format('g:ia') }}@if($schedule->end_time)<span class="hidden sm:inline"> - {{ \Carbon\Carbon::parse($schedule->end_time)->format('g:ia') }}</span>@endif
                                             </div>
                                             @if($schedule->venue || $schedule->location)
-                                                <div class="flex items-center gap-2">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div class="flex items-center gap-0.5 sm:gap-2 hidden sm:flex">
+                                                    <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                                     </svg>
-                                                    {{ $schedule->venue ? $schedule->venue->name : $schedule->location }}
+                                                    <span class="truncate">{{ $schedule->venue ? $schedule->venue->name : $schedule->location }}</span>
                                                 </div>
                                             @endif
                                             @if($schedule->priest)
-                                                <div class="flex items-center gap-2">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div class="flex items-center gap-0.5 sm:gap-2 hidden sm:flex">
+                                                    <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                                     </svg>
-                                                    <span class="font-medium">{{ $schedule->priest->name }}</span>
+                                                    <span class="font-medium truncate">{{ $schedule->priest->name }}</span>
                                                 </div>
                                             @elseif($schedule->external_priest_name)
-                                                <div class="flex items-center gap-2">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <div class="flex items-center gap-0.5 sm:gap-2 hidden sm:flex">
+                                                    <svg class="w-2.5 h-2.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                                     </svg>
-                                                    <span class="font-medium">{{ $schedule->external_priest_name }} <span class="text-xs text-gray-500 dark:text-gray-400">(External)</span></span>
+                                                    <span class="font-medium truncate">{{ $schedule->external_priest_name }} <span class="text-[6px] sm:text-xs text-gray-500 dark:text-gray-400">(Ext)</span></span>
                                                 </div>
                                             @endif
                                         </div>
 
                                         @if($schedule->description)
-                                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ Str::limit($schedule->description, 100) }}</p>
+                                            <p class="text-[8px] sm:text-sm text-gray-600 dark:text-gray-400 mb-1 sm:mb-3 line-clamp-1 sm:line-clamp-2 hidden sm:block">{{ Str::limit($schedule->description, 60) }}</p>
                                         @endif
 
-                                        <div class="flex items-center gap-2 text-xs">
-                                            <span class="px-2 py-1 rounded bg-{{ $schedule->is_public ? 'green' : 'gray' }}-100 dark:bg-{{ $schedule->is_public ? 'green' : 'gray' }}-900/30 text-{{ $schedule->is_public ? 'green' : 'gray' }}-800 dark:text-{{ $schedule->is_public ? 'green' : 'gray' }}-200">
-                                                {{ $schedule->is_public ? '👁️ Public' : '🔒 Private' }}
+                                        <div class="flex items-center gap-0.5 sm:gap-2 text-[6px] sm:text-xs">
+                                            <span class="px-1 sm:px-2 py-0.5 rounded bg-{{ $schedule->is_public ? 'green' : 'gray' }}-100 dark:bg-{{ $schedule->is_public ? 'green' : 'gray' }}-900/30 text-{{ $schedule->is_public ? 'green' : 'gray' }}-800 dark:text-{{ $schedule->is_public ? 'green' : 'gray' }}-200">
+                                                <span class="sm:hidden">{{ $schedule->is_public ? '👁️' : '🔒' }}</span>
+                                                <span class="hidden sm:inline">{{ $schedule->is_public ? '👁️ Public' : '🔒 Private' }}</span>
                                             </span>
                                         </div>
 
-                                        <div class="flex gap-2 mt-3">
-                                            <button onclick='openEditModal(@json($schedule))' class="flex-1 text-sm px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50">
+                                        <div class="flex gap-0.5 sm:gap-2 mt-1 sm:mt-3">
+                                            <button onclick='openEditModal(@json($schedule))' class="flex-1 text-[8px] sm:text-sm px-1.5 sm:px-3 py-0.5 sm:py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50">
                                                 Edit
                                             </button>
                                             <form action="{{ route('staff.calendar.destroy', $schedule->schedule_id) }}" method="POST" class="flex-1">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" onclick="return confirm('Delete this schedule?')" class="w-full text-sm px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50">
-                                                    Delete
+                                                <button type="submit" onclick="return confirm('Delete this schedule?')" class="w-full text-[8px] sm:text-sm px-1.5 sm:px-3 py-0.5 sm:py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-900/50">
+                                                    Del
                                                 </button>
                                             </form>
                                         </div>
                                     </div>
                                 @empty
-                                    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
-                                        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <div class="text-center py-3 sm:py-8 text-gray-500 dark:text-gray-400">
+                                        <svg class="w-6 h-6 sm:w-12 sm:h-12 mx-auto mb-1 sm:mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                         </svg>
-                                        <p>No schedules yet</p>
+                                        <p class="text-[10px] sm:text-base">No schedules yet</p>
                                     </div>
                                 @endforelse
                             </div>
@@ -264,63 +888,63 @@
     </div>
 
     <!-- Enhanced Add Schedule Modal -->
-    <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all" onclick="event.stopPropagation()">
-            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-5 rounded-t-2xl">
+    <div id="addModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-1 sm:p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-lg sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] overflow-y-auto transform transition-all" onclick="event.stopPropagation()">
+            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-2 sm:px-6 py-2 sm:py-5 rounded-t-lg sm:rounded-t-2xl">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-white/20 p-2 rounded-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-1.5 sm:gap-3">
+                        <div class="bg-white/20 p-1 sm:p-2 rounded-md sm:rounded-lg">
+                            <svg class="w-3 h-3 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-white">Add New Schedule</h3>
-                            <p class="text-indigo-100 text-sm">Create a liturgical event or activity</p>
+                            <h3 class="text-sm sm:text-xl font-bold text-white">Add Schedule</h3>
+                            <p class="text-indigo-100 text-[8px] sm:text-sm hidden sm:block">Create a liturgical event or activity</p>
                         </div>
                     </div>
                     <button onclick="closeAddModal()" class="text-white/80 hover:text-white transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
             </div>
 
-            <form action="{{ route('staff.calendar.store') }}" method="POST" class="p-6">
+            <form action="{{ route('staff.calendar.store') }}" method="POST" class="p-2 sm:p-6">
                 @csrf
-                <div class="space-y-5">
+                <div class="space-y-2 sm:space-y-5">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                             Title <span class="text-red-500">*</span>
                         </label>
                         <input type="text" 
                                name="title" 
                                required 
-                               placeholder="e.g., Sunday Mass, Youth Retreat"
-                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                               placeholder="e.g., Sunday Mass"
+                               class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                        <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Description</label>
                         <textarea name="description" 
-                                  rows="3" 
-                                  placeholder="Add details about this event..."
-                                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"></textarea>
+                                  rows="2" 
+                                  placeholder="Add details..."
+                                  class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"></textarea>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-2 sm:gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                                 Date <span class="text-red-500">*</span>
                             </label>
                             <input type="date" 
                                    name="schedule_date" 
                                    required 
-                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark] focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                   class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark] focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                                 Event Type <span class="text-red-500">*</span>
                             </label>
                             <select name="event_type" 
@@ -329,21 +953,21 @@
                                     x-data="{ massType: '' }"
                                     x-model="massType"
                                     @change="document.getElementById('addMassSubtype').value = ''; document.getElementById('addMassSubtypeContainer').style.display = (massType === 'institutional_mass' || massType === 'non_institutional_mass') ? 'block' : 'none';"
-                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
-                                <option value="">Select Event Type</option>
-                                <option value="institutional_mass">⛪ Institutional Mass</option>
-                                <option value="non_institutional_mass">✝️ Non-Institutional Mass</option>
+                                    class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                <option value="">Select Type</option>
+                                <option value="institutional_mass">⛪ Institutional</option>
+                                <option value="non_institutional_mass">✝️ Non-Institutional</option>
                             </select>
                         </div>
                         
                         <!-- Mass Subtype Dropdown (conditionally shown) -->
-                        <div id="addMassSubtypeContainer" style="display: none;">
-                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <div id="addMassSubtypeContainer" class="col-span-2" style="display: none;">
+                            <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                                 Mass Type <span class="text-red-500">*</span>
                             </label>
                             <select name="mass_subtype" 
                                     id="addMassSubtype"
-                                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                    class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                                 <option value="">Select Mass Type</option>
                                 <!-- Institutional Mass options -->
                                 <optgroup label="Institutional Mass" id="addInstitutionalGroup" style="display: none;">
@@ -390,29 +1014,29 @@
                     </script>
                     
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-2 sm:gap-4">
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                                 Start Time <span class="text-red-500">*</span>
                             </label>
                             <input type="time" 
                                    name="start_time" 
                                    required 
-                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark] focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                   class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark] focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">End Time</label>
+                            <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">End Time</label>
                             <input type="time" 
                                    name="end_time" 
-                                   class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark] focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                   class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark] focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Location</label>
+                        <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Location</label>
                         <select id="venue_select" 
                                 name="venue_select"
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                                 onchange="handleVenueChange()">
                             <option value="">-- Select Location --</option>
                             @foreach($venues as $venue)
@@ -424,29 +1048,29 @@
 
                     <!-- Custom Location Input (hidden by default) -->
                     <div id="custom_location_container" style="display: none;">
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Custom Location</label>
+                        <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Custom Location</label>
                         <input type="text" 
                                id="custom_location_input"
                                name="location" 
-                               placeholder="Enter custom location (e.g., Off-campus venue)"
-                               class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                               placeholder="Enter custom location"
+                               class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
 
                     <!-- Hidden input to store venue_id -->
                     <input type="hidden" id="venue_id_input" name="venue_id" value="">
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                             Assign Priest
                         </label>
-                        <div class="space-y-3" x-data="{ useExternal: false }">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" x-model="useExternal" id="add_use_external" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
-                                <label for="add_use_external" class="text-sm text-gray-700 dark:text-gray-300">Use External Priest</label>
+                        <div class="space-y-2 sm:space-y-3" x-data="{ useExternal: false }">
+                            <div class="flex items-center gap-1 sm:gap-2">
+                                <input type="checkbox" x-model="useExternal" id="add_use_external" class="w-3 h-3 sm:w-5 sm:h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                                <label for="add_use_external" class="text-[10px] sm:text-sm text-gray-700 dark:text-gray-300">Use External Priest</label>
                             </div>
                             <template x-if="!useExternal">
                                 <select name="priest_id" 
-                                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                        class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                                     <option value="">-- Select Priest (Optional) --</option>
                                     @foreach($priests as $priest)
                                         <option value="{{ $priest->id }}">
@@ -455,49 +1079,49 @@
                                     @endforeach
                                 </select>
                             </template>
-                            <div x-show="useExternal" x-transition class="space-y-3">
+                            <div x-show="useExternal" x-transition class="space-y-2 sm:space-y-3">
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">External Priest Name <span class="text-red-500">*</span></label>
-                                    <input type="text" name="external_priest_name" placeholder="e.g. Fr. Juan Dela Cruz" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                    <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-0.5 sm:mb-1">External Priest Name <span class="text-red-500">*</span></label>
+                                    <input type="text" name="external_priest_name" placeholder="Fr. Juan Dela Cruz" class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">External Priest Contact</label>
-                                    <input type="text" name="external_priest_contact" placeholder="Phone or Email (optional)" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                    <label class="block text-[10px] sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-0.5 sm:mb-1">External Priest Contact</label>
+                                    <input type="text" name="external_priest_contact" placeholder="Phone/Email (optional)" class="w-full px-2 sm:px-4 py-1.5 sm:py-3 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                                 </div>
-                                <p class="text-xs text-indigo-600 dark:text-indigo-400">Internal priest select disabled when using external.</p>
+                                <p class="text-[8px] sm:text-xs text-indigo-600 dark:text-indigo-400">Internal priest select disabled when using external.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                        <div class="flex items-start gap-3">
+                    <div class="bg-indigo-50 dark:bg-indigo-900/20 p-2 sm:p-4 rounded-md sm:rounded-lg border border-indigo-200 dark:border-indigo-800">
+                        <div class="flex items-start gap-2 sm:gap-3">
                             <input type="hidden" name="is_public" value="0">
                             <input type="checkbox" 
                                    name="is_public" 
                                    id="is_public_add" 
                                    value="1"
                                    checked 
-                                   class="mt-1 w-5 h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500">
+                                   class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500">
                             <label for="is_public_add" class="flex-1">
-                                <span class="block font-semibold text-gray-900 dark:text-white">Make this schedule public</span>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Allow guests to view this event on the public calendar</span>
+                                <span class="block font-semibold text-[10px] sm:text-base text-gray-900 dark:text-white">Make public</span>
+                                <span class="text-[8px] sm:text-sm text-gray-600 dark:text-gray-400 hidden sm:block">Allow guests to view this event</span>
                             </label>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex gap-2 sm:gap-3 mt-3 sm:mt-6 pt-2 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
                     <button type="button" 
                             onclick="closeAddModal()" 
-                            class="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold transition-all">
+                            class="flex-1 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md sm:rounded-lg font-semibold transition-all">
                         Cancel
                     </button>
                     <button type="submit" 
-                            class="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            class="flex-1 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-md sm:rounded-lg font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-1 sm:gap-2">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        Add Schedule
+                        Add
                     </button>
                 </div>
             </form>
@@ -505,60 +1129,60 @@
     </div>
 
     <!-- Edit Schedule Modal -->
-    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-            <div class="bg-blue-50 dark:bg-blue-900/20 px-6 py-4 border-b border-blue-100 dark:border-blue-800 rounded-t-xl">
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-1 sm:p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-2xl max-w-2xl w-full max-h-[95vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="bg-blue-50 dark:bg-blue-900/20 px-2 sm:px-6 py-2 sm:py-4 border-b border-blue-100 dark:border-blue-800 rounded-t-lg sm:rounded-t-xl">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100">Edit Schedule</h3>
+                    <h3 class="text-sm sm:text-lg font-semibold text-blue-900 dark:text-blue-100">Edit Schedule</h3>
                     <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
             </div>
 
-            <form id="editForm" method="POST" class="p-6">
+            <form id="editForm" method="POST" class="p-2 sm:p-6">
                 @csrf
                 @method('PUT')
-                <div class="space-y-4">
+                <div class="space-y-2 sm:space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title *</label>
-                        <input type="text" name="title" id="edit_title" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                        <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Title *</label>
+                        <input type="text" name="title" id="edit_title" required class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                        <textarea name="description" id="edit_description" rows="3" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
+                        <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Description</label>
+                        <textarea name="description" id="edit_description" rows="2" class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white"></textarea>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-2 sm:gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date *</label>
-                            <input type="date" name="schedule_date" id="edit_date" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark]">
+                            <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Date *</label>
+                            <input type="date" name="schedule_date" id="edit_date" required class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark]">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event Type *</label>
+                            <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Event Type *</label>
                             <select name="event_type" 
                                     id="edit_type" 
                                     required 
                                     onchange="handleEditEventTypeChange()"
-                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
-                                <option value="">Select Event Type</option>
-                                <option value="institutional_mass">⛪ Institutional Mass</option>
-                                <option value="non_institutional_mass">✝️ Non-Institutional Mass</option>
+                                    class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white">
+                                <option value="">Select Type</option>
+                                <option value="institutional_mass">⛪ Institutional</option>
+                                <option value="non_institutional_mass">✝️ Non-Institutional</option>
                             </select>
                         </div>
                     </div>
                     
                     <!-- Edit Mass Subtype Dropdown -->
                     <div id="editMassSubtypeContainer" style="display: none;">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                             Mass Type <span class="text-red-500">*</span>
                         </label>
                         <select name="mass_subtype" 
                                 id="edit_mass_subtype"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white">
                             <option value="">Select Mass Type</option>
                             <!-- Institutional Mass options -->
                             <optgroup label="Institutional Mass" id="editInstitutionalGroup">
@@ -601,53 +1225,53 @@
                         }
                     </script>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-2 sm:gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Time *</label>
-                            <input type="time" name="start_time" id="edit_start" required class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark]">
+                            <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Start Time *</label>
+                            <input type="time" name="start_time" id="edit_start" required class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark]">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Time</label>
-                            <input type="time" name="end_time" id="edit_end" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark]">
+                            <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">End Time</label>
+                            <input type="time" name="end_time" id="edit_end" class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white dark:[color-scheme:dark]">
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location</label>
+                        <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Location</label>
                         <select id="edit_venue_select" 
                                 name="edit_venue_select"
-                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                                class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white"
                                 onchange="handleEditVenueChange()">
                             <option value="">-- Select Location --</option>
                             @foreach($venues as $venue)
                                 <option value="{{ $venue->venue_id }}">{{ $venue->name }}</option>
                             @endforeach
-                            <option value="custom">Custom Location (Outside)</option>
+                            <option value="custom">Custom Location</option>
                         </select>
                     </div>
 
                     <!-- Custom Location Input for Edit (hidden by default) -->
                     <div id="edit_custom_location_container" style="display: none;">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom Location</label>
+                        <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Custom Location</label>
                         <input type="text" 
                                id="edit_custom_location_input"
                                name="location" 
                                placeholder="Enter custom location"
-                               class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                               class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white">
                     </div>
 
                     <!-- Hidden input to store venue_id for edit -->
                     <input type="hidden" id="edit_venue_id_input" name="venue_id" value="">
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Priest</label>
-                        <div class="space-y-3" x-data="{ useExternalEdit: false }">
-                            <div class="flex items-center gap-2">
-                                <input type="checkbox" x-model="useExternalEdit" id="edit_use_external" class="w-4 h-4 text-indigo-600 rounded">
-                                <label for="edit_use_external" class="text-sm text-gray-700 dark:text-gray-300">Use External Priest</label>
+                        <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">Assign Priest</label>
+                        <div class="space-y-2 sm:space-y-3" x-data="{ useExternalEdit: false }">
+                            <div class="flex items-center gap-1 sm:gap-2">
+                                <input type="checkbox" x-model="useExternalEdit" id="edit_use_external" class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-600 rounded">
+                                <label for="edit_use_external" class="text-[10px] sm:text-sm text-gray-700 dark:text-gray-300">Use External Priest</label>
                             </div>
                             <template x-if="!useExternalEdit">
-                                <select name="priest_id" id="edit_priest" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white">
+                                <select name="priest_id" id="edit_priest" class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white">
                                     <option value="">-- Select Priest (Optional) --</option>
                                     @foreach($priests as $priest)
                                         <option value="{{ $priest->id }}">
@@ -656,34 +1280,34 @@
                                     @endforeach
                                 </select>
                             </template>
-                            <div x-show="useExternalEdit" x-transition class="space-y-3">
+                            <div x-show="useExternalEdit" x-transition class="space-y-2 sm:space-y-3">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">External Priest Name <span class="text-red-500">*</span></label>
-                                    <input type="text" name="external_priest_name" id="edit_external_priest_name" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="e.g. Fr. John Smith">
+                                    <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5 sm:mb-1">External Priest Name <span class="text-red-500">*</span></label>
+                                    <input type="text" name="external_priest_name" id="edit_external_priest_name" class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Fr. John Smith">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">External Priest Contact</label>
-                                    <input type="text" name="external_priest_contact" id="edit_external_priest_contact" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Phone or Email (optional)">
+                                    <label class="block text-[10px] sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-0.5 sm:mb-1">External Priest Contact</label>
+                                    <input type="text" name="external_priest_contact" id="edit_external_priest_contact" class="w-full px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base border border-gray-300 dark:border-gray-600 rounded-md sm:rounded-lg dark:bg-gray-700 dark:text-white" placeholder="Phone/Email">
                                 </div>
-                                <p class="text-xs text-indigo-600 dark:text-indigo-400">Internal priest select disabled when using external.</p>
+                                <p class="text-[8px] sm:text-xs text-indigo-600 dark:text-indigo-400">Internal priest disabled when using external.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1 sm:gap-2">
                         <!-- Hidden default to ensure field is always present when unchecked -->
                         <input type="hidden" name="is_public" value="0">
-                        <input type="checkbox" name="is_public" id="is_public_edit" value="1" class="w-4 h-4 text-indigo-600 rounded">
-                        <label for="is_public_edit" class="text-sm text-gray-700 dark:text-gray-300">Make this schedule public (visible to guests)</label>
+                        <input type="checkbox" name="is_public" id="is_public_edit" value="1" class="w-3 h-3 sm:w-4 sm:h-4 text-indigo-600 rounded">
+                        <label for="is_public_edit" class="text-[10px] sm:text-sm text-gray-700 dark:text-gray-300">Make public</label>
                     </div>
                 </div>
 
-                <div class="flex gap-3 mt-6">
-                    <button type="button" onclick="closeEditModal()" class="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium">
+                <div class="flex gap-2 sm:gap-3 mt-3 sm:mt-6">
+                    <button type="button" onclick="closeEditModal()" class="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md sm:rounded-lg font-medium">
                         Cancel
                     </button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
-                        Update Schedule
+                    <button type="submit" class="flex-1 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-base bg-blue-600 hover:bg-blue-700 text-white rounded-md sm:rounded-lg font-medium">
+                        Update
                     </button>
                 </div>
             </form>

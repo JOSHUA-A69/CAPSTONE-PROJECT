@@ -13,14 +13,14 @@
 
     <!-- Favicon -->
     <link rel="icon" href="/images/ers-logo.png" />
-    
+
     <!-- Animation Mode: none for app pages (disable all animations) -->
     <script>
         window.ANIMATIONS_MODE = 'none';
     </script>
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- Dark Mode Initialization Script -->
     <script>
         // Initialize dark mode from localStorage before page renders
@@ -42,8 +42,8 @@
 
             <!-- Page Heading -->
             @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow" role="banner">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <header class="bg-white dark:bg-gray-950 shadow-lg dark:shadow-2xl" role="banner">
+                    <div class="max-w-7xl mx-auto py-3 px-3 sm:py-6 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
@@ -66,7 +66,7 @@
 
     <!-- Screen reader announcements for dynamic content -->
         <div id="sr-announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
-        
+
         <!-- Dark Mode Toggle Script -->
         <script>
             function toggleDarkMode(button) {
@@ -75,7 +75,7 @@
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
                 updateDarkModeText();
             }
-            
+
             function updateDarkModeText() {
                 const isDark = document.documentElement.classList.contains('dark');
                 const toggleButton = document.getElementById('darkModeToggle');
@@ -86,7 +86,7 @@
                     }
                 }
             }
-            
+
             // Update text on page load
             document.addEventListener('DOMContentLoaded', updateDarkModeText);
         </script>

@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip for SQLite as it doesn't support MODIFY
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+        
         if (Schema::hasTable('notifications') && Schema::hasColumn('notifications', 'type')) {
             // Switch from ENUM to VARCHAR to avoid future enum drift and truncation warnings
             DB::statement("ALTER TABLE `notifications` MODIFY `type` VARCHAR(100) NULL");

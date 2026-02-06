@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h2 class="text-heading text-2xl font-bold text-gray-800 dark:text-gray-200">
+        <div class="flex flex-col gap-2 items-start">
+            <h2 class="text-heading text-2xl font-bold text-gray-800 dark:text-gray-200 whitespace-nowrap">
                 Reservation Details
             </h2>
 
-            <a href="{{ route('admin.reservations.index') }}" class="btn-ghost">
+            <a href="{{ route('admin.reservations.index') }}" class="btn-ghost whitespace-nowrap self-start">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>

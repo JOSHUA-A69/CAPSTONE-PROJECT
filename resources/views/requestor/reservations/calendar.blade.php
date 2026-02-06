@@ -1,97 +1,147 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto py-8 px-4">
-    <div class="mb-8">
-        <h1 class="text-4xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-            <div class="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+<div class="max-w-7xl mx-auto py-2 sm:py-4 lg:py-6 px-2 sm:px-4 lg:px-6">
+    {{-- Compact Header for Mobile --}}
+    <div class="mb-2 sm:mb-4 lg:mb-6">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="p-1.5 sm:p-2 lg:p-2.5 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg shadow-md flex-shrink-0">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">
+                    My Calendar
+                </h1>
             </div>
-            My Calendar
-        </h1>
-        <p class="mt-2 text-gray-600 dark:text-gray-400 text-lg">View and manage your upcoming reservations and scheduled activities</p>
-    </div>
-
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border-2 border-emerald-100 dark:border-emerald-800 p-8 hover:shadow-2xl transition-shadow duration-300">
-        <div id="requestorCalendar"></div>
-    </div>
-
-    @php $hasSchedules = isset($schedules) && $schedules && $schedules->count() > 0; @endphp
-    @if($reservations->isEmpty() && ! $hasSchedules)
-        <div class="mt-6 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/30 dark:to-amber-900/30 border-l-4 border-yellow-400 dark:border-yellow-600 rounded-xl shadow-md">
-            <div class="flex items-center gap-3">
-                <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <p class="text-yellow-800 dark:text-yellow-200 font-semibold">No upcoming reservations or scheduled activities found.</p>
-            </div>
+            {{-- Empty State Badge - Inline for Mobile --}}
+            @php $hasSchedules = isset($schedules) && $schedules && $schedules->count() > 0; @endphp
+            @if($reservations->isEmpty() && ! $hasSchedules)
+                <span class="hidden sm:inline-flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-xs font-medium rounded-full">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                    No events
+                </span>
+            @endif
         </div>
-    @endif
+    </div>
+
+    {{-- Calendar Container --}}
+    <div class="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-md sm:shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div id="requestorCalendar" class="calendar-container"></div>
+    </div>
 </div>
 @endsection
 
 
 @push('styles')
 <style>
+    /* Calendar container */
+    .calendar-container {
+        padding: 10px;
+    }
+    
     /* Enhanced calendar event styling */
     .fc-event-content-enhanced {
         cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    
-    .fc-event:hover .fc-event-content-enhanced {
-        transform: translateY(-1px);
+        transition: all 0.15s ease;
     }
     
     .fc-event {
-        border-radius: 6px !important;
-        border-width: 2px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
+        border-radius: 3px !important;
+        border-width: 0 !important;
+        border-left: 3px solid !important;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        transition: all 0.15s ease;
     }
     
     .fc-event:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transform: translateY(-2px);
-        z-index: 10;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        transform: translateY(-1px);
     }
     
     .fc-daygrid-event {
-        margin: 2px 0;
-        padding: 2px;
+        margin: 1px 2px;
+        padding: 0;
     }
     
-    /* Calendar header styling */
+    /* Calendar title styling */
     .fc .fc-toolbar-title {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: #047857;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
     }
     
     .dark .fc .fc-toolbar-title {
-        color: #34d399;
+        color: #f3f4f6;
     }
     
+    /* Button styling - Clean and minimal */
     .fc .fc-button-primary {
-        background-color: #10b981 !important;
-        border-color: #10b981 !important;
-        font-weight: 600;
-        transition: all 0.2s ease;
+        background-color: #5b5fc7 !important;
+        border-color: #5b5fc7 !important;
+        font-weight: 500;
+        font-size: 0.7rem;
+        padding: 6px 10px !important;
+        border-radius: 6px !important;
+        transition: all 0.15s ease;
+        margin: 0;
+        min-height: 30px;
+        text-transform: capitalize;
     }
     
     .fc .fc-button-primary:hover {
-        background-color: #059669 !important;
-        border-color: #059669 !important;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        background-color: #4a4eb5 !important;
+        border-color: #4a4eb5 !important;
     }
     
     .fc .fc-button-primary:disabled {
-        background-color: #6ee7b7 !important;
-        border-color: #6ee7b7 !important;
-        opacity: 0.6;
+        background-color: #d1d5db !important;
+        border-color: #d1d5db !important;
+        color: #6b7280 !important;
+        opacity: 1;
     }
     
+    .fc .fc-button-active {
+        background-color: #4338ca !important;
+        border-color: #4338ca !important;
+    }
+    
+    /* Toolbar layout */
+    .fc .fc-toolbar {
+        margin-bottom: 12px !important;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .fc .fc-toolbar-chunk {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    /* Button groups */
+    .fc .fc-button-group {
+        display: flex;
+        gap: 0;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    
+    .fc .fc-button-group > .fc-button {
+        border-radius: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .fc .fc-button-group > .fc-button:first-child {
+        border-radius: 6px 0 0 6px !important;
+    }
+    
+    .fc .fc-button-group > .fc-button:last-child {
+        border-radius: 0 6px 6px 0 !important;
+    }
+    
+    /* Table styling */
     .fc-theme-standard td, .fc-theme-standard th {
         border-color: #e5e7eb;
     }
@@ -100,54 +150,264 @@
         border-color: #374151;
     }
     
+    /* Column headers */
     .fc .fc-col-header-cell {
-        background-color: #f3f4f6;
-        font-weight: 700;
+        background-color: #f9fafb;
+        font-weight: 600;
         text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.05em;
-        color: #374151;
-        padding: 12px 4px;
+        font-size: 0.65rem;
+        letter-spacing: 0.02em;
+        color: #6b7280;
+        padding: 8px 0;
+        border-bottom: 1px solid #e5e7eb;
     }
     
     .dark .fc .fc-col-header-cell {
         background-color: #1f2937;
-        color: #d1d5db;
+        color: #9ca3b8;
+        border-bottom-color: #374151;
     }
     
+    /* Day cells */
     .fc .fc-daygrid-day-top {
         padding: 4px;
-        font-weight: 600;
+        font-weight: 500;
+        justify-content: center;
     }
     
     .fc .fc-daygrid-day.fc-day-today {
-        background-color: #ecfdf5 !important;
+        background-color: #fefce8 !important;
     }
     
     .dark .fc .fc-daygrid-day.fc-day-today {
-        background-color: #064e3b !important;
+        background-color: rgba(234, 179, 8, 0.1) !important;
     }
     
     .fc .fc-daygrid-day-number {
-        color: #1f2937;
-        font-size: 0.9rem;
-        font-weight: 600;
+        color: #374151;
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0;
     }
     
     .dark .fc .fc-daygrid-day-number {
-        color: #f3f4f6;
+        color: #d1d5db;
     }
     
     .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
-        background-color: #10b981;
+        background-color: #eab308;
         color: white;
         border-radius: 50%;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
+        font-weight: 600;
+        font-size: 0.7rem;
+    }
+    
+    /* Day cell frame - balanced height */
+    .fc .fc-daygrid-day-frame {
+        min-height: 60px;
+    }
+    
+    /* List view styling */
+    .fc-list {
+        border: none !important;
+    }
+    
+    .fc-list-day-cushion {
+        background-color: #f9fafb !important;
+        padding: 10px 12px !important;
+        font-size: 0.8rem;
+    }
+    
+    .dark .fc-list-day-cushion {
+        background-color: #1f2937 !important;
+    }
+    
+    .fc-list-event td {
+        padding: 10px 12px !important;
+        font-size: 0.85rem;
+    }
+    
+    .fc-list-empty {
+        background-color: #f9fafb !important;
+        text-align: center;
+        padding: 40px 20px !important;
+    }
+    
+    .fc-list-empty-cushion {
+        font-size: 0.9rem;
+        color: #6b7280;
+    }
+    
+    /* Time grid (Week view) */
+    .fc-timegrid-slot {
+        height: 2.5em !important;
+    }
+    
+    .fc-timegrid-slot-label {
+        font-size: 0.65rem !important;
+        color: #9ca3af;
+    }
+    
+    .fc-timegrid-axis {
+        width: 45px !important;
+    }
+    
+    /* Scrollbar styling */
+    .fc-scroller {
+        scrollbar-width: thin;
+        scrollbar-color: #e5e7eb transparent;
+    }
+    
+    .fc-scroller::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    
+    .fc-scroller::-webkit-scrollbar-thumb {
+        background-color: #d1d5db;
+        border-radius: 4px;
+    }
+    
+    /* ========== MOBILE STYLES (max-width: 480px) ========== */
+    @media (max-width: 480px) {
+        .calendar-container {
+            padding: 6px;
+        }
+        
+        /* Toolbar - centered stacked layout */
+        .fc .fc-toolbar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px !important;
+        }
+        
+        .fc .fc-toolbar-chunk {
+            justify-content: center;
+        }
+        
+        /* Title */
+        .fc .fc-toolbar-title {
+            font-size: 1rem !important;
+            font-weight: 600;
+        }
+        
+        /* Compact buttons */
+        .fc .fc-button-primary {
+            font-size: 0.65rem !important;
+            padding: 5px 10px !important;
+            min-height: 28px;
+        }
+        
+        /* Column headers */
+        .fc .fc-col-header-cell {
+            font-size: 0.6rem;
+            padding: 6px 0;
+        }
+        
+        /* Day numbers */
+        .fc .fc-daygrid-day-number {
+            font-size: 0.75rem;
+        }
+        
+        .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+            width: 20px;
+            height: 20px;
+            font-size: 0.65rem;
+        }
+        
+        /* Day cell frame */
+        .fc .fc-daygrid-day-frame {
+            min-height: 50px;
+        }
+        
+        /* Week view */
+        .fc-timegrid-slot {
+            height: 2em !important;
+        }
+        
+        .fc-timegrid-slot-label {
+            font-size: 0.55rem !important;
+        }
+        
+        .fc-timegrid-axis {
+            width: 35px !important;
+        }
+        
+        /* List view */
+        .fc-list-day-cushion {
+            padding: 8px 10px !important;
+            font-size: 0.75rem;
+        }
+        
+        .fc-list-event td {
+            padding: 8px 10px !important;
+            font-size: 0.8rem;
+        }
+    }
+    
+    /* Tablet */
+    @media (min-width: 481px) and (max-width: 768px) {
+        .calendar-container {
+            padding: 10px;
+        }
+        
+        .fc .fc-toolbar {
+            flex-direction: row;
+            justify-content: space-between;
+        }
+        
+        .fc .fc-toolbar-title {
+            font-size: 1.1rem !important;
+        }
+        
+        .fc .fc-daygrid-day-frame {
+            min-height: 55px;
+        }
+    }
+    
+    /* Desktop */
+    @media (min-width: 769px) {
+        .calendar-container {
+            padding: 16px;
+        }
+        
+        .fc .fc-toolbar {
+            flex-direction: row;
+            justify-content: space-between;
+            margin-bottom: 16px !important;
+        }
+        
+        .fc .fc-toolbar-title {
+            font-size: 1.25rem !important;
+        }
+        
+        .fc .fc-button-primary {
+            font-size: 0.75rem;
+            padding: 6px 14px !important;
+            min-height: 34px;
+        }
+        
+        .fc .fc-col-header-cell {
+            font-size: 0.7rem;
+            padding: 10px 4px;
+        }
+        
+        .fc .fc-daygrid-day-frame {
+            min-height: 80px;
+        }
+        
+        .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
+            width: 26px;
+            height: 26px;
+            font-size: 0.75rem;
+        }
     }
 </style>
 @endpush
@@ -421,12 +681,44 @@
             initialView: 'dayGridMonth',
             timeZone: APP_TIMEZONE,
             headerToolbar: {
-                left: 'prev,next today',
+                left: 'prev,next',
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,listWeek'
             },
+            buttonText: {
+                today: 'Today',
+                month: 'Month',
+                week: 'Week',
+                list: 'List'
+            },
+            // Auto height to show full calendar without cutting off
             height: 'auto',
+            contentHeight: 'auto',
+            // Mobile optimizations
+            dayMaxEvents: window.innerWidth < 480 ? 2 : (window.innerWidth < 768 ? 3 : 4),
+            dayMaxEventRows: window.innerWidth < 480 ? 2 : 3,
+            moreLinkClick: 'popover',
+            fixedWeekCount: false,
+            showNonCurrentDates: true,
+            // Week view settings - compact time range
+            slotMinTime: '06:00:00',
+            slotMaxTime: '21:00:00',
+            slotDuration: '01:00:00',
+            allDaySlot: false,
+            expandRows: true,
+            stickyHeaderDates: true,
             events: [...reservationEvents, ...scheduleEvents, ...orgBookingEvents],
+            // Handle window resize
+            windowResize: function(view) {
+                const width = window.innerWidth;
+                if (width < 480) {
+                    calendar.setOption('dayMaxEvents', 2);
+                } else if (width < 768) {
+                    calendar.setOption('dayMaxEvents', 3);
+                } else {
+                    calendar.setOption('dayMaxEvents', 4);
+                }
+            },
             eventClick(info) {
                 const { extendedProps } = info.event;
                 const raw = extendedProps.raw || {};
@@ -541,88 +833,115 @@
             eventContent(arg) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'fc-event-content-enhanced';
-                wrapper.style.padding = '4px 6px';
-                wrapper.style.fontSize = '0.75rem';
-                wrapper.style.lineHeight = '1.3';
+                
+                const isMobile = window.innerWidth < 480;
+                const isSmallMobile = window.innerWidth < 380;
+                
+                wrapper.style.padding = isMobile ? '1px 2px' : '3px 5px';
+                wrapper.style.fontSize = isMobile ? '0.6rem' : '0.72rem';
+                wrapper.style.lineHeight = '1.2';
                 wrapper.style.overflow = 'hidden';
                 
                 const { extendedProps } = arg.event;
                 const isReservation = extendedProps.entryType === 'reservation';
                 
-                // Title with time
+                // Title with time - compact for mobile
                 const titleDiv = document.createElement('div');
-                titleDiv.style.fontWeight = '700';
-                titleDiv.style.marginBottom = '2px';
-                titleDiv.style.fontSize = '0.8rem';
+                titleDiv.style.fontWeight = '600';
+                titleDiv.style.marginBottom = isMobile ? '0' : '1px';
+                titleDiv.style.fontSize = isMobile ? '0.6rem' : '0.75rem';
+                titleDiv.style.whiteSpace = 'nowrap';
+                titleDiv.style.overflow = 'hidden';
+                titleDiv.style.textOverflow = 'ellipsis';
                 
                 let displayTime = '';
                 if (isReservation && extendedProps.scheduleTime) {
-                    displayTime = extendedProps.scheduleTime.substring(0, 5); // HH:MM
+                    displayTime = extendedProps.scheduleTime.substring(0, 5);
                 } else if (arg.timeText) {
                     displayTime = arg.timeText;
                 }
                 
-                titleDiv.innerHTML = displayTime 
-                    ? `<span style="font-weight: 800; color: rgba(255,255,255,0.95);">${escapeHtml(displayTime)}</span> ${escapeHtml(arg.event.title)}`
-                    : escapeHtml(arg.event.title);
+                // On very small screens, just show time or truncated title
+                if (isSmallMobile) {
+                    titleDiv.innerHTML = displayTime 
+                        ? `<span style="font-weight: 700;">${escapeHtml(displayTime)}</span>`
+                        : escapeHtml(arg.event.title.substring(0, 8));
+                } else if (isMobile) {
+                    titleDiv.innerHTML = displayTime 
+                        ? `<span style="font-weight: 700;">${escapeHtml(displayTime)}</span> ${escapeHtml(arg.event.title.substring(0, 12))}`
+                        : escapeHtml(arg.event.title.substring(0, 15));
+                } else {
+                    titleDiv.innerHTML = displayTime 
+                        ? `<span style="font-weight: 700; color: rgba(255,255,255,0.95);">${escapeHtml(displayTime)}</span> ${escapeHtml(arg.event.title)}`
+                        : escapeHtml(arg.event.title);
+                }
                 wrapper.appendChild(titleDiv);
                 
-                // Service name for reservations
-                if (isReservation && extendedProps.service) {
-                    const serviceDiv = document.createElement('div');
-                    serviceDiv.style.fontSize = '0.7rem';
-                    serviceDiv.style.opacity = '0.95';
-                    serviceDiv.style.marginTop = '2px';
-                    serviceDiv.style.fontWeight = '500';
-                    serviceDiv.innerHTML = `📋 ${escapeHtml(extendedProps.service)}`;
-                    wrapper.appendChild(serviceDiv);
+                // Only show additional info on larger screens
+                if (!isMobile) {
+                    // Service name for reservations
+                    if (isReservation && extendedProps.service) {
+                        const serviceDiv = document.createElement('div');
+                        serviceDiv.style.fontSize = '0.65rem';
+                        serviceDiv.style.opacity = '0.95';
+                        serviceDiv.style.marginTop = '1px';
+                        serviceDiv.style.fontWeight = '500';
+                        serviceDiv.style.whiteSpace = 'nowrap';
+                        serviceDiv.style.overflow = 'hidden';
+                        serviceDiv.style.textOverflow = 'ellipsis';
+                        serviceDiv.innerHTML = `📋 ${escapeHtml(extendedProps.service)}`;
+                        wrapper.appendChild(serviceDiv);
+                    }
+                    
+                    // Venue
+                    if (extendedProps.venue) {
+                        const venueDiv = document.createElement('div');
+                        venueDiv.style.fontSize = '0.65rem';
+                        venueDiv.style.opacity = '0.9';
+                        venueDiv.style.marginTop = '1px';
+                        venueDiv.style.fontStyle = 'italic';
+                        venueDiv.style.whiteSpace = 'nowrap';
+                        venueDiv.style.overflow = 'hidden';
+                        venueDiv.style.textOverflow = 'ellipsis';
+                        venueDiv.innerHTML = `📍 ${escapeHtml(extendedProps.venue)}`;
+                        wrapper.appendChild(venueDiv);
+                    }
                 }
                 
-                // Venue
-                if (extendedProps.venue) {
-                    const venueDiv = document.createElement('div');
-                    venueDiv.style.fontSize = '0.7rem';
-                    venueDiv.style.opacity = '0.9';
-                    venueDiv.style.marginTop = '2px';
-                    venueDiv.style.fontStyle = 'italic';
-                    venueDiv.innerHTML = `📍 ${escapeHtml(extendedProps.venue)}`;
-                    wrapper.appendChild(venueDiv);
-                }
-                
-                // Status badge for reservations
-                if (isReservation && extendedProps.status) {
+                // Status badge - compact version for all screens
+                if (isReservation && extendedProps.status && !isSmallMobile) {
                     const statusDiv = document.createElement('div');
-                    statusDiv.style.fontSize = '0.65rem';
-                    statusDiv.style.marginTop = '3px';
-                    statusDiv.style.padding = '2px 6px';
-                    statusDiv.style.borderRadius = '4px';
+                    statusDiv.style.fontSize = isMobile ? '0.5rem' : '0.6rem';
+                    statusDiv.style.marginTop = isMobile ? '1px' : '2px';
+                    statusDiv.style.padding = isMobile ? '1px 3px' : '1px 4px';
+                    statusDiv.style.borderRadius = '3px';
                     statusDiv.style.display = 'inline-block';
                     statusDiv.style.fontWeight = '600';
                     statusDiv.style.textTransform = 'uppercase';
-                    statusDiv.style.letterSpacing = '0.5px';
+                    statusDiv.style.letterSpacing = '0.3px';
                     
                     const status = extendedProps.status.toLowerCase();
                     if (status === 'approved') {
                         statusDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.9)';
                         statusDiv.style.color = 'white';
-                        statusDiv.innerHTML = '✓ Approved';
+                        statusDiv.innerHTML = isMobile ? '✓' : '✓ Approved';
                     } else if (status === 'admin_approved') {
                         statusDiv.style.backgroundColor = 'rgba(59, 130, 246, 0.9)';
                         statusDiv.style.color = 'white';
-                        statusDiv.innerHTML = '✓ Admin Approved';
+                        statusDiv.innerHTML = isMobile ? '✓' : '✓ Admin';
                     } else if (status === 'adviser_approved') {
-                        statusDiv.style.backgroundColor = 'rgba(234, 179, 8, 0.9)'; // yellow-500
+                        statusDiv.style.backgroundColor = 'rgba(234, 179, 8, 0.9)';
                         statusDiv.style.color = 'white';
-                        const label = (extendedProps.raw && extendedProps.raw.priest_selection_type === 'external') ? 'Awaiting Admin' : 'Awaiting Priest';
-                        statusDiv.innerHTML = '⏳ ' + escapeHtml(label);
+                        const label = (extendedProps.raw && extendedProps.raw.priest_selection_type === 'external') ? 'Admin' : 'Priest';
+                        statusDiv.innerHTML = isMobile ? '⏳' : '⏳ ' + escapeHtml(label);
                     } else if (status === 'pending') {
                         statusDiv.style.backgroundColor = 'rgba(251, 191, 36, 0.9)';
                         statusDiv.style.color = 'white';
-                        statusDiv.innerHTML = '⏳ Pending';
+                        statusDiv.innerHTML = isMobile ? '⏳' : '⏳ Pending';
                     } else {
                         statusDiv.style.backgroundColor = 'rgba(148, 163, 184, 0.9)';
                         statusDiv.style.color = 'white';
-                        statusDiv.innerHTML = escapeHtml(formatLabel(extendedProps.status));
+                        statusDiv.innerHTML = isMobile ? '•' : escapeHtml(formatLabel(extendedProps.status));
                     }
                     
                     wrapper.appendChild(statusDiv);

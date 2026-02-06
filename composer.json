@@ -12,6 +12,7 @@
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
         "phpoffice/phpspreadsheet": "^5.3",
+        "sendgrid/sendgrid": "^8.1",
         "smalot/pdfparser": "*"
     },
     "require-dev": {

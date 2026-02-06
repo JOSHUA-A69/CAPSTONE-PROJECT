@@ -7,45 +7,47 @@
         ->get();
 @endphp
 
-<section id="home-calendar" class="py-20 scroll-mt-28">
-    <div class="container mx-auto px-4 max-w-7xl">
+<section id="home-calendar" class="py-8 sm:py-20 scroll-mt-28">
+    <div class="container mx-auto px-3 sm:px-4 max-w-7xl">
         
-        <div class="text-center mb-12">
-            <div class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900 dark:to-green-900 backdrop-blur-sm rounded-full text-emerald-700 dark:text-emerald-300 mb-6 shadow-lg border-2 border-emerald-300 dark:border-emerald-600">
-                <svg class="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="text-center mb-6 sm:mb-12">
+            <div class="inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-8 py-2 sm:py-4 bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900 dark:to-green-900 backdrop-blur-sm rounded-full text-emerald-700 dark:text-emerald-300 mb-4 sm:mb-6 shadow-lg border-2 border-emerald-300 dark:border-emerald-600">
+                <svg class="w-4 h-4 sm:w-6 sm:h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
-                <span class="font-black text-lg tracking-wide">Public Calendar</span>
+                <span class="font-black text-sm sm:text-lg tracking-wide">Public Calendar</span>
             </div>
         </div>
 
-        <!-- Filter Section -->
-        <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        <!-- Filter Section - Compact on Mobile -->
+        <div class="mb-4 sm:mb-6 grid grid-cols-2 gap-2 sm:gap-4 max-w-4xl mx-auto">
             <!-- Service Category Filter -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-2 border-emerald-200 dark:border-emerald-700">
-                <label for="massCategoryFilter" class="block text-sm font-black text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border-2 border-emerald-200 dark:border-emerald-700">
+                <label for="massCategoryFilter" class="block text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                    <svg class="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>
-                    Service Category
+                    <span class="hidden sm:inline">Service Category</span>
+                    <span class="sm:hidden">Category</span>
                 </label>
-                <select id="massCategoryFilter" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:ring-4 focus:ring-purple-300 focus:border-purple-500 dark:bg-gray-700 dark:text-white font-semibold transition-all">
-                    <option value="">All Categories</option>
-                    <option value="institutional_mass">⛪ Institutional Mass</option>
-                    <option value="non_institutional_mass">✝️ Non-Institutional Mass</option>
+                <select id="massCategoryFilter" class="w-full px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl shadow-sm focus:ring-4 focus:ring-purple-300 focus:border-purple-500 dark:bg-gray-700 dark:text-white font-semibold transition-all">
+                    <option value="">All</option>
+                    <option value="institutional_mass">⛪ Institutional</option>
+                    <option value="non_institutional_mass">✝️ Non-Institutional</option>
                 </select>
             </div>
 
             <!-- Mass Type Filter (Specific) -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-2 border-green-200 dark:border-green-700">
-                <label for="massTypeFilter" class="block text-sm font-black text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border-2 border-green-200 dark:border-green-700">
+                <label for="massTypeFilter" class="block text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                    <svg class="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                     </svg>
-                    Select Service Type
+                    <span class="hidden sm:inline">Select Service Type</span>
+                    <span class="sm:hidden">Type</span>
                 </label>
-                <select id="massTypeFilter" class="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:ring-4 focus:ring-indigo-300 focus:border-indigo-500 dark:bg-gray-700 dark:text-white font-semibold transition-all">
-                    <option value="">Select Service Type</option>
+                <select id="massTypeFilter" class="w-full px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl shadow-sm focus:ring-4 focus:ring-indigo-300 focus:border-indigo-500 dark:bg-gray-700 dark:text-white font-semibold transition-all">
+                    <option value="">All Types</option>
                     <optgroup label="Institutional Mass" id="institutionalOptions" style="display:none;">
                         <option value="university_opening_mass">University Opening Mass</option>
                         <option value="thanksgiving_mass">Thanksgiving Mass</option>
@@ -71,16 +73,16 @@
         </div>
 
         <!-- Calendar + Right Details Panel -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 dark:from-gray-900 dark:via-emerald-900 dark:to-green-900 rounded-3xl p-6 lg:p-10 shadow-2xl border-2 border-emerald-100 dark:border-emerald-800">
-                <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden">
-                    <div id="homepagecalendar"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div class="lg:col-span-2 bg-gradient-to-br from-emerald-50 via-green-50 to-lime-50 dark:from-gray-900 dark:via-emerald-900 dark:to-green-900 rounded-2xl sm:rounded-3xl p-3 sm:p-6 lg:p-10 shadow-2xl border-2 border-emerald-100 dark:border-emerald-800">
+                <div class="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
+                    <div id="homepagecalendar" class="home-calendar-compact"></div>
                 </div>
             </div>
-            <aside id="homeEventPanel" class="bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/40 dark:to-green-900/40 rounded-3xl p-6 shadow-2xl border-2 border-emerald-200 dark:border-emerald-800">
+            <aside id="homeEventPanel" class="hidden lg:block bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/40 dark:to-green-900/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-2xl border-2 border-emerald-200 dark:border-emerald-800">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-2xl font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-3">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <h3 class="text-lg sm:text-2xl font-black text-emerald-800 dark:text-emerald-300 flex items-center gap-2 sm:gap-3">
+                        <svg class="w-5 h-5 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         Event Details
@@ -99,45 +101,44 @@
             </aside>
         </div>
 
-        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/40 dark:to-emerald-900/40 rounded-2xl p-6 shadow-lg border-2 border-teal-200 dark:border-teal-700">
-                <h3 class="text-2xl font-black text-teal-800 dark:text-teal-300 mb-4 flex items-center gap-3">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Info Cards - Compact on Mobile -->
+        <div class="mt-4 sm:mt-8 grid grid-cols-2 gap-3 sm:gap-6">
+            <div class="bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-900/40 dark:to-emerald-900/40 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-lg border-2 border-teal-200 dark:border-teal-700">
+                <h3 class="text-sm sm:text-2xl font-black text-teal-800 dark:text-teal-300 mb-2 sm:mb-4 flex items-center gap-1 sm:gap-3">
+                    <svg class="w-4 h-4 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                     </svg>
-                    Event Types
+                    <span class="hidden sm:inline">Event Types</span>
+                    <span class="sm:hidden">Types</span>
                 </h3>
-                <div class="grid grid-cols-1 gap-3">
-                    <div class="flex items-center gap-2 text-sm font-bold">
-                        <span class="w-4 h-4 rounded-full" style="background-color: #8B5CF6;"></span>
-                        <span class="text-gray-800 dark:text-gray-200">⛪ Institutional Mass</span>
+                <div class="grid grid-cols-1 gap-2 sm:gap-3">
+                    <div class="flex items-center gap-2 text-xs sm:text-sm font-bold">
+                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style="background-color: #8B5CF6;"></span>
+                        <span class="text-gray-800 dark:text-gray-200"><span class="hidden sm:inline">⛪</span> Institutional</span>
                     </div>
-                    <div class="flex items-center gap-2 text-sm font-bold">
-                        <span class="w-4 h-4 rounded-full" style="background-color: #3B82F6;"></span>
-                        <span class="text-gray-800 dark:text-gray-200">✝️ Non-Institutional Mass</span>
+                    <div class="flex items-center gap-2 text-xs sm:text-sm font-bold">
+                        <span class="w-3 h-3 sm:w-4 sm:h-4 rounded-full" style="background-color: #3B82F6;"></span>
+                        <span class="text-gray-800 dark:text-gray-200"><span class="hidden sm:inline">✝️</span> Non-Institutional</span>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/40 dark:to-green-900/40 rounded-2xl p-6 shadow-lg border-2 border-emerald-200 dark:border-emerald-700">
-                <h3 class="text-2xl font-black text-emerald-800 dark:text-emerald-300 mb-4 flex items-center gap-3">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/40 dark:to-green-900/40 rounded-xl sm:rounded-2xl p-3 sm:p-6 shadow-lg border-2 border-emerald-200 dark:border-emerald-700">
+                <h3 class="text-sm sm:text-2xl font-black text-emerald-800 dark:text-emerald-300 mb-2 sm:mb-4 flex items-center gap-1 sm:gap-3">
+                    <svg class="w-4 h-4 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    Quick Info
+                    <span class="hidden sm:inline">Quick Info</span>
+                    <span class="sm:hidden">Info</span>
                 </h3>
-                <div class="space-y-2 text-gray-700 dark:text-gray-300">
-                    <p class="flex items-start gap-2 text-sm font-semibold">
+                <div class="space-y-1 sm:space-y-2 text-gray-700 dark:text-gray-300">
+                    <p class="flex items-start gap-1 sm:gap-2 text-xs sm:text-sm font-semibold">
                         <span class="text-emerald-600 dark:text-emerald-400">•</span>
-                        <span>Click on any event to view more details</span>
+                        <span>Click events for details</span>
                     </p>
-                    <p class="flex items-start gap-2 text-sm font-semibold">
+                    <p class="flex items-start gap-1 sm:gap-2 text-xs sm:text-sm font-semibold">
                         <span class="text-emerald-600 dark:text-emerald-400">•</span>
-                        <span>Use filters above to find specific events</span>
-                    </p>
-                    <p class="flex items-start gap-2 text-sm font-semibold">
-                        <span class="text-emerald-600 dark:text-emerald-400">•</span>
-                        <span>Total Events: <span id="totalEvents" class="text-emerald-700 dark:text-emerald-300 font-black">{{ $allSchedules->count() }}</span></span>
+                        <span>Total: <span id="totalEvents" class="text-emerald-700 dark:text-emerald-300 font-black">{{ $allSchedules->count() }}</span></span>
                     </p>
                 </div>
             </div>
@@ -828,15 +829,114 @@ document.addEventListener('DOMContentLoaded', function() {
 @media (max-width: 768px) {
     #homepagecalendar .fc-toolbar {
         flex-direction: column !important;
-        gap: 1rem !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem !important;
     }
     
     #homepagecalendar .fc-toolbar-title {
-        font-size: 1.25rem !important;
+        font-size: 1rem !important;
+        order: -1 !important;
+    }
+    
+    #homepagecalendar .fc-toolbar-chunk {
+        display: flex !important;
+        justify-content: center !important;
+    }
+    
+    #homepagecalendar .fc-button {
+        font-size: 0.65rem !important;
+        padding: 0.35rem 0.6rem !important;
+        border-radius: 0.5rem !important;
+    }
+    
+    #homepagecalendar .fc-col-header-cell {
+        font-size: 0.6rem !important;
+        padding: 0.35rem 0.1rem !important;
+    }
+    
+    #homepagecalendar .fc-col-header-cell-cushion {
+        padding: 0 !important;
     }
     
     #homepagecalendar .fc-daygrid-day {
-        min-height: 80px !important;
+        min-height: 55px !important;
+    }
+    
+    #homepagecalendar .fc-daygrid-day-number {
+        font-size: 0.7rem !important;
+        padding: 2px 4px !important;
+    }
+    
+    #homepagecalendar .fc-daygrid-day-frame {
+        min-height: 55px !important;
+    }
+    
+    #homepagecalendar .fc-event {
+        margin: 1px 2px !important;
+        padding: 2px !important;
+    }
+    
+    #homepagecalendar .fc-event-main-custom {
+        padding: 3px 4px !important;
+        font-size: 0.5rem !important;
+        min-height: 40px !important;
+        gap: 1px !important;
+    }
+    
+    #homepagecalendar .fc-event-main-custom div {
+        font-size: 0.5rem !important;
+    }
+    
+    #homepagecalendar .fc-event-main-custom svg {
+        width: 8px !important;
+        height: 8px !important;
+    }
+    
+    #homepagecalendar .fc-daygrid-event-harness {
+        margin-top: 1px !important;
+    }
+    
+    #homepagecalendar .fc-view-harness {
+        min-height: 280px !important;
+    }
+    
+    /* Hide location and priest on mobile to save space */
+    #homepagecalendar .fc-event-main-custom > div:nth-child(n+3) {
+        display: none !important;
+    }
+    
+    /* Compact header on mobile */
+    #homepagecalendar .fc-header-toolbar {
+        margin-bottom: 0.5rem !important;
+    }
+    
+    /* Make scrollbar thin on mobile */
+    #homepagecalendar .fc-scroller {
+        scrollbar-width: thin;
+    }
+}
+
+/* Extra small devices */
+@media (max-width: 380px) {
+    #homepagecalendar .fc-toolbar-title {
+        font-size: 0.85rem !important;
+    }
+    
+    #homepagecalendar .fc-button {
+        font-size: 0.6rem !important;
+        padding: 0.25rem 0.4rem !important;
+    }
+    
+    #homepagecalendar .fc-col-header-cell {
+        font-size: 0.55rem !important;
+    }
+    
+    #homepagecalendar .fc-daygrid-day {
+        min-height: 48px !important;
+    }
+    
+    #homepagecalendar .fc-daygrid-day-number {
+        font-size: 0.6rem !important;
     }
 }
 </style>

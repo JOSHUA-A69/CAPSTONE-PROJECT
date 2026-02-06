@@ -16,20 +16,20 @@ class ServiceManagementController extends Controller
      */
     public function index(Request $request)
     {
-    Log::info('ServiceManagementController index method called');
+        Log::info('ServiceManagementController index method called with params: ', $request->all());
         
-        $query = Service::orderBy('service_name', 'asc');
-
         if ($request->has('archived')) {
-            $query->onlyTrashed();
+            // Get only archived (soft deleted) services
+            $services = Service::onlyTrashed()->orderBy('service_name', 'asc')->get();
             $showingArchived = true;
+            Log::info('Showing archived services. Count: ' . $services->count());
         } else {
+            // Get only active (non-deleted) services
+            $services = Service::orderBy('service_name', 'asc')->get();
             $showingArchived = false;
+            Log::info('Showing active services. Count: ' . $services->count());
         }
 
-        $services = $query->get();
-
-    Log::info('Services count: ' . $services->count());
         $categories = $this->getCategories();
         return view('admin.services.manage', compact('services', 'categories', 'showingArchived'));
     }

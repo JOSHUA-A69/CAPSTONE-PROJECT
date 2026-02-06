@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip for SQLite as it doesn't support MODIFY
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+        
         // Add 'Cancellation Request' to notification type ENUM
         DB::statement("ALTER TABLE notifications MODIFY COLUMN type ENUM(
             'Approval',

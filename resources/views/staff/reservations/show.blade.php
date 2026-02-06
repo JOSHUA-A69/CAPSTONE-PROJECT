@@ -1,15 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
-                Reservation #{{ $reservation->reservation_id }}
-            </h2>
-
+        <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
+            Reservation #{{ $reservation->reservation_id }}
+        </h2>
+        <div class="mt-3">
             <a href="{{ route('staff.reservations.index') }}" class="btn-ghost">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
-                Back to Reservations
+                Back to Manage Reservations
             </a>
         </div>
     </x-slot>

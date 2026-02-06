@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto py-8 px-4">
-    <h1 class="text-3xl font-bold mb-6 flex items-center gap-3">
-        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Organization Calendar
+<div class="max-w-6xl mx-auto py-4 sm:py-8 px-3 sm:px-4">
+    <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3 whitespace-nowrap overflow-hidden">
+        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span class="truncate">Organization Calendar</span>
     </h1>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-3 sm:p-6 overflow-hidden">
         <div id="adviserCalendar"></div>
     </div>
 
@@ -262,7 +262,36 @@
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,listWeek'
             },
-            height: 'auto',
+            // Responsive height settings to prevent excessive scrolling
+            height: window.innerWidth <= 768 ? 450 : 600,
+            contentHeight: 'auto',
+            aspectRatio: window.innerWidth <= 768 ? 0.8 : 1.35,
+
+            // Week view specific optimizations
+            slotMinTime: '00:00:00',
+            slotMaxTime: '22:00:00',
+            slotDuration: '01:00:00',
+            slotLabelInterval: '02:00:00',
+            allDaySlot: true,
+            allDayText: 'All Day',
+
+            // Event display optimizations
+            dayMaxEvents: window.innerWidth <= 768 ? 2 : 3,
+            moreLinkClick: 'popover',
+            eventDisplay: 'block',
+
+            // Responsive behavior
+            windowResize: function(view) {
+                if (window.innerWidth <= 768) {
+                    calendar.setOption('height', 450);
+                    calendar.setOption('aspectRatio', 0.8);
+                    calendar.setOption('dayMaxEvents', 2);
+                } else {
+                    calendar.setOption('height', 600);
+                    calendar.setOption('aspectRatio', 1.35);
+                    calendar.setOption('dayMaxEvents', 3);
+                }
+            },
             events: [...reservationEvents, ...scheduleEvents, ...orgBookingEvents],
             eventClick(info) {
                 const { extendedProps } = info.event;
@@ -369,8 +398,11 @@
             },
             eventContent(arg) {
                 const wrapper = document.createElement('div');
-                wrapper.style.fontSize = '0.7rem';
+                wrapper.style.fontSize = window.innerWidth <= 768 ? '0.65rem' : '0.7rem';
                 wrapper.style.fontWeight = '600';
+                wrapper.style.lineHeight = '1.1';
+                wrapper.style.overflow = 'hidden';
+                wrapper.style.textOverflow = 'ellipsis';
                 wrapper.innerHTML = `<div>${escapeHtml(arg.event.title)}</div>`;
                 return { domNodes: [wrapper] };
             }

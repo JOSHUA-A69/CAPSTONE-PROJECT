@@ -38,9 +38,9 @@ docker compose exec app php artisan storage:link
 
 3. Open:
 
-- App: <http://localhost:8000>
-- MailHog: <http://localhost:8025>
-- phpMyAdmin: <http://localhost:8080>
+- App: [http://localhost:8000](http://localhost:8000)
+- MailHog: [http://localhost:8025](http://localhost:8025)
+- phpMyAdmin: [http://localhost:8080](http://localhost:8080)
 
 ## Manual (no Docker) — minimal
 
@@ -92,9 +92,9 @@ docker compose exec app sh -c "npm ci --silent && npm run build --silent"
 
 7. Open the app in your browser:
 
-- Application: <http://localhost:8000>
-- MailHog (dev SMTP UI): <http://localhost:8025> (if Mailhog service is running)
-- phpMyAdmin: <http://localhost:8080> (if enabled in compose)
+- Application: [http://localhost:8000](http://localhost:8000)
+- MailHog (dev SMTP UI): [http://localhost:8025](http://localhost:8025) (if Mailhog service is running)
+- phpMyAdmin: [http://localhost:8080](http://localhost:8080) (if enabled in compose)
 
 8. Helpful commands (stop, restart, logs):
 
@@ -210,9 +210,9 @@ When using Docker prefix with `docker compose exec app` (for example `docker com
 
 ## Ports & services (defaults used by compose)
 
-- App (PHP built-in server inside container): <http://localhost:8000>
-- MailHog web UI (dev SMTP): <http://localhost:8025> (SMTP on port 1025)
-- phpMyAdmin: <http://localhost:8080> (if enabled in compose)
+- App (PHP built-in server inside container): [http://localhost:8000](http://localhost:8000)
+- MailHog web UI (dev SMTP): [http://localhost:8025](http://localhost:8025) (SMTP on port 1025)
+- phpMyAdmin: [http://localhost:8080](http://localhost:8080) (if enabled in compose)
 
 Check `docker-compose.yml` for exact ports and service names (service name is `app` in this project; container_name may be `laravel_app`).
 
@@ -264,15 +264,12 @@ docker compose exec app php artisan storage:link
 - If the app title remains "Laravel":
 
   - Edit `.env` and set `APP_NAME="eReligiousServices"` and clear config cache. If you changed `config/app.php` fallback, clear config cache too.
-
 - Composer memory errors on install:
 
   - Use `COMPOSER_MEMORY_LIMIT=-1 composer install` or allocate more memory to Docker if running in a container.
-
 - Node build errors:
 
   - Ensure Node 18+ is installed. On containers run `docker compose exec app node -v` to inspect.
-
 - Container exec reporting not running: be sure to use the Compose service name. For this repo the service is `app`:
 
 ```powershell
@@ -284,9 +281,9 @@ docker compose exec laravel_app sh -c "..."
 ```
 
 - Database connection errors: confirm `.env` DB_HOST matches the compose service name (commonly `db` or `mysql_db`), or when running on host use `127.0.0.1` and the host port mapping.
-
 - If Blade templates or config changes don't show up, clear caches:
-git branch -a
+  git branch -a
+
 ```powershell
 docker compose exec app php artisan config:clear
 docker compose exec app php artisan view:clear
@@ -307,12 +304,31 @@ git pull https://github.com/JOSHUA-A69/CAPSTONE-PROJECT.git
 
 composer install
 
+##if need i update
+
+composer update -- **ignore**-**platform**-**reqs**
+
+##if di jud mogana sa
+
+docker compose exec app composer update --ignore-platform-req=ext-zip
+
 npm install
 
 php artisan migrate
 
+docker exec laravel_app php artisan migrate
+
 php artisan cache:clear
 php artisan config:clear
 
-docker compose up -df
+docker exec laravel_app php artisan cache:clear
+docker exec laravel_app php artisan config:clear
 
+npm run build
+
+docker compose up -d
+
+if you want live server
+
+php artisan serve
+npm run dev
