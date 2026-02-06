@@ -1,5 +1,6 @@
 @php
     use Carbon\Carbon;
+    use Illuminate\Support\Facades\Storage;
 
     $conversationData = $conversations->map(function ($conversation) {
         return [
@@ -8,7 +9,7 @@
             'last_name' => $conversation->last_name ?? '',
             'full_name' => trim(($conversation->first_name ?? 'User') . ' ' . ($conversation->last_name ?? '')),
             'profile_picture_url' => $conversation->profile_picture
-                ? asset('storage/' . $conversation->profile_picture)
+                ? Storage::url($conversation->profile_picture)
                 : asset('images/default-avatar.svg'),
             'unread_count' => $conversation->unread_count ?? 0,
             'message_count' => $conversation->message_count ?? 0,
@@ -262,7 +263,7 @@
                                     <div :class="message.sender_id === currentUserId ? 'flex justify-end' : 'flex justify-start'">
                                         <div class="flex items-start gap-2 max-w-[80%] md:max-w-[65%]">
                                             <div x-show="message.sender_id !== currentUserId" class="flex-shrink-0 mt-0.5">
-                                                <img :src="message.sender.profile_picture"
+                                                <img :src="message.sender.profile_picture_url"
                                                      :alt="message.sender.name"
                                                      class="w-7 h-7 rounded-full object-cover">
                                             </div>

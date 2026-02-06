@@ -94,7 +94,7 @@ class ChatController extends Controller
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('chat_attachments', $fileName, 'public');
+            $filePath = $file->storeAs('chat_attachments', $fileName);
 
             $messageData['attachment_path'] = $filePath;
             $messageData['attachment_name'] = $file->getClientOriginalName();

@@ -34,7 +34,7 @@ class Message extends Model
     {
         if ($this->attachment_path) {
             // Add a cache-busting query param based on last update to avoid stale caches
-            $url = asset('storage/' . $this->attachment_path);
+            $url = \Illuminate\Support\Facades\Storage::url($this->attachment_path);
             $version = optional($this->updated_at)->timestamp ?? time();
             return $url . '?v=' . $version;
         }

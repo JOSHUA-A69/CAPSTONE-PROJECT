@@ -29,6 +29,10 @@ services:
         sync: false
       - key: MYSQL_ATTR_SSL_CA
         value: /etc/ssl/certs/ca-certificates.crt
+      - key: FILESYSTEM_DISK
+        value: cloudinary
+      - key: CLOUDINARY_URL
+        sync: false
 
 # Databases
 # Using external TiDB Cloud (Serverless MySQL)

@@ -76,6 +76,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $appends = [
         'name',
         'full_name',
+        'profile_picture_url',
     ];
 
     /**
@@ -145,8 +146,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getProfilePictureUrlAttribute(): string
     {
-        if ($this->profile_picture && file_exists(public_path('storage/' . $this->profile_picture))) {
-            return asset('storage/' . $this->profile_picture);
+        if ($this->profile_picture) {
+            return \Illuminate\Support\Facades\Storage::url($this->profile_picture);
         }
 
         // Professional default avatar (local asset)
