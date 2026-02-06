@@ -47,6 +47,12 @@ return [
             'report' => false,
         ],
 
+        'cloudinary' => [
+            'driver' => 'cloudinary',
+            'folder' => env('CLOUDINARY_FOLDER', 'ers_uploads'),
+            'upload_preset' => env('CLOUDINARY_UPLOAD_PRESET'),
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
