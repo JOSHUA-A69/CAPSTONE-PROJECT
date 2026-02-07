@@ -168,7 +168,7 @@
                                                     <span class="ml-3 text-sm text-gray-900 dark:text-gray-300">
                                                         {{ $org->org_name }}
                                                         @if($org->adviser_id && $org->adviser_id != $user->id)
-                                                            <span class="block text-xs text-orange-500 dark:text-orange-400 mt-0.5">Adviser: {{ $org->adviser->name }}</span>
+                                                            <span class="block text-xs text-orange-500 dark:text-orange-400 mt-0.5">Adviser: {{ $org->adviser?->name ?? 'Unknown (ID: '.$org->adviser_id.')' }}</span>
                                                         @elseif($org->adviser_id == $user->id)
                                                             <span class="block text-xs text-green-500 dark:text-green-400 mt-0.5">Currently assigned</span>
                                                         @endif
