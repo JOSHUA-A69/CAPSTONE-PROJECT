@@ -1,8 +1,8 @@
 <nav x-data="{ open: false }" class="bg-[#2ecc71] dark:bg-dark-bg border-b border-[#27c165] text-white relative z-50" role="navigation" aria-label="Main navigation">
     <!-- Primary Navigation Menu -->
-    <div class="max-w-7xl mx-auto px-1 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16 items-center">
-            <div class="flex items-center gap-0.5 sm:gap-4 lg:gap-8 flex-1 min-w-0">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-14 sm:h-16 items-center">
+            <div class="flex items-center gap-1 sm:gap-3 md:gap-4 lg:gap-8 flex-1 min-w-0">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" aria-label="Go to dashboard home">
@@ -11,8 +11,8 @@
                 </div>
 
                 <!-- Navigation Links - Mobile & Desktop with improved responsiveness -->
-                <div class="flex items-center gap-0.5 sm:gap-3 lg:gap-8 overflow-hidden flex-1 min-w-0" role="menubar">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                <div class="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-8 overflow-hidden flex-1 min-w-0" role="menubar">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap px-2 sm:px-3">
                         {{ __('Dashboard') }}
                     </x-nav-link>
 
@@ -28,7 +28,7 @@
                             };
                         @endphp
                         @if($calendarRoute)
-                            <x-nav-link :href="route($calendarRoute)" :active="request()->routeIs(str_replace('.','.*',$calendarRoute))" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                            <x-nav-link :href="route($calendarRoute)" :active="request()->routeIs(str_replace('.','.*',$calendarRoute))" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap px-2 sm:px-3">
                                 {{ __('Calendar') }}
                             </x-nav-link>
                         @endif
@@ -63,13 +63,14 @@
                                         });
                                         window.addEventListener('focus', updateUnread);
                                     "
-                                    class="text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                                    class="text-xs sm:text-sm lg:text-base whitespace-nowrap px-2 sm:px-3">
                             <span class="inline-flex items-center gap-0.5 sm:gap-1">
-                                <svg class="w-3 h-3 sm:w-4 sm:h-4 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <svg class="w-3 h-3 sm:w-4 sm:h-4 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                 </svg>
                                 <span class="inline-flex items-center">
-                                    {{ __('Messages') }}
+                                    <span class="hidden sm:inline">{{ __('Messages') }}</span>
+                                    <span class="sm:hidden">Chat</span>
                                     <span x-show="Number(unreadCount) > 0"
                                         x-cloak
                                         x-text="Number(unreadCount) > 9 ? '9+' : unreadCount"
@@ -84,7 +85,7 @@
 
                     {{-- Generate Report link - Full text with font scaling --}}
                     @if(auth()->check() && in_array(auth()->user()->role, ['staff','adviser','admin']))
-                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap">
+                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')" role="menuitem" class="text-xs sm:text-sm lg:text-base whitespace-nowrap px-2 sm:px-3">
                             {{ __('Report') }}
                         </x-nav-link>
                     @endif
@@ -172,7 +173,7 @@
                          x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
                          x-transition:leave-end="opacity-0 transform scale-95 -translate-y-2"
                          @click.away="open = false"
-                         class="absolute top-full right-0 mt-2 w-[400px] max-w-[calc(100vw-24px)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-[9999]"
+                         class="absolute top-full right-0 mt-2 w-[320px] sm:w-[400px] max-w-[calc(100vw-16px)] sm:max-w-[calc(100vw-24px)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-[9999]"
                          style="display: none;">
                         <div>
                             <!-- Header - Enhanced -->
@@ -376,7 +377,7 @@
                      x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
                      x-transition:leave-end="opacity-0 transform scale-95 -translate-y-2"
                      @click.away="mobileMenuOpen = false"
-                     class="absolute top-full right-0 mt-1 w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-50"
+                     class="absolute top-full right-0 mt-1 w-72 sm:w-64 max-w-[calc(100vw-16px)] bg-white dark:bg-gray-800 rounded-2xl shadow-2xl ring-1 ring-black ring-opacity-5 overflow-hidden z-50"
                      style="display: none;">
 
                     <!-- User Info Header -->

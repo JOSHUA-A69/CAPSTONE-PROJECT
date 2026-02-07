@@ -1,7 +1,7 @@
 <footer class="bg-[#2ecc71] dark:bg-dark-bg text-white mt-6 sm:mt-8 lg:mt-16 no-animations relative overflow-hidden">
     <!-- Decorative wave top -->
     <div class="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-transparent to-[#2ecc71] dark:to-dark-bg opacity-50"></div>
-    
+
     <!-- Desktop Footer (lg and above) -->
     <div class="hidden lg:block max-w-7xl mx-auto px-6 lg:px-8 py-12 text-sm lg:text-base relative">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">

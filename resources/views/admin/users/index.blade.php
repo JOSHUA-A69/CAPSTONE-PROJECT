@@ -7,7 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
             <!-- Actions Bar -->
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <div class="flex-1 w-full md:w-auto">
@@ -19,15 +19,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </div>
-                            <input type="text" 
-                                   name="search" 
-                                   value="{{ $search ?? '' }}" 
-                                   placeholder="Search by name or email..." 
+                            <input type="text"
+                                   name="search"
+                                   value="{{ $search ?? '' }}"
+                                   placeholder="Search by name or email..."
                                    class="block w-full pl-10 pr-3 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors">
                         </div>
-                        
+
                         <div class="flex gap-2">
-                            <select name="role" 
+                            <select name="role"
                                     onchange="document.getElementById('userFilterForm').submit();"
                                     class="w-full sm:w-auto pl-3 pr-10 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-colors cursor-pointer">
                                 <option value="">All Roles</option>
@@ -39,7 +39,7 @@
                             </select>
 
                             @if(($search ?? false) || ($role ?? false))
-                                <a href="{{ route('admin.users.index') }}" 
+                                <a href="{{ route('admin.users.index') }}"
                                    class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors duration-200">
                                     Reset
                                 </a>
@@ -49,14 +49,14 @@
                 </div>
 
                 <div class="flex items-center gap-3 w-full md:w-auto justify-end">
-                    <a href="{{ route('admin.users.archives') }}" 
+                    <a href="{{ route('admin.users.archives') }}"
                        class="inline-flex items-center px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg shadow-md transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
                         </svg>
                         Archives
                     </a>
-                    <a href="{{ route('admin.users.create') }}" 
+                    <a href="{{ route('admin.users.create') }}"
                        class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-md transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -145,16 +145,16 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex items-center justify-end gap-2" x-data="{ showConfirm: false, isArchiving: false }">
-                                            
+
                                             <!-- Edit Button -->
-                                            <a href="{{ route('admin.users.edit', $user->id) }}" 
+                                            <a href="{{ route('admin.users.edit', $user->id) }}"
                                                class="inline-flex items-center px-2.5 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-xs font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                 <span class="hidden sm:inline">Edit</span>
                                             </a>
 
                                             <!-- Archive Button -->
-                                            <button @click="showConfirm = true" 
+                                            <button @click="showConfirm = true"
                                                     :disabled="isArchiving"
                                                     class="inline-flex items-center px-2.5 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-xs font-semibold text-red-600 dark:text-red-400 shadow-sm hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
                                                 <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -162,42 +162,90 @@
                                             </button>
 
                                             <!-- Modal -->
-                                            <div x-show="showConfirm" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" style="display: none;">
-                                                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showConfirm = false" aria-hidden="true"></div>
-                                                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                                                    <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200 dark:border-gray-700">
-                                                        <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                                            <div class="sm:flex sm:items-start">
-                                                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 sm:mx-0 sm:h-10 sm:w-10">
-                                                                    <svg class="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <div x-show="showConfirm" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="modal-title" style="display: none;">
+                                                <div class="flex items-center justify-center min-h-screen px-3 py-6 sm:px-4 sm:py-8 lg:py-20">
+                                                    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300" @click="showConfirm = false" aria-hidden="true"></div>
+                                                    <div class="relative inline-block w-full max-w-sm sm:max-w-md lg:max-w-2xl bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all border border-gray-200 dark:border-gray-700">
+                                                        <!-- Header -->
+                                                        <div class="px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5 lg:px-8 lg:pt-8 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-white dark:from-gray-750 dark:to-gray-800">
+                                                            <div class="flex items-start gap-4 lg:gap-5">
+                                                                <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
+                                                                    <svg class="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                                                                     </svg>
                                                                 </div>
-                                                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                                                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">
+                                                                <div class="flex-1 min-w-0">
+                                                                    <h2 id="modal-title" class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                                                                         Archive User Account
-                                                                    </h3>
-                                                                    <div class="mt-2">
-                                                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                                                            Are you sure you want to archive <strong>{{ $user->full_name }}</strong>? <br>
-                                                                            <span class="text-xs mt-1 block text-orange-600 dark:text-orange-400">Archived users cannot log in but can be restored later.</span>
-                                                                        </p>
-                                                                    </div>
+                                                                    </h2>
+                                                                    <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">This action cannot be undone immediately</p>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-3">
-                                                            <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}" class="inline">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" @click="isArchiving = true" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:w-auto sm:text-sm transition-colors">
-                                                                    Yes, Archive User
-                                                                </button>
-                                                            </form>
-                                                            <button type="button" @click="showConfirm = false" class="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:w-auto sm:text-sm transition-colors">
+
+                                                        <!-- Content Body -->
+                                                        <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6 space-y-5">
+                                                            <!-- User Name Highlight -->
+                                                            <div class="p-3 sm:p-4 lg:p-5 bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-900/30 dark:to-blue-900/10 border-l-4 border-blue-500 dark:border-blue-400 rounded-lg">
+                                                                <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                                                                    <span class="font-semibold text-gray-900 dark:text-gray-100">User:</span> {{ $user->full_name }}
+                                                                </p>
+                                                                <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
+                                                                    <span class="font-medium text-gray-700 dark:text-gray-300">Email:</span> {{ $user->email }}
+                                                                </p>
+                                                            </div>
+
+                                                            <!-- Warning Box -->
+                                                            <div class="p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-orange-50 to-orange-50/50 dark:from-orange-900/25 dark:to-orange-900/5 border-l-4 border-orange-500 dark:border-orange-400 rounded-lg shadow-sm">
+                                                                <div class="flex items-start gap-3 sm:gap-4">
+                                                                    <svg class="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2M5 17.5H3m6.5 0h10M3.75 13h16.5m-16.5-5h16.5M3.75 7.5H20.25" />
+                                                                    </svg>
+                                                                    <div class="flex-1 min-w-0">
+                                                                        <p class="text-sm sm:text-base font-semibold text-orange-900 dark:text-orange-200 mb-3">What happens when you archive?</p>
+                                                                        <ul class="text-sm sm:text-base space-y-2 text-orange-800 dark:text-orange-300">
+                                                                            <li class="flex items-center gap-2">
+                                                                                <span class="inline-block w-2 h-2 bg-orange-600 dark:bg-orange-400 rounded-full flex-shrink-0"></span>
+                                                                                <span>User cannot log in</span>
+                                                                            </li>
+                                                                            <li class="flex items-center gap-2">
+                                                                                <span class="inline-block w-2 h-2 bg-orange-600 dark:bg-orange-400 rounded-full flex-shrink-0"></span>
+                                                                                <span>Account can be restored later</span>
+                                                                            </li>
+                                                                        </ul>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Confirmation Question -->
+                                                            <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 font-semibold pt-2">
+                                                                Are you sure you want to proceed?
+                                                            </p>
+                                                        </div>
+
+                                                        <!-- Footer with Buttons -->
+                                                        <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                                                            <button type="button" @click="showConfirm = false" class="flex-1 order-2 sm:order-1 inline-flex items-center justify-center px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm sm:text-base font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-0 transition-all duration-200">
                                                                 Cancel
                                                             </button>
+                                                            <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}" class="flex-1 order-1 sm:order-2" x-on:submit="isArchiving = true">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" :disabled="isArchiving" :class="{ 'cursor-not-allowed': isArchiving }" class="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 disabled:from-orange-400 disabled:to-orange-500 disabled:opacity-70 text-white text-xs sm:text-sm lg:text-base font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-600 dark:focus:ring-offset-0 transition-all duration-200 whitespace-nowrap">
+                                                                    <template x-if="isArchiving">
+                                                                        <svg class="animate-spin h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                        </svg>
+                                                                    </template>
+                                                                    <template x-if="!isArchiving">
+                                                                        <svg class="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                        </svg>
+                                                                    </template>
+                                                                    <span x-text="isArchiving ? 'Archiving...' : 'Yes, Archive User'"></span>
+                                                                </button>
+                                                            </form>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -271,55 +319,105 @@
                             </div>
 
                             <!-- Actions -->
-                            <div class="flex flex-col xs:flex-row gap-2">
-                                <a href="{{ route('admin.users.edit', $user->id) }}" 
-                                   class="flex-1 inline-flex items-center justify-center px-3 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors min-w-0">
+                            <div class="flex flex-col gap-2">
+                                <a href="{{ route('admin.users.edit', $user->id) }}"
+                                   class="w-full inline-flex items-center justify-center px-3 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                                     <svg class="w-4 h-4 mr-1.5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                    <span class="truncate">Edit</span>
+                                    Edit
                                 </a>
-                                <button @click="showConfirm = true" 
+                                <button @click="showConfirm = true"
                                         :disabled="isArchiving"
-                                        class="flex-1 inline-flex items-center justify-center px-3 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors min-w-0">
+                                        class="w-full inline-flex items-center justify-center px-3 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                                     <svg class="w-4 h-4 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    <span class="truncate">Archive</span>
+                                    Archive
                                 </button>
                             </div>
 
                             <!-- Mobile Modal -->
                             <div x-show="showConfirm" x-cloak class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" style="display: none;">
-                                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showConfirm = false" aria-hidden="true"></div>
-                                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                                    <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-200 dark:border-gray-700">
-                                        <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                            <div class="sm:flex sm:items-start">
-                                                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-orange-100 dark:bg-orange-900/30 sm:mx-0 sm:h-10 sm:w-10">
-                                                    <svg class="h-6 w-6 text-orange-600 dark:text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <div class="flex items-center justify-center min-h-screen px-3 py-6 sm:px-4 sm:py-8 lg:py-20">
+                                    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300" @click="showConfirm = false" aria-hidden="true"></div>
+                                    <div class="relative inline-block w-full max-w-sm sm:max-w-md lg:max-w-2xl bg-white dark:bg-gray-800 rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all border border-gray-200 dark:border-gray-700">
+                                        <!-- Header -->
+                                        <div class="px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5 lg:px-8 lg:pt-8 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-white dark:from-gray-750 dark:to-gray-800">
+                                            <div class="flex items-start gap-4 lg:gap-5">
+                                                <div class="flex-shrink-0 flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
+                                                    <svg class="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                                                     </svg>
                                                 </div>
-                                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                                    <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100">Archive User Account</h3>
-                                                    <div class="mt-2">
-                                                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                                                            Are you sure you want to archive <strong>{{ $user->full_name }}</strong>?<br>
-                                                            <span class="text-xs mt-1 block text-orange-600 dark:text-orange-400">Archived users cannot log in but can be restored later.</span>
-                                                        </p>
-                                                    </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <h2 id="modal-title" class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                                                        Archive User Account
+                                                    </h2>
+                                                    <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1">This action cannot be undone immediately</p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 flex flex-col-reverse sm:flex-row-reverse gap-2">
-                                            <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}" class="w-full sm:w-auto">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" @click="isArchiving = true" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-orange-600 text-base font-medium text-white hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:text-sm transition-colors">
-                                                    Yes, Archive User
-                                                </button>
-                                            </form>
-                                            <button type="button" @click="showConfirm = false" class="w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
+
+                                        <!-- Content Body -->
+                                        <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6 space-y-5">
+                                            <!-- User Name Highlight -->
+                                            <div class="p-3 sm:p-4 lg:p-5 bg-gradient-to-br from-blue-50 to-blue-50/50 dark:from-blue-900/30 dark:to-blue-900/10 border-l-4 border-blue-500 dark:border-blue-400 rounded-lg">
+                                                <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300">
+                                                    <span class="font-semibold text-gray-900 dark:text-gray-100">User:</span> {{ $user->full_name }}
+                                                </p>
+                                                <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
+                                                    <span class="font-medium text-gray-700 dark:text-gray-300">Email:</span> {{ $user->email }}
+                                                </p>
+                                            </div>
+
+                                            <!-- Warning Box -->
+                                            <div class="p-4 sm:p-5 lg:p-6 bg-gradient-to-br from-orange-50 to-orange-50/50 dark:from-orange-900/25 dark:to-orange-900/5 border-l-4 border-orange-500 dark:border-orange-400 rounded-lg shadow-sm">
+                                                <div class="flex items-start gap-3 sm:gap-4">
+                                                    <svg class="h-5 w-5 sm:h-6 sm:w-6 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 4v2M5 17.5H3m6.5 0h10M3.75 13h16.5m-16.5-5h16.5M3.75 7.5H20.25" />
+                                                    </svg>
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm sm:text-base font-semibold text-orange-900 dark:text-orange-200 mb-3">What happens when you archive?</p>
+                                                        <ul class="text-sm sm:text-base space-y-2 text-orange-800 dark:text-orange-300">
+                                                            <li class="flex items-center gap-2">
+                                                                <span class="inline-block w-2 h-2 bg-orange-600 dark:bg-orange-400 rounded-full flex-shrink-0"></span>
+                                                                <span>User cannot log in</span>
+                                                            </li>
+                                                            <li class="flex items-center gap-2">
+                                                                <span class="inline-block w-2 h-2 bg-orange-600 dark:bg-orange-400 rounded-full flex-shrink-0"></span>
+                                                                <span>Account can be restored later</span>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Confirmation Question -->
+                                            <p class="text-sm sm:text-base text-gray-700 dark:text-gray-300 font-semibold pt-2">
+                                                Are you sure you want to proceed?
+                                            </p>
+                                        </div>
+
+                                        <!-- Footer with Buttons -->
+                                        <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                                            <button type="button" @click="showConfirm = false" class="flex-1 order-2 sm:order-1 inline-flex items-center justify-center px-4 py-2.5 sm:py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm sm:text-base font-semibold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-0 transition-all duration-200">
                                                 Cancel
                                             </button>
+                                            <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}" class="flex-1 order-1 sm:order-2" x-on:submit="isArchiving = true">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" :disabled="isArchiving" :class="{ 'cursor-not-allowed': isArchiving }" class="w-full flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 disabled:from-orange-400 disabled:to-orange-500 disabled:opacity-70 text-white text-xs sm:text-sm lg:text-base font-semibold rounded-lg shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-600 dark:focus:ring-offset-0 transition-all duration-200 whitespace-nowrap">
+                                                    <template x-if="isArchiving">
+                                                        <svg class="animate-spin h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                        </svg>
+                                                    </template>
+                                                    <template x-if="!isArchiving">
+                                                        <svg class="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </template>
+                                                    <span x-text="isArchiving ? 'Archiving...' : 'Yes, Archive User'"></span>
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>

@@ -31,7 +31,8 @@ class UserManagementController extends Controller
         // Check if soft deletes column exists
         if (Schema::hasColumn('users', 'deleted_at')) {
             $user->delete(); // Soft delete
-            return Redirect::back()->with('status', 'user-archived');
+            // Redirect to archives page to show the newly archived user
+            return Redirect::route('admin.users.archives')->with('status', 'user-archived');
         } else {
             return Redirect::back()->with('info', 'Archive feature requires database migration. Please run: php artisan migrate');
         }
@@ -44,7 +45,7 @@ class UserManagementController extends Controller
     {
         $search = $request->input('search');
         $role = $request->input('role');
-        
+
         // Only show non-archived users if soft deletes column exists
         if (Schema::hasColumn('users', 'deleted_at')) {
             $query = User::query();
@@ -52,7 +53,7 @@ class UserManagementController extends Controller
             // Use withoutGlobalScope to bypass SoftDeletes when column doesn't exist
             $query = User::withoutGlobalScope(\Illuminate\Database\Eloquent\SoftDeletingScope::class);
         }
-        
+
         // Apply search filter if provided
         if ($search) {
             $query->where(function($q) use ($search) {
@@ -62,14 +63,14 @@ class UserManagementController extends Controller
                   ->orWhere('email', 'like', "%{$search}%");
             });
         }
-        
+
         // Apply role filter if provided
         if ($role) {
             $query->where('role', $role);
         }
-        
+
         $users = $query->orderBy('created_at', 'desc')->paginate(25);
-        
+
         // Preserve search and role query in pagination links
         $users->appends(['search' => $search, 'role' => $role]);
 
@@ -86,7 +87,7 @@ class UserManagementController extends Controller
             return redirect()->route('admin.users.index')
                 ->with('info', 'Archive feature requires database migration. Please run: php artisan migrate');
         }
-        
+
         $archivedUsers = User::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(25);
         return view('admin.users.archives', compact('archivedUsers'));
     }
@@ -174,10 +175,10 @@ class UserManagementController extends Controller
 
         $userRoles = UserRole::orderBy('role_name')->get();
         $organizations = Organization::orderBy('org_name')->get();
-        
+
         // Get the IDs of organizations this user is adviser for
         $userOrganizationIds = $user->organizations->pluck('org_id')->toArray();
-        
+
         return view('admin.users.edit', compact('user', 'userRoles', 'organizations', 'userOrganizationIds'));
     }
 
@@ -224,7 +225,7 @@ class UserManagementController extends Controller
         if ($data['role'] === 'adviser') {
             // First, remove this adviser from all organizations they were previously assigned to
             Organization::where('adviser_id', $user->id)->update(['adviser_id' => null]);
-            
+
             // Then assign to selected organizations
             if (!empty($organizationIds)) {
                 Organization::whereIn('org_id', $organizationIds)->update(['adviser_id' => $user->id]);
