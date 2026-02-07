@@ -37,9 +37,9 @@ chmod -R 775 /var/www/html/bootstrap/cache
 echo "Running migrations..."
 php artisan migrate --force
 
-# Run seeds automatically
-echo "Running seeds..."
-php artisan db:seed --force
+# Run seeds automatically (Disabled to prevent duplicate data issues on re-deploy)
+# echo "Running seeds..."
+# php artisan db:seed --force
 
 # Start Apache
 exec docker-php-entrypoint apache2-foreground
