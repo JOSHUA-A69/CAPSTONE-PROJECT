@@ -43,9 +43,16 @@ return [
     | Get your API key from https://semaphore.co/
     */
     'semaphore' => [
-        'enabled' => env('SMS_ENABLED', false),
+        'enabled' => env('SMS_ENABLED', false) && env('SMS_PROVIDER', 'semaphore') === 'semaphore',
         'api_key' => env('SEMAPHORE_API_KEY'),
         'sender_name' => env('SEMAPHORE_SENDER_NAME', 'CREaM-HNU'),
+    ],
+
+    'twilio' => [
+        'enabled' => env('SMS_ENABLED', false) && env('SMS_PROVIDER') === 'twilio',
+        'sid' => env('TWILIO_SID'),
+        'token' => env('TWILIO_AUTH_TOKEN'),
+        'from' => env('TWILIO_FROM_NUMBER'),
     ],
 
 ];

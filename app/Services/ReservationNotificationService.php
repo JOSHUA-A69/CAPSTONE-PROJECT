@@ -1495,34 +1495,55 @@ class ReservationNotificationService
     }
 
     /**
-     * Send SMS using Semaphore API (Philippine SMS provider)
-     * Replace with Twilio or other provider as needed
+     * Send SMS using configured provider
      */
     private function sendSMS(string $phoneNumber, string $message): void
     {
         try {
-            // Check if SMS is enabled
-            if (!config('services.semaphore.enabled', false)) {
+            $provider = config('services.twilio.enabled') ? 'twilio' : (config('services.semaphore.enabled') ? 'semaphore' : null);
+
+            // Check if ANY SMS is enabled
+            if (!$provider) {
                 Log::info('SMS disabled - would have sent: ' . $message . ' to ' . $phoneNumber);
                 return;
             }
 
-            $apiKey = config('services.semaphore.api_key');
-            $senderName = config('services.semaphore.sender_name', 'CREaM-HNU');
+            if ($provider === 'twilio') {
+                $sid = config('services.twilio.sid');
+                $token = config('services.twilio.token');
+                $from = config('services.twilio.from');
+                $url = "https://api.twilio.com/2010-04-01/Accounts/{$sid}/Messages.json";
 
-            // Semaphore API endpoint
-            $response = Http::asForm()->post('https://api.semaphore.co/api/v4/messages', [
-                'apikey' => $apiKey,
-                'number' => $this->formatPhoneNumber($phoneNumber),
-                'message' => $message,
-                'sendername' => $senderName,
-            ]);
+                $response = Http::withBasicAuth($sid, $token)->asForm()->post($url, [
+                    'To' => $this->formatPhoneNumber($phoneNumber),
+                    'From' => $from,
+                    'Body' => $message,
+                ]);
 
-            if ($response->successful()) {
-                Log::info('SMS sent successfully to ' . $phoneNumber);
-            } else {
-                Log::error('Failed to send SMS: ' . $response->body());
+                if ($response->successful()) {
+                    Log::info('Twilio SMS sent to ' . $phoneNumber);
+                } else {
+                    Log::error('Twilio Error: ' . $response->body());
+                }
+            } 
+            elseif ($provider === 'semaphore') {
+                $apiKey = config('services.semaphore.api_key');
+                $senderName = config('services.semaphore.sender_name', 'CREaM-HNU');
+
+                $response = Http::asForm()->post('https://api.semaphore.co/api/v4/messages', [
+                    'apikey' => $apiKey,
+                    'number' => $this->formatPhoneNumber($phoneNumber),
+                    'message' => $message,
+                    'sendername' => $senderName,
+                ]);
+
+                if ($response->successful()) {
+                    Log::info('Semaphore SMS sent to ' . $phoneNumber);
+                } else {
+                    Log::error('Semaphore Error: ' . $response->body());
+                }
             }
+
         } catch (\Exception $e) {
             Log::error('SMS sending exception: ' . $e->getMessage());
         }
