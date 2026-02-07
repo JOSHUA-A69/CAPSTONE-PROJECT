@@ -3,7 +3,7 @@
 @section('content')
 <div class="py-4 sm:py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
+
         <!-- Mobile-First Header -->
         <div class="mb-6">
             <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
@@ -19,11 +19,11 @@
                     Configure service types and their settings available for reservations.
                 @endif
             </p>
-            
+
             <!-- Action Buttons - Stacked on mobile, side by side on desktop -->
             <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 @if(isset($showingArchived) && $showingArchived)
-                    <a href="{{ route('admin.services.manage') }}" 
+                    <a href="{{ route('admin.services.manage') }}"
                        class="inline-flex items-center justify-center px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
                         <svg class="w-5 h-5 mr-2 -ml-1 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -31,7 +31,7 @@
                         Back to Active Services
                     </a>
                 @else
-                    <a href="{{ route('admin.services.manage', ['archived' => 1]) }}" 
+                    <a href="{{ route('admin.services.manage', ['archived' => 1]) }}"
                        class="inline-flex items-center justify-center px-4 py-2.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
                         <svg class="w-5 h-5 mr-2 -ml-1 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
@@ -40,7 +40,7 @@
                     </a>
                 @endif
                 @if(!isset($showingArchived) || !$showingArchived)
-                    <button onclick="openAddModal()" 
+                    <button onclick="openAddModal()"
                             class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-md transition-all duration-200 hover:shadow-lg transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -76,19 +76,45 @@
             </div>
         @endif
 
+        <!-- Filter Section -->
+        <div class="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100">Filter Services</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Filter by service type</p>
+                        </div>
+                    </div>
+
+                    <div class="flex-shrink-0 w-full sm:w-auto">
+                        <div class="relative">
+                            <select id="serviceFilter"
+                                    class="w-full sm:w-48 pl-3 pr-10 py-2.5 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:text-gray-100 transition-all duration-200 appearance-none cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    onchange="filterServices(this.value)">
+                                <option value="all">All Services</option>
+                                <option value="institutional">Institutional Services</option>
+                                <option value="non-institutional">Non-Institutional Services</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Services Content -->
         <div class="bg-white dark:bg-gray-800 shadow-xl rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            {{-- Debug Information --}}
-            @if(config('app.debug'))
-                <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border-b text-sm">
-                    <strong>Debug:</strong> Showing {{ isset($showingArchived) && $showingArchived ? 'archived' : 'active' }} services. 
-                    Services count: {{ $services->count() }}
-                    @if(isset($showingArchived))
-                        | showingArchived: {{ $showingArchived ? 'true' : 'false' }}
-                    @endif
-                </div>
-            @endif
-            
+
             @if($services->isEmpty())
             <div class="p-8 sm:p-12 text-center">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
@@ -114,13 +140,13 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @foreach($services as $service)
-                            <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                            <tr data-service-row class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                                 <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                     {{ $service->service_name }}
                                 </td>
                                 <td class="px-6 py-4">
                                     @if($service->service_category)
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ str_contains($service->service_category, 'Non-Institutional') ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                        <span class="service-category-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ str_contains($service->service_category, 'Non-Institutional') ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' }}">
                                             {{ $service->service_category }}
                                         </span>
                                     @else
@@ -146,7 +172,7 @@
                 <div class="lg:hidden">
                     <div class="divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($services as $service)
-                        <div class="p-4 sm:p-6">
+                        <div data-service-card class="p-4 sm:p-6 transition-all duration-200" style="opacity: 1; transform: translateY(0);">
                             <!-- Service Header -->
                             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
                                 <div class="flex-1 min-w-0">
@@ -155,7 +181,7 @@
                                     </h3>
                                     @if($service->service_category)
                                         <div class="mt-2">
-                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ str_contains($service->service_category, 'Non-Institutional') ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                            <span class="service-category-badge inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {{ str_contains($service->service_category, 'Non-Institutional') ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' }}">
                                                 {{ $service->service_category }}
                                             </span>
                                         </div>
@@ -173,7 +199,7 @@
                                     <span class="text-gray-700 dark:text-gray-300">{{ $service->duration }} minutes</span>
                                 </div>
                                 @endif
-                                
+
                                 @if($service->description)
                                 <div class="sm:col-span-2">
                                     <div class="flex items-start text-sm">
@@ -197,20 +223,20 @@
                                         </button>
                                     </form>
                                 @else
-                                    <button 
+                                    <button
                                         data-name="{{ e($service->service_name) }}"
                                         data-category="{{ e($service->service_category) }}"
                                         data-description="{{ e($service->description) }}"
                                         data-duration="{{ e($service->duration) }}"
                                         data-id="{{ $service->service_id }}"
-                                        class="btn-edit-service flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-800 rounded-lg text-sm font-medium text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                        class="btn-edit-service flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 dark:from-blue-600 dark:to-blue-700 rounded-lg text-sm font-medium text-white shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 dark:hover:from-blue-700 dark:hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 active:scale-95">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                         Edit
                                     </button>
-                                    <button 
+                                    <button
                                         data-name="{{ e($service->service_name) }}"
                                         data-id="{{ $service->service_id }}"
-                                        class="btn-delete-service flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-lg text-sm font-medium text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
+                                        class="btn-delete-service flex-1 sm:flex-none inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-red-500 to-red-600 dark:from-red-600 dark:to-red-700 rounded-lg text-sm font-medium text-white shadow-md hover:shadow-lg hover:from-red-600 hover:to-red-700 dark:hover:from-red-700 dark:hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 active:scale-95">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         Archive
                                     </button>
@@ -247,7 +273,7 @@
                                 @csrf
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Name <span class="text-red-500">*</span></label>
-                                    <input type="text" name="service_name" required 
+                                    <input type="text" name="service_name" required
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
                                         placeholder="e.g., Wedding, Baptism">
                                 </div>
@@ -261,13 +287,13 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (minutes)</label>
-                                    <input type="number" name="duration" min="5" step="5" 
+                                    <input type="number" name="duration" min="5" step="5"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
                                         placeholder="60">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                                    <textarea name="description" rows="3" 
+                                    <textarea name="description" rows="3"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
                                         placeholder="Brief details about this service..."></textarea>
                                 </div>
@@ -277,11 +303,11 @@
                 </div>
             </div>
             <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row-reverse gap-3">
-                <button type="button" onclick="document.getElementById('addServiceForm').submit()" 
+                <button type="button" onclick="document.getElementById('addServiceForm').submit()"
                     class="w-full sm:w-auto inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
                     Create Service
                 </button>
-                <button type="button" onclick="closeAddModal()" 
+                <button type="button" onclick="closeAddModal()"
                     class="w-full sm:w-auto inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
                     Cancel
                 </button>
@@ -313,7 +339,7 @@
                                 @method('PUT')
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Name <span class="text-red-500">*</span></label>
-                                    <input type="text" id="edit_service_name" name="service_name" required 
+                                    <input type="text" id="edit_service_name" name="service_name" required
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors">
                                 </div>
                                 <div>
@@ -326,12 +352,12 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (minutes)</label>
-                                    <input type="number" id="edit_duration" name="duration" min="5" step="5" 
+                                    <input type="number" id="edit_duration" name="duration" min="5" step="5"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                                    <textarea id="edit_description" name="description" rows="3" 
+                                    <textarea id="edit_description" name="description" rows="3"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"></textarea>
                                 </div>
                             </form>
@@ -340,11 +366,11 @@
                 </div>
             </div>
             <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row-reverse gap-3">
-                <button type="button" onclick="document.getElementById('editForm').submit()" 
+                <button type="button" onclick="document.getElementById('editForm').submit()"
                     class="w-full sm:w-auto inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm transition-colors">
                     Save Changes
                 </button>
-                <button type="button" onclick="closeEditModal()" 
+                <button type="button" onclick="closeEditModal()"
                     class="w-full sm:w-auto inline-flex justify-center rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
                     Cancel
                 </button>
@@ -424,7 +450,7 @@
             editCategory.value = cat || "";
             editDuration.value = dur || "";
             editDesc.value = desc || "";
-            
+
             editModal.classList.remove('hidden');
         });
     });
@@ -451,6 +477,89 @@
 
     function closeDeleteModal() {
         deleteModal.classList.add('hidden');
+    }
+
+    // Filter Services Function
+    function filterServices(filterValue) {
+        const serviceCards = document.querySelectorAll('[data-service-card]');
+        const tableRows = document.querySelectorAll('[data-service-row]');
+
+        // Filter mobile cards
+        serviceCards.forEach(card => {
+            const categoryElements = card.querySelectorAll('.service-category-badge');
+            let showCard = false;
+
+            if (filterValue === 'all') {
+                showCard = true;
+            } else {
+                categoryElements.forEach(badge => {
+                    const categoryText = badge.textContent.trim();
+                    if (filterValue === 'non-institutional' && categoryText.toLowerCase().includes('non-institutional')) {
+                        showCard = true;
+                    } else if (filterValue === 'institutional' && !categoryText.toLowerCase().includes('non-institutional')) {
+                        showCard = true;
+                    }
+                });
+
+                // If no category badge is found, treat as institutional
+                if (categoryElements.length === 0 && filterValue === 'institutional') {
+                    showCard = true;
+                }
+            }
+
+            // Smooth transition
+            if (showCard) {
+                card.style.display = 'block';
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 50);
+            } else {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    card.style.display = 'none';
+                }, 200);
+            }
+        });
+
+        // Filter desktop table rows
+        tableRows.forEach(row => {
+            const categoryElements = row.querySelectorAll('.service-category-badge');
+            let showRow = false;
+
+            if (filterValue === 'all') {
+                showRow = true;
+            } else {
+                categoryElements.forEach(badge => {
+                    const categoryText = badge.textContent.trim();
+                    if (filterValue === 'non-institutional' && categoryText.toLowerCase().includes('non-institutional')) {
+                        showRow = true;
+                    } else if (filterValue === 'institutional' && !categoryText.toLowerCase().includes('non-institutional')) {
+                        showRow = true;
+                    }
+                });
+
+                // If no category badge is found, treat as institutional
+                if (categoryElements.length === 0 && filterValue === 'institutional') {
+                    showRow = true;
+                }
+            }
+
+            row.style.display = showRow ? 'table-row' : 'none';
+        });
+
+        // Update filter count or show no results message
+        updateFilterResults(filterValue);
+    }
+
+    function updateFilterResults(filterValue) {
+        const visibleCards = document.querySelectorAll('[data-service-card][style*="block"]').length;
+        const visibleRows = document.querySelectorAll('[data-service-row][style*="table-row"], [data-service-row]:not([style*="none"])').length;
+        const totalVisible = Math.max(visibleCards, visibleRows);
+
+        // You can add a results counter here if needed
+        console.log(`Showing ${totalVisible} services for filter: ${filterValue}`);
     }
 </script>
 @endsection

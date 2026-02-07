@@ -2,7 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
     <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes" />
         <title>{{ config('app.name', 'eReligiousServices') }}</title>
 
     <!-- Favicon / site logo -->
@@ -14,16 +14,45 @@
         @endif
 
         <style>
+            /* Performance optimizations */
+            * {
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
+
+            html {
+                scroll-behavior: smooth;
+                overflow-x: hidden;
+            }
+
+            body {
+                overflow-x: hidden;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* GPU acceleration for better performance */
+            .gpu-accelerate {
+                transform: translateZ(0);
+                backface-visibility: hidden;
+                perspective: 1000px;
+            }
+
             .hero-gradient {
                 background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+                transform: translateZ(0);
             }
 
             .card-hover {
-                transition: box-shadow 0.15s ease, border-color 0.15s ease;
+                transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                           border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                           transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                will-change: transform;
+                transform: translateZ(0);
             }
 
             .card-hover:hover {
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-2px) translateZ(0);
             }
 
             @keyframes float {
@@ -35,32 +64,71 @@
                 animation: float 6s ease-in-out infinite;
             }
 
-            /* Enhanced Hero Animations */
+            /* Enhanced Hero Animations - GPU accelerated */
             @keyframes heroFadeIn {
-                from { opacity: 0; transform: translateY(40px); }
-                to { opacity: 1; transform: translateY(0); }
+                from {
+                    opacity: 0;
+                    transform: translate3d(0, 40px, 0);
+                }
+                to {
+                    opacity: 1;
+                    transform: translate3d(0, 0, 0);
+                }
             }
 
             @keyframes heroSlideLeft {
-                from { opacity: 0; transform: translateX(-60px); }
-                to { opacity: 1; transform: translateX(0); }
+                from {
+                    opacity: 0;
+                    transform: translate3d(-60px, 0, 0);
+                }
+                to {
+                    opacity: 1;
+                    transform: translate3d(0, 0, 0);
+                }
             }
 
             @keyframes heroSlideRight {
-                from { opacity: 0; transform: translateX(60px); }
-                to { opacity: 1; transform: translateX(0); }
+                from {
+                    opacity: 0;
+                    transform: translate3d(60px, 0, 0);
+                }
+                to {
+                    opacity: 1;
+                    transform: translate3d(0, 0, 0);
+                }
             }
 
             @keyframes heroScale {
-                from { opacity: 0; transform: scale(0.8); }
-                to { opacity: 1; transform: scale(1); }
+                from {
+                    opacity: 0;
+                    transform: scale3d(0.8, 0.8, 1);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale3d(1, 1, 1);
+                }
             }
 
-            .hero-animate-1 { animation: heroFadeIn 0.8s ease-out 0.2s both; }
-            .hero-animate-2 { animation: heroFadeIn 0.8s ease-out 0.4s both; }
-            .hero-animate-3 { animation: heroFadeIn 0.8s ease-out 0.6s both; }
-            .hero-animate-4 { animation: heroFadeIn 0.8s ease-out 0.8s both; }
-            .hero-animate-5 { animation: heroFadeIn 0.8s ease-out 1s both; }
+            .hero-animate-1 {
+                animation: heroFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+                will-change: transform, opacity;
+            }
+            .hero-animate-2 {
+                animation: heroFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+                will-change: transform, opacity;
+            }
+            .hero-animate-3 {
+                animation: heroFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both;
+                will-change: transform, opacity;
+            }
+            .hero-animate-4 {
+                animation: heroFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+                will-change: transform, opacity;
+            }
+            .hero-animate-5 {
+                animation: heroFadeIn 1s cubic-bezier(0.16, 1, 0.3, 1) 1s both;
+                will-change: transform, opacity;
+            }
 
             /* Animated Background Gradient */
             @keyframes gradientMove {
@@ -75,16 +143,32 @@
                 animation: gradientMove 15s ease infinite;
             }
 
-            /* Smooth Scroll Reveal */
+            /* Smooth Scroll Reveal - GPU accelerated */
             .reveal-on-scroll {
                 opacity: 0;
-                transform: translateY(30px);
-                transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translate3d(0, 30px, 0);
+                transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                           transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+                will-change: transform, opacity;
             }
 
             .reveal-on-scroll.revealed {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translate3d(0, 0, 0);
+            }
+
+            /* Fade in on page load */
+            @keyframes fadeInPage {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            body {
+                animation: fadeInPage 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
             /* Staggered card animations */
@@ -135,11 +219,13 @@
                 50% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: rotate(-180deg) scale(1.1); }
             }
 
-            /* Enhanced button styles */
+            /* Enhanced button styles - GPU accelerated */
             .btn-enhanced {
                 position: relative;
                 overflow: hidden;
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                transform: translateZ(0);
+                will-change: transform;
             }
 
             .btn-enhanced::after {
@@ -147,12 +233,16 @@
                 position: absolute;
                 inset: 0;
                 background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%);
-                transform: translateX(-100%);
-                transition: transform 0.6s ease;
+                transform: translate3d(-100%, 0, 0);
+                transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
             .btn-enhanced:hover::after {
-                transform: translateX(100%);
+                transform: translate3d(100%, 0, 0);
+            }
+
+            .btn-enhanced:hover {
+                transform: translateY(-2px) translateZ(0);
             }
 
             /* Header navigation styling to match footer theme */
@@ -160,6 +250,9 @@
                 background: linear-gradient(135deg, #10b981 0%, #059669 50%, #10b981 100%);
                 backdrop-filter: blur(10px);
                 -webkit-backdrop-filter: blur(10px);
+                transform: translateZ(0);
+                will-change: transform;
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             }
 
             /* Dark mode header styling */
@@ -173,7 +266,10 @@
                 font-weight: 600;
                 letter-spacing: .5px;
                 color: #374151;
-                transition: color .25s ease, transform .25s ease;
+                transition: color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                           transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                will-change: transform;
+                transform: translateZ(0);
             }
 
             @media (prefers-color-scheme: dark) {
@@ -198,7 +294,7 @@
             .site-header .nav-link:hover,
             .site-header .nav-link:focus {
                 color: #10b981;
-                transform: translateY(-2px);
+                transform: translate3d(0, -2px, 0);
             }
             @media (max-width: 768px) {
                 .site-header nav {
@@ -222,16 +318,20 @@
                 object-fit: cover;
                 object-position: center 35%;
                 filter: brightness(0.95) saturate(1.05);
-                transition: transform 12s ease-out, filter 1s ease;
+                transition: transform 12s cubic-bezier(0.16, 1, 0.3, 1),
+                           filter 1s cubic-bezier(0.16, 1, 0.3, 1);
+                will-change: transform;
+                transform: translateZ(0);
             }
 
             /* Subtle slow-zoom on load for a cinematic feel */
             @keyframes heroZoom {
-                from { transform: scale(1); }
-                to   { transform: scale(1.06); }
+                from { transform: scale3d(1, 1, 1); }
+                to   { transform: scale3d(1.06, 1.06, 1); }
             }
             .hero-bg-zoom {
-                animation: heroZoom 20s ease-out forwards;
+                animation: heroZoom 20s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+                will-change: transform;
             }
 
             /* Mobile: Focus on the church building center */
@@ -285,8 +385,8 @@
                         @guest
                             <!-- Sign In Button -->
                             <a href="{{ route('login') }}"
-                               class="group relative inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold text-emerald-700 bg-white border-2 border-emerald-300 rounded-xl sm:rounded-3xl hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 shadow-sm hover:shadow-md">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="group relative inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-emerald-700 bg-white border-2 border-emerald-300 rounded-lg sm:rounded-2xl hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 shadow-sm hover:shadow-md">
+                                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                 </svg>
                                 <span class="tracking-wide">SIGN IN</span>
@@ -294,16 +394,16 @@
 
                             <!-- Register Button -->
                             <a href="{{ route('register') }}"
-                               class="group relative inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl sm:rounded-3xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 overflow-hidden">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="group relative inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg sm:rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 overflow-hidden">
+                                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
                                 </svg>
                                 <span class="tracking-wide relative z-10">REGISTER</span>
                             </a>
                         @else
                             <a href="{{ route('dashboard') }}"
-                               class="inline-flex items-center justify-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
-                                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               class="inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg sm:rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105">
+                                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                                 </svg>
                                 <span class="tracking-wide">DASHBOARD</span>
@@ -419,63 +519,61 @@
                     </div>
                 </div>
 
-                <!-- Upcoming Reservations Calendar Section (just before Explore Services) -->
-                @include('partials.home-calendar')
-
                 <!-- Featured Services Section - Enhanced with better responsive layout -->
-                <div id="services" class="mt-12 sm:mt-16 lg:mt-20 px-2 sm:px-0">
-                    <div class="text-center mb-8 sm:mb-12 reveal-on-scroll">
-                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white mb-3 sm:mb-4">Our Services</h2>
+                <div id="services" class="mt-8 sm:mt-12 lg:mt-16 px-2 sm:px-0">
+                    <div class="text-center mb-6 sm:mb-10 reveal-on-scroll">
+                        <h2 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-white mb-2 sm:mb-3">Our Services</h2>
                         <p class="text-sm sm:text-base lg:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">Discover the various ways we serve our community</p>
                     </div>
 
                     <!-- Desktop: Equal-sized horizontal cards with gap, Mobile: Vertical Stack -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto">
                         <!-- Mass Reservations -->
-                        <div class="reveal-on-scroll stagger-card card-hover group bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-400 relative overflow-hidden min-h-[220px] sm:min-h-[260px] flex flex-col">
+                        <div class="reveal-on-scroll stagger-card card-hover group bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-7 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-400 relative overflow-hidden min-h-[200px] sm:min-h-[240px] flex flex-col">
                             <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                             <div class="relative flex flex-col items-center sm:items-center text-center flex-1">
-                                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg group-hover:shadow-green-500/25">
-                                    <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg group-hover:shadow-green-500/25">
+                                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
                                 </div>
-                                <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Mass Reservations</h3>
-                                <p class="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">Book your spot for daily mass, special celebrations, and liturgical events</p>
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors">Mass Reservations</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Book your spot for daily mass, special celebrations, and liturgical events</p>
                             </div>
                         </div>
 
                         <!-- Retreats -->
-                        <div class="reveal-on-scroll stagger-card card-hover group bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-400 relative overflow-hidden min-h-[220px] sm:min-h-[260px] flex flex-col">
+                        <div class="reveal-on-scroll stagger-card card-hover group bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-7 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-teal-500 dark:hover:border-teal-400 relative overflow-hidden min-h-[200px] sm:min-h-[240px] flex flex-col">
                             <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                             <div class="relative flex flex-col items-center sm:items-center text-center flex-1">
-                                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-teal-500 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg group-hover:shadow-teal-500/25">
-                                    <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-teal-500 rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg group-hover:shadow-teal-500/25">
+                                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                                     </svg>
                                 </div>
-                                <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">Spiritual Retreats</h3>
-                                <p class="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">Join immersive retreat experiences for spiritual renewal and growth</p>
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">Spiritual Retreats</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Join immersive retreat experiences for spiritual renewal and growth</p>
                             </div>
                         </div>
 
                         <!-- Community Events -->
-                        <div class="reveal-on-scroll stagger-card card-hover group bg-white dark:bg-gray-800 rounded-2xl p-6 sm:p-8 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 relative overflow-hidden min-h-[220px] sm:min-h-[260px] flex flex-col">
+                        <div class="reveal-on-scroll stagger-card card-hover group bg-white dark:bg-gray-800 rounded-2xl p-5 sm:p-7 shadow-xl border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 relative overflow-hidden min-h-[200px] sm:min-h-[240px] flex flex-col">
                             <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                             <div class="relative flex flex-col items-center sm:items-center text-center flex-1">
-                                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg group-hover:shadow-blue-500/25">
-                                    <svg class="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg group-hover:shadow-blue-500/25">
+                                    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                     </svg>
                                 </div>
-                                <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Community Events</h3>
-                                <p class="text-sm sm:text-base text-gray-600 dark:text-gray-300 leading-relaxed">Participate in faith-based activities and community gatherings</p>
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Community Events</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Participate in faith-based activities and community gatherings</p>
                             </div>
                         </div>
                     </div>
                 </div>
-                    </div>
-                </div>
+
+                <!-- Upcoming Reservations Calendar Section -->
+                @include('partials.home-calendar')
             </div>
         </main>
 
@@ -528,22 +626,36 @@
                     });
                 });
 
-                // Parallax effect on scroll (subtle)
+                // Enhanced parallax effect with smoother performance
                 let ticking = false;
-                window.addEventListener('scroll', function() {
-                    if (!ticking) {
-                        window.requestAnimationFrame(function() {
-                            const scrolled = window.pageYOffset;
-                            const blobs = document.querySelectorAll('.morph-blob-1, .morph-blob-2');
-                            blobs.forEach((blob, i) => {
-                                const speed = i === 0 ? 0.05 : 0.03;
-                                blob.style.transform = `translateY(${scrolled * speed}px)`;
-                            });
-                            ticking = false;
+                let lastScrollY = 0;
+
+                const handleScroll = () => {
+                    const scrolled = window.pageYOffset;
+
+                    // Only update if scroll position changed significantly (throttle)
+                    if (Math.abs(scrolled - lastScrollY) > 1) {
+                        lastScrollY = scrolled;
+
+                        const blobs = document.querySelectorAll('.morph-blob-1, .morph-blob-2');
+                        blobs.forEach((blob, i) => {
+                            const speed = i === 0 ? 0.05 : 0.03;
+                            blob.style.transform = `translate3d(0, ${scrolled * speed}px, 0)`;
                         });
+                    }
+
+                    ticking = false;
+                };
+
+                window.addEventListener('scroll', () => {
+                    if (!ticking) {
+                        window.requestAnimationFrame(handleScroll);
                         ticking = true;
                     }
-                });
+                }, { passive: true });
+
+                // Smooth scroll polyfill for better cross-browser support
+                document.documentElement.style.scrollBehavior = 'smooth';
             });
         </script>
     </body>

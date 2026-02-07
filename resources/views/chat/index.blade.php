@@ -527,11 +527,11 @@
                     </div>
                 </div>
 
-                <!-- FAQ Management Modal (Admin Only) -->
+                <!-- FAQ Management Modal (Admin Only) - Enhanced Responsive -->
                 @if(auth()->user()->role === 'admin')
                 <div x-show="showFaqModal"
                      x-cloak
-                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto"
                      @click.self="closeFaqModal()"
                      x-transition:enter="transition ease-out duration-200"
                      x-transition:enter-start="opacity-0"
@@ -539,7 +539,7 @@
                      x-transition:leave="transition ease-in duration-150"
                      x-transition:leave-start="opacity-100"
                      x-transition:leave-end="opacity-0">
-                    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden transform transition-all max-h-[90vh] flex flex-col"
+                    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl sm:mx-4 mx-3 my-4 sm:my-8 overflow-hidden transform transition-all h-auto sm:max-h-[85vh] flex flex-col"
                          @click.stop
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 scale-95"
@@ -548,99 +548,111 @@
                          x-transition:leave-start="opacity-100 scale-100"
                          x-transition:leave-end="opacity-0 scale-95">
                         <!-- Modal Header -->
-                        <div class="bg-gradient-to-r from-[#6f48ff] to-[#8f63ff] px-6 py-4 flex-shrink-0">
-                            <div class="flex items-center justify-between">
-                                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="bg-gradient-to-r from-[#6f48ff] to-[#8f63ff] px-4 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2 flex-1 pr-3">
+                                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span x-text="editingFaq ? 'Edit FAQ' : 'FAQ Management'"></span>
+                                    <span x-text="editingFaq ? 'Edit FAQ' : 'FAQ Management'" class="truncate"></span>
                                 </h3>
-                                <button type="button" @click="closeFaqModal()" class="text-white/80 hover:text-white transition">
+                                <button type="button" @click="closeFaqModal()" class="text-white/80 hover:text-white transition flex-shrink-0">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
-                            <!-- Tabs -->
-                            <div class="flex gap-2 mt-3" x-show="!editingFaq">
+                            <!-- Tabs with Enhanced Design -->
+                            <div class="flex items-center gap-1 sm:gap-2 mt-3" x-show="!editingFaq">
+                                <!-- Existing FAQs Tab -->
                                 <button type="button"
                                         @click="faqModalTab = 'list'"
-                                        :class="faqModalTab === 'list' ? 'bg-white text-[#6f48ff]' : 'bg-white/20 text-white hover:bg-white/30'"
-                                        class="px-4 py-1.5 rounded-lg text-sm font-semibold transition">
-                                    Existing FAQs
+                                        class="flex-1 px-3 sm:px-4 py-2 rounded-t-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5"
+                                        :class="faqModalTab === 'list'
+                                            ? 'bg-white text-[#6f48ff] shadow-lg shadow-white/20'
+                                            : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white/90'">
+                                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h2m0 0h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m0 0V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m0 0H9m0 0v10" />
+                                    </svg>
+                                    <span class="hidden sm:inline">Existing FAQs</span>
+                                    <span class="sm:hidden">FAQs</span>
                                 </button>
+
+                                <!-- Add New FAQ Button - Prominent -->
                                 <button type="button"
                                         @click="faqModalTab = 'create'"
-                                        :class="faqModalTab === 'create' ? 'bg-white text-[#6f48ff]' : 'bg-white/20 text-white hover:bg-white/30'"
-                                        class="px-4 py-1.5 rounded-lg text-sm font-semibold transition flex items-center gap-1">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        class="flex-1 px-3 sm:px-4 py-2 rounded-t-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5"
+                                        :class="faqModalTab === 'create'
+                                            ? 'bg-white text-[#6f48ff] shadow-lg shadow-white/20'
+                                            : 'bg-white/10 text-white/70 hover:bg-white/15 hover:text-white/90'">
+                                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                     </svg>
-                                    Add New
+                                    <span class="hidden sm:inline">Add FAQ</span>
+                                    <span class="sm:hidden">Add</span>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Modal Body -->
-                        <div class="flex-1 overflow-y-auto">
+                        <div class="flex-1 overflow-y-auto min-h-[300px] sm:min-h-[350px]">
                             <!-- Error Message -->
-                            <div x-show="faqFormError" x-cloak class="mx-6 mt-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                            <div x-show="faqFormError" x-cloak class="mx-3 sm:mx-6 mt-3 sm:mt-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm">
                                 <span x-text="faqFormError"></span>
                             </div>
 
                             <!-- Existing FAQs List Tab -->
-                            <div x-show="faqModalTab === 'list' && !editingFaq" class="p-5">
-                                <div x-show="dynamicFaqs.length === 0" class="text-center py-8">
-                                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
-                                        <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div x-show="faqModalTab === 'list' && !editingFaq" class="p-3 sm:p-5">
+                                <div x-show="dynamicFaqs.length === 0" class="text-center py-8 sm:py-10">
+                                    <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </div>
-                                    <p class="text-gray-500 text-sm">No FAQs created yet.</p>
-                                    <button type="button" @click="faqModalTab = 'create'" class="mt-3 text-[#6f48ff] text-sm font-semibold hover:underline">
+                                    <p class="text-gray-500 text-xs sm:text-sm">No FAQs created yet.</p>
+                                    <button type="button" @click="faqModalTab = 'create'" class="mt-3 text-[#6f48ff] text-xs sm:text-sm font-semibold hover:underline">
                                         Create your first FAQ →
                                     </button>
                                 </div>
 
-                                <div x-show="dynamicFaqs.length > 0" class="space-y-3 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+                                <div x-show="dynamicFaqs.length > 0" class="space-y-2 sm:space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-1">
                                     <template x-for="(faq, index) in dynamicFaqs" :key="faq.id">
-                                        <div class="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow duration-200">
+                                        <div class="bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow duration-200">
                                             <!-- Title Row with Actions -->
-                                            <div class="flex items-start justify-between mb-2">
-                                                <span class="font-semibold text-gray-900 text-sm" x-text="faq.title || 'Untitled'"></span>
-                                                <div class="flex items-center gap-1 ml-3">
-                                                    <button type="button" @click="startEditFaq(faq)" class="p-1.5 text-gray-400 hover:text-[#6f48ff] rounded transition-colors" title="Edit">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <div class="flex items-start justify-between gap-2 mb-2">
+                                                <span class="font-semibold text-gray-900 text-xs sm:text-sm line-clamp-1" x-text="faq.title || 'Untitled'"></span>
+                                                <div class="flex items-center gap-1 flex-shrink-0">
+                                                    <button type="button" @click="startEditFaq(faq)" class="p-1 sm:p-1.5 text-gray-400 hover:text-[#6f48ff] rounded transition-colors flex-shrink-0" title="Edit">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                                         </svg>
                                                     </button>
                                                     <button type="button"
                                                             @click.stop.prevent="confirmDeleteFaq(faq)"
-                                                            class="p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors"
+                                                            class="p-1 sm:p-1.5 text-gray-400 hover:text-red-500 rounded transition-colors flex-shrink-0"
                                                             title="Delete">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                                         </svg>
                                                     </button>
                                                 </div>
                                             </div>
                                             <!-- Question -->
-                                            <p class="text-sm text-gray-800 mb-2" x-text="faq.question"></p>
+                                            <p class="text-xs sm:text-sm text-gray-800 mb-1.5" x-text="faq.question" class="line-clamp-2"></p>
                                             <!-- Response Preview -->
-                                            <p class="text-xs text-gray-500 line-clamp-2" x-text="faq.response"></p>
+                                            <p class="text-xs text-gray-500 line-clamp-1" x-text="faq.response"></p>
                                         </div>
                                     </template>
                                 </div>
                             </div>
 
                             <!-- Create/Edit FAQ Form Tab -->
-                            <div x-show="faqModalTab === 'create' || editingFaq" class="p-6 space-y-5">
+                            <div x-show="faqModalTab === 'create' || editingFaq" class="p-4 sm:p-6 space-y-4 sm:space-y-5">
                                 <!-- Back button when editing -->
                                 <button x-show="editingFaq"
                                         type="button"
                                         @click="cancelEditFaq()"
-                                        class="flex items-center gap-1 text-sm text-gray-500 hover:text-[#6f48ff] transition mb-2">
+                                        class="flex items-center gap-1 text-xs sm:text-sm text-gray-500 hover:text-[#6f48ff] transition mb-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                                     </svg>
@@ -649,71 +661,67 @@
 
                                 <!-- FAQ Title (Optional) -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                        Short Title <span class="text-gray-400 font-normal">(optional)</span>
+                                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                                        Short Title <span class="text-gray-400 font-normal text-xs">(optional)</span>
                                     </label>
                                     <input type="text"
                                            x-model="faqForm.title"
                                            maxlength="100"
                                            placeholder="e.g., Booking Advance"
-                                           class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-sm">
+                                           class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-xs sm:text-sm">
                                 </div>
 
                                 <!-- FAQ Question -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                                         FAQ Question <span class="text-red-500">*</span>
                                     </label>
                                     <textarea x-model="faqForm.question"
-                                              rows="3"
+                                              rows="2"
                                               maxlength="500"
-                                              placeholder="Enter the question users will see and click..."
-                                              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-sm resize-none"></textarea>
+                                              placeholder="Enter the question users will see..."
+                                              class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-xs sm:text-sm resize-none"></textarea>
                                     <p class="text-xs text-gray-400 mt-1" x-text="(faqForm.question?.length || 0) + '/500'"></p>
                                 </div>
 
                                 <!-- Auto Response -->
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    <label class="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                                         Auto Response <span class="text-red-500">*</span>
                                     </label>
                                     <textarea x-model="faqForm.response"
-                                              rows="5"
+                                              rows="3"
                                               maxlength="2000"
-                                              placeholder="Enter the automated response that will be sent..."
-                                              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-sm resize-none"></textarea>
+                                              placeholder="Enter the automated response..."
+                                              class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-[#7050ff]/30 focus:border-[#7050ff] transition text-xs sm:text-sm resize-none"></textarea>
                                     <p class="text-xs text-gray-400 mt-1" x-text="(faqForm.response?.length || 0) + '/2000'"></p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Modal Footer -->
-                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3 flex-shrink-0">
-                            <button type="button"
-                                    @click="closeFaqModal()"
-                                    class="px-5 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition">
-                                Close
-                            </button>
+                        <!-- Modal Footer - Enhanced Clean Design -->
+                        <div class="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-t from-gray-50 to-white border-t border-gray-100 flex items-center justify-end gap-2 sm:gap-3 flex-shrink-0 flex-wrap">
                             <button type="button"
                                     x-show="faqModalTab === 'create' || editingFaq"
                                     @click="editingFaq ? updateFaq() : submitFaq()"
                                     :disabled="faqFormLoading || !faqForm.question?.trim() || !faqForm.response?.trim()"
-                                    class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#6f48ff] to-[#8f63ff] text-white font-semibold hover:from-[#5f38ef] hover:to-[#7f53ef] disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-purple-500/25">
-                                <span x-show="!faqFormLoading" class="flex items-center gap-2">
-                                    <svg x-show="!editingFaq" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#6f48ff] to-[#8f63ff] text-white font-semibold text-xs sm:text-sm hover:from-[#5f38ef] hover:to-[#7f53ef] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg shadow-purple-500/25 flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                <span x-show="!faqFormLoading" class="flex items-center gap-1.5">
+                                    <svg x-show="!editingFaq" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                     </svg>
-                                    <svg x-show="editingFaq" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg x-show="editingFaq" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span x-text="editingFaq ? 'Update FAQ' : 'Create FAQ'"></span>
+                                    <span x-text="editingFaq ? 'Update' : 'Create'" class="hidden sm:inline"></span>
+                                    <span x-text="editingFaq ? 'Update FAQ' : 'Create FAQ'" class="sm:hidden"></span>
                                 </span>
-                                <span x-show="faqFormLoading" class="flex items-center justify-center gap-2">
-                                    <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                <span x-show="faqFormLoading" class="flex items-center justify-center gap-1.5">
+                                    <svg class="animate-spin h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
-                                    <span x-text="editingFaq ? 'Updating...' : 'Creating...'"></span>
+                                    <span x-text="editingFaq ? 'Updating...' : 'Creating...'" class="hidden sm:inline"></span>
                                 </span>
                             </button>
                         </div>
@@ -721,11 +729,11 @@
                 </div>
                 @endif
 
-                <!-- Delete FAQ Confirmation Modal -->
+                <!-- Delete FAQ Confirmation Modal - Enhanced Responsive -->
                 @if(auth()->user()->role === 'admin')
                 <div x-show="showDeleteFaqConfirm"
                      x-cloak
-                     class="fixed inset-0 flex items-center justify-center p-4 bg-black/50"
+                     class="fixed inset-0 flex items-center justify-center p-3 sm:p-4 bg-black/50 overflow-y-auto"
                      style="z-index: 9999 !important;"
                      @click.self="showDeleteFaqConfirm = false; faqToDelete = null;"
                      x-transition:enter="transition ease-out duration-200"
@@ -735,7 +743,7 @@
                      x-transition:leave-start="opacity-100"
                      x-transition:leave-end="opacity-0">
                     <!-- Modal -->
-                    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8"
+                    <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-sm p-6 sm:p-8 my-4"
                          @click.stop
                          x-transition:enter="transition ease-out duration-200"
                          x-transition:enter-start="opacity-0 scale-95"
@@ -744,37 +752,43 @@
                          x-transition:leave-start="opacity-100 scale-100"
                          x-transition:leave-end="opacity-0 scale-95">
                         <!-- Warning Icon -->
-                        <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
-                            <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 sm:mb-5">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                             </svg>
                         </div>
 
                         <!-- Title -->
-                        <h3 class="text-xl font-bold text-gray-900 text-center mb-2">Delete FAQ?</h3>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 text-center mb-2">Delete FAQ?</h3>
 
                         <!-- Description -->
-                        <p class="text-sm text-gray-500 text-center mb-6">
+                        <p class="text-xs sm:text-sm text-gray-500 text-center mb-5 sm:mb-6">
                             Are you sure you want to delete this FAQ? This action cannot be undone.
                         </p>
 
                         <!-- FAQ Preview -->
-                        <div x-show="faqToDelete" class="mb-6 p-3 bg-gray-50 rounded-xl border border-gray-200">
-                            <p class="text-sm text-gray-700 font-medium line-clamp-2" x-text="faqToDelete?.question"></p>
+                        <div x-show="faqToDelete" class="mb-5 sm:mb-6 p-3 bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200">
+                            <p class="text-xs sm:text-sm text-gray-700 font-medium line-clamp-3" x-text="faqToDelete?.question"></p>
                         </div>
 
-                        <!-- Buttons -->
-                        <div class="flex gap-3">
+                        <!-- Buttons - Clean Enhanced Design -->
+                        <div class="flex gap-2 sm:gap-3 flex-col-reverse sm:flex-row">
                             <button type="button"
                                     @click="showDeleteFaqConfirm = false; faqToDelete = null;"
-                                    class="flex-1 px-5 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition">
+                                    class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 border-2 border-gray-200 text-gray-700 font-semibold text-xs sm:text-sm rounded-lg sm:rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
                                 Cancel
                             </button>
                             <button type="button"
                                     @click="executeDeleteFaq()"
                                     :disabled="faqFormLoading"
-                                    class="flex-1 px-5 py-3 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
-                                <svg x-show="faqFormLoading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                    class="flex-1 px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold text-xs sm:text-sm rounded-lg sm:rounded-xl hover:from-red-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg shadow-red-500/25">
+                                <svg x-show="!faqFormLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                <svg x-show="faqFormLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>

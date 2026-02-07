@@ -1,52 +1,53 @@
 <x-guest-layout>
-    <div class="space-y-6">
-        <!-- Header Section -->
-        <div class="flex flex-col items-center text-center space-y-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-            <div class="relative">
-                <div class="w-24 h-24 bg-[#2ecc71] rounded-full flex items-center justify-center shadow-lg p-1">
-                    <div class="w-full h-full bg-white dark:bg-gray-800 rounded-full flex items-center justify-center p-2">
-                        <img src="/images/ers-logo.png" alt="eReligiousServices" class="w-full h-full object-contain" />
+    <div class="min-h-screen flex items-center justify-center py-2 sm:py-4 lg:py-6 px-2 sm:px-4 lg:px-6">
+        <div class="w-full max-w-full sm:max-w-2xl lg:max-w-4xl xl:max-w-6xl space-y-3 sm:space-y-5 px-4 sm:px-6 lg:px-12 xl:px-16 py-5 sm:py-6 lg:py-8">
+            <!-- Header Section -->
+            <div class="flex flex-col items-center text-center space-y-2 sm:space-y-3 pb-2 sm:pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="relative">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-[#2ecc71] rounded-full flex items-center justify-center shadow-lg p-1">
+                        <div class="w-full h-full bg-white dark:bg-gray-800 rounded-full flex items-center justify-center p-2">
+                            <img src="/images/ers-logo.png" alt="eReligiousServices" class="w-full h-full object-contain" />
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 bg-[#2ecc71] rounded-full flex items-center justify-center shadow-md">
+                        <svg class="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
                     </div>
                 </div>
-                <div class="absolute -bottom-1 -right-1 w-8 h-8 bg-[#2ecc71] rounded-full flex items-center justify-center shadow-md">
-                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                    </svg>
+
+                <div class="space-y-1 sm:space-y-2">
+                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white">
+                        Create Account
+                    </h1>
+                    <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 max-w-lg">
+                        Join eReligiousServices and start booking spiritual services
+                    </p>
                 </div>
             </div>
 
-            <div class="space-y-2">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                    Create Account
-                </h1>
-                <p class="text-sm text-gray-600 dark:text-gray-400 max-w-lg">
-                    Join eReligiousServices and start booking spiritual services at Holy Name University's Center for Religious Education and Mission
-                </p>
-            </div>
-        </div>
-
-        <form method="POST" action="{{ route('register') }}" class="space-y-6">
+            <form method="POST" action="{{ route('register') }}" class="space-y-3 sm:space-y-5">
             @csrf
 
             <!-- Personal Information Section -->
-            <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800 p-6 rounded-2xl border-2 border-green-200 dark:border-green-900/30 shadow-sm">
+            <div class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-gray-900 dark:to-gray-800 p-3 sm:p-5 lg:p-6 rounded-2xl border-2 border-green-200 dark:border-green-900/30 shadow-sm">
                 <!-- Header -->
-                <div class="mb-6">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="w-11 h-11 bg-gradient-to-br from-[#2ecc71] to-[#27ae60] rounded-xl flex items-center justify-center shadow-lg">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="mb-3 sm:mb-4 lg:mb-6">
+                    <div class="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                        <div class="w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-[#2ecc71] to-[#27ae60] rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-lg font-bold text-gray-900 dark:text-white">Personal Information</h3>
+                            <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Personal Information</h3>
                         </div>
                     </div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Tell us about yourself</p>
+                    <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Tell us about yourself</p>
                 </div>
 
                 <!-- Name Fields -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-5">
                     <div class="validation-field">
                         <x-input-label for="first_name" :value="__('First Name')" />
                         <div class="relative mt-1">
@@ -851,6 +852,16 @@
 
                 updateSubmitButton();
             }, 100);
+        });
+    </script>
+    @endpush
+
+    @push('scripts')
+    <script>
+        // Add register-specific class to parent for wider layout
+        document.addEventListener('DOMContentLoaded', function() {
+            const body = document.querySelector('.min-h-screen.flex.flex-col');
+            if (body) body.classList.add('guest-register-page');
         });
     </script>
     @endpush
