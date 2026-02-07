@@ -121,7 +121,7 @@ class SampleReservationsSeeder extends Seeder
                     'participants_count' => $reservationData['participants_count'],
                     'theme' => $reservationData['theme'],
                     'details' => 'Sample reservation created for testing calendar display functionality.',
-                    'priest_selection_type' => 'internal',
+                    'priest_selection_type' => 'specific',
                 ]);
 
                 $this->command->info("Created reservation: {$reservationData['activity_name']} on {$reservationData['schedule_date']->format('Y-m-d H:i')}");
