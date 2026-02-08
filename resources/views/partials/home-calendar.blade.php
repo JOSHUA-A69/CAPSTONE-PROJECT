@@ -1,28 +1,6 @@
 @php
-    // Get ALL liturgical schedules (both public and non-public) - optimized for performance
-    $allSchedules = \App\Models\LiturgicalSchedule::with(['priest:id,first_name,last_name', 'venue:venue_id,name'])
-        ->public() // show only public schedules on homepage
-        ->where('schedule_date', '>=', now()->startOfDay())
-        ->where('schedule_date', '<=', now()->addMonths(6))
-        ->orderBy('schedule_date')
-        ->orderBy('start_time')
-        ->get();
-
-    // Get upcoming reservations (passed from WelcomeController, fallback query)
-    if (!isset($upcomingReservations)) {
-        $upcomingReservations = \App\Models\Reservation::with(['service:service_id,service_name', 'venue:venue_id,name', 'organization:org_id,org_name', 'officiant:id,first_name,last_name'])
-            ->where('schedule_date', '>=', now())
-            ->where('schedule_date', '<=', now()->addMonths(6))
-            ->whereNotIn('status', ['cancelled', 'rejected'])
-            ->orderBy('schedule_date')
-            ->get();
-    }
-    if (!isset($services)) {
-        $services = \App\Models\Service::orderBy('service_name')->get(['service_id','service_name']);
-    }
-    if (!isset($venues)) {
-        $venues = \App\Models\Venue::orderBy('name')->get(['venue_id','name']);
-    }
+    // Data is now passed from WelcomeController with caching for performance
+    // $allSchedules, $upcomingReservations, $services, $venues are available globally
 @endphp
 
 <section id="home-calendar" class="py-8 sm:py-20 scroll-mt-28">
