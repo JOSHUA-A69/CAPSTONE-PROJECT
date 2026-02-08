@@ -10,7 +10,7 @@
 
     // Get upcoming reservations (passed from WelcomeController, fallback query)
     if (!isset($upcomingReservations)) {
-        $upcomingReservations = \App\Models\Reservation::with(['service:service_id,service_name', 'venue:venue_id,name', 'organization:id,org_name', 'officiant:id,first_name,last_name'])
+        $upcomingReservations = \App\Models\Reservation::with(['service:service_id,service_name', 'venue:venue_id,name', 'organization:org_id,org_name', 'officiant:id,first_name,last_name'])
             ->where('schedule_date', '>=', now())
             ->where('schedule_date', '<=', now()->addMonths(6))
             ->whereNotIn('status', ['cancelled', 'rejected'])
