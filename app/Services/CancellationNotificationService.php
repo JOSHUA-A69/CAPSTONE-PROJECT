@@ -19,7 +19,7 @@ class CancellationNotificationService
     public function notifyCancellationRequest(Reservation $reservation, ReservationCancellation $cancellation): void
     {
         $requestor = $reservation->user;
-        $requestorName = $requestor->first_name . ' ' . $requestor->last_name;
+        $requestorName = $requestor ? ($requestor->first_name . ' ' . $requestor->last_name) : 'Unknown User';
         $serviceName = $reservation->service->service_name;
         $scheduleDate = $reservation->schedule_date->format('F d, Y - h:i A');
 
@@ -254,21 +254,23 @@ class CancellationNotificationService
         $reservation = $cancellation->reservation;
         $requestor = $cancellation->requestor; // The user who made the cancellation request
 
-        // Notify requestor in-app
-        NotificationHelper::make([
-            'user_id' => $requestor->id,
-            'reservation_id' => $reservation->reservation_id,
-            'message' => "Your cancellation request for <strong>{$reservation->service->service_name}</strong> has been rejected by {$rejectorRole} {$rejectorName}. The reservation remains active.",
-            'type' => NotificationHelper::TYPE_UPDATE, // Or add a specific constant if preferred
-            'sent_at' => now(),
-            'data' => [
-                'cancellation_id' => $cancellation->cancellation_id,
-                'action' => 'cancellation_rejected',
-                'service_name' => $reservation->service->service_name,
-                'rejector_name' => $rejectorName,
-                'rejector_role' => $rejectorRole
-            ],
-        ]);
+        if ($requestor) {
+            // Notify requestor in-app
+            NotificationHelper::make([
+                'user_id' => $requestor->id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => "Your cancellation request for <strong>{$reservation->service->service_name}</strong> has been rejected by {$rejectorRole} {$rejectorName}. The reservation remains active.",
+                'type' => NotificationHelper::TYPE_UPDATE, // Or add a specific constant if preferred
+                'sent_at' => now(),
+                'data' => [
+                    'cancellation_id' => $cancellation->cancellation_id,
+                    'action' => 'cancellation_rejected',
+                    'service_name' => $reservation->service->service_name,
+                    'rejector_name' => $rejectorName,
+                    'rejector_role' => $rejectorRole
+                ],
+            ]);
+        }
         
         // Notify Staff/Admin that it was rejected (for tracking)
         $staffAndAdmin = User::whereIn('role', ['staff', 'admin'])->where('status', 'active')->get();
@@ -296,10 +298,10 @@ class CancellationNotificationService
     public function notifyCancellationCompleted(Reservation $reservation, ReservationCancellation $cancellation): void
     {
         $requestor = $reservation->user;
-        $requestorName = $requestor->first_name . ' ' . $requestor->last_name;
+        $requestorName = $requestor ? ($requestor->first_name . ' ' . $requestor->last_name) : 'Unknown User';
 
         // Notify requestor
-        if ($requestor->email) {
+        if ($requestor && $requestor->email) {
             try {
                 Mail::to($requestor->email)
                     ->send(new ReservationCancellationConfirmed($reservation));
@@ -309,18 +311,20 @@ class CancellationNotificationService
         }
 
         // Notify requestor in-app
-        NotificationHelper::make([
-            'user_id' => $requestor->id,
-            'reservation_id' => $reservation->reservation_id,
-            'message' => "Your cancellation request for <strong>{$reservation->service->service_name}</strong> has been confirmed",
-            'type' => NotificationHelper::TYPE_UPDATE,
-            'sent_at' => now(),
-            'data' => [
-                'cancellation_id' => $cancellation->cancellation_id,
-                'action' => 'cancellation_completed',
-                'service_name' => $reservation->service->service_name,
-            ],
-        ]);
+        if ($requestor) {
+            NotificationHelper::make([
+                'user_id' => $requestor->id,
+                'reservation_id' => $reservation->reservation_id,
+                'message' => "Your cancellation request for <strong>{$reservation->service->service_name}</strong> has been confirmed",
+                'type' => NotificationHelper::TYPE_UPDATE,
+                'sent_at' => now(),
+                'data' => [
+                    'cancellation_id' => $cancellation->cancellation_id,
+                    'action' => 'cancellation_completed',
+                    'service_name' => $reservation->service->service_name,
+                ],
+            ]);
+        }
 
         // Also notify staff/admin that cancellation was completed (audit/awareness)
         $staffAndAdmin = User::whereIn('role', ['staff', 'admin'])->where('status', 'active')->get();
