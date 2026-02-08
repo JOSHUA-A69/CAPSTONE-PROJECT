@@ -20,7 +20,7 @@ class CancellationNotificationService
     {
         $requestor = $reservation->user;
         $requestorName = $requestor ? ($requestor->first_name . ' ' . $requestor->last_name) : 'Unknown User';
-        $serviceName = $reservation->service->service_name;
+        $serviceName = $reservation->service?->service_name ?? 'Unknown Service';
         $scheduleDate = $reservation->schedule_date->format('F d, Y - h:i A');
 
         // Notify Staff/Admin
@@ -232,7 +232,7 @@ class CancellationNotificationService
                     'action' => 'escalation_to_staff',
                     'unresponsive_role' => $role,
                     'contact_info' => $contactInfo,
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                     'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
                 ],
             ]);
@@ -259,13 +259,13 @@ class CancellationNotificationService
             NotificationHelper::make([
                 'user_id' => $requestor->id,
                 'reservation_id' => $reservation->reservation_id,
-                'message' => "Your cancellation request for <strong>{$reservation->service->service_name}</strong> has been rejected by {$rejectorRole} {$rejectorName}. The reservation remains active.",
+                'message' => "Your cancellation request for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> has been rejected by {$rejectorRole} {$rejectorName}. The reservation remains active.",
                 'type' => NotificationHelper::TYPE_UPDATE, // Or add a specific constant if preferred
                 'sent_at' => now(),
                 'data' => [
                     'cancellation_id' => $cancellation->cancellation_id,
                     'action' => 'cancellation_rejected',
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                     'rejector_name' => $rejectorName,
                     'rejector_role' => $rejectorRole
                 ],
@@ -278,13 +278,13 @@ class CancellationNotificationService
             NotificationHelper::make([
                 'user_id' => $user->id,
                 'reservation_id' => $reservation->reservation_id,
-                'message' => "Cancellation request for <strong>{$reservation->service->service_name}</strong> was rejected by {$rejectorRole} {$rejectorName}",
+                'message' => "Cancellation request for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> was rejected by {$rejectorRole} {$rejectorName}",
                 'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
                 'data' => [
                     'cancellation_id' => $cancellation->cancellation_id,
                     'action' => 'cancellation_rejected',
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                     'rejector_name' => $rejectorName,
                     'rejector_role' => $rejectorRole
                 ],
@@ -315,13 +315,13 @@ class CancellationNotificationService
             NotificationHelper::make([
                 'user_id' => $requestor->id,
                 'reservation_id' => $reservation->reservation_id,
-                'message' => "Your cancellation request for <strong>{$reservation->service->service_name}</strong> has been confirmed",
+                'message' => "Your cancellation request for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> has been confirmed",
                 'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
                 'data' => [
                     'cancellation_id' => $cancellation->cancellation_id,
                     'action' => 'cancellation_completed',
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                 ],
             ]);
         }
@@ -332,13 +332,13 @@ class CancellationNotificationService
             NotificationHelper::make([
                 'user_id' => $user->id,
                 'reservation_id' => $reservation->reservation_id,
-                'message' => "Cancellation completed for <strong>{$reservation->service->service_name}</strong> by <strong>{$requestorName}</strong>",
+                'message' => "Cancellation completed for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> by <strong>{$requestorName}</strong>",
                 'type' => NotificationHelper::TYPE_UPDATE,
                 'sent_at' => now(),
                 'data' => [
                     'cancellation_id' => $cancellation->cancellation_id,
                     'action' => 'cancellation_completed',
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                     'requestor_name' => $requestorName,
                 ],
             ]);
