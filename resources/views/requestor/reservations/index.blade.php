@@ -208,7 +208,7 @@
                                             </span>
                                             @if($r->rejectedBy)
                                                 <span class="text-[10px] text-red-600 dark:text-red-400 pl-1">
-                                                    by {{ $r->rejectedBy->first_name }}
+                                                    by {{ $r->rejectedBy?->first_name ?? 'Observer' }}
                                                 </span>
                                             @endif
                                         </div>
@@ -225,11 +225,11 @@
                                             <span class="text-xs text-gray-500 italic">External Priest</span>
                                         </div>
                                     @elseif($r->officiant)
-                                        <span class="font-medium text-gray-900 dark:text-white block">Fr. {{ $r->officiant->first_name }} {{ $r->officiant->last_name }}</span>
+                                        <span class="font-medium text-gray-900 dark:text-white block">Fr. {{ $r->officiant?->full_name ?? 'Unknown Priest' }}</span>
                                     @elseif($r->priests && $r->priests->isNotEmpty())
                                         <div class="flex flex-col space-y-0.5">
                                             @foreach($r->priests as $priest)
-                                                <span class="font-medium text-gray-900 dark:text-white">Fr. {{ $priest->first_name }} {{ $priest->last_name }}</span>
+                                                <span class="font-medium text-gray-900 dark:text-white">Fr. {{ $priest?->full_name }}</span>
                                             @endforeach
                                         </div>
                                     @else
@@ -362,9 +362,9 @@
                                         <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->external_priest_name }}</span>
                                         <span class="block text-xs text-gray-500 italic">External</span>
                                     @elseif($r->officiant)
-                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Fr. {{ $r->officiant->first_name }}</span>
+                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Fr. {{ $r->officiant?->full_name ?? 'Unknown' }}</span>
                                     @elseif($r->priests && $r->priests->isNotEmpty())
-                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Fr. {{ $r->priests->first()->first_name }}</span>
+                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Fr. {{ $r->priests->first()?->first_name }}</span>
                                     @else
                                         <span class="text-sm text-gray-400 dark:text-gray-500 italic">Unassigned</span>
                                     @endif

@@ -113,7 +113,7 @@
                     @elseif($reservation->officiant)
                         <div>
                             <p class="text-sm text-gray-600 dark:text-gray-400">Assigned Priest</p>
-                            <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->officiant->full_name }}</p>
+                            <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->officiant?->full_name ?? 'Unknown Priest' }}</p>
                         </div>
                     @endif
                 </div>

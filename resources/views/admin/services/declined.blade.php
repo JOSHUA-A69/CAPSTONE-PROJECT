@@ -138,7 +138,7 @@
                                                 </svg>
                                             </div>
                                             <div>
-                                                <div class="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">{{ $reservation->user->full_name }}</div>
+                                                <div class="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">{{ $reservation->user?->full_name ?? 'Unknown User' }}</div>
                                                 <div class="text-xs text-gray-500 dark:text-gray-400">Requestor</div>
                                             </div>
                                         </div>

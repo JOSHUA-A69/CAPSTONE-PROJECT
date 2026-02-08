@@ -73,9 +73,9 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900 dark:text-gray-100">
-                                        {{ $request->organization->org_name }}
+                                        {{ $request->organization?->org_name ?? 'Unknown Organization' }}
                                     </div>
-                                    @if($request->organization->adviser)
+                                    @if($request->organization?->adviser)
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
                                             Adviser: {{ $request->organization->adviser->full_name ?? $request->organization->adviser->name }}
                                         </div>
@@ -136,7 +136,7 @@
                                         {{ $request->activity_name }}
                                     </h3>
                                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                        {{ $request->organization->org_name }}
+                                        {{ $request->organization?->org_name ?? 'Unknown Organization' }}
                                     </p>
                                 </div>
                                 <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full {{ $request->status_badge_class }}">

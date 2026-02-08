@@ -132,11 +132,11 @@
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Requestor</label>
-                                <p class="mt-1 text-base text-gray-900 dark:text-white">{{ $notification->reservation->user->full_name ?? 'N/A' }}</p>
+                                <p class="mt-1 text-base text-gray-900 dark:text-white">{{ $notification->reservation->user?->full_name ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Organization</label>
-                                <p class="mt-1 text-base text-gray-900 dark:text-white">{{ $notification->reservation->organization->org_name ?? 'N/A' }}</p>
+                                <p class="mt-1 text-base text-gray-900 dark:text-white">{{ $notification->reservation->organization?->org_name ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Venue</label>

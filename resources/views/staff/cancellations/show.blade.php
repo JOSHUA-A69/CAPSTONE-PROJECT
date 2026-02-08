@@ -158,7 +158,7 @@
                         <div class="flex items-start">
                             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 w-1/3">Assigned Priest:</span>
                             <span class="text-sm text-gray-900 dark:text-gray-100 w-2/3">
-                                {{ $cancellation->reservation->officiant->full_name ?? $cancellation->reservation->officiant->name }}
+                                {{ $cancellation->reservation->officiant?->full_name ?? $cancellation->reservation->officiant?->name }}
                             </span>
                         </div>
                         @endif

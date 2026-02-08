@@ -14,7 +14,7 @@
     </div>
 
     <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
-        Dear {{ $organization->adviser->full_name ?? $organization->adviser->name }},
+        Dear {{ $organization->adviser?->full_name ?? $organization->adviser?->name ?? 'Adviser' }},
     </p>
 
     <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">

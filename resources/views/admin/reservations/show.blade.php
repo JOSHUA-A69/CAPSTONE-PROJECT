@@ -177,12 +177,12 @@
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Name</label>
-                                    <p class="mt-1 text-base">{{ $reservation->user->name ?? '—' }}</p>
+                                    <p class="mt-1 text-base">{{ $reservation->user?->name ?? 'Unknown User' }}</p>
                                 </div>
 
                                 <div>
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</label>
-                                    <p class="mt-1 text-base">{{ $reservation->user->email ?? '—' }}</p>
+                                    <p class="mt-1 text-base">{{ $reservation->user?->email ?? '—' }}</p>
                                 </div>
 
                                 @if($reservation->organization)
@@ -284,8 +284,8 @@
                             </h3>
 
                             <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                                <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $reservation->officiant->full_name ?? $reservation->officiant->name }}</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $reservation->officiant->email }}</p>
+                                <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $reservation->officiant?->full_name ?? $reservation->officiant?->name ?? 'Unknown Priest' }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $reservation->officiant?->email }}</p>
                             </div>
                         </div>
                     </div>

@@ -177,19 +177,23 @@
                             <div class="space-y-4">
                                 <div>
                                     <label class="form-label">Name</label>
-                                    <p class="text-heading">{{ $reservation->user->full_name }}</p>
+                                    <p class="text-heading">{{ $reservation->user?->full_name ?? 'Unknown User' }}</p>
                                 </div>
 
                                 <div>
                                     <label class="form-label">Email</label>
                                     <p class="mt-1">
+                                        @if($reservation->user?->email)
                                         <a href="mailto:{{ $reservation->user->email }}" class="text-indigo-600 hover:text-indigo-900 transition-colors duration-150">
                                             {{ $reservation->user->email }}
                                         </a>
+                                        @else
+                                        <span class="text-muted">N/A</span>
+                                        @endif
                                     </p>
                                 </div>
 
-                                @if($reservation->user->phone)
+                                @if($reservation->user?->phone)
                                 <div>
                                     <label class="form-label">Phone</label>
                                     <p class="mt-1">

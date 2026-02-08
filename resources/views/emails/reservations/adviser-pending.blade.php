@@ -20,7 +20,7 @@
             <tr>
                 <td style="padding: 8px 0; color: #6b7280; width: 120px;">Requestor:</td>
                 <td style="padding: 8px 0; color: #111827; font-weight: 500;">
-                    {{ $reservation->user->first_name }} {{ $reservation->user->last_name }}
+                    {{ $reservation->user?->full_name ?? 'Unknown Requestor' }}
                 </td>
             </tr>
             <tr>

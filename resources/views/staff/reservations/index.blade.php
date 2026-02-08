@@ -87,10 +87,10 @@
                             #{{ $r->reservation_id }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->user->full_name ?? $r->user->email }}</div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->user?->full_name ?? $r->user?->email ?? 'Unknown User (ID: '.$r->user_id.')' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-gray-300">{{ $r->organization->org_name ?? '—' }}</div>
+                            <div class="text-sm text-gray-900 dark:text-gray-300">{{ $r->organization?->org_name ?? '—' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-gray-300">{{ $r->service->service_name ?? '—' }}</div>
@@ -172,7 +172,7 @@
                                         @endif
                                     </div>
                                     <h3 class="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                        {{ $r->user->full_name ?? $r->user->email }}
+                                        {{ $r->user?->full_name ?? $r->user?->email ?? 'Unknown User' }}
                                     </h3>
                                 </div>
                             </div>
@@ -190,7 +190,7 @@
                                 </div>
                                 <div class="col-span-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-2.5">
                                     <span class="block text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5">Organization</span>
-                                    <span class="font-medium text-gray-900 dark:text-white">{{ $r->organization->org_name ?? '—' }}</span>
+                                    <span class="font-medium text-gray-900 dark:text-white">{{ $r->organization?->org_name ?? '—' }}</span>
                                 </div>
                             </div>
 
