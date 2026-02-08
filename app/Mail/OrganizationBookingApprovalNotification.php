@@ -45,7 +45,7 @@ class OrganizationBookingApprovalNotification extends Mailable
             with: [
                 'request' => $this->bookingRequest,
                 'organization' => $this->bookingRequest->organization,
-                'adviser' => $this->bookingRequest->organization->adviser,
+                'adviser' => $this->bookingRequest->organization?->adviser,
                 'comments' => $this->comments,
             ],
         );

@@ -25,7 +25,7 @@ class ReservationAdviserApproved extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reservation Approved by Adviser - ' . $this->reservation->service->service_name,
+            subject: 'Reservation Approved by Adviser - ' . ($this->reservation->service?->service_name ?? 'Unknown Service'),
         );
     }
 
@@ -36,7 +36,7 @@ class ReservationAdviserApproved extends Mailable
             with: [
                 'reservation' => $this->reservation,
                 'requestor' => $this->reservation->user,
-                'adviser' => $this->reservation->organization->adviser,
+                'adviser' => $this->reservation->organization?->adviser,
                 'remarks' => $this->remarks,
             ],
         );

@@ -22,8 +22,8 @@ class ReservationFinalApprovalToPriest extends Mailable
         $this->reservation = $reservation;
         $this->priestName = $priestName;
         $this->isMainPriest = $isMainPriest;
-        $this->requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
-        $this->venueName = $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A';
+        $this->requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
+        $this->venueName = $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A';
     }
 
     public function build()

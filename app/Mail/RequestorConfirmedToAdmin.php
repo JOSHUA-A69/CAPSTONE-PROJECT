@@ -17,7 +17,7 @@ class RequestorConfirmedToAdmin extends Mailable
     public function __construct(Reservation $reservation)
     {
         $this->reservation = $reservation;
-        $this->requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
+        $this->requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
     }
 
     public function build()

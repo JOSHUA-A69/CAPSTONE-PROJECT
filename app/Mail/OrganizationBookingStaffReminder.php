@@ -43,7 +43,7 @@ class OrganizationBookingStaffReminder extends Mailable
             with: [
                 'request' => $this->bookingRequest,
                 'organization' => $this->bookingRequest->organization,
-                'adviser' => $this->bookingRequest->organization->adviser,
+                'adviser' => $this->bookingRequest->organization?->adviser,
                 'requestor' => $this->bookingRequest->requestor,
                 'daysPending' => $this->bookingRequest->adviser_notified_at ? $this->bookingRequest->adviser_notified_at->diffInDays(now()) : 0,
             ],

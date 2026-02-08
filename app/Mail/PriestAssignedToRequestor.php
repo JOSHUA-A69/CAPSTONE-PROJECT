@@ -29,7 +29,7 @@ class PriestAssignedToRequestor extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Priest Assigned: ' . $this->reservation->service->service_name,
+            subject: 'Priest Assigned: ' . ($this->reservation->service?->service_name ?? 'Unknown Service'),
         );
     }
 

@@ -140,8 +140,8 @@ class NotificationController extends Controller
                 'phone' => $adviser->phone ?? $adviser->contact_number ?? 'N/A',
                 'hours_pending' => $notification->reservation->created_at->diffInHours(now()),
                 'requestor_name' => $notification->reservation->user?->full_name ?? 'Unknown',
-                'service_name' => $notification->reservation->service->service_name ?? 'N/A',
-                'organization_name' => $notification->reservation->organization->org_name ?? 'N/A',
+                'service_name' => $notification->reservation->service?->service_name ?? 'N/A',
+                'organization_name' => $notification->reservation->organization?->org_name ?? 'N/A',
             ];
         }
 

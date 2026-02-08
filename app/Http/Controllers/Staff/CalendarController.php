@@ -188,7 +188,7 @@ class CalendarController extends Controller
             if ($priest) {
                 $title = $schedule->title ?? ($schedule->event_type ?? 'Schedule');
                 $when = $schedule->schedule_date . ($schedule->start_time ? ' ' . $schedule->start_time : '');
-                $venueName = $schedule->venue->name ?? $schedule->location;
+                $venueName = $schedule->venue?->name ?? $schedule->location;
 
                 NotificationHelper::make([
                     'user_id' => $priest->id,

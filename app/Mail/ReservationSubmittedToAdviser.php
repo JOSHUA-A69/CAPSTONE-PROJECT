@@ -32,7 +32,7 @@ class ReservationSubmittedToAdviser extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Reservation Request: ' . $this->reservation->service->service_name,
+            subject: 'New Reservation Request: ' . ($this->reservation->service?->service_name ?? 'Unknown Service'),
         );
     }
 

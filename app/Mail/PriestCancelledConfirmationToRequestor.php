@@ -23,7 +23,7 @@ class PriestCancelledConfirmationToRequestor extends Mailable
         $this->priestName = $priestName;
         $this->reason = $reason;
         $this->requestor = $reservation->user;
-        $this->venueName = $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A';
+        $this->venueName = $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A';
     }
 
     public function build()

@@ -21,7 +21,7 @@ class ReservationFinalApproved extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reservation Approved - ' . $this->reservation->service->service_name,
+            subject: 'Reservation Approved - ' . ($this->reservation->service?->service_name ?? 'Unknown Service'),
         );
     }
 

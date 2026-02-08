@@ -25,10 +25,10 @@ class ReservationUnnoticedAlert extends Mailable
     {
         $this->reservation = $reservation;
         $this->hoursPending = $hoursPending;
-        $this->serviceName = $reservation->service->service_name;
+        $this->serviceName = $reservation->service?->service_name ?? 'Unknown Service';
         $this->scheduleDate = $reservation->schedule_date; // Keep as object for formatting in blade if handled there, or format here
-        $this->requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
-        $this->orgName = $reservation->organization->org_name ?? 'N/A';
+        $this->requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
+        $this->orgName = $reservation->organization?->org_name ?? 'N/A';
         
         $this->adviserName = $adviser ? ($adviser->full_name ?? $adviser->first_name . ' ' . $adviser->last_name) : 'Unknown';
         $this->adviserEmail = $adviser ? $adviser->email : 'N/A';

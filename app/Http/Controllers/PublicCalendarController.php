@@ -54,13 +54,13 @@ class PublicCalendarController extends Controller
 
             return [
                 'schedule_id' => 'reservation_' . $reservation->reservation_id,
-                'title' => $reservation->activity_name ?: $reservation->service->service_name,
-                'event_type' => strtolower(str_replace(' ', '_', $reservation->service->service_category ?? 'other')),
+                'title' => $reservation->activity_name ?: ($reservation->service?->service_name ?? 'Unknown Service'),
+                'event_type' => strtolower(str_replace(' ', '_', $reservation->service?->service_category ?? 'other')),
                 'mass_subtype' => null,
                 'schedule_date' => $reservation->schedule_date->format('Y-m-d'),
                 'start_time' => $reservation->schedule_date->format('H:i'),
                 'end_time' => null,
-                'location' => $reservation->custom_venue_name ?: ($reservation->venue->name ?? null),
+                'location' => $reservation->custom_venue_name ?: ($reservation->venue?->name ?? null),
                 'venue' => $reservation->venue ? ['name' => $reservation->venue->name] : null,
                 'priest' => $priestName ? ['name' => $priestName] : null,
                 'external_priest_name' => $reservation->external_priest_name,
@@ -116,11 +116,11 @@ class PublicCalendarController extends Controller
 
             return [
                 'schedule_id' => 'reservation_' . $reservation->reservation_id,
-                'title' => $reservation->activity_name ?: $reservation->service->service_name,
-                'event_type' => strtolower(str_replace(' ', '_', $reservation->service->service_category ?? 'other')),
+                'title' => $reservation->activity_name ?: ($reservation->service?->service_name ?? 'Unknown Service'),
+                'event_type' => strtolower(str_replace(' ', '_', $reservation->service?->service_category ?? 'other')),
                 'schedule_date' => $reservation->schedule_date->format('Y-m-d'),
                 'start_time' => $reservation->schedule_date->format('H:i'),
-                'location' => $reservation->custom_venue_name ?: ($reservation->venue->name ?? null),
+                'location' => $reservation->custom_venue_name ?: ($reservation->venue?->name ?? null),
                 'priest' => $priestName ? ['name' => $priestName] : null,
                 'external_priest_name' => $reservation->external_priest_name,
                 'description' => $reservation->purpose ?: $reservation->details,

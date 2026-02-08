@@ -262,7 +262,7 @@ class ReservationController extends Controller
 
             DB::commit();
 
-            $serviceName = $reservation->activity_name ?? $reservation->service->service_name;
+            $serviceName = $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service';
             $serviceDate = $reservation->schedule_date->format('F d, Y \a\t g:i A');
             
             return Redirect::route('priest.reservations.index')
@@ -323,9 +323,9 @@ class ReservationController extends Controller
             'priest_id' => $priestId,
             'reason' => $reason,
             'declined_at' => now(),
-            'reservation_activity_name' => $reservation->activity_name ?? $reservation->service->service_name,
+            'reservation_activity_name' => $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service',
             'reservation_schedule_date' => $reservation->schedule_date,
-            'reservation_venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
+            'reservation_venue' => $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A',
         ]);
 
         // Default transition after decline
@@ -475,7 +475,7 @@ class ReservationController extends Controller
             $this->notificationService->notifyPriestDeclined($reservation, $reason, $priestId);
         }
 
-        $serviceName = $reservation->activity_name ?? $reservation->service->service_name;
+        $serviceName = $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service';
         $serviceDate = $reservation->schedule_date->format('F d, Y \a\t g:i A');
         
         $message = $isCancellation
@@ -572,10 +572,10 @@ class ReservationController extends Controller
                 'data' => [
                     'priest_name' => $priestName,
                     'priest_id' => $priestId,
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                     'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
                     'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
-                    'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
+                    'venue' => $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A',
                     'action' => 'undecline',
                     'decline_count' => $totalDeclines,
                 ],

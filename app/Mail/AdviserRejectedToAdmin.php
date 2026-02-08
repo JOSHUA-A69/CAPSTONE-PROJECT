@@ -32,7 +32,7 @@ class AdviserRejectedToAdmin extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Adviser Rejected: ' . $this->reservation->service->service_name,
+            subject: 'Adviser Rejected: ' . ($this->reservation->service?->service_name ?? 'Unknown Service'),
         );
     }
 
@@ -47,7 +47,7 @@ class AdviserRejectedToAdmin extends Mailable
                 'reservation' => $this->reservation,
                 'reason' => $this->reason,
                 'requestor' => $this->reservation->user,
-                'adviser' => $this->reservation->organization->adviser,
+                'adviser' => $this->reservation->organization?->adviser,
             ],
         );
     }

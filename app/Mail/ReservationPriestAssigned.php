@@ -23,7 +23,7 @@ class ReservationPriestAssigned extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'You Have Been Assigned to Officiate - ' . $this->reservation->service->service_name,
+            subject: 'You Have Been Assigned to Officiate - ' . ($this->reservation->service?->service_name ?? 'Unknown Service'),
         );
     }
 

@@ -367,7 +367,7 @@ class ReservationController extends Controller
     {
         // In-app notification to requestor
         try {
-            $message = "Your reservation for <strong>{$reservation->service->service_name}</strong> has been approved by the admin. Your reservation with {$reservation->external_priest_name} is confirmed for " . $reservation->schedule_date->format('M d, Y h:i A');
+            $message = "Your reservation for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> has been approved by the admin. Your reservation with {$reservation->external_priest_name} is confirmed for " . $reservation->schedule_date->format('M d, Y h:i A');
             
             $notificationData = [
                 'user_id' => $reservation->user_id,
@@ -379,7 +379,7 @@ class ReservationController extends Controller
             
             if (Schema::hasColumn('notifications', 'data')) {
                 $notificationData['data'] = json_encode([
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                     'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
                     'external_priest_name' => $reservation->external_priest_name,
                     'action' => 'external_priest_confirmed',
@@ -396,7 +396,7 @@ class ReservationController extends Controller
         if ($reservation->organization && $reservation->organization->adviser) {
             try {
                 $adviser = $reservation->organization->adviser;
-                $message = "Reservation for <strong>{$reservation->service->service_name}</strong> with external priest has been confirmed by admin.";
+                $message = "Reservation for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> with external priest has been confirmed by admin.";
                 
                 $notificationData = [
                     'user_id' => $adviser->id,
@@ -408,7 +408,7 @@ class ReservationController extends Controller
                 
                 if (Schema::hasColumn('notifications', 'data')) {
                     $notificationData['data'] = json_encode([
-                        'service_name' => $reservation->service->service_name,
+                        'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                         'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
                         'action' => 'external_priest_confirmed',
                     ]);
@@ -557,9 +557,9 @@ class ReservationController extends Controller
                 'priest_id' => $priestId,
                 'reason' => $reason,
                 'declined_at' => now(),
-                'reservation_activity_name' => $reservation->activity_name ?? $reservation->service->service_name,
+                'reservation_activity_name' => $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service',
                 'reservation_schedule_date' => $reservation->schedule_date,
-                'reservation_venue' => $reservation->custom_venue_name ?? ($reservation->venue ? $reservation->venue->name : 'N/A'),
+                'reservation_venue' => $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A',
             ]);
 
             // 2. Update pivot status if exists

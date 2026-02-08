@@ -21,7 +21,7 @@ class RequestorConfirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Please Confirm Your Reservation - ' . $this->reservation->service->service_name,
+            subject: 'Please Confirm Your Reservation - ' . ($this->reservation->service?->service_name ?? 'Unknown Service'),
         );
     }
 

@@ -21,7 +21,7 @@ class PriestCancelledConfirmationToAdmin extends Mailable
         $this->reservation = $reservation;
         $this->priestName = $priestName;
         $this->reason = $reason;
-        $this->requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
+        $this->requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
     }
 
     public function build()

@@ -21,7 +21,7 @@ class RequestorPriestReassigned extends Mailable
         $this->reservation = $reservation;
         $this->oldPriestName = $oldPriestName;
         $this->newPriestName = $newPriestName;
-        $this->requestorName = $reservation->user->first_name;
+        $this->requestorName = $reservation->user ? $reservation->user->first_name : 'Unknown User';
     }
 
     public function build()
