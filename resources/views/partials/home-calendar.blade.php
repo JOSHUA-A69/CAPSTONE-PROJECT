@@ -1,15 +1,18 @@
 @php
-    // Get ALL liturgical schedules (both public and non-public)
-    $allSchedules = \App\Models\LiturgicalSchedule::with(['priest', 'venue'])
+    // Get ALL liturgical schedules (both public and non-public) - optimized for performance
+    $allSchedules = \App\Models\LiturgicalSchedule::with(['priest:id,first_name,last_name', 'venue:venue_id,name'])
         ->public() // show only public schedules on homepage
+        ->where('schedule_date', '>=', now()->startOfDay())
+        ->where('schedule_date', '<=', now()->addMonths(6))
         ->orderBy('schedule_date')
         ->orderBy('start_time')
         ->get();
 
     // Get upcoming reservations (passed from WelcomeController, fallback query)
     if (!isset($upcomingReservations)) {
-        $upcomingReservations = \App\Models\Reservation::with(['service', 'venue', 'organization', 'officiant'])
+        $upcomingReservations = \App\Models\Reservation::with(['service:service_id,service_name', 'venue:venue_id,name', 'organization:id,org_name', 'officiant:id,first_name,last_name'])
             ->where('schedule_date', '>=', now())
+            ->where('schedule_date', '<=', now()->addMonths(6))
             ->whereNotIn('status', ['cancelled', 'rejected'])
             ->orderBy('schedule_date')
             ->get();

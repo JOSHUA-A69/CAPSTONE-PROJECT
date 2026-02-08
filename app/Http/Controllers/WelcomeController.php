@@ -13,9 +13,11 @@ class WelcomeController extends Controller
     public function index(Request $request)
     {
         // Fetch upcoming reservations (exclude cancelled/rejected) with related info
-        $upcomingReservations = Reservation::with(['service', 'venue', 'organization', 'officiant'])
+        // Optimizing performance: limit to next 6 months
+        $upcomingReservations = Reservation::with(['service:service_id,service_name', 'venue:venue_id,name', 'organization:id,org_name', 'officiant:id,first_name,last_name'])
             ->upcoming()
             ->whereNotIn('status', ['cancelled', 'rejected'])
+            ->where('schedule_date', '<=', Carbon::now()->addMonths(6))
             ->orderBy('schedule_date')
             ->get();
 
