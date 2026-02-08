@@ -17,7 +17,7 @@
     </p>
 
     <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
-        <strong>{{ $requestor->first_name }} {{ $requestor->last_name }}</strong> has submitted a new reservation request for your organization that requires your review and approval.
+        <strong>{{ $requestor?->first_name ?? 'Unknown' }} {{ $requestor?->last_name ?? 'User' }}</strong> has submitted a new reservation request for your organization that requires your review and approval.
     </p>
 
     <div style="background-color: #f3f4f6; border-radius: 8px; padding: 24px; margin-bottom: 24px;">

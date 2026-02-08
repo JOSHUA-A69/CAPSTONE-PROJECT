@@ -33,7 +33,7 @@
             </tr>
             <tr>
                 <td style="padding: 8px 0; color: #6b7280;">Requestor:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: 500;">{{ $reservation->user->first_name }} {{ $reservation->user->last_name }}</td>
+                <td style="padding: 8px 0; color: #111827; font-weight: 500;">{{ $reservation->user?->first_name ?? 'Unknown' }} {{ $reservation->user?->last_name ?? 'User' }}</td>
             </tr>
         </table>
     </div>

@@ -33,7 +33,7 @@
             </tr>
             <tr>
                 <td style="padding-bottom: 8px; color: #666666;">Requestor:</td>
-                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->user->first_name }} {{ $reservation->user->last_name }}</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->user?->first_name ?? 'Unknown' }} {{ $reservation->user?->last_name ?? 'User' }}</td>
             </tr>
             <tr>
                 <td style="padding-bottom: 8px; color: #666666;">Date & Time:</td>

@@ -574,7 +574,7 @@ class ReservationController extends Controller
                     'priest_id' => $priestId,
                     'service_name' => $reservation->service->service_name,
                     'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
-                    'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                    'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                     'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
                     'action' => 'undecline',
                     'decline_count' => $totalDeclines,

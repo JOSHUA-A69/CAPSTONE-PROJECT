@@ -44,7 +44,7 @@ class ReservationNotificationService
         $priestSelectionType = $reservation->priest_selection_type ?? 'specific';
 
         // Email to requestor (confirmation)
-        if ($reservation->user->email) {
+        if ($reservation->user && $reservation->user->email) {
             Mail::to($reservation->user->email)
                 ->send(new ReservationSubmitted($reservation));
         }
@@ -108,7 +108,7 @@ class ReservationNotificationService
                 if (Schema::hasColumn('notifications', 'data')) {
                     $notificationData['data'] = json_encode([
                         'service_name' => $reservation->service->service_name,
-                        'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                        'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                         'action' => 'adviser_review_required',
                     ]);
                 }
@@ -121,9 +121,10 @@ class ReservationNotificationService
 
             // SMS to adviser (optional)
             if ($adviser->phone) {
+                $requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
                 $this->sendSMS(
                     $adviser->phone,
-                    "New reservation request from {$reservation->user->first_name} {$reservation->user->last_name} for {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . ". Please review in eReligiousServices."
+                    "New reservation request from {$requestorName} for {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A') . ". Please review in eReligiousServices."
                 );
             }
         } else {
@@ -162,7 +163,7 @@ class ReservationNotificationService
                         $notificationData['data'] = json_encode([
                             'service_name' => $reservation->service->service_name,
                             'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
-                            'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                            'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                             'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
                             'action' => 'priest_assignment',
                         ]);
@@ -194,7 +195,7 @@ class ReservationNotificationService
                         $dataContent = [
                             'service_name' => $reservation->service->service_name,
                             'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
-                            'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                            'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                             'priest_selection_type' => $priestSelectionType,
                             'action' => $priestSelectionType === 'any_available' ? 'admin_priest_assignment_required' : 'admin_external_priest_review',
                         ];
@@ -223,7 +224,7 @@ class ReservationNotificationService
     {
         // Email to requestor
         try {
-            if ($reservation->user->email) {
+            if ($reservation->user && $reservation->user->email) {
                 Mail::to($reservation->user->email)
                     ->send(new ReservationAdviserApproved($reservation, $remarks));
             }
@@ -261,7 +262,7 @@ class ReservationNotificationService
                         'action' => 'adviser_approved',
                         'service_name' => $reservation->service->service_name,
                         'schedule_date' => optional($reservation->schedule_date)->format('Y-m-d H:i:s'),
-                        'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                        'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                         'organization' => optional($reservation->organization)->org_name,
                     ]);
                 }
@@ -311,7 +312,7 @@ class ReservationNotificationService
         }
 
         // SMS to requestor
-        if ($reservation->user->phone) {
+        if ($reservation->user && $reservation->user->phone) {
             $this->sendSMS(
                 $reservation->user->phone,
                 "Good news! Your reservation for {$reservation->service->service_name} has been approved by your organization adviser. Awaiting final CREaM approval."
@@ -350,7 +351,7 @@ class ReservationNotificationService
         
         // Email to requestor
         try {
-            if ($reservation->user->email) {
+            if ($reservation->user && $reservation->user->email) {
                 Mail::to($reservation->user->email)
                     ->send(new ReservationAdviserRejected($reservation, $reason));
             }
@@ -360,7 +361,7 @@ class ReservationNotificationService
 
         // SMS to requestor
         try {
-            if ($reservation->user->phone) {
+            if ($reservation->user && $reservation->user->phone) {
                 $this->sendSMS(
                     $reservation->user->phone,
                     "Your reservation for {$reservation->service->service_name} was not approved by your adviser{$orgInfo}. Reason: {$reason}"
@@ -481,7 +482,7 @@ class ReservationNotificationService
                         'reason' => $reason,
                         'action' => 'admin_rejected',
                         'service_name' => $reservation->service->service_name,
-                        'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                        'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                     ];
                 }
                 NotificationHelper::make($notificationData);
@@ -629,7 +630,7 @@ class ReservationNotificationService
                     if (Schema::hasColumn('notifications', 'data')) {
                         $notificationData['data'] = [
                             'service_name' => $reservation->service->service_name,
-                            'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                            'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                             'schedule_date' => $reservation->schedule_date->toDateTimeString(),
                             'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
                             'admin_remarks' => $reservation->history()
@@ -670,7 +671,7 @@ class ReservationNotificationService
         }
 
         // Email to requestor (update)
-        if ($reservation->user->email) {
+        if ($reservation->user && $reservation->user->email) {
             Mail::to($reservation->user->email)
                 ->send(new \App\Mail\PriestAssignedToRequestor($reservation));
         }
@@ -724,7 +725,7 @@ class ReservationNotificationService
                             'priest_id' => $declinedPriest ? $declinedPriest->id : null,
                             'service_name' => $reservation->service->service_name,
                             'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
-                            'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                            'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                             'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
                         ];
                     }
@@ -868,7 +869,8 @@ class ReservationNotificationService
                 if ($isPriest) {
                     $message = "The requestor cancelled the reservation you were assigned to officiate for <strong>{$reservation->service->service_name}</strong>";
                 } elseif ($isAdviser) {
-                    $message = "<strong>{$reservation->user->first_name} {$reservation->user->last_name}</strong> cancelled their reservation for <strong>{$reservation->service->service_name}</strong>";
+                    $requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
+                    $message = "<strong>{$requestorName}</strong> cancelled their reservation for <strong>{$reservation->service->service_name}</strong>";
                 } else {
                     $message = "Reservation cancelled by <strong>{$cancelledBy}</strong> for <strong>{$reservation->service->service_name}</strong>";
                 }
@@ -932,7 +934,7 @@ class ReservationNotificationService
             $adviserPhone = $adviser->phone ?? $adviser->contact_number ?? 'N/A';
         }
 
-        $requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
+        $requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
         $serviceName = $reservation->service->service_name ?? 'N/A';
         $scheduleDate = $reservation->schedule_date ? $reservation->schedule_date->format('F d, Y - h:i A') : 'N/A';
         $orgName = $reservation->organization->org_name ?? 'N/A';
@@ -1040,7 +1042,7 @@ class ReservationNotificationService
         // Get priest info
         $priest = User::find($priestId);
         $priestName = $priest ? 'Fr. ' . $priest->first_name . ' ' . $priest->last_name : 'A priest';
-        $requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
+        $requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
 
         // Get admins/staff but EXCLUDE the priest if they are admin
         $admins = User::whereIn('role', ['admin', 'staff'])
@@ -1145,7 +1147,7 @@ class ReservationNotificationService
 
         // Send email to requestor
         try {
-            if ($reservation->user->email) {
+            if ($reservation->user && $reservation->user->email) {
                 Mail::to($reservation->user->email)->send(new \App\Mail\ReservationConfirmed($reservation, $priestName));
             }
         } catch (\Exception $e) {
@@ -1159,7 +1161,7 @@ class ReservationNotificationService
      */
     public function notifyAllPriestsConfirmed(Reservation $reservation): void
     {
-        $requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
+        $requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
         $priestNames = $reservation->priests->map(fn($p) => 'Fr. ' . $p->first_name . ' ' . $p->last_name)->join(', ');
         
         if (empty($priestNames) && $reservation->officiant) {
@@ -1318,7 +1320,7 @@ class ReservationNotificationService
      */
     public function notifyRequestorConfirmed(Reservation $reservation): void
     {
-        $requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
+        $requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
 
         // Notify admins/staff by email and in-app
         $admins = User::whereIn('role', ['admin', 'staff'])->where('status', 'active')->get();
@@ -1442,7 +1444,7 @@ class ReservationNotificationService
 
             // Create in-app notification for each admin
             try {
-                $requestorName = $reservation->user->first_name . ' ' . $reservation->user->last_name;
+                $requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
                 $message = "<strong>{$priestName}</strong> cancelled back his reservation submitted by <strong>{$requestorName}</strong> ⚠️";
 
                 $notificationData = [
@@ -1462,7 +1464,7 @@ class ReservationNotificationService
                             'priest_id' => $priestId,
                             'service_name' => $reservation->service->service_name,
                             'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
-                            'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                            'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                             'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
                             'action' => 'cancelled_confirmation',
                         ];
@@ -1576,7 +1578,7 @@ class ReservationNotificationService
         $priestName = 'Fr. ' . $priest->first_name . ' ' . $priest->last_name;
 
         // Email to requestor
-        if ($reservation->user->email) {
+        if ($reservation->user && $reservation->user->email) {
             Mail::to($reservation->user->email)->send(new \App\Mail\ReservationConfirmed($reservation, $priestName));
         }
 
@@ -1607,7 +1609,7 @@ class ReservationNotificationService
         }
 
         // SMS to requestor
-        if ($reservation->user->phone) {
+        if ($reservation->user && $reservation->user->phone) {
             $this->sendSMS(
                 $reservation->user->phone,
                 "{$priestName} confirmed your {$reservation->service->service_name} on " . $reservation->schedule_date->format('M d, Y h:i A')
@@ -1672,7 +1674,7 @@ class ReservationNotificationService
         $newPriestName = 'Fr. ' . $newPriest->first_name . ' ' . $newPriest->last_name;
 
         // Email to requestor
-        if ($reservation->user->email) {
+        if ($reservation->user && $reservation->user->email) {
             try {
                 Mail::to($reservation->user->email)
                     ->send(new RequestorPriestReassigned($reservation, $oldPriestName, $newPriestName));
@@ -1830,7 +1832,7 @@ class ReservationNotificationService
         }
 
         // SMS to requestor
-        if ($reservation->user->phone) {
+        if ($reservation->user && $reservation->user->phone) {
             $this->sendSMS(
                 $reservation->user->phone,
                 "Your reservation for {$reservation->service->service_name} approval has been cancelled. Reason: {$reason}. Your reservation is now pending review again."
@@ -1853,7 +1855,7 @@ class ReservationNotificationService
                     $staffNotificationData['data'] = [
                         'reason' => $reason,
                         'action' => 'approval_cancelled',
-                        'requestor' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                        'requestor' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                     ];
                 }
                 NotificationHelper::make($staffNotificationData);
@@ -1878,7 +1880,7 @@ class ReservationNotificationService
                     $adminNotificationData['data'] = [
                         'reason' => $reason,
                         'action' => 'approval_cancelled',
-                        'requestor' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
+                        'requestor' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
                     ];
                 }
                 NotificationHelper::make($adminNotificationData);
@@ -1895,6 +1897,7 @@ class ReservationNotificationService
     public function notifyFinalApproval(Reservation $reservation): void
     {
         $requestor = $reservation->user;
+        $requestorName = $requestor ? ($requestor->first_name . ' ' . $requestor->last_name) : 'Unknown User';
         
         // Build priest names list
         $priestNames = $reservation->priests->map(function ($priest) {
@@ -1908,7 +1911,7 @@ class ReservationNotificationService
         $venueName = $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A';
         
         // Email notification to requestor
-        if ($requestor->email) {
+        if ($requestor && $requestor->email) {
             try {
                 Mail::to($requestor->email)->send(new \App\Mail\ReservationFinalApproved($reservation, $priestNames));
             } catch (\Exception $e) {
@@ -1948,7 +1951,7 @@ class ReservationNotificationService
                     NotificationHelper::make([
                         'user_id' => $organization->adviser->id,
                         'reservation_id' => $reservation->reservation_id,
-                        'message' => "Reservation for {$reservation->service->service_name} by {$requestor->first_name} {$requestor->last_name} has been fully approved.",
+                        'message' => "Reservation for {$reservation->service->service_name} by {$requestorName} has been fully approved.",
                         'type' => NotificationHelper::TYPE_SUCCESS,
                         'sent_at' => now(),
                     ]);

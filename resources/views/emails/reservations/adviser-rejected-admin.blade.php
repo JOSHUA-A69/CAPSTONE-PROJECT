@@ -30,7 +30,7 @@
         <table style="width: 100%; border-collapse: collapse;">
              <tr>
                 <td style="padding-bottom: 8px; color: #666666; width: 140px;">Requestor:</td>
-                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $requestor->full_name }}</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $requestor?->full_name ?? 'Unknown User' }}</td>
             </tr>
             <tr>
                 <td style="padding-bottom: 8px; color: #666666;">Organization:</td>
