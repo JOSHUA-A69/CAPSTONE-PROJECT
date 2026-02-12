@@ -19,70 +19,103 @@
             </div>
             @endif
 
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900 dark:text-gray-100">
-                    @if($cancellations->isEmpty())
-                        <div class="text-center py-8">
-                            <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            <p class="text-lg text-gray-500 dark:text-gray-400">No pending cancellation requests found.</p>
-                        </div>
-                    @else
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-700">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Requestor</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Organization</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reason</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date Requested</th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                                    @foreach($cancellations as $cancellation)
-                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $cancellation->requestor->name }}</div>
-                                            <div class="text-sm text-gray-500 dark:text-gray-400">{{ $cancellation->requestor->email }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                {{ $cancellation->reservation->organization->name }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-500 dark:text-gray-400 max-w-xs truncate" title="{{ $cancellation->reason }}">
-                                                {{ $cancellation->reason }}
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                            {{ $cancellation->created_at->format('M d, Y h:i A') }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                                {{ $cancellation->status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                                {{ ucwords(str_replace('_', ' ', $cancellation->status)) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <a href="{{ route('adviser.cancellations.show', $cancellation->cancellation_id) }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">
-                                                Review
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="mt-4">
-                            {{ $cancellations->links() }}
-                        </div>
-                    @endif
+            <p class="mb-6 text-gray-600 dark:text-gray-400">
+                Review and manage cancellation requests from users.
+            </p>
+
+            @if($cancellations->isEmpty())
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg p-12 text-center">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">No requests found</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mt-1">There are no pending cancellation requests at this time.</p>
                 </div>
-            </div>
+            @else
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @foreach($cancellations as $cancellation)
+                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-full hover:shadow-md transition-shadow duration-200">
+                            <!-- Card Header: User Info -->
+                            <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex items-center space-x-4">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 font-bold text-lg">
+                                        {{ substr($cancellation->requestor->name, 0, 1) }}
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        {{ $cancellation->requestor->name }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        {{ $cancellation->requestor->email }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Card Body: Details -->
+                            <div class="p-5 flex-grow space-y-4">
+                                <!-- Grid for Org/Service -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Organization</p>
+                                        <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white truncate" title="{{ $cancellation->reservation->organization->name }}">
+                                            {{ $cancellation->reservation->organization->name }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Service</p>
+                                        <p class="mt-1 text-sm font-medium text-gray-900 dark:text-white truncate">
+                                            {{ $cancellation->reservation->service->service_name ?? 'N/A' }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Schedule Date -->
+                                <div class="pt-2">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Scheduled Date</p>
+                                    <div class="mt-1 flex items-center text-sm font-medium text-gray-900 dark:text-white">
+                                        <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        {{ \Carbon\Carbon::parse($cancellation->reservation->schedule_date)->format('M d, Y') }}
+                                        @if($cancellation->reservation->schedule_time) 
+                                            <span class="ml-2 text-gray-400">|</span> 
+                                            <span class="ml-2">{{ \Carbon\Carbon::parse($cancellation->reservation->schedule_time)->format('h:i A') }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <!-- Reason -->
+                                <div class="pt-2">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Reason</p>
+                                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300 line-clamp-2" title="{{ $cancellation->reason }}">
+                                        {{ $cancellation->reason }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Card Footer: Status & Action -->
+                            <div class="p-5 bg-gray-50 dark:bg-gray-750 border-t border-gray-100 dark:border-gray-700 rounded-b-lg flex items-center justify-between">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {{ $cancellation->status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 
+                                    ($cancellation->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 
+                                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300') }}">
+                                    {{ ucwords(str_replace('_', ' ', $cancellation->status)) }}
+                                </span>
+                                
+                                <a href="{{ route('adviser.cancellations.show', $cancellation->cancellation_id) }}" 
+                                   class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md font-semibold text-xs text-gray-700 dark:text-gray-300 uppercase tracking-widest shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
+                                    Review
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                
+                <div class="mt-6">
+                    {{ $cancellations->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>
