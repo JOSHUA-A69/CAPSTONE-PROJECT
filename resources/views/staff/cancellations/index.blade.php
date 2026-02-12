@@ -102,8 +102,6 @@
                                 </div>
                             </div>
                         </div>
-                            </div>
-                        </div>
                     @empty
                         <!-- Empty State -->
                         <div class="p-8 sm:p-12 text-center">
