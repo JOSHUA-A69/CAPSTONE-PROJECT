@@ -4,8 +4,8 @@
 <div class="max-w-7xl mx-auto px-4 py-6">
     <!-- Header -->
     <div class="mb-6">
-        <h1 class="text-heading text-3xl font-bold text-gray-900 dark:text-white mb-2">Manage Reservations</h1>
-        <p class="text-muted dark:text-gray-400">Review and manage reservation requests</p>
+        <h1 class="text-heading text-3xl font-bold text-gray-900 dark:text-white mb-2">Unnoticed Reservations</h1>
+        <p class="text-muted dark:text-gray-400">Reservations awaiting adviser response for over 24 hours</p>
     </div>
 
     <!-- Flash Messages -->
@@ -20,39 +20,15 @@
         </div>
     @endif
 
-    <!-- Search / Filter -->
-    <form method="GET" class="card mb-6">
-        <div class="card-body">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="form-label dark:text-gray-300">Search</label>
-                    <input type="text" name="q" value="{{ request('q') }}" class="form-input dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" placeholder="Requestor, organization...">
-                </div>
-                <div>
-                    <label class="form-label dark:text-gray-300">Status</label>
-                    <select name="status" class="form-input dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="">All</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="adviser_approved" {{ request('status') === 'adviser_approved' ? 'selected' : '' }}>Adviser Approved</option>
-                        <option value="pending_priest_reassignment" {{ request('status') === 'pending_priest_reassignment' ? 'selected' : '' }}>Priest Declined (Reassign)</option>
-                        <option value="admin_approved" {{ request('status') === 'admin_approved' ? 'selected' : '' }}>Admin Approved</option>
-                        <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
-                        <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                        <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                    </select>
-                </div>
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="btn-primary">
-                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                        </svg>
-                        Filter
-                    </button>
-                    <a href="{{ route('staff.reservations.index') }}" class="btn-ghost">Clear</a>
-                </div>
-            </div>
-        </div>
-    </form>
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="{{ route('staff.dashboard') }}" class="inline-flex items-center text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 text-sm font-medium transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
 
     <!-- Reservations Card -->
     <div class="card">
@@ -63,12 +39,12 @@
                 <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                 </svg>
-                <p class="text-muted dark:text-gray-400 text-lg">No reservations found</p>
+                <p class="text-muted dark:text-gray-400 text-lg">No unnoticed reservations found</p>
             </div>
             @else
             <div class="table-responsive">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" role="table" aria-label="All reservations">
-                <caption class="sr-only">List of all spiritual activity reservations for staff review</caption>
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" role="table" aria-label="Unnoticed reservations">
+                <caption class="sr-only">List of unnoticed reservation requests awaiting adviser response</caption>
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
@@ -76,7 +52,7 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Organization</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Service</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Schedule</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Time Waiting</th>
                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -87,7 +63,7 @@
                             #{{ $r->reservation_id }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->user?->full_name ?? $r->user?->email ?? 'Unknown User (ID: '.$r->user_id.')' }}</div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->user?->full_name ?? $r->user?->email ?? 'Unknown User' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-gray-300">{{ $r->organization?->org_name ?? '—' }}</div>
@@ -100,25 +76,8 @@
                             <div class="text-xs text-muted dark:text-gray-400">{{ optional($r->schedule_date)->format('h:i A') }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($r->status === 'pending')
-                                <span class="badge-warning">Awaiting Adviser</span>
-                            @elseif($r->status === 'adviser_approved')
-                                <span class="badge-warning">Awaiting Priest</span>
-                            @elseif($r->status === 'admin_approved')
-                                <span class="badge-info">Awaiting Admin</span>
-                            @elseif($r->status === 'approved')
-                                <span class="badge-success">Approved by Admin</span>
-                            @elseif($r->status === 'confirmed')
-                                <span class="badge-success">Confirmed</span>
-                            @elseif($r->status === 'completed')
-                                <span class="badge-success">Completed</span>
-                            @elseif($r->status === 'rejected')
-                                <span class="badge-danger">Rejected</span>
-                            @elseif($r->status === 'cancelled')
-                                <span class="badge-secondary">Cancelled</span>
-                            @else
-                                <span class="badge-secondary">{{ ucfirst(str_replace('_', ' ', $r->status)) }}</span>
-                            @endif
+                            <div class="text-sm text-gray-900 dark:text-white">{{ $r->created_at->diffForHumans() }}</div>
+                            <div class="text-xs text-muted dark:text-gray-400">Since {{ $r->created_at->format('M d, Y') }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <a href="{{ route('staff.reservations.show', $r->reservation_id) }}" class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300 transition-colors duration-150">
@@ -140,35 +99,20 @@
                     <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    <p class="text-muted dark:text-gray-400 text-lg">No reservations found</p>
+                    <p class="text-muted dark:text-gray-400 text-lg">No unnoticed reservations found</p>
                 </div>
             @else
                 <div class="space-y-3 p-4">
                     @foreach($reservations as $r)
-                        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-150 p-4">
-                            <!-- Header: ID, Status Badge -->
+                        <div class="bg-white dark:bg-gray-800 rounded-xl border border-red-200 dark:border-red-900/50 shadow-sm hover:shadow-md transition-all duration-150 p-4">
+                            <!-- Header: ID, Warning Badge -->
                             <div class="flex items-start justify-between gap-3 mb-3">
                                 <div class="flex items-center gap-2 flex-wrap">
                                     <span class="text-xs font-mono text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">#{{ $r->reservation_id }}</span>
-                                    @if($r->status === 'pending')
-                                        <span class="badge-warning text-xs">Awaiting Adviser</span>
-                                    @elseif($r->status === 'adviser_approved')
-                                        <span class="badge-warning text-xs">Awaiting Priest</span>
-                                    @elseif($r->status === 'admin_approved')
-                                        <span class="badge-info text-xs">Awaiting Admin</span>
-                                    @elseif($r->status === 'approved')
-                                        <span class="badge-success text-xs">Approved</span>
-                                    @elseif($r->status === 'confirmed')
-                                        <span class="badge-success text-xs">Confirmed</span>
-                                    @elseif($r->status === 'completed')
-                                        <span class="badge-success text-xs">Completed</span>
-                                    @elseif($r->status === 'rejected')
-                                        <span class="badge-danger text-xs">Rejected</span>
-                                    @elseif($r->status === 'cancelled')
-                                        <span class="badge-secondary text-xs">Cancelled</span>
-                                    @else
-                                        <span class="badge-secondary text-xs">{{ ucfirst(str_replace('_', ' ', $r->status)) }}</span>
-                                    @endif
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5 animate-pulse"></span>
+                                        Awaiting Response
+                                    </span>
                                 </div>
                             </div>
 
@@ -192,16 +136,21 @@
                                     <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Organization</p>
                                     <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $r->organization?->org_name ?? '—' }}</p>
                                 </div>
+                                <div class="col-span-2 bg-red-50 dark:bg-red-900/10 rounded-lg p-3 border border-red-100 dark:border-red-900/30">
+                                    <p class="text-xs font-medium text-red-600 dark:text-red-400 uppercase tracking-wide mb-1">Waiting Since</p>
+                                    <p class="text-sm font-medium text-red-900 dark:text-red-200">{{ $r->created_at->diffForHumans() }}</p>
+                                    <p class="text-xs text-red-700 dark:text-red-300">{{ $r->created_at->format('M d, Y \a\t g:i A') }}</p>
+                                </div>
                             </div>
 
                             <!-- Action Button -->
                             <a href="{{ route('staff.reservations.show', $r->reservation_id) }}"
-                               class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors duration-150">
+                               class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors duration-150">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                 </svg>
-                                View Details
+                                Follow Up Now
                             </a>
                         </div>
                     @endforeach

@@ -116,14 +116,14 @@ class ReservationController extends Controller
 
         // Check if adviser is associated with any organization in this reservation
         $reservationOrgIds = $reservation->organizations->pluck('org_id');
-        
+
         // Support both multi-org and legacy single org_id
         if ($reservationOrgIds->isEmpty()) {
             $reservationOrgIds = collect([$reservation->org_id]);
         }
 
         $matchingOrgId = $adviserOrgIds->intersect($reservationOrgIds)->first();
-        
+
         if (!$matchingOrgId) {
             abort(403, 'You are not the adviser for any organization in this reservation.');
         }
@@ -203,7 +203,7 @@ class ReservationController extends Controller
                 // Send notifications to requestor and CREaM admin/staff
                 $this->notificationService->notifyAdviserApproved($reservation, $remarks);
 
-                $message = 'All advisers have approved. Reservation is now awaiting priest confirmation.';
+                $message = 'Adviser have approved. Reservation is now awaiting priest confirmation.';
             } else {
                 // Still waiting for other advisers
                 $pending = $reservation->pendingAdviserCount();
@@ -271,14 +271,14 @@ class ReservationController extends Controller
 
         // Check if adviser is associated with any organization in this reservation
         $reservationOrgIds = $reservation->organizations->pluck('org_id');
-        
+
         // Support both multi-org and legacy single org_id
         if ($reservationOrgIds->isEmpty()) {
             $reservationOrgIds = collect([$reservation->org_id]);
         }
 
         $matchingOrgId = $adviserOrgIds->intersect($reservationOrgIds)->first();
-        
+
         if (!$matchingOrgId) {
             abort(403, 'You are not the adviser for any organization in this reservation.');
         }
@@ -317,7 +317,7 @@ class ReservationController extends Controller
 
             // Check if this is a single-org reservation or if all orgs have now responded
             $totalOrgs = $reservation->organizations->count();
-            
+
             if ($totalOrgs <= 1) {
                 // Single org - reject the whole reservation
                 $reservation->update([

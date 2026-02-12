@@ -34,50 +34,82 @@
                             </p>
                         </div>
                     @else
-                        <div class="space-y-4">
+                        <div class="space-y-4 sm:space-y-5">
                             @foreach($declines as $decline)
-                                <div class="border dark:border-gray-700 rounded-lg p-4 bg-red-50 dark:bg-red-900/10">
-                                    <div class="flex items-start justify-between">
-                                        <div class="flex-1">
-                                            <div class="flex items-center gap-3 mb-2">
-                                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                <div class="border dark:border-gray-700 rounded-xl overflow-hidden bg-red-50 dark:bg-red-900/10 transition-all hover:shadow-md">
+                                    <!-- Card Content -->
+                                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-0">
+                                        <!-- Main Content Section -->
+                                        <div class="flex-1 p-4 sm:p-5 lg:p-6">
+                                            <!-- Title and Status Badge -->
+                                            <div class="flex flex-col sm:flex-row sm:items-center sm:gap-3 mb-4 gap-2">
+                                                <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
                                                     {{ $decline->reservation_activity_name }}
                                                 </h3>
-                                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-200">
+                                                <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-200 dark:bg-red-900/60 text-red-800 dark:text-red-200 w-fit">
                                                     Declined
                                                 </span>
                                             </div>
 
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                                                <div class="flex items-center">
-                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                                    </svg>
-                                                    <span class="font-medium">Original Schedule:</span>&nbsp;
-                                                    {{ \Carbon\Carbon::parse($decline->reservation_schedule_date)->format('M d, Y - g:i A') }}
+                                            <!-- Service Details Grid -->
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4">
+                                                <!-- Original Schedule -->
+                                                <div class="bg-white dark:bg-gray-800/50 rounded-lg p-3 sm:p-4">
+                                                    <div class="flex items-start gap-2 sm:gap-3">
+                                                        <svg class="w-5 h-5 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                        </svg>
+                                                        <div class="min-w-0 flex-1">
+                                                            <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">Original Schedule</p>
+                                                            <p class="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 break-words">
+                                                                {{ \Carbon\Carbon::parse($decline->reservation_schedule_date)->format('M d, Y') }}
+                                                            </p>
+                                                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                                                {{ \Carbon\Carbon::parse($decline->reservation_schedule_date)->format('g:i A') }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                <div class="flex items-center">
-                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                                    </svg>
-                                                    {{ $decline->reservation_venue }}
+                                                <!-- Venue -->
+                                                <div class="bg-white dark:bg-gray-800/50 rounded-lg p-3 sm:p-4">
+                                                    <div class="flex items-start gap-2 sm:gap-3">
+                                                        <svg class="w-5 h-5 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        </svg>
+                                                        <div class="min-w-0 flex-1">
+                                                            <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">Venue</p>
+                                                            <p class="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                                {{ $decline->reservation_venue }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
 
-                                                <div class="flex items-center">
-                                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                    </svg>
-                                                    <span class="font-medium">Declined:</span>&nbsp;
-                                                    {{ $decline->declined_at->format('M d, Y g:i A') }}
+                                                <!-- Declined Date -->
+                                                <div class="bg-white dark:bg-gray-800/50 rounded-lg p-3 sm:p-4">
+                                                    <div class="flex items-start gap-2 sm:gap-3">
+                                                        <svg class="w-5 h-5 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                        </svg>
+                                                        <div class="min-w-0 flex-1">
+                                                            <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">Declined</p>
+                                                            <p class="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">
+                                                                {{ $decline->declined_at->format('M d, Y') }}
+                                                            </p>
+                                                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                                                {{ $decline->declined_at->format('g:i A') }}
+                                                            </p>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <!-- Reason -->
-                                            <div class="mt-3 p-3 bg-white dark:bg-gray-800 rounded border dark:border-gray-700">
-                                                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">Reason for Declining:</p>
-                                                <p class="text-sm text-gray-700 dark:text-gray-300">{{ $decline->reason }}</p>
+                                            <!-- Reason Section -->
+                                            <div class="bg-white dark:bg-gray-800/50 rounded-lg p-3 sm:p-4 mb-4">
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide mb-2">Reason for Declining</p>
+                                                <p class="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{{ $decline->reason }}</p>
                                             </div>
 
                                             @php
@@ -98,15 +130,15 @@
                                                 }
                                             @endphp
 
+                                            <!-- Undecline Available Notice -->
                                             @if($canUndecline)
-                                                <!-- Undecline Available Notice -->
-                                                <div class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
-                                                    <div class="flex items-start">
-                                                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                <div class="p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                                    <div class="flex gap-2 sm:gap-3">
+                                                        <svg class="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                                                         </svg>
-                                                        <div class="flex-1">
-                                                            <p class="text-sm font-medium text-green-800 dark:text-green-300">
+                                                        <div class="flex-1 min-w-0">
+                                                            <p class="text-sm font-semibold text-green-800 dark:text-green-300">
                                                                 This reservation has not been reassigned yet
                                                             </p>
                                                             <p class="text-xs text-green-700 dark:text-green-400 mt-1">
@@ -118,27 +150,28 @@
                                             @endif
                                         </div>
 
-                                        <!-- Action Buttons -->
-                                        <div class="ml-4 flex flex-col gap-2">
+                                        <!-- Action Buttons Section -->
+                                        <div class="border-t lg:border-t-0 lg:border-l dark:border-gray-700 p-4 sm:p-5 lg:p-6 flex flex-col gap-2 sm:gap-3 w-full lg:w-auto lg:min-w-max">
                                             @if($decline->reservation)
                                                 <!-- View Reservation Button -->
                                                 <a href="{{ route('priest.reservations.show', $decline->reservation_id) }}"
-                                                   class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap text-center">
-                                                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                   class="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-gray-600 hover:bg-gray-700 text-white text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 whitespace-nowrap w-full lg:w-auto">
+                                                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                                     </svg>
-                                                    View Details
+                                                    <span class="hidden sm:inline">View Details</span>
+                                                    <span class="sm:hidden">View</span>
                                                 </a>
 
                                                 <!-- Undecline Button (if eligible) -->
                                                 @if($canUndecline)
-                                                    <form method="POST" action="{{ route('priest.reservations.undecline', $decline->reservation_id) }}"
-                                                          onsubmit="return confirm('Are you sure you want to undo your decline and accept this assignment?\n\nYou will need to confirm your availability after undoing.');">
+                                                    <form id="undeclineForm-{{ $decline->reservation_id }}" method="POST" action="{{ route('priest.reservations.undecline', $decline->reservation_id) }}"
+                                                          onsubmit="showUndeclineConfirmation(event, '{{ $decline->reservation_id }}');">
                                                         @csrf
                                                         <button type="submit"
-                                                                class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap">
-                                                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                class="flex items-center justify-center gap-2 w-full px-4 py-2.5 sm:py-3 bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-semibold rounded-lg transition-all duration-200 transform hover:scale-105">
+                                                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
                                                             </svg>
                                                             Undo Decline
@@ -189,3 +222,91 @@
         </div>
     </div>
 </x-app-layout>
+
+<!-- Undo Decline Confirmation Modal -->
+<div id="undeclineConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[110] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md transform transition-all">
+        <div class="px-6 py-5 border-b dark:border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Confirm Undo Decline</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Reactivate your assignment</p>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-5">
+            <p class="text-gray-700 dark:text-gray-300 mb-4">Are you sure you want to <strong>UNDO</strong> your decline and accept this assignment?</p>
+            <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-4 space-y-2">
+                <div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Important Next Steps</p>
+                    <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">You will need to confirm your availability after undoing this decline.</p>
+                </div>
+            </div>
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note:</strong> This will remove your decline status and allows you to manage your availability for this service.
+                </p>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg flex gap-3">
+            <button type="button" onclick="confirmUndecline()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 rounded-md transition duration-200 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Yes, Undo Decline
+            </button>
+            <button type="button" onclick="hideUndeclineConfirmation()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-semibold py-2.5 px-4 rounded-md transition duration-200">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentUndeclineReservationId = null;
+
+function showUndeclineConfirmation(event, reservationId) {
+    event.preventDefault();
+    currentUndeclineReservationId = reservationId;
+
+    // Show the modal
+    const modal = document.getElementById('undeclineConfirmModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function hideUndeclineConfirmation() {
+    const modal = document.getElementById('undeclineConfirmModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    currentUndeclineReservationId = null;
+}
+
+function confirmUndecline() {
+    if (currentUndeclineReservationId) {
+        const form = document.getElementById('undeclineForm-' + currentUndeclineReservationId);
+        if (form) {
+            form.submit();
+        }
+    }
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        hideUndeclineConfirmation();
+    }
+});
+
+// Close modal on outside click
+document.getElementById('undeclineConfirmModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideUndeclineConfirmation();
+    }
+});
+</script>

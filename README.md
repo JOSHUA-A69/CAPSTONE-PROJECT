@@ -328,7 +328,7 @@ npm run build
 
 docker compose up -d
 
-if you want live server
+## if you want live server
 
 php artisan serve
 npm run dev

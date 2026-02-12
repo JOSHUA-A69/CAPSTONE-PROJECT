@@ -29,7 +29,7 @@ class OrganizationController extends Controller
             $organizations = Organization::orderBy('org_name')
                 ->paginate(20);
         }
-        
+
         return view('staff.organizations.index', compact('organizations'));
     }
 
@@ -40,7 +40,7 @@ class OrganizationController extends Controller
             return redirect()->route('staff.organizations.index')
                 ->with('info', 'Archive feature requires database migration. Please run: php artisan migrate');
         }
-        
+
         $archivedOrganizations = Organization::onlyTrashed()->orderBy('deleted_at', 'desc')->paginate(20);
         return view('staff.organizations.archives', compact('archivedOrganizations'));
     }
@@ -54,12 +54,7 @@ class OrganizationController extends Controller
     public function store(OrganizationRequest $request): RedirectResponse
     {
         $data = $request->validated();
-
-        // Handle custom organization name
-        if (isset($data['org_name']) && $data['org_name'] === 'Other' && !empty($data['custom_org_name'])) {
-            $data['org_name'] = $data['custom_org_name'];
-        }
-        unset($data['custom_org_name']);
+        unset($data['custom_org_name']); // Clean up just in case it's still sent
 
         Organization::create($data);
         return Redirect::route('staff.organizations.index')->with('status', 'organization-created');
@@ -76,12 +71,7 @@ class OrganizationController extends Controller
     {
         $organization = Organization::findOrFail($org_id);
         $data = $request->validated();
-
-        // Handle custom organization name
-        if (isset($data['org_name']) && $data['org_name'] === 'Other' && !empty($data['custom_org_name'])) {
-            $data['org_name'] = $data['custom_org_name'];
-        }
-        unset($data['custom_org_name']);
+        unset($data['custom_org_name']); // Clean up just in case it's still sent
 
         $organization->update($data);
         return Redirect::route('staff.organizations.index')->with('status', 'organization-updated');

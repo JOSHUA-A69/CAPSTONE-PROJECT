@@ -383,14 +383,14 @@
 
                     <div class="flex items-center gap-2 sm:gap-3">
                         @guest
-                            <!-- Sign In Button -->
-                            <a href="{{ route('login') }}"
-                               class="group relative inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-emerald-700 bg-white border-2 border-emerald-300 rounded-lg sm:rounded-2xl hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 shadow-sm hover:shadow-md">
+                            <!-- Sign In Button (opens modal) -->
+                            <button onclick="document.getElementById('signInModal').classList.remove('hidden'); document.body.style.overflow='hidden';"
+                               class="group relative inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-emerald-700 bg-white border-2 border-emerald-300 rounded-lg sm:rounded-2xl hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer">
                                 <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                 </svg>
                                 <span class="tracking-wide">SIGN IN</span>
-                            </a>
+                            </button>
 
                             <!-- Register Button -->
                             <a href="{{ route('register') }}"
@@ -657,6 +657,163 @@
                 // Smooth scroll polyfill for better cross-browser support
                 document.documentElement.style.scrollBehavior = 'smooth';
             });
+        </script>
+
+        {{-- ==================== GLASSY SIGN-IN MODAL ==================== --}}
+        <div id="signInModal" class="hidden fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            {{-- Backdrop --}}
+            <div onclick="closeSignInModal()" class="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"></div>
+
+            {{-- Glassy Card --}}
+            <div class="relative w-full max-w-md animate-[modalSlideUp_0.35s_ease-out]
+                        bg-white/80 dark:bg-gray-900/80
+                        backdrop-blur-xl backdrop-saturate-150
+                        border border-white/30 dark:border-gray-700/40
+                        rounded-3xl shadow-2xl shadow-emerald-900/10
+                        overflow-hidden">
+
+                {{-- Decorative top accent bar --}}
+                <div class="h-1.5 w-full bg-gradient-to-r from-emerald-400 via-green-500 to-teal-500"></div>
+
+                {{-- Close button --}}
+                <button onclick="closeSignInModal()"
+                        class="absolute top-5 right-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10"
+                        aria-label="Close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+
+                <div class="px-6 sm:px-8 pt-6 pb-6">
+                    {{-- Header --}}
+                    <div class="flex items-center justify-center gap-3 mb-2">
+                        <img src="/images/ers-logo.png" alt="eReligiousServices" class="w-10 h-10 object-contain drop-shadow" />
+                        <span class="text-emerald-700 dark:text-emerald-400 font-semibold text-sm tracking-tight">eReligiousServices</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mt-3 mb-1 tracking-tight text-center">Welcome Back</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-5 text-center">
+                        Sign in to access your account
+                    </p>
+
+                    {{-- Session status --}}
+                    <x-auth-session-status class="mb-4" :status="session('status')" />
+
+                    {{-- Form --}}
+                    <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                        @csrf
+
+                        {{-- Email --}}
+                        <div>
+                            <label for="modal_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email Address</label>
+                            <input id="modal_email" name="email" type="email" value="{{ old('email') }}" required autofocus autocomplete="username"
+                                   placeholder="you@example.com"
+                                   class="w-full px-4 py-2.5 text-sm bg-white/60 dark:bg-gray-800/60 border border-gray-200/80 dark:border-gray-600/60 rounded-xl
+                                          focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                                          backdrop-blur-sm transition-all duration-200 placeholder-gray-400" />
+                            <x-input-error :messages="$errors->get('email')" class="mt-1.5 text-xs" />
+                        </div>
+
+                        {{-- Password --}}
+                        <div>
+                            <label for="modal_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+                            <div class="relative">
+                                <input id="modal_password" name="password" type="password" required autocomplete="current-password"
+                                       placeholder="••••••••"
+                                       class="w-full px-4 py-2.5 pr-12 text-sm bg-white/60 dark:bg-gray-800/60 border border-gray-200/80 dark:border-gray-600/60 rounded-xl
+                                              focus:ring-2 focus:ring-emerald-500 focus:border-transparent
+                                              backdrop-blur-sm transition-all duration-200 placeholder-gray-400" />
+                                <button type="button"
+                                        onclick="toggleModalPassword()"
+                                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-emerald-600 transition-colors focus:outline-none z-10"
+                                        aria-label="Toggle password visibility">
+                                    <svg id="modalEyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    <svg id="modalEyeOffIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <x-input-error :messages="$errors->get('password')" class="mt-1.5 text-xs" />
+                        </div>
+
+                        <input type="hidden" name="role" value="" />
+
+                        {{-- Remember & Forgot --}}
+                        <div class="flex items-center justify-between gap-2">
+                            <label for="modal_remember" class="inline-flex items-center cursor-pointer group">
+                                <input id="modal_remember" type="checkbox" name="remember"
+                                       class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 focus:ring-offset-0 transition-colors" />
+                                <span class="ml-2 text-sm text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200 transition-colors select-none">Remember me</span>
+                            </label>
+                            @if (Route::has('password.request'))
+                                <a href="{{ route('password.request') }}"
+                                   class="text-sm text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-medium transition-colors whitespace-nowrap">
+                                    Forgot password?
+                                </a>
+                            @endif
+                        </div>
+
+                        {{-- Submit --}}
+                        <button type="submit"
+                                class="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-semibold text-white
+                                       bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 hover:from-emerald-600 hover:via-green-600 hover:to-teal-600
+                                       rounded-xl shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50
+                                       transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                            </svg>
+                            Sign In
+                        </button>
+                    </form>
+
+                    {{-- Register link --}}
+                    <p class="mt-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        Don't have an account?
+                        <a href="{{ route('register') }}" class="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 font-semibold transition-colors underline decoration-emerald-600/30 hover:decoration-emerald-600 underline-offset-2">
+                            Create Account
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal animation keyframes & helpers --}}
+        <style>
+            @keyframes modalSlideUp {
+                from { opacity: 0; transform: translateY(30px) scale(0.97); }
+                to   { opacity: 1; transform: translateY(0) scale(1); }
+            }
+        </style>
+        <script>
+            function closeSignInModal() {
+                document.getElementById('signInModal').classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+            // Close on Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeSignInModal();
+            });
+            function toggleModalPassword() {
+                const input = document.getElementById('modal_password');
+                const eyeIcon = document.getElementById('modalEyeIcon');
+                const eyeOffIcon = document.getElementById('modalEyeOffIcon');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    eyeIcon.classList.add('hidden');
+                    eyeOffIcon.classList.remove('hidden');
+                } else {
+                    input.type = 'password';
+                    eyeIcon.classList.remove('hidden');
+                    eyeOffIcon.classList.add('hidden');
+                }
+            }
+            // Auto-open modal if there are validation errors (form was submitted)
+            @if($errors->any())
+                document.getElementById('signInModal').classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            @endif
         </script>
     </body>
 </html>

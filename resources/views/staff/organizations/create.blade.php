@@ -27,37 +27,17 @@
                             <label for="org_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Organization Name <span class="text-red-500">*</span>
                             </label>
-                            <select id="org_name"
-                                    name="org_name"
-                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    required>
-                                <option value="">-- Select an organization --</option>
-                                <option value="Himig Diwa Chorale" @if(old('org_name') == 'Himig Diwa Chorale') selected @endif>Himig Diwa Chorale</option>
-                                <option value="Acolytes and Lectors" @if(old('org_name') == 'Acolytes and Lectors') selected @endif>Acolytes and Lectors</option>
-                                <option value="Children of Mary" @if(old('org_name') == 'Children of Mary') selected @endif>Children of Mary</option>
-                                <option value="Student Catholic Action" @if(old('org_name') == 'Student Catholic Action') selected @endif>Student Catholic Action</option>
-                                <option value="Young Missionaries Club" @if(old('org_name') == 'Young Missionaries Club') selected @endif>Young Missionaries Club</option>
-                                <option value="Catechetical Organization" @if(old('org_name') == 'Catechetical Organization') selected @endif>Catechetical Organization</option>
-                                <option value="Other" @if(old('org_name') == 'Other') selected @endif>Other (Custom Name)</option>
-                            </select>
+                            <input type="text"
+                                   id="org_name"
+                                   name="org_name"
+                                   value="{{ old('org_name') }}"
+                                   class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                   placeholder="Enter organization name"
+                                   required>
                             @error('org_name')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select from predefined organizations or choose "Other" for a custom name</p>
-                        </div>
-
-                        <!-- Custom Organization Name (shown when Other is selected) -->
-                        <div id="custom_org_name_field" class="mb-6 hidden">
-                            <label for="custom_org_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Custom Organization Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text"
-                                   id="custom_org_name"
-                                   name="custom_org_name"
-                                   value="{{ old('custom_org_name') }}"
-                                   class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                   placeholder="Enter organization name">
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter a custom organization name</p>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter any organization name</p>
                         </div>
 
                         <!-- Organization Description -->
@@ -123,30 +103,4 @@
             </div>
         </div>
     </div>
-
-    <!-- JavaScript to toggle custom org name field -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const orgNameSelect = document.getElementById('org_name');
-            const customField = document.getElementById('custom_org_name_field');
-            const customInput = document.getElementById('custom_org_name');
-
-            orgNameSelect.addEventListener('change', function() {
-                if (this.value === 'Other') {
-                    customField.classList.remove('hidden');
-                    customInput.setAttribute('required', 'required');
-                } else {
-                    customField.classList.add('hidden');
-                    customInput.removeAttribute('required');
-                    customInput.value = '';
-                }
-            });
-
-            // Check on page load (for old input)
-            if (orgNameSelect.value === 'Other') {
-                customField.classList.remove('hidden');
-                customInput.setAttribute('required', 'required');
-            }
-        });
-    </script>
 </x-app-layout>

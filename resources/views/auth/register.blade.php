@@ -591,7 +591,7 @@
 
             if (!validator) return;
 
-            // Special handling for elevated_code
+            // Special handling for elevated_code (doesn't have validation-field wrapper)
             if (fieldId === 'elevated_code') {
                 const role = document.getElementById('role').value;
                 const elevatedRoles = ['admin', 'staff', 'adviser', 'priest'];
@@ -599,20 +599,35 @@
                 if (!elevatedRoles.includes(role)) {
                     // Not an elevated role, so elevated code is not required
                     validationState[fieldId] = true;
+                    field.classList.remove('is-invalid');
                     return;
                 }
 
                 // For elevated roles, validate the code
                 if (value.trim().length === 0) {
-                    showValidation(fieldId, false, 'Elevated code is required for this role');
+                    validationState[fieldId] = false;
+                    field.classList.add('is-invalid');
+                    field.classList.remove('is-valid');
                     return;
                 }
-            } else {
-                // For other fields, check if they're empty
-                if (value.length === 0) {
-                    showValidation(fieldId, false, 'This field is required');
-                    return;
+
+                // Check if code meets minimum length
+                if (value.trim().length >= 6) {
+                    validationState[fieldId] = true;
+                    field.classList.remove('is-invalid');
+                    field.classList.add('is-valid');
+                } else {
+                    validationState[fieldId] = false;
+                    field.classList.add('is-invalid');
+                    field.classList.remove('is-valid');
                 }
+                return;
+            }
+
+            // For other fields, check if they're empty
+            if (value.length === 0) {
+                showValidation(fieldId, false, 'This field is required');
+                return;
             }
 
             if (validator.validate(value)) {
@@ -760,6 +775,11 @@
 
                 if (hasError) {
                     e.preventDefault();
+                    // Make sure button stays enabled so user can retry
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    submitBtn.classList.add('hover:bg-[#27ae60]', 'hover:shadow-xl', 'hover:scale-[1.01]');
+
                     // Scroll to first error
                     const firstError = document.querySelector('.is-invalid');
                     if (firstError) {
@@ -808,18 +828,39 @@
             // Handle server-side elevated code errors
             const elevatedCodeField = document.getElementById('elevated_code');
             if (elevatedCodeField) {
-                // Find server-side error rendered by x-input-error
-                const serverErrorEl = elevatedCodeField.closest('div')?.parentElement?.querySelector('.mt-2:last-child');
+                // Find ALL server-side error elements near the elevated_code field
+                const parentContainer = elevatedCodeField.closest('div')?.parentElement;
+                const serverErrorEls = parentContainer ? parentContainer.querySelectorAll('.mt-2') : [];
 
                 elevatedCodeField.addEventListener('input', () => {
-                    // Hide server-side error message when user starts typing
-                    if (serverErrorEl && serverErrorEl.textContent.trim().length > 0) {
-                        serverErrorEl.style.display = 'none';
-                    }
+                    // Hide server-side error messages when user starts typing
+                    serverErrorEls.forEach(el => {
+                        if (el.textContent.trim().length > 0) {
+                            el.style.display = 'none';
+                        }
+                    });
+
+                    // Re-validate and update validation state
+                    validateField('elevated_code');
+                    updateSubmitButton();
+                });
+
+                elevatedCodeField.addEventListener('blur', () => {
                     validateField('elevated_code');
                     updateSubmitButton();
                 });
             }
+
+            // Ensure ALL input fields (including password) update button on input
+            // This handles the case where server returns error and passwords are cleared
+            ['password', 'password_confirmation', 'elevated_code', 'first_name', 'last_name', 'email', 'phone'].forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', () => {
+                        updateSubmitButton();
+                    });
+                }
+            });
 
             // Reset button state immediately on page load (handles full page reload after server error)
             resetButtonFromLoadingState();
@@ -843,6 +884,17 @@
                         validateField(fieldId);
                     }
                 });
+
+                // Handle elevated_code initial state on page load (e.g. after server error)
+                const ecField = document.getElementById('elevated_code');
+                const roleVal = document.getElementById('role')?.value || '';
+                const isElevated = ['admin', 'staff', 'adviser', 'priest'].includes(roleVal);
+                if (ecField && isElevated && ecField.value.trim().length > 0) {
+                    // Has a value pre-filled, mark as valid so button can enable
+                    validationState['elevated_code'] = true;
+                } else if (!isElevated) {
+                    validationState['elevated_code'] = true;
+                }
 
                 // Also check agreement checkbox
                 const agreementField = document.getElementById('agreement');

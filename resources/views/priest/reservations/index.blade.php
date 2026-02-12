@@ -292,8 +292,8 @@
                                         $reservation->priest_confirmation !== 'declined')
                                         <!-- Inline Decline Panel (more reliable than overlay modal) -->
                                         <div id="declinePanel-{{ $reservation->reservation_id }}" class="hidden mt-4 p-4 border border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/10">
-                              <form method="POST" action="{{ route('priest.reservations.decline', $reservation->reservation_id) }}"
-                                  onsubmit="return confirm(`Are you sure you want to DECLINE this reservation?\n\nService: {{ addslashes($reservation->service->service_name) }}\nDate: {{ $reservation->schedule_date->format('M d, Y - g:i A') }}`)">
+                              <form id="declineForm-{{ $reservation->reservation_id }}" method="POST" action="{{ route('priest.reservations.decline', $reservation->reservation_id) }}"
+                                  onsubmit="showDeclineConfirmation(event, '{{ $reservation->reservation_id }}', '{{ addslashes($reservation->service->service_name) }}', '{{ $reservation->schedule_date->format('M d, Y - g:i A') }}')">
                                                 @csrf
                                                 <label class="block text-sm font-medium text-red-900 dark:text-red-200 mb-2">
                                                     Reason for declining <span class="text-red-600">*</span>
@@ -328,3 +328,96 @@
         </div>
     </div>
 </x-app-layout>
+
+<!-- Decline Confirmation Modal -->
+<div id="declineConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[110] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md transform transition-all">
+        <div class="px-6 py-5 border-b dark:border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Confirm Decline</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-5">
+            <p class="text-gray-700 dark:text-gray-300 mb-4">Are you sure you want to <strong>DECLINE</strong> this reservation?</p>
+            <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-4 space-y-2">
+                <div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Service</p>
+                    <p id="declineService" class="text-sm font-semibold text-gray-900 dark:text-white"></p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Date & Time</p>
+                    <p id="declineDate" class="text-sm font-semibold text-gray-900 dark:text-white"></p>
+                </div>
+            </div>
+            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p class="text-sm text-amber-800 dark:text-amber-200">
+                    <strong>Important:</strong> Administrators and the requestor will be immediately notified of your decline with your reason.
+                </p>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg flex gap-3">
+            <button type="button" onclick="confirmDecline()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-md transition duration-200 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Yes, Decline
+            </button>
+            <button type="button" onclick="hideDeclineConfirmation()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-semibold py-2.5 px-4 rounded-md transition duration-200">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDeclineReservationId = null;
+
+function showDeclineConfirmation(event, reservationId, serviceName, dateTime) {
+    event.preventDefault();
+    currentDeclineReservationId = reservationId;
+
+    // Update modal with reservation details
+    document.getElementById('declineService').textContent = serviceName;
+    document.getElementById('declineDate').textContent = dateTime;
+
+    // Show the modal
+    const modal = document.getElementById('declineConfirmModal');
+    modal.classList.remove('hidden');
+}
+
+function hideDeclineConfirmation() {
+    document.getElementById('declineConfirmModal').classList.add('hidden');
+    currentDeclineReservationId = null;
+}
+
+function confirmDecline() {
+    if (currentDeclineReservationId) {
+        const form = document.getElementById('declineForm-' + currentDeclineReservationId);
+        if (form) {
+            form.submit();
+        }
+    }
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        hideDeclineConfirmation();
+    }
+});
+
+// Close modal on outside click
+document.getElementById('declineConfirmModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideDeclineConfirmation();
+    }
+});
+</script>

@@ -29,7 +29,7 @@
             </div>
         @endif
 
-        <!-- Reservations Table -->
+        <!-- Reservations Table/Cards -->
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-2xl border border-gray-100 dark:border-gray-700">
             @if($reservations->isEmpty())
                 <div class="flex flex-col items-center justify-center py-16 px-4 text-center">
@@ -63,7 +63,8 @@
                     </p>
                 </div>
             @else
-                <div class="overflow-x-auto">
+                <!-- Desktop Table View -->
+                <div class="overflow-x-auto hidden md:block">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700/50">
                             <tr>
@@ -162,6 +163,99 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="block md:hidden space-y-3 p-4">
+                    @foreach($reservations as $r)
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-3xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-150">
+                        <!-- Card Frame -->
+                        <div class="space-y-4">
+                            <!-- Requestor Info -->
+                            <div class="flex items-start gap-3">
+                                <img class="h-12 w-12 rounded-full object-cover flex-shrink-0" src="{{ $r->user->profile_picture_url ?? 'https://ui-avatars.com/api/?name='.urlencode($r->user->full_name).'&color=7F9CF5&background=EBF4FF' }}" alt="">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">{{ $r->user->full_name ?? $r->user->email }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ $r->user->email }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Organization & Service -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Organization</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-200 truncate">{{ $r->organization->org_name ?? '—' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Service</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-gray-200 truncate">{{ $r->service->service_name ?? '—' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Schedule -->
+                            <div>
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Schedule</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ optional($r->schedule_date)->format('M d, Y') }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ optional($r->schedule_date)->format('h:i A') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status & Action -->
+                            <div class="flex items-center justify-between gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                <div class="flex-1">
+                                    @if($r->status === 'pending')
+                                        @php
+                                            $approvedCount = $r->organizations ? $r->organizations->where('pivot.approval_status', 'approved')->count() : 0;
+                                            $totalOrgs = $r->organizations ? $r->organizations->count() : 0;
+                                        @endphp
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800 whitespace-nowrap">
+                                            <span class="w-1 h-1 bg-orange-500 rounded-full mr-1.5 animate-pulse"></span>
+                                            @if($totalOrgs > 1)
+                                                Approval ({{ $approvedCount }}/{{ $totalOrgs }})
+                                            @else
+                                                Needs Approval
+                                            @endif
+                                        </span>
+                                    @elseif($r->status === 'adviser_approved')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800 whitespace-nowrap">
+                                            Waiting for Priest
+                                        </span>
+                                    @elseif($r->status === 'admin_approved')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800 whitespace-nowrap">
+                                            Waiting for Admin
+                                        </span>
+                                    @elseif($r->status === 'approved' || $r->status === 'confirmed')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800 whitespace-nowrap">
+                                            Approved
+                                        </span>
+                                    @elseif($r->status === 'completed')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800 whitespace-nowrap">
+                                            Completed
+                                        </span>
+                                    @elseif($r->status === 'rejected')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800 whitespace-nowrap">
+                                            Rejected
+                                        </span>
+                                    @elseif($r->status === 'cancelled')
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                                            Cancelled
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                                            {{ ucfirst(str_replace('_', ' ', $r->status)) }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <a href="{{ route('adviser.reservations.show', $r->reservation_id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 rounded-lg transition-colors font-semibold text-xs whitespace-nowrap">
+                                    Review
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
             @endif
         </div>

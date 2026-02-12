@@ -1,16 +1,23 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                Edit Organization: {{ $organization->org_name }}
-            </h2>
+        <div class="flex justify-between items-start gap-4">
+            <!-- Left: Title Section -->
+            <div class="flex-1">
+                <p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    Edit Organization
+                </p>
+                <h2 class="font-bold text-base sm:text-xl lg:text-2xl text-gray-800 dark:text-gray-200 truncate">
+                    {{ $organization->org_name }}
+                </h2>
+            </div>
 
+            <!-- Right: Back Button -->
             <a href="{{ route('staff.organizations.index') }}"
-               class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
+               class="inline-flex items-center px-3 sm:px-4 py-2 bg-gray-600 dark:bg-gray-700 border border-transparent rounded-md font-semibold text-xs text-white hover:bg-gray-700 dark:hover:bg-gray-600 active:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150 whitespace-nowrap flex-shrink-0">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
-                Back to Organizations
+                <span>Back</span>
             </a>
         </div>
     </x-slot>
@@ -45,46 +52,16 @@
                             <label for="org_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Organization Name <span class="text-red-500">*</span>
                             </label>
-                            <select id="org_name"
-                                    name="org_name"
-                                    class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    required>
-                                <option value="">-- Select an organization --</option>
-                                @php
-                                    $options = [
-                                        'Himig Diwa Chorale',
-                                        'Acolytes and Lectors',
-                                        'Children of Mary',
-                                        'Student Catholic Action',
-                                        'Young Missionaries Club',
-                                        'Catechetical Organization',
-                                    ];
-                                @endphp
-                                @foreach($options as $opt)
-                                    <option value="{{ $opt }}" @if(old('org_name', $organization->org_name) == $opt) selected @endif>
-                                        {{ $opt }}
-                                    </option>
-                                @endforeach
-                                <option value="Other" @if(old('org_name', $organization->org_name) == 'Other' || !in_array($organization->org_name, $options)) selected @endif>
-                                    Other (Custom Name)
-                                </option>
-                            </select>
+                            <input type="text"
+                                   id="org_name"
+                                   name="org_name"
+                                   value="{{ old('org_name', $organization->org_name) }}"
+                                   class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                   placeholder="{{ $organization->org_name }}"
+                                   required>
                             @error('org_name')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                             @enderror
-                        </div>
-
-                        <!-- Custom Organization Name (shown when Other is selected) -->
-                        <div id="custom_org_name_field" class="mb-6 {{ in_array($organization->org_name, $options ?? []) ? 'hidden' : '' }}">
-                            <label for="custom_org_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Custom Organization Name <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text"
-                                   id="custom_org_name"
-                                   name="custom_org_name"
-                                   value="{{ old('custom_org_name', !in_array($organization->org_name, $options ?? []) ? $organization->org_name : '') }}"
-                                   class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                   placeholder="Enter organization name">
                         </div>
 
                         <!-- Organization Description -->
@@ -150,29 +127,4 @@
         </div>
     </div>
 
-    <!-- JavaScript to toggle custom org name field -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const orgNameSelect = document.getElementById('org_name');
-            const customField = document.getElementById('custom_org_name_field');
-            const customInput = document.getElementById('custom_org_name');
-
-            orgNameSelect.addEventListener('change', function() {
-                if (this.value === 'Other') {
-                    customField.classList.remove('hidden');
-                    customInput.setAttribute('required', 'required');
-                } else {
-                    customField.classList.add('hidden');
-                    customInput.removeAttribute('required');
-                    customInput.value = '';
-                }
-            });
-
-            // Check on page load
-            if (orgNameSelect.value === 'Other') {
-                customField.classList.remove('hidden');
-                customInput.setAttribute('required', 'required');
-            }
-        });
-    </script>
 </x-app-layout>
