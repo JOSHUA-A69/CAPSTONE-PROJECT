@@ -25,58 +25,69 @@
                     @else
                         <div class="space-y-4">
                             @foreach($archivedHistory as $h)
-                            <div class="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm" id="archived-history-{{ $h->history_id }}">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span class="px-2 py-1 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium">
+                            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow" id="archived-history-{{ $h->history_id }}">
+                                <div class="space-y-3">
+                                    <!-- Header -->
+                                    <div class="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="px-3 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs rounded-full font-medium">
                                                 {{ $h->reservation->activity_name ?? 'N/A' }}
                                             </span>
-                                            <span class="text-xs text-gray-500 dark:text-gray-400">
-                                                Reservation ID: {{ $h->reservation_id }}
+                                            <span class="text-xs text-gray-400 dark:text-gray-500">
+                                                ID: #{{ $h->reservation_id }}
                                             </span>
                                         </div>
-                                        
-                                        <div class="flex">
-                                            <div class="flex-shrink-0 w-2 bg-gray-400 rounded-full mr-4"></div>
-                                            <div class="flex-1">
+                                        <p class="text-xs text-gray-400 dark:text-gray-500 italic">
+                                            Archived {{ $h->archived_at->diffForHumans() }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Content -->
+                                    <div class="flex gap-4">
+                                        <div class="flex-shrink-0 mt-1">
+                                            <div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600"></div>
+                                        </div>
+                                        <div class="flex-1 space-y-2">
+                                            <div>
                                                 <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                                     {{ ucfirst(str_replace('_', ' ', $h->action)) }}
                                                 </p>
-                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    by {{ $h->performedBy?->full_name ?? 'System' }}
+                                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                    by <span class="font-medium text-gray-700 dark:text-gray-300">{{ $h->performedBy?->full_name ?? 'System' }}</span>
                                                     • {{ $h->created_at->format('M d, Y h:i A') }}
                                                 </p>
-                                                @if($h->remarks)
-                                                <p class="text-sm text-gray-700 dark:text-gray-300 mt-2 p-2 bg-white dark:bg-gray-600 rounded">
-                                                    "{{ $h->remarks }}"
-                                                </p>
-                                                @endif
-                                                <p class="text-xs text-gray-400 dark:text-gray-500 mt-2 italic">
-                                                    Archived {{ $h->archived_at->diffForHumans() }}
-                                                    by {{ $h->archivedBy?->full_name ?? 'Unknown' }}
-                                                </p>
                                             </div>
+
+                                            @if($h->remarks)
+                                            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm text-gray-600 dark:text-gray-300 italic border border-gray-100 dark:border-gray-700">
+                                                "{{ $h->remarks }}"
+                                            </div>
+                                            @endif
+                                            
+                                            <p class="text-xs text-gray-400 dark:text-gray-500">
+                                                Archived by {{ $h->archivedBy?->full_name ?? 'Unknown' }}
+                                            </p>
                                         </div>
                                     </div>
-                                    
-                                    <div class="ml-4 flex gap-2">
+
+                                    <!-- Actions -->
+                                    <div class="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                                         <button onclick="restoreHistory({{ $h->history_id }})" 
-                                                class="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-600 rounded-md transition-colors text-xs font-medium"
+                                                class="flex items-center justify-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:text-green-300 rounded-lg transition-colors text-sm font-medium w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
                                                 title="Restore this item">
-                                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                             </svg>
-                                            Restore
+                                            <span>Restore</span>
                                         </button>
                                         <a href="{{ route('priest.reservations.show', $h->reservation_id) }}" 
-                                           class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-md transition-colors text-xs font-medium"
+                                           class="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:hover:bg-indigo-900/30 dark:text-indigo-300 rounded-lg transition-colors text-sm font-medium w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                                            title="View reservation">
-                                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                             </svg>
-                                            View
+                                            <span>View Reservation</span>
                                         </a>
                                     </div>
                                 </div>
