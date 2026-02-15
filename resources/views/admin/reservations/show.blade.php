@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col gap-2 items-start">
-            <h2 class="text-heading text-2xl font-bold text-gray-800 dark:text-gray-200 whitespace-nowrap">
+            <h2 class="text-heading text-2xl font-bold text-gray-800 dark:text-gray-200">
                 Reservation Details
             </h2>
 
-            <a href="{{ route('admin.reservations.index') }}" class="btn-ghost whitespace-nowrap self-start">
+            <a href="{{ route('admin.reservations.index') }}" class="btn-ghost self-start">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
@@ -19,8 +19,8 @@
             <!-- Success/Error Messages -->
             @if(session('status'))
                 <div class="mb-6">
-                    <span class="badge-success">
-                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                    <span class="badge-success whitespace-normal h-auto py-2 inline-block">
+                        <svg class="w-4 h-4 mr-1.5 inline-block -mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                         {{ session('message', session('status')) }}
@@ -30,8 +30,8 @@
 
             @if(session('error'))
                 <div class="mb-6">
-                    <span class="badge-danger">
-                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                    <span class="badge-danger whitespace-normal h-auto py-2 inline-block">
+                        <svg class="w-4 h-4 mr-1.5 inline-block -mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                         </svg>
                         {{ session('error') }}
@@ -70,13 +70,13 @@
                         <div>
                             <h3 class="form-label mb-2">Current Status</h3>
                             @if(in_array($reservation->status, ['approved', 'confirmed', 'completed']))
-                                <span class="badge-success text-lg">{{ $statusLabel }}</span>
+                                <span class="badge-success text-lg whitespace-normal text-center inline-block">{{ $statusLabel }}</span>
                             @elseif(in_array($reservation->status, ['rejected', 'cancelled']))
-                                <span class="badge-danger text-lg">{{ $statusLabel }}</span>
+                                <span class="badge-danger text-lg whitespace-normal text-center inline-block">{{ $statusLabel }}</span>
                             @elseif($reservation->status === 'admin_approved')
-                                <span class="badge-info text-lg">{{ $statusLabel }}</span>
+                                <span class="badge-info text-lg whitespace-normal text-center inline-block">{{ $statusLabel }}</span>
                             @else
-                                <span class="badge-warning text-lg">{{ $statusLabel }}</span>
+                                <span class="badge-warning text-lg whitespace-normal text-center inline-block">{{ $statusLabel }}</span>
                             @endif
                         </div>
                         <div class="text-left sm:text-right">
@@ -105,15 +105,15 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="form-label">Service</label>
-                                    <p class="text-heading">{{ $reservation->service->service_name ?? '—' }}</p>
+                                    <p class="text-heading break-words">{{ $reservation->service->service_name ?? '—' }}</p>
                                 </div>
 
                                 <div>
                                     <label class="form-label">Venue</label>
-                                    <p class="text-heading">
+                                    <p class="text-heading break-words">
                                         @if($reservation->custom_venue_name)
                                             {{ $reservation->custom_venue_name }}
-                                            <span class="badge-info ml-2">Custom</span>
+                                            <span class="badge-info ml-2 whitespace-normal inline-block">Custom</span>
                                         @else
                                             {{ $reservation->venue->name ?? '—' }}
                                         @endif
@@ -122,7 +122,7 @@
 
                                 <div>
                                     <label class="form-label">Schedule</label>
-                                    <p class="text-heading text-indigo-600">
+                                    <p class="text-heading text-indigo-600 break-words">
                                         {{ optional($reservation->schedule_date)->format('M d, Y') }}<br>
                                         <span class="text-sm">{{ optional($reservation->schedule_date)->format('h:i A') }}</span>
                                     </p>
@@ -134,30 +134,30 @@
                                 </div>
 
                                 @if($reservation->activity_name)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Activity Name</label>
-                                    <p class="mt-1 text-base font-semibold">{{ $reservation->activity_name }}</p>
+                                    <p class="mt-1 text-base font-semibold break-words">{{ $reservation->activity_name }}</p>
                                 </div>
                                 @endif
 
                                 @if($reservation->theme)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Theme</label>
-                                    <p class="mt-1 text-base">{{ $reservation->theme }}</p>
+                                    <p class="mt-1 text-base break-words">{{ $reservation->theme }}</p>
                                 </div>
                                 @endif
 
                                 @if($reservation->purpose)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Purpose</label>
-                                    <p class="mt-1 text-base">{{ $reservation->purpose }}</p>
+                                    <p class="mt-1 text-base break-words">{{ $reservation->purpose }}</p>
                                 </div>
                                 @endif
 
                                 @if($reservation->details)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Additional Details</label>
-                                    <p class="mt-1 text-base">{{ $reservation->details }}</p>
+                                    <p class="mt-1 text-base break-words">{{ $reservation->details }}</p>
                                 </div>
                                 @endif
                             </div>
@@ -174,23 +174,23 @@
                                 Requester Information
                             </h3>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Name</label>
-                                    <p class="mt-1 text-base">{{ $reservation->user?->name ?? 'Unknown User' }}</p>
+                                    <p class="mt-1 text-base break-words">{{ $reservation->user?->name ?? 'Unknown User' }}</p>
                                 </div>
 
                                 <div>
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</label>
-                                    <p class="mt-1 text-base">{{ $reservation->user?->email ?? '—' }}</p>
+                                    <p class="mt-1 text-base break-all">{{ $reservation->user?->email ?? '—' }}</p>
                                 </div>
 
                                 @if($reservation->organization)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Organization</label>
-                                    <p class="mt-1 text-base font-semibold">{{ $reservation->organization->org_name }}</p>
+                                    <p class="mt-1 text-base font-semibold break-words">{{ $reservation->organization->org_name }}</p>
                                     @if($reservation->organization->adviser)
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
                                             Adviser: {{ $reservation->organization->adviser->name }}
                                         </p>
                                     @endif
@@ -220,13 +220,13 @@
                                 <div class="space-y-3">
                                     <div>
                                         <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Priest Name</label>
-                                        <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $reservation->external_priest_name }}</p>
+                                        <p class="font-semibold text-lg text-gray-900 dark:text-gray-100 break-words">{{ $reservation->external_priest_name }}</p>
                                     </div>
                                     
                                     @if($reservation->external_priest_contact)
                                     <div>
                                         <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Contact Information</label>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $reservation->external_priest_contact }}</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 break-words">{{ $reservation->external_priest_contact }}</p>
                                     </div>
                                     @else
                                     <div>
@@ -266,8 +266,8 @@
                             <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700 space-y-3">
                                 @foreach($assignedPriests as $p)
                                 <div>
-                                    <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $p->full_name ?? $p->name }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $p->email }}</p>
+                                    <p class="font-semibold text-lg text-gray-900 dark:text-gray-100 break-words">{{ $p->full_name ?? $p->name }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 break-all">{{ $p->email }}</p>
                                 </div>
                                 @endforeach
                             </div>
@@ -284,8 +284,8 @@
                             </h3>
 
                             <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                                <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $reservation->officiant?->full_name ?? $reservation->officiant?->name ?? 'Unknown Priest' }}</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $reservation->officiant?->email }}</p>
+                                <p class="font-semibold text-lg text-gray-900 dark:text-gray-100 break-words">{{ $reservation->officiant?->full_name ?? $reservation->officiant?->name ?? 'Unknown Priest' }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 break-all">{{ $reservation->officiant?->email }}</p>
                             </div>
                         </div>
                     </div>
