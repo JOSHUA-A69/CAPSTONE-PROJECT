@@ -31,9 +31,10 @@ class MarchScenarioSeeder extends Seeder
         // Services
         if (Service::count() === 0) {
             $this->command->info('Creating default services...');
-            Service::create(['service_name' => 'Mass', 'service_category' => 'Mass', 'description' => 'Holy Mass']);
-            Service::create(['service_name' => 'Baptism', 'service_category' => 'Sacraments', 'description' => 'Holy Baptism']);
-            Service::create(['service_name' => 'Wedding', 'service_category' => 'Sacraments', 'description' => 'Holy Matrimony']);
+            // Use standard categories to avoid Enum constraint issues
+            Service::create(['service_name' => 'Mass', 'service_category' => 'Liturgical Celebrations', 'description' => 'Holy Mass']);
+            Service::create(['service_name' => 'Baptism', 'service_category' => 'Liturgical Celebrations', 'description' => 'Holy Baptism']);
+            Service::create(['service_name' => 'Wedding', 'service_category' => 'Liturgical Celebrations', 'description' => 'Holy Matrimony']);
         }
         $services = Service::all();
 
@@ -74,25 +75,34 @@ class MarchScenarioSeeder extends Seeder
             $selectedOrgId = null;
             
             if ($rand >= 4 && $rand <= 6) {
-                $selectedOrgId = $himigOrg->org_id;
+                // Check if org exists before accessing property
+                if ($himigOrg) {
+                    $selectedOrgId = $himigOrg->org_id;
+                }
             } elseif ($rand >= 7) {
-                $selectedOrgId = $acolyteOrg->org_id;
+                // Check if org exists before accessing property
+                if ($acolyteOrg) {
+                    $selectedOrgId = $acolyteOrg->org_id;
+                }
             }
 
             // Random date in March 2026
             $date = Carbon::create(2026, 3, rand(1, 31), rand(7, 18), 0, 0);
 
-            Reservation::create([
-                'user_id' => $requestors->random()->id,
-                'service_id' => $services->random()->service_id,
-                'venue_id' => $venue->venue_id,
-                'schedule_date' => $date,
-                'status' => 'pending', 
-                'priest_selection_type' => 'any_available',
-                'org_id' => $selectedOrgId,
-                'purpose' => 'March Special Event ' . ($i + 1),
-                'participants_count' => rand(50, 150),
-            ]);
+            // Ensure we have user/service/venue before creating
+            if ($requestors->count() > 0 && $services->count() > 0 && $venue) {
+                Reservation::create([
+                    'user_id' => $requestors->random()->id,
+                    'service_id' => $services->random()->service_id,
+                    'venue_id' => $venue->venue_id,
+                    'schedule_date' => $date,
+                    'status' => 'pending', 
+                    'priest_selection_type' => 'any_available',
+                    'org_id' => $selectedOrgId,
+                    'purpose' => 'March Special Event ' . ($i + 1),
+                    'participants_count' => rand(50, 150),
+                ]);
+            }
         }
         $this->command->info('10 Reservations created.');
 
@@ -101,32 +111,36 @@ class MarchScenarioSeeder extends Seeder
 
         // Himig Bookings (5)
         for ($i = 0; $i < 5; $i++) {
-            OrganizationBookingRequest::create([
-                'requestor_id' => $requestors->random()->id, // Assuming a member requests it
-                'organization_id' => $himigOrg->org_id,
-                'activity_name' => 'Choral Practice Session ' . ($i + 1),
-                'purpose' => 'Rehearsal for Holy Week',
-                'requested_date' => Carbon::create(2026, 3, rand(1, 31), rand(16, 20), 0, 0),
-                'requested_venue' => 'Parish Hall',
-                'estimated_participants' => rand(15, 40),
-                'status' => 'pending',
-                'submitted_at' => now()->subDays(rand(1, 5)),
-            ]);
+            if ($himigOrg && $requestors->count() > 0) {
+                OrganizationBookingRequest::create([
+                    'requestor_id' => $requestors->random()->id, // Assuming a member requests it
+                    'organization_id' => $himigOrg->org_id,
+                    'activity_name' => 'Choral Practice Session ' . ($i + 1),
+                    'purpose' => 'Rehearsal for Holy Week',
+                    'requested_date' => Carbon::create(2026, 3, rand(1, 31), rand(16, 20), 0, 0),
+                    'requested_venue' => 'Parish Hall',
+                    'estimated_participants' => rand(15, 40),
+                    'status' => 'pending',
+                    'submitted_at' => now()->subDays(rand(1, 5)),
+                ]);
+            }
         }
 
         // Acolyte Bookings (5)
         for ($i = 0; $i < 5; $i++) {
-            OrganizationBookingRequest::create([
-                'requestor_id' => $requestors->random()->id,
-                'organization_id' => $acolyteOrg->org_id,
-                'activity_name' => 'Server Training ' . ($i + 1),
-                'purpose' => 'Training for new altar servers',
-                'requested_date' => Carbon::create(2026, 3, rand(1, 31), rand(8, 12), 0, 0),
-                'requested_venue' => 'Main Church',
-                'estimated_participants' => rand(10, 20),
-                'status' => 'pending',
-                'submitted_at' => now()->subDays(rand(1, 5)),
-            ]);
+            if ($acolyteOrg && $requestors->count() > 0) {
+                OrganizationBookingRequest::create([
+                    'requestor_id' => $requestors->random()->id,
+                    'organization_id' => $acolyteOrg->org_id,
+                    'activity_name' => 'Server Training ' . ($i + 1),
+                    'purpose' => 'Training for new altar servers',
+                    'requested_date' => Carbon::create(2026, 3, rand(1, 31), rand(8, 12), 0, 0),
+                    'requested_venue' => 'Main Church',
+                    'estimated_participants' => rand(10, 20),
+                    'status' => 'pending',
+                    'submitted_at' => now()->subDays(rand(1, 5)),
+                ]);
+            }
         }
 
         $this->command->info('10 Organization Bookings created.');
