@@ -88,11 +88,10 @@ class MarchScenarioSeeder extends Seeder
                 'venue_id' => $venue->venue_id,
                 'schedule_date' => $date,
                 'status' => 'pending', 
-                'priest_selection_type' => 'admin_assign',
+                'priest_selection_type' => 'any_available',
                 'org_id' => $selectedOrgId,
                 'purpose' => 'March Special Event ' . ($i + 1),
                 'participants_count' => rand(50, 150),
-                'contacted_at' => now(),
             ]);
         }
         $this->command->info('10 Reservations created.');
