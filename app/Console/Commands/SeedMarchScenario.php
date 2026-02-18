@@ -26,8 +26,10 @@ class SeedMarchScenario extends Command
     public function handle()
     {
         $this->info('Running custom seeder for March scenario...');
+        // Force is required in production environments to bypass confirmation prompt
         $this->call('db:seed', [
-            '--class' => 'Database\Seeders\MarchScenarioSeeder'
+            '--class' => 'Database\Seeders\MarchScenarioSeeder',
+            '--force' => true
         ]);
         $this->info('March scenario seeded successfully.');
     }
