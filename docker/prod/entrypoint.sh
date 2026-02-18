@@ -39,7 +39,7 @@ php artisan migrate --force
 
 # Run March Scenario Seeder (Enabled temporarily)
 echo "Running March Scenario Seeder..."
-php artisan seed:march-scenario
+php artisan seed:march-scenario || echo "Seeder failed but continuing (check logs)"
 
 # Run seeds automatically (Disabled to prevent duplicate data issues on re-deploy)
 # echo "Running seeds..."
