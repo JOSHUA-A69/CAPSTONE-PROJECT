@@ -37,6 +37,10 @@ chmod -R 775 /var/www/html/bootstrap/cache
 echo "Running migrations..."
 php artisan migrate --force
 
+# Run March Scenario Seeder (Enabled temporarily)
+echo "Running March Scenario Seeder..."
+php artisan seed:march-scenario
+
 # Run seeds automatically (Disabled to prevent duplicate data issues on re-deploy)
 # echo "Running seeds..."
 # php artisan db:seed --force
