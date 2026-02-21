@@ -38,6 +38,6 @@ class PriestDecline extends Model
      */
     public function priest(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'priest_id', 'id');
+        return $this->belongsTo(User::class, 'priest_id', 'id')->withTrashed();
     }
 }

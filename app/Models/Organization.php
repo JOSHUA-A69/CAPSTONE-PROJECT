@@ -50,7 +50,7 @@ class Organization extends Model
 
     public function adviser()
     {
-        return $this->belongsTo(User::class, 'adviser_id');
+        return $this->belongsTo(User::class, 'adviser_id')->withTrashed();
     }
 
     /**

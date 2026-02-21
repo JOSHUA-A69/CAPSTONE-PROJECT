@@ -78,27 +78,27 @@ class ReservationCancellation extends Model
 
     public function requestor()
     {
-        return $this->belongsTo(User::class, 'requestor_id');
+        return $this->belongsTo(User::class, 'requestor_id')->withTrashed();
     }
 
     public function staffConfirmer()
     {
-        return $this->belongsTo(User::class, 'staff_confirmed_by');
+        return $this->belongsTo(User::class, 'staff_confirmed_by')->withTrashed();
     }
 
     public function adminConfirmer()
     {
-        return $this->belongsTo(User::class, 'admin_confirmed_by');
+        return $this->belongsTo(User::class, 'admin_confirmed_by')->withTrashed();
     }
 
     public function adviserConfirmer()
     {
-        return $this->belongsTo(User::class, 'adviser_confirmed_by');
+        return $this->belongsTo(User::class, 'adviser_confirmed_by')->withTrashed();
     }
 
     public function priestConfirmer()
     {
-        return $this->belongsTo(User::class, 'priest_confirmed_by');
+        return $this->belongsTo(User::class, 'priest_confirmed_by')->withTrashed();
     }
 
     // Helper methods

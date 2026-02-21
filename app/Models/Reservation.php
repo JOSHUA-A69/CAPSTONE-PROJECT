@@ -121,12 +121,12 @@ class Reservation extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function organization()
     {
-        return $this->belongsTo(Organization::class, 'org_id', 'org_id');
+        return $this->belongsTo(Organization::class, 'org_id', 'org_id')->withTrashed();
     }
 
     /**
@@ -136,7 +136,7 @@ class Reservation extends Model
     {
         return $this->belongsToMany(Organization::class, 'reservation_organization', 'reservation_id', 'organization_id')
             ->withPivot('notified', 'notified_at', 'approval_status', 'rejection_reason', 'responded_by', 'responded_at')
-            ->withTimestamps();
+            ->withTimestamps()->withTrashed(); // Include soft-deleted
     }
 
     /**
@@ -146,7 +146,7 @@ class Reservation extends Model
     {
         return $this->belongsToMany(User::class, 'reservation_priest', 'reservation_id', 'priest_id')
             ->withPivot('confirmation_status', 'decline_reason', 'notified', 'notified_at', 'responded_at')
-            ->withTimestamps();
+            ->withTimestamps()->withTrashed(); // Include soft-deleted
     }
 
     public function venue()
@@ -164,7 +164,7 @@ class Reservation extends Model
      */
     public function officiant()
     {
-        return $this->belongsTo(User::class, 'officiant_id');
+        return $this->belongsTo(User::class, 'officiant_id')->withTrashed();
     }
 
     /**
@@ -172,7 +172,7 @@ class Reservation extends Model
      */
     public function cancelledByUser()
     {
-        return $this->belongsTo(User::class, 'cancelled_by');
+        return $this->belongsTo(User::class, 'cancelled_by')->withTrashed();
     }
 
     /**
@@ -180,7 +180,7 @@ class Reservation extends Model
      */
     public function rejectedBy()
     {
-        return $this->belongsTo(User::class, 'rejected_by');
+        return $this->belongsTo(User::class, 'rejected_by')->withTrashed();
     }
 
     /**
@@ -188,7 +188,7 @@ class Reservation extends Model
      */
     public function approvedBy()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'approved_by')->withTrashed();
     }
 
     public function history()
