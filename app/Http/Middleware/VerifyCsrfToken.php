@@ -6,5 +6,12 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken as Middleware;
 
 class VerifyCsrfToken extends Middleware
 {
-    // Inherit behavior from framework middleware
+    protected function inExceptArray($request): bool
+    {
+        if (app()->environment('local') && $request->is('dev/chat/unread/debug')) {
+            return true;
+        }
+
+        return parent::inExceptArray($request);
+    }
 }

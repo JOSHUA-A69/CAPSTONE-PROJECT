@@ -954,8 +954,8 @@
         calendar.render();
     }
 </script>
-<script id="requestor-reservations-json" type="application/json">{!! $reservations->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
-<script id="requestor-schedules-json" type="application/json">{!! ($schedules ?? collect())->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
+<script id="requestor-reservations-json" type="application/json">@json($reservations)</script>
+<script id="requestor-schedules-json" type="application/json">@json($schedules ?? collect())</script>
 @endpush
 
 @push('scripts')

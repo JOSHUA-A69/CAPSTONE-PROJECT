@@ -675,6 +675,13 @@
 
     // Show validation error modal
     function showValidationErrorModal(errors) {
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
         const existingModal = document.getElementById('validationErrorModal');
         if (existingModal) {
             existingModal.remove();
@@ -685,7 +692,7 @@
         const errorListHtml = displayErrors.map(err => `
             <li class="flex items-center gap-2 py-2 border-b border-gray-100 last:border-0 text-sm text-gray-700">
                 <span class="text-red-500 font-bold">•</span>
-                <span>${err}</span>
+                <span>${escapeHtml(err)}</span>
             </li>
         `).join('');
         
@@ -965,6 +972,13 @@
         const targetElement = document.getElementById(afterElementId);
         if (!targetElement) return;
 
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
         const messageDiv = document.createElement('div');
         messageDiv.className = 'availability-message flex items-center gap-2 text-xs mt-2 p-2 rounded';
         
@@ -980,7 +994,7 @@
         };
         
         messageDiv.className += ' ' + (styles[type] || styles.warning);
-        messageDiv.innerHTML = `<span class="font-bold">${icons[type] || icons.warning}</span> <span>${message}</span>`;
+           messageDiv.innerHTML = `<span class="font-bold">${icons[type] || icons.warning}</span> <span>${escapeHtml(message)}</span>`;
         
         if (targetElement.nextSibling) {
              targetElement.parentNode.insertBefore(messageDiv, targetElement.nextSibling);

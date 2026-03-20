@@ -330,10 +330,10 @@ const requestVolumeCtx = document.getElementById('requestVolumeChart').getContex
 new Chart(requestVolumeCtx, {
     type: 'line',
     data: {
-        labels: {!! json_encode($chartData['volume']['labels'] ?? []) !!},
+        labels: @json($chartData['volume']['labels'] ?? []),
         datasets: [{
             label: 'Requests Submitted',
-            data: {!! json_encode($chartData['volume']['data'] ?? []) !!},
+            data: @json($chartData['volume']['data'] ?? []),
             borderColor: 'rgb(75, 192, 192)',
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             tension: 0.1
@@ -382,10 +382,10 @@ const responseTimeCtx = document.getElementById('responseTimeChart').getContext(
 new Chart(responseTimeCtx, {
     type: 'bar',
     data: {
-        labels: {!! json_encode($chartData['response_time']['labels'] ?? []) !!},
+        labels: @json($chartData['response_time']['labels'] ?? []),
         datasets: [{
             label: 'Average Response Time (hours)',
-            data: {!! json_encode($chartData['response_time']['data'] ?? []) !!},
+            data: @json($chartData['response_time']['data'] ?? []),
             backgroundColor: 'rgba(54, 162, 235, 0.5)',
             borderColor: 'rgba(54, 162, 235, 1)',
             borderWidth: 1

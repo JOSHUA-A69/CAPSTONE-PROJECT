@@ -45,8 +45,11 @@ class ReservationNotificationService
 
         // Email to requestor (confirmation)
         if ($reservation->user && $reservation->user->email) {
-            Mail::to($reservation->user->email)
-                ->send(new ReservationSubmitted($reservation));
+            $this->sendMailableSafely($reservation->user->email, new ReservationSubmitted($reservation), [
+                'action' => 'reservation_submitted_requestor',
+                'reservation_id' => $reservation->reservation_id,
+                'user_id' => $reservation->user_id,
+            ]);
         }
 
         // In-app notification to requestor (message varies by priest selection type)
@@ -89,7 +92,11 @@ class ReservationNotificationService
 
             try {
                 if ($adviser->email) {
-                    Mail::to($adviser->email)->send(new \App\Mail\ReservationSubmittedToAdviser($reservation, $adviser));
+                    $this->sendMailableSafely($adviser->email, new \App\Mail\ReservationSubmittedToAdviser($reservation, $adviser), [
+                        'action' => 'reservation_submitted_adviser',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $adviser->id,
+                    ]);
                     Log::info('Email sent to adviser: ' . $adviser->email);
                 }
             } catch (\Throwable $e) {
@@ -145,7 +152,11 @@ class ReservationNotificationService
                 // Send email to priest
                 try {
                     if ($priest->email) {
-                        Mail::to($priest->email)->send(new \App\Mail\ReservationPriestAssigned($reservation));
+                        $this->sendMailableSafely($priest->email, new \App\Mail\ReservationPriestAssigned($reservation), [
+                            'action' => 'reservation_submitted_priest_assignment',
+                            'reservation_id' => $reservation->reservation_id,
+                            'user_id' => $priest->id,
+                        ]);
                         Log::info('Email sent to priest: ' . $priest->email);
                     }
                 } catch (\Throwable $e) {
@@ -230,8 +241,11 @@ class ReservationNotificationService
         // Email to requestor
         try {
             if ($reservation->user && $reservation->user->email) {
-                Mail::to($reservation->user->email)
-                    ->send(new ReservationAdviserApproved($reservation, $remarks));
+                $this->sendMailableSafely($reservation->user->email, new ReservationAdviserApproved($reservation, $remarks), [
+                    'action' => 'adviser_approved_requestor',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $reservation->user_id,
+                ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Failed to send adviser approval email to requestor: ' . $e->getMessage());
@@ -242,8 +256,11 @@ class ReservationNotificationService
             $admins = User::whereIn('role', ['admin', 'staff'])->get();
             foreach ($admins as $admin) {
                 if ($admin->email) {
-                    Mail::to($admin->email)
-                        ->send(new \App\Mail\AdviserApprovedToAdmin($reservation, $remarks));
+                    $this->sendMailableSafely($admin->email, new \App\Mail\AdviserApprovedToAdmin($reservation, $remarks), [
+                        'action' => 'adviser_approved_admin_staff',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $admin->id,
+                    ]);
                 }
             }
         } catch (\Throwable $e) {
@@ -283,8 +300,11 @@ class ReservationNotificationService
             try {
                 // Email to priest
                 if ($reservation->officiant->email) {
-                    Mail::to($reservation->officiant->email)
-                        ->send(new ReservationPriestAssigned($reservation));
+                    $this->sendMailableSafely($reservation->officiant->email, new ReservationPriestAssigned($reservation), [
+                        'action' => 'adviser_approved_priest_assigned',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $reservation->officiant_id,
+                    ]);
                 }
 
                 // In-app notification to priest
@@ -360,8 +380,11 @@ class ReservationNotificationService
         // Email to requestor
         try {
             if ($reservation->user && $reservation->user->email) {
-                Mail::to($reservation->user->email)
-                    ->send(new ReservationAdviserRejected($reservation, $reason));
+                $this->sendMailableSafely($reservation->user->email, new ReservationAdviserRejected($reservation, $reason), [
+                    'action' => 'adviser_rejected_requestor',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $reservation->user_id,
+                ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Failed to send adviser rejection email to requestor: ' . $e->getMessage());
@@ -385,8 +408,11 @@ class ReservationNotificationService
             $staff = User::where('role', 'staff')->get();
             foreach ($staff as $member) {
                 if ($member->email) {
-                    Mail::to($member->email)
-                        ->send(new \App\Mail\AdviserRejectedToAdmin($reservation, $reason));
+                    $this->sendMailableSafely($member->email, new \App\Mail\AdviserRejectedToAdmin($reservation, $reason), [
+                        'action' => 'adviser_rejected_staff',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $member->id,
+                    ]);
                 }
             }
         } catch (\Throwable $e) {
@@ -446,8 +472,11 @@ class ReservationNotificationService
         // Email to requestor (using styled mailable)
         if ($reservation->user && $reservation->user->email) {
             try {
-                Mail::to($reservation->user->email)
-                    ->send(new \App\Mail\ReservationAdminRejected($reservation, $reason, $adminName));
+                $this->sendMailableSafely($reservation->user->email, new \App\Mail\ReservationAdminRejected($reservation, $reason, $adminName), [
+                    'action' => 'admin_rejected_requestor',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $reservation->user_id,
+                ]);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('Failed to send admin reject email to requestor: ' . $e->getMessage());
             }
@@ -512,8 +541,11 @@ class ReservationNotificationService
         // 1. Notify Requestor (using AdminRejected mailable as generic management rejection)
         if ($reservation->user && $reservation->user->email) {
             try {
-                Mail::to($reservation->user->email)
-                    ->send(new \App\Mail\ReservationAdminRejected($reservation, $reason, $staffName));
+                $this->sendMailableSafely($reservation->user->email, new \App\Mail\ReservationAdminRejected($reservation, $reason, $staffName), [
+                    'action' => 'staff_rejected_requestor',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $reservation->user_id,
+                ]);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('Failed to send staff reject email to requestor: ' . $e->getMessage());
             }
@@ -667,8 +699,11 @@ class ReservationNotificationService
 
         // Email to priest
         if ($reservation->officiant && $reservation->officiant->email) {
-            Mail::to($reservation->officiant->email)
-                ->send(new ReservationPriestAssigned($reservation));
+            $this->sendMailableSafely($reservation->officiant->email, new ReservationPriestAssigned($reservation), [
+                'action' => 'priest_assigned_officiant',
+                'reservation_id' => $reservation->reservation_id,
+                'user_id' => $reservation->officiant_id,
+            ]);
         }
 
         // SMS to priest
@@ -687,8 +722,11 @@ class ReservationNotificationService
 
         // Email to requestor (update)
         if ($reservation->user && $reservation->user->email) {
-            Mail::to($reservation->user->email)
-                ->send(new \App\Mail\PriestAssignedToRequestor($reservation));
+            $this->sendMailableSafely($reservation->user->email, new \App\Mail\PriestAssignedToRequestor($reservation), [
+                'action' => 'priest_assigned_requestor_update',
+                'reservation_id' => $reservation->reservation_id,
+                'user_id' => $reservation->user_id,
+            ]);
         }
     }
 
@@ -714,8 +752,11 @@ class ReservationNotificationService
         $admins = User::whereIn('role', ['admin', 'staff'])->get();
         foreach ($admins as $admin) {
             if ($admin->email) {
-                Mail::to($admin->email)
-                    ->send(new ReservationPriestDeclined($reservation, $reason));
+                $this->sendMailableSafely($admin->email, new ReservationPriestDeclined($reservation, $reason), [
+                    'action' => 'priest_declined_admin_staff',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $admin->id,
+                ]);
             }
 
             // Create in-app notification for each admin
@@ -826,6 +867,8 @@ class ReservationNotificationService
      */
     public function notifyCancellation(Reservation $reservation, string $reason, string $cancelledBy): void
     {
+        $reason = trim(strip_tags($reason));
+        $cancelledBy = trim(strip_tags($cancelledBy));
         $recipients = [];
 
         // Always notify requestor
@@ -852,15 +895,18 @@ class ReservationNotificationService
         // Send emails
         foreach ($recipients as $recipient) {
             if ($recipient->email) {
-                Mail::to($recipient->email)
-                    ->send(new ReservationCancelled($reservation, $reason, $cancelledBy));
+                $this->sendMailableSafely($recipient->email, new ReservationCancelled($reservation, $reason, $cancelledBy), [
+                    'action' => 'reservation_cancelled',
+                    'reservation_id' => $reservation->reservation_id,
+                    'recipient_id' => $recipient->id,
+                ]);
             }
 
             // Send SMS to key parties
             if ($recipient->phone && in_array($recipient->id, [
                 $reservation->user_id,
                 $reservation->officiant_id,
-                $reservation->organization->adviser_id ?? null
+                $reservation->organization?->adviser_id
             ])) {
                 $serviceName = $reservation->service?->service_name ?? 'Unknown Service';
                 $this->sendSMS(
@@ -962,8 +1008,11 @@ class ReservationNotificationService
         foreach ($staffMembers as $staff) {
             if ($staff->email) {
                 try {
-                    Mail::to($staff->email)
-                        ->send(new ReservationUnnoticedAlert($reservation, $adviser, $hoursPending));
+                    $this->sendMailableSafely($staff->email, new ReservationUnnoticedAlert($reservation, $adviser, $hoursPending), [
+                        'action' => 'adviser_follow_up_staff_alert',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $staff->id,
+                    ]);
                 } catch (\Exception $e) {
                     Log::warning('Failed to send unnoticed reservation email to staff: ' . $e->getMessage());
                 }
@@ -1005,7 +1054,11 @@ class ReservationNotificationService
         // 3. Send reminder EMAIL to adviser
         if ($adviser && $adviser->email) {
             try {
-                Mail::to($adviser->email)->send(new \App\Mail\AdviserPendingReservation($reservation, $adviser));
+                $this->sendMailableSafely($adviser->email, new \App\Mail\AdviserPendingReservation($reservation, $adviser), [
+                    'action' => 'adviser_follow_up_reminder',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $adviser->id,
+                ]);
             } catch (\Exception $e) {
                 Log::warning('Failed to send reminder email to adviser: ' . $e->getMessage());
             }
@@ -1080,8 +1133,11 @@ class ReservationNotificationService
             if ($admin->email) {
                 // Create styled email notification
                 try {
-                    Mail::to($admin->email)
-                        ->send(new ReservationPriestConfirmedToAdmin($reservation, $priestName));
+                    $this->sendMailableSafely($admin->email, new ReservationPriestConfirmedToAdmin($reservation, $priestName), [
+                        'action' => 'priest_confirmed_admin_staff',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $admin->id,
+                    ]);
                 } catch (\Exception $e) {
                     Log::warning('Failed to send priest confirmation email to admin: ' . $e->getMessage());
                 }
@@ -1167,7 +1223,11 @@ class ReservationNotificationService
         // Send email to requestor
         try {
             if ($reservation->user && $reservation->user->email) {
-                Mail::to($reservation->user->email)->send(new \App\Mail\ReservationConfirmed($reservation, $priestName));
+                $this->sendMailableSafely($reservation->user->email, new \App\Mail\ReservationConfirmed($reservation, $priestName), [
+                    'action' => 'priest_confirmed_requestor',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $reservation->user_id,
+                ]);
             }
         } catch (\Exception $e) {
             Log::warning('Failed to send requestor confirmation email: ' . $e->getMessage());
@@ -1194,8 +1254,11 @@ class ReservationNotificationService
             // Email notification
             try {
                 if ($admin->email) {
-                    Mail::to($admin->email)
-                        ->send(new ReservationAllPriestsConfirmed($reservation, $requestorName, $priestNames));
+                    $this->sendMailableSafely($admin->email, new ReservationAllPriestsConfirmed($reservation, $requestorName, $priestNames), [
+                        'action' => 'all_priests_confirmed_admin_staff',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $admin->id,
+                    ]);
                 }
             } catch (\Exception $e) {
                 Log::warning('Failed to send all-priests-confirmed email: ' . $e->getMessage());
@@ -1249,8 +1312,11 @@ class ReservationNotificationService
             if ($admin->email) {
                 try {
                 // Create styled email notification
-                Mail::to($admin->email)
-                    ->send(new ReservationPriestRestoredToAdmin($reservation, $priestName));
+                $this->sendMailableSafely($admin->email, new ReservationPriestRestoredToAdmin($reservation, $priestName), [
+                    'action' => 'priest_undeclined_admin_staff',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $admin->id,
+                ]);
                  } catch (\Exception $e) {
                     Log::warning('Failed to send priest restored email: ' . $e->getMessage());
                 }
@@ -1294,7 +1360,11 @@ class ReservationNotificationService
         // Email to requestor with confirmation link
         try {
             if ($reservation->user && $reservation->user->email) {
-                Mail::to($reservation->user->email)->send(new \App\Mail\RequestorConfirmation($reservation, $confirmationUrl));
+                $this->sendMailableSafely($reservation->user->email, new \App\Mail\RequestorConfirmation($reservation, $confirmationUrl), [
+                    'action' => 'requestor_confirmation_link',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $reservation->user_id,
+                ]);
             }
         } catch (\Throwable $e) {
             Log::warning('Failed to send requestor confirmation email: ' . $e->getMessage());
@@ -1353,8 +1423,11 @@ class ReservationNotificationService
             // Email
             try {
                 if ($admin->email) {
-                    Mail::to($admin->email)
-                        ->send(new RequestorConfirmedToAdmin($reservation));
+                    $this->sendMailableSafely($admin->email, new RequestorConfirmedToAdmin($reservation), [
+                        'action' => 'requestor_confirmed_admin_staff',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $admin->id,
+                    ]);
                 }
             } catch (\Throwable $e) {
                 Log::warning('Failed to send admin/staff email (requestor confirmed): ' . $e->getMessage());
@@ -1417,8 +1490,11 @@ class ReservationNotificationService
             // Send email to requestor
             if ($requestor->email) {
                 try {
-                    Mail::to($requestor->email)
-                        ->send(new PriestCancelledConfirmationToRequestor($reservation, $priestName, $reason));
+                    $this->sendMailableSafely($requestor->email, new PriestCancelledConfirmationToRequestor($reservation, $priestName, $reason), [
+                        'action' => 'priest_cancelled_confirmation_requestor',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $requestor->id,
+                    ]);
                 } catch (\Exception $e) {
                     Log::error('Failed to send cancellation email to requestor: ' . $e->getMessage());
                 }
@@ -1460,8 +1536,11 @@ class ReservationNotificationService
             if ($admin->email) {
                 // Create email notification
                 try {
-                    Mail::to($admin->email)
-                        ->send(new PriestCancelledConfirmationToAdmin($reservation, $priestName, $reason));
+                    $this->sendMailableSafely($admin->email, new PriestCancelledConfirmationToAdmin($reservation, $priestName, $reason), [
+                        'action' => 'priest_cancelled_confirmation_admin_staff',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $admin->id,
+                    ]);
                 } catch (\Exception $e) {
                     Log::error('Failed to send cancellation email to admin: ' . $e->getMessage());
                 }
@@ -1518,6 +1597,32 @@ class ReservationNotificationService
                 $adminWithPhone->phone,
                 "⚠️ URGENT: {$priestName} CANCELLED confirmed reservation #{$reservation->reservation_id} for " . ($reservation->service?->service_name ?? 'Unknown Service') . " on " . $reservation->schedule_date->format('M d, Y') . ". Please reassign immediately!"
             );
+        }
+    }
+
+    /**
+     * Send mail with recipient validation and failure isolation.
+     */
+    private function sendMailableSafely(?string $email, object $mailable, array $context = []): void
+    {
+        if (!$email) {
+            return;
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            Log::warning('Skipping email due to invalid recipient email format', array_merge($context, [
+                'email' => $email,
+            ]));
+            return;
+        }
+
+        try {
+            Mail::to($email)->send($mailable);
+        } catch (\Throwable $e) {
+            Log::warning('Failed sending email', array_merge($context, [
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ]));
         }
     }
 
@@ -1605,7 +1710,11 @@ class ReservationNotificationService
 
         // Email to requestor
         if ($reservation->user && $reservation->user->email) {
-            Mail::to($reservation->user->email)->send(new \App\Mail\ReservationConfirmed($reservation, $priestName));
+            $this->sendMailableSafely($reservation->user->email, new \App\Mail\ReservationConfirmed($reservation, $priestName), [
+                'action' => 'requestor_priest_confirmed_requestor',
+                'reservation_id' => $reservation->reservation_id,
+                'user_id' => $reservation->user_id,
+            ]);
         }
 
         // In-app notification
@@ -1658,7 +1767,11 @@ class ReservationNotificationService
         // Email to adviser
         if ($adviser->email) {
             try {
-                Mail::to($adviser->email)->send(new \App\Mail\AdviserPriestConfirmed($reservation, $priestName, $adviser));
+                $this->sendMailableSafely($adviser->email, new \App\Mail\AdviserPriestConfirmed($reservation, $priestName, $adviser), [
+                    'action' => 'adviser_priest_confirmed',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $adviser->id,
+                ]);
             } catch (\Exception $e) {
                 Log::warning('Failed to send priest confirmation email to adviser: ' . $e->getMessage());
             }
@@ -1704,8 +1817,11 @@ class ReservationNotificationService
         // Email to requestor
         if ($reservation->user && $reservation->user->email) {
             try {
-                Mail::to($reservation->user->email)
-                    ->send(new RequestorPriestReassigned($reservation, $oldPriestName, $newPriestName));
+                $this->sendMailableSafely($reservation->user->email, new RequestorPriestReassigned($reservation, $oldPriestName, $newPriestName), [
+                    'action' => 'requestor_priest_reassigned',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $reservation->user_id,
+                ]);
             } catch (\Exception $e) {
                 Log::error('Failed to send priest reassigned email to requestor: ' . $e->getMessage());
             }
@@ -1790,8 +1906,11 @@ class ReservationNotificationService
         // Email to priest
         if ($priest->email) {
             try {
-                Mail::to($priest->email)
-                    ->send(new \App\Mail\ReservationPriestAssigned($reservation));
+                $this->sendMailableSafely($priest->email, new \App\Mail\ReservationPriestAssigned($reservation), [
+                    'action' => 'priest_assignment_notification',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $priest->id,
+                ]);
             } catch (\Exception $e) {
                 Log::error('Failed to send priest assignment email: ' . $e->getMessage());
             }
@@ -1945,7 +2064,11 @@ class ReservationNotificationService
         // Email notification to requestor
         if ($requestor && $requestor->email) {
             try {
-                Mail::to($requestor->email)->send(new \App\Mail\ReservationFinalApproved($reservation, $priestNames));
+                $this->sendMailableSafely($requestor->email, new \App\Mail\ReservationFinalApproved($reservation, $priestNames), [
+                    'action' => 'final_approval_requestor',
+                    'reservation_id' => $reservation->reservation_id,
+                    'user_id' => $requestor->id,
+                ]);
             } catch (\Exception $e) {
                 Log::warning('Failed to send final approval email to requestor: ' . $e->getMessage());
             }
@@ -1973,8 +2096,11 @@ class ReservationNotificationService
         foreach ($reservation->organizations as $organization) {
             if ($organization->adviser && $organization->adviser->email) {
                 try {
-                    Mail::to($organization->adviser->email)
-                        ->send(new ReservationFinalApprovalToAdviser($reservation));
+                    $this->sendMailableSafely($organization->adviser->email, new ReservationFinalApprovalToAdviser($reservation), [
+                        'action' => 'final_approval_adviser',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $organization->adviser->id,
+                    ]);
                 } catch (\Exception $e) {
                     Log::warning('Failed to send final approval email to adviser: ' . $e->getMessage());
                 }
@@ -1998,8 +2124,11 @@ class ReservationNotificationService
         foreach ($reservation->priests as $priest) {
             if ($priest->email) {
                 try {
-                    Mail::to($priest->email)
-                        ->send(new ReservationFinalApprovalToPriest($reservation, $priest->first_name . ' ' . $priest->last_name));
+                    $this->sendMailableSafely($priest->email, new ReservationFinalApprovalToPriest($reservation, $priest->first_name . ' ' . $priest->last_name), [
+                        'action' => 'final_approval_priest',
+                        'reservation_id' => $reservation->reservation_id,
+                        'user_id' => $priest->id,
+                    ]);
                 } catch (\Exception $e) {
                     Log::warning('Failed to send final approval email to priest: ' . $e->getMessage());
                 }

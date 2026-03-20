@@ -80,10 +80,12 @@ if (app()->environment('local')) {
             200,
             ['Content-Type' => 'text/html']
         );
-    })->middleware('auth')->name('dev.test-unnoticed');
+    })->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])->name('dev.test-unnoticed');
 
     // Debug notifications page
-    Route::get('/dev/debug-notifications', [\App\Http\Controllers\DebugController::class, 'notifications'])->middleware('auth')->name('dev.debug-notifications');
+    Route::get('/dev/debug-notifications', [\App\Http\Controllers\DebugController::class, 'notifications'])
+        ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
+        ->name('dev.debug-notifications');
 }
 
 // Default dashboard: redirect users to their role-specific dashboard
@@ -130,7 +132,7 @@ Route::middleware('auth')->group(function () {
 // ==========================
 // Chat Routes (Requestor & Admin)
 // ==========================
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':admin,requestor'])->group(function () {
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::get('/chat/{userId}', [ChatController::class, 'show'])->name('chat.show');
     Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
@@ -149,9 +151,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/faqs/reorder', [FaqController::class, 'reorder'])->name('faqs.reorder');
     
     // Temporary debug endpoint to inspect unread sources (admin-only)
-    Route::get('/dev/chat/unread/debug', [ChatController::class, 'debugUnread'])->name('chat.unread.debug');
+    Route::post('/dev/chat/unread/debug', [ChatController::class, 'debugUnread'])
+        ->middleware([\App\Http\Middleware\RoleMiddleware::class . ':admin'])
+        ->name('chat.unread.debug');
     // Temporary debug endpoint to mark ALL unread as read for current user (admin-only)
-    Route::post('/dev/chat/unread/mark-all', [ChatController::class, 'debugMarkAllUnreadAsRead'])->name('chat.unread.mark-all');
+    Route::post('/dev/chat/unread/mark-all', [ChatController::class, 'debugMarkAllUnreadAsRead'])
+        ->middleware([\App\Http\Middleware\RoleMiddleware::class . ':admin'])
+        ->name('chat.unread.mark-all');
 });
 
 // Authentication routes (Laravel Breeze/Jetstream/etc.)

@@ -42,6 +42,16 @@ class Notification extends Model
         });
     }
 
+    public function getMessageAttribute($value): string
+    {
+        return trim(strip_tags((string) $value));
+    }
+
+    public function setMessageAttribute($value): void
+    {
+        $this->attributes['message'] = trim(strip_tags((string) $value));
+    }
+
     /**
      * Get the user that owns the notification
      */

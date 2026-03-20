@@ -275,7 +275,7 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation cannot be rejected.');
         }
 
-        $reason = $request->input('reason');
+        $reason = trim(strip_tags((string) $request->input('reason')));
 
         $reservation->update([
             'status' => 'rejected',
@@ -495,7 +495,7 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation cannot be cancelled as it is already ' . $reservation->status . '.');
         }
 
-        $reason = $request->input('reason');
+        $reason = trim(strip_tags((string) $request->input('reason')));
 
         // Update reservation status and audit fields
         $reservation->update([
@@ -548,7 +548,7 @@ class ReservationController extends Controller
 
         DB::beginTransaction();
         try {
-            $reason = $request->input('reason');
+            $reason = trim(strip_tags((string) $request->input('reason')));
             $replacementId = $request->input('replacement_priest_id');
 
             // 1. Create PriestDecline record
@@ -636,7 +636,7 @@ class ReservationController extends Controller
             // If NO replacement, proceed with old notification logic
             if (!$replacementId) {
                 try {
-                    $this->notificationService->notifyPriestDeclined($reservation, Auth::user(), $reason); 
+                    $this->notificationService->notifyPriestDeclined($reservation, $reason, Auth::id()); 
                 } catch (\Exception $e) {
                     Log::warning('Notification failed during admin decline: ' . $e->getMessage());
                 }

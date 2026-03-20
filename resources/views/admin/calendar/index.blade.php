@@ -826,8 +826,8 @@
         calendar.render();
     }
 </script>
-<script id="admin-reservations-json" type="application/json">{!! $reservations->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
-<script id="admin-schedules-json" type="application/json">{!! ($schedules ?? collect())->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
+<script id="admin-reservations-json" type="application/json">@json($reservations)</script>
+<script id="admin-schedules-json" type="application/json">@json($schedules ?? collect())</script>
 <script id="admin-org-bookings-json" type="application/json">@json($orgBookings ?? [])</script>
-<script id="admin-id-json" type="application/json">{!! json_encode($adminId) !!}</script>
+<script id="admin-id-json" type="application/json">@json($adminId)</script>
 @endpush

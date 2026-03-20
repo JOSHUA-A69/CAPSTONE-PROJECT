@@ -146,9 +146,15 @@ class ChatController extends Controller
 
         $user = Auth::user();
         $receiverId = $request->receiver_id;
+        $receiver = User::findOrFail($receiverId);
 
         // Only requestors can use this endpoint
         if ($user->role !== 'requestor') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Requestors can only send FAQ prompts to admins
+        if ($receiver->role !== 'admin') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
@@ -169,7 +175,7 @@ class ChatController extends Controller
 
             // 2. Send the automated reply immediately after (with microsecond difference)
             $autoReplyMessage = Message::create([
-                'sender_id' => $receiverId,
+                'sender_id' => $user->id,
                 'receiver_id' => $user->id,
                 'message' => "🤖 **Automated FAQ Response:**\n\n" . $request->answer . "\n\n_If you need further assistance, please type your question below and an admin will respond shortly._",
                 'is_auto_reply' => true,

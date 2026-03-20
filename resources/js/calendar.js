@@ -4,6 +4,15 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // Helper: normalize a date-like value to 'YYYY-MM-DD' without timezone
 function normalizeDateStr(val) {
     const s = String(val ?? '').trim();
@@ -168,7 +177,7 @@ window.initStaffCalendar = function(schedules) {
                 timeDiv.style.display = 'flex';
                 timeDiv.style.alignItems = 'center';
                 timeDiv.style.gap = '4px';
-                timeDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg><span>${timeStr}</span>`;
+                timeDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg><span>${escapeHtml(timeStr)}</span>`;
                 wrapper.appendChild(timeDiv);
             }
             
@@ -180,7 +189,7 @@ window.initStaffCalendar = function(schedules) {
             titleDiv.style.display = 'flex';
             titleDiv.style.alignItems = 'center';
             titleDiv.style.gap = '4px';
-            titleDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg><span>${arg.event.title}</span>`;
+            titleDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg><span>${escapeHtml(arg.event.title)}</span>`;
             wrapper.appendChild(titleDiv);
             
             // Add location with icon if available
@@ -196,7 +205,7 @@ window.initStaffCalendar = function(schedules) {
                 locationDiv.style.display = 'flex';
                 locationDiv.style.alignItems = 'center';
                 locationDiv.style.gap = '4px';
-                locationDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg><span>${locationText}</span>`;
+                locationDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg><span>${escapeHtml(locationText)}</span>`;
                 wrapper.appendChild(locationDiv);
             }
             
@@ -215,7 +224,7 @@ window.initStaffCalendar = function(schedules) {
                 priestDiv.style.alignItems = 'center';
                 priestDiv.style.gap = '4px';
                 const externalBadge = internalPriest ? '' : ' <span style="font-size: 0.68rem; opacity: 0.85;">(External)</span>';
-                priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${presiderName}${externalBadge}</span>`;
+                priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${escapeHtml(presiderName)}${externalBadge}</span>`;
                 wrapper.appendChild(priestDiv);
             }
             
@@ -364,12 +373,12 @@ function createTooltip(event) {
     const titleSize = isExtraSmallMobile ? '10px' : isSmallMobile ? '11px' : isMobile ? '14px' : '16px';
     const detailSize = isExtraSmallMobile ? '8px' : isSmallMobile ? '9px' : isMobile ? '11px' : '13px';
     
-    let content = `<div style="color: #ffffff; text-align: center; font-size: ${titleSize}; font-weight: 700; line-height: 1.3;">${massType}</div>`;
+    let content = `<div style="color: #ffffff; text-align: center; font-size: ${titleSize}; font-weight: 700; line-height: 1.3;">${escapeHtml(massType)}</div>`;
 
     // Presider line (internal or external) - hide on extra small mobile
     const presiderName = event.extendedProps.scheduleData?.priest?.name || event.extendedProps.scheduleData?.external_priest_name;
     if (presiderName && !isExtraSmallMobile) {
-        content += `<div style="margin-top: ${isSmallMobile ? '3px' : '8px'}; color: #fff; text-align: center; font-size: ${detailSize}; font-weight: 600;">Presider: ${presiderName}${event.extendedProps.scheduleData?.priest ? '' : ' (Ext)'}</div>`;
+        content += `<div style="margin-top: ${isSmallMobile ? '3px' : '8px'}; color: #fff; text-align: center; font-size: ${detailSize}; font-weight: 600;">Presider: ${escapeHtml(presiderName)}${event.extendedProps.scheduleData?.priest ? '' : ' (Ext)'}</div>`;
     }
     
     tooltip.innerHTML = content;
@@ -452,7 +461,7 @@ window.initPublicCalendar = function(schedules) {
             eventText.style.marginBottom = '2px';
             
             let timeStr = arg.timeText || '';
-            eventText.innerHTML = `<strong style="font-size: 0.8rem;">${timeStr}</strong> ${arg.event.title}`;
+            eventText.innerHTML = `<strong style="font-size: 0.8rem;">${escapeHtml(timeStr)}</strong> ${escapeHtml(arg.event.title)}`;
             
             wrapper.appendChild(eventText);
             
@@ -465,7 +474,7 @@ window.initPublicCalendar = function(schedules) {
                 locationDiv.style.fontSize = '0.7rem';
                 locationDiv.style.opacity = '0.9';
                 locationDiv.style.marginTop = '2px';
-                locationDiv.innerHTML = `📍 ${locationText}`;
+                locationDiv.innerHTML = `📍 ${escapeHtml(locationText)}`;
                 wrapper.appendChild(locationDiv);
             }
             
@@ -480,7 +489,7 @@ window.initPublicCalendar = function(schedules) {
                 priestDiv.style.opacity = '0.9';
                 priestDiv.style.fontWeight = '600';
                 priestDiv.style.marginTop = '2px';
-                priestDiv.innerHTML = `� ${presiderName}${internalPriest ? '' : ' (External)'}`;
+                priestDiv.innerHTML = `� ${escapeHtml(presiderName)}${internalPriest ? '' : ' (External)'}`;
                 wrapper.appendChild(priestDiv);
             }
             

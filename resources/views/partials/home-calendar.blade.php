@@ -160,11 +160,20 @@
 </div>
 
 <!-- JSON schedule data for homepage calendar -->
-<script id="homeCalendarDataJson" type="application/json">{!! $allSchedules->toJson() !!}</script>
-<script id="homeReservationDataJson" type="application/json">{!! $upcomingReservations->toJson() !!}</script>
+<script id="homeCalendarDataJson" type="application/json">@json($allSchedules)</script>
+<script id="homeReservationDataJson" type="application/json">@json($upcomingReservations)</script>
 
 <script>
 let homepageCalendar;
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // Blade -> JS data bridge (avoid mentioning the Blade json directive here to prevent parsing)
 var __homeJsonEl = document.getElementById('homeCalendarDataJson');
 var allSchedulesData = [];
@@ -422,7 +431,7 @@ function initializeHomeCalendar(schedules) {
                 timeDiv.style.display = 'flex';
                 timeDiv.style.alignItems = 'center';
                 timeDiv.style.gap = '4px';
-                timeDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg><span>${timeStr}</span>`;
+                timeDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg><span>${escapeHtml(timeStr)}</span>`;
                 wrapper.appendChild(timeDiv);
             }
 
@@ -435,7 +444,7 @@ function initializeHomeCalendar(schedules) {
             titleDiv.style.alignItems = 'flex-start';
             titleDiv.style.gap = '4px';
             titleDiv.style.wordBreak = 'break-word';
-            titleDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0; margin-top: 2px;" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg><span>${arg.event.title}</span>`;
+            titleDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0; margin-top: 2px;" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg><span>${escapeHtml(arg.event.title)}</span>`;
             wrapper.appendChild(titleDiv);
 
             // Get venue name from relationship, fallback to location field
@@ -457,7 +466,7 @@ function initializeHomeCalendar(schedules) {
                 locationDiv.style.alignItems = 'flex-start';
                 locationDiv.style.gap = '4px';
                 locationDiv.style.wordBreak = 'break-word';
-                locationDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0; margin-top: 1px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg><span>${locationText}</span>`;
+                locationDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0; margin-top: 1px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg><span>${escapeHtml(locationText)}</span>`;
                 wrapper.appendChild(locationDiv);
             }
 
@@ -477,7 +486,7 @@ function initializeHomeCalendar(schedules) {
                     priestDiv.style.display = 'flex';
                     priestDiv.style.alignItems = 'center';
                     priestDiv.style.gap = '4px';
-                    priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${presiderName}${isExternal ? ' <span style="margin-left:4px;" class="inline-block px-1.5 py-0.5 text-[10px] rounded bg-white/20 border border-white/30 align-middle">External</span>' : ''}</span>`;
+                    priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${escapeHtml(presiderName)}${isExternal ? ' <span style="margin-left:4px;" class="inline-block px-1.5 py-0.5 text-[10px] rounded bg-white/20 border border-white/30 align-middle">External</span>' : ''}</span>`;
                     wrapper.appendChild(priestDiv);
                 }
             }
@@ -546,7 +555,7 @@ function initializeHomeCalendar(schedules) {
                 .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())  // Capitalize each word
                 .join(' ');
 
-            tooltip.innerHTML = `<strong style="font-size: 15px;">${displayText}</strong>`;
+            tooltip.innerHTML = `<strong style="font-size: 15px;">${escapeHtml(displayText)}</strong>`;
             document.body.appendChild(tooltip);
 
             // Store tooltip reference for cleanup
@@ -623,8 +632,8 @@ function renderHomepageUpcomingList(schedules) {
             '<button type="button" data-schedule-id="' + s.schedule_id + '" class="w-full text-left p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex items-start gap-3">' +
                 '<span class="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-white font-bold" style="background:' + color + ';">' + displayDate.replace(/[^\d]/g,'').padStart(2,'0') + '</span>' +
                 '<span class="min-w-0">' +
-                    '<span class="block text-sm font-black text-emerald-900 dark:text-emerald-200">' + (s.title || '') + '</span>' +
-                    '<span class="block text-xs text-gray-600 dark:text-gray-400">' + timeStart + (locationText ? ' • ' + locationText : '') + '</span>' +
+                    '<span class="block text-sm font-black text-emerald-900 dark:text-emerald-200">' + escapeHtml(s.title || '') + '</span>' +
+                    '<span class="block text-xs text-gray-600 dark:text-gray-400">' + escapeHtml(timeStart + (locationText ? ' • ' + locationText : '')) + '</span>' +
                 '</span>' +
             '</button>'
         );
@@ -660,27 +669,36 @@ function renderHomeEventDetails(schedule) {
     const dateObj = new Date((schedule.schedule_date || '').toString().slice(0,10));
     const dateLabel = isNaN(dateObj) ? schedule.schedule_date : dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
+    const safeTitle = escapeHtml(schedule.title || '');
+    const safeEventType = escapeHtml(String(schedule.event_type || '').replace(/_/g,' ').toUpperCase());
+    const safeScheduleDate = escapeHtml(schedule.schedule_date || '');
+    const safeDateLabel = escapeHtml(dateLabel || '');
+    const safeTimeRange = escapeHtml(timeStart + (timeEnd ? ' - ' + timeEnd : ''));
+    const safeLocationText = escapeHtml(locationText || '');
+    const safePresiderName = escapeHtml(presiderName || '');
+    const safeDescription = escapeHtml(schedule.description || '');
+
     panel.innerHTML = `
         <div class="rounded-2xl border-2" style="border-color:${color};">
             <div class="p-4 bg-white/80 dark:bg-gray-800/70 rounded-t-2xl">
                 <div class="flex items-start justify-between gap-3">
                     <div>
-                        <h4 class="text-xl font-extrabold text-emerald-800 dark:text-emerald-200">${schedule.title}</h4>
+                        <h4 class="text-xl font-extrabold text-emerald-800 dark:text-emerald-200">${safeTitle}</h4>
                         <div class="mt-1 inline-flex items-center px-2 py-1 text-xs rounded-full text-white" style="background:${color};">
-                            ${String(schedule.event_type || '').replace(/_/g,' ').toUpperCase()}
+                            ${safeEventType}
                         </div>
                     </div>
-                    <button class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white" onclick="homepageCalendarSetDate('${schedule.schedule_date}')" title="View in calendar">
+                    <button class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white" onclick="homepageCalendarSetDate('${safeScheduleDate}')" title="View in calendar">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     </button>
                 </div>
             </div>
             <div class="p-4 space-y-3 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-b-2xl">
-                <p class="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span><strong>Date:</strong> ${dateLabel}</span></p>
-                <p class="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span><strong>Time:</strong> ${timeStart}${timeEnd ? ' - ' + timeEnd : ''}</span></p>
-                ${locationText ? `<p class=\"flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200\"><svg class=\"w-4 h-4 text-emerald-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z\"></path><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 11a3 3 0 11-6 0 3 3 0 016 0z\"></path></svg><span><strong>Location:</strong> ${locationText}</span></p>` : ''}
-                ${presiderName ? `<p class=\"flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200\"><svg class=\"w-4 h-4 text-emerald-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\"></path></svg><span><strong>Presider:</strong> ${presiderName}${isExternal ? ' <span class=\"ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-200/60 text-emerald-900 align-middle\">External</span>' : ''}</span></p>` : ''}
-                ${schedule.description ? `<div class=\"text-sm text-gray-800 dark:text-gray-200\"><strong>Description:</strong> ${schedule.description}</div>` : ''}
+                <p class="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg><span><strong>Date:</strong> ${safeDateLabel}</span></p>
+                <p class="flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><span><strong>Time:</strong> ${safeTimeRange}</span></p>
+                ${locationText ? `<p class=\"flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200\"><svg class=\"w-4 h-4 text-emerald-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z\"></path><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 11a3 3 0 11-6 0 3 3 0 016 0z\"></path></svg><span><strong>Location:</strong> ${safeLocationText}</span></p>` : ''}
+                ${presiderName ? `<p class=\"flex items-center gap-2 text-sm text-gray-800 dark:text-gray-200\"><svg class=\"w-4 h-4 text-emerald-600\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z\"></path></svg><span><strong>Presider:</strong> ${safePresiderName}${isExternal ? ' <span class=\"ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-200/60 text-emerald-900 align-middle\">External</span>' : ''}</span></p>` : ''}
+                ${schedule.description ? `<div class=\"text-sm text-gray-800 dark:text-gray-200\"><strong>Description:</strong> ${safeDescription}</div>` : ''}
             </div>
         </div>
     `;
@@ -941,7 +959,7 @@ function initializeReservationCalendar(reservations) {
                 statusDiv.style.whiteSpace = 'nowrap';
                 statusDiv.style.overflow = 'hidden';
                 statusDiv.style.textOverflow = 'ellipsis';
-                statusDiv.innerHTML = '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>' + getReservationStatusLabel(arg.event.extendedProps.status) + '</span>';
+                statusDiv.innerHTML = '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>' + escapeHtml(getReservationStatusLabel(arg.event.extendedProps.status)) + '</span>';
                 wrapper.appendChild(statusDiv);
 
                 // Title
@@ -969,7 +987,7 @@ function initializeReservationCalendar(reservations) {
                     svcDiv.style.overflow = 'hidden';
                     svcDiv.style.textOverflow = 'ellipsis';
                     svcDiv.style.whiteSpace = 'nowrap';
-                    svcDiv.innerHTML = '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clip-rule="evenodd"/></svg><span>' + arg.event.extendedProps.serviceName + '</span>';
+                    svcDiv.innerHTML = '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" clip-rule="evenodd"/></svg><span>' + escapeHtml(arg.event.extendedProps.serviceName) + '</span>';
                     wrapper.appendChild(svcDiv);
                 }
 
@@ -984,7 +1002,7 @@ function initializeReservationCalendar(reservations) {
                     venDiv.style.overflow = 'hidden';
                     venDiv.style.textOverflow = 'ellipsis';
                     venDiv.style.whiteSpace = 'nowrap';
-                    venDiv.innerHTML = '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg><span>' + arg.event.extendedProps.venueName + '</span>';
+                    venDiv.innerHTML = '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg><span>' + escapeHtml(arg.event.extendedProps.venueName) + '</span>';
                     wrapper.appendChild(venDiv);
                 }
             }
@@ -1022,16 +1040,16 @@ function renderReservationEventDetails(res) {
     panel.innerHTML =
         '<div class="rounded-2xl border-2" style="border-color:' + color + ';">' +
             '<div class="p-4 bg-white/80 dark:bg-gray-800/70 rounded-t-2xl">' +
-                '<h4 class="text-lg font-extrabold text-emerald-800 dark:text-emerald-200">' + (res.activity_name || serviceName) + '</h4>' +
-                '<div class="mt-1 inline-flex items-center px-2 py-1 text-xs rounded-full text-white" style="background:' + color + ';">' + getReservationStatusLabel(res.status) + '</div>' +
+                '<h4 class="text-lg font-extrabold text-emerald-800 dark:text-emerald-200">' + escapeHtml(res.activity_name || serviceName) + '</h4>' +
+                '<div class="mt-1 inline-flex items-center px-2 py-1 text-xs rounded-full text-white" style="background:' + color + ';">' + escapeHtml(getReservationStatusLabel(res.status)) + '</div>' +
             '</div>' +
             '<div class="p-4 space-y-2 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-b-2xl text-sm text-gray-800 dark:text-gray-200">' +
-                '<p><strong>Date:</strong> ' + dateLabel + '</p>' +
-                (serviceName ? '<p><strong>Service:</strong> ' + serviceName + '</p>' : '') +
-                (venueName ? '<p><strong>Venue:</strong> ' + venueName + '</p>' : '') +
-                (orgName ? '<p><strong>Organization:</strong> ' + orgName + '</p>' : '') +
-                (res.purpose ? '<p><strong>Purpose:</strong> ' + res.purpose + '</p>' : '') +
-                (res.participants_count ? '<p><strong>Participants:</strong> ' + res.participants_count + '</p>' : '') +
+                '<p><strong>Date:</strong> ' + escapeHtml(dateLabel) + '</p>' +
+                (serviceName ? '<p><strong>Service:</strong> ' + escapeHtml(serviceName) + '</p>' : '') +
+                (venueName ? '<p><strong>Venue:</strong> ' + escapeHtml(venueName) + '</p>' : '') +
+                (orgName ? '<p><strong>Organization:</strong> ' + escapeHtml(orgName) + '</p>' : '') +
+                (res.purpose ? '<p><strong>Purpose:</strong> ' + escapeHtml(res.purpose) + '</p>' : '') +
+                (res.participants_count ? '<p><strong>Participants:</strong> ' + escapeHtml(res.participants_count) + '</p>' : '') +
             '</div>' +
         '</div>';
     panel.classList.remove('hidden');
@@ -1070,43 +1088,43 @@ function showReservationModal(res) {
     modalBody.innerHTML =
         '<div class="p-4 sm:p-5" style="border-top: 4px solid ' + color + '; max-height: calc(90vh - 80px); overflow-y: auto;">' +
             '<div class="mb-3">' +
-                '<h3 class="text-lg sm:text-xl font-black text-emerald-800 dark:text-emerald-200 mb-2 pr-8 leading-tight">' + (res.activity_name || serviceName) + '</h3>' +
+                '<h3 class="text-lg sm:text-xl font-black text-emerald-800 dark:text-emerald-200 mb-2 pr-8 leading-tight">' + escapeHtml(res.activity_name || serviceName) + '</h3>' +
                 '<div class="inline-flex items-center gap-2 px-2 py-1 text-xs font-bold rounded-full text-white" style="background:' + color + ';">' +
                     '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>' +
-                    '<span>' + statusLabel + '</span>' +
+                    '<span>' + escapeHtml(statusLabel) + '</span>' +
                 '</div>' +
             '</div>' +
             '<div class="space-y-2 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-lg p-3 text-xs sm:text-sm">' +
                 '<div class="flex items-start gap-2">' +
                     '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>' +
-                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Date & Time</p><p class="text-gray-600 dark:text-gray-400 text-xs leading-snug">' + dateLabel + '<br><span class="text-emerald-600 dark:text-emerald-400 font-bold">' + timeStr + '</span></p></div>' +
+                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Date & Time</p><p class="text-gray-600 dark:text-gray-400 text-xs leading-snug">' + escapeHtml(dateLabel) + '<br><span class="text-emerald-600 dark:text-emerald-400 font-bold">' + escapeHtml(timeStr) + '</span></p></div>' +
                 '</div>' +
                 '<div class="flex items-start gap-2">' +
                     '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>' +
-                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Service</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + serviceName + '</p></div>' +
+                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Service</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + escapeHtml(serviceName) + '</p></div>' +
                 '</div>' +
                 '<div class="flex items-start gap-2">' +
                     '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>' +
-                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Venue</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + venueName + '</p></div>' +
+                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Venue</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + escapeHtml(venueName) + '</p></div>' +
                 '</div>' +
                 '<div class="flex items-start gap-2">' +
                     '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>' +
-                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Organization</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + orgName + '</p></div>' +
+                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Organization</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + escapeHtml(orgName) + '</p></div>' +
                 '</div>' +
                 '<div class="flex items-start gap-2">' +
                     '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>' +
-                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Officiant</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + officiantName + '</p></div>' +
+                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Officiant</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + escapeHtml(officiantName) + '</p></div>' +
                 '</div>' +
                 (res.participants_count ?
                     '<div class="flex items-start gap-2">' +
                         '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>' +
-                        '<div class="flex-1"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Participants</p><p class="text-gray-600 dark:text-gray-400 text-xs">' + res.participants_count + '</p></div>' +
+                        '<div class="flex-1"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Participants</p><p class="text-gray-600 dark:text-gray-400 text-xs">' + escapeHtml(res.participants_count) + '</p></div>' +
                     '</div>'
                 : '') +
                 (res.purpose ?
                     '<div class="flex items-start gap-2">' +
                         '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>' +
-                        '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Purpose</p><p class="text-gray-600 dark:text-gray-400 text-xs line-clamp-2">' + res.purpose + '</p></div>' +
+                        '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Purpose</p><p class="text-gray-600 dark:text-gray-400 text-xs line-clamp-2">' + escapeHtml(res.purpose) + '</p></div>' +
                     '</div>'
                 : '') +
             '</div>' +
@@ -1217,12 +1235,15 @@ function renderReservationUpcomingList(reservations) {
         var svcName = (res.service && res.service.service_name) ? res.service.service_name : '';
         var venName = (res.venue && res.venue.name) ? res.venue.name : '';
         var color = getReservationStatusColor(res.status);
+        var safeReservationId = escapeHtml(res.reservation_id);
+        var safeTitle = escapeHtml(res.activity_name || svcName);
+        var safeStatusLine = escapeHtml(getReservationStatusLabel(res.status) + (venName ? ' \u2022 ' + venName : ''));
         htmlParts.push(
-            '<button type="button" data-res-id="' + res.reservation_id + '" class="w-full text-left p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex items-start gap-3">' +
+            '<button type="button" data-res-id="' + safeReservationId + '" class="w-full text-left p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex items-start gap-3">' +
                 '<span class="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-white text-xs font-bold" style="background:' + color + ';">' + displayDate.replace(/[^\d]/g,'').padStart(2,'0') + '</span>' +
                 '<span class="min-w-0">' +
-                    '<span class="block text-sm font-black text-emerald-900 dark:text-emerald-200">' + (res.activity_name || svcName) + '</span>' +
-                    '<span class="block text-xs text-gray-600 dark:text-gray-400">' + getReservationStatusLabel(res.status) + (venName ? ' \u2022 ' + venName : '') + '</span>' +
+                    '<span class="block text-sm font-black text-emerald-900 dark:text-emerald-200">' + safeTitle + '</span>' +
+                    '<span class="block text-xs text-gray-600 dark:text-gray-400">' + safeStatusLine + '</span>' +
                 '</span>' +
             '</button>'
         );

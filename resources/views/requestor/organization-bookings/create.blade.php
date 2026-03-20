@@ -357,6 +357,13 @@
     }
 
     function showValidationErrorModal(errors) {
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
         const existingModal = document.getElementById('validationErrorModal');
         if (existingModal) existingModal.remove();
 
@@ -373,7 +380,7 @@
                     </div>
                     <div class="p-6">
                         <ul class="max-h-48 overflow-y-auto space-y-2">
-                             ${uniqueErrors.map(err => `<li class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><span class="text-red-500">•</span>${err}</li>`).join('')}
+                             ${uniqueErrors.map(err => `<li class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><span class="text-red-500">•</span>${escapeHtml(err)}</li>`).join('')}
                         </ul>
                     </div>
                     <div class="p-4 bg-gray-50 dark:bg-gray-700/50">

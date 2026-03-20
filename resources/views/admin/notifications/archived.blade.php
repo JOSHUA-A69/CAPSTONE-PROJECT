@@ -58,7 +58,7 @@
                                     <!-- Message Section -->
                                     <div class="space-y-2">
                                         <p class="text-sm sm:text-base text-gray-900 dark:text-gray-100 leading-relaxed">
-                                            {!! $notification->message !!}
+                                            {{ $notification->message }}
                                         </p>
 
                                         @if($notification->reservation)

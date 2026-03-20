@@ -411,7 +411,7 @@
         calendar.render();
     }
 </script>
-<script id="adviser-reservations-json" type="application/json">{!! $reservations->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
-<script id="adviser-schedules-json" type="application/json">{!! ($schedules ?? collect())->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
+<script id="adviser-reservations-json" type="application/json">@json($reservations)</script>
+<script id="adviser-schedules-json" type="application/json">@json($schedules ?? collect())</script>
 <script id="adviser-org-bookings-json" type="application/json">@json($orgBookings ?? [])</script>
 @endpush

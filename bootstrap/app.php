@@ -14,6 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Trust Render's Load Balancer for HTTPS generation
         $middleware->trustProxies(at: '*');
 
+        // Local-only: allow Postman testing of admin debug endpoint without CSRF token handling
+        if (env('APP_ENV') === 'local') {
+            $middleware->validateCsrfTokens(except: [
+                'dev/chat/unread/debug*',
+            ]);
+        }
+
         // Add performance headers middleware
         $middleware->web(append: [
             \App\Http\Middleware\SetPerformanceHeaders::class,

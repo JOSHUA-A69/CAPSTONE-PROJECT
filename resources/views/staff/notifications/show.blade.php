@@ -47,7 +47,7 @@
                                 </span>
                             @endif
                             <div class="text-lg text-gray-900 dark:text-white leading-relaxed">
-                                {!! $notification->message !!}
+                                {{ $notification->message }}
                             </div>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
                                 {{ $notification->sent_at ? $notification->sent_at->format('F j, Y \a\t g:i A') : $notification->created_at->format('F j, Y \a\t g:i A') }}

@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use App\Providers\RouteServiceProvider;
 use Carbon\Carbon;
@@ -55,6 +56,12 @@ class LoginCodeController extends Controller
         $userId = $request->session()->get('login_code_user_id');
         $user = User::find($userId);
 
+        $verifyKey = $this->verifyThrottleKey($request, $userId);
+        if (RateLimiter::tooManyAttempts($verifyKey, 5)) {
+            $seconds = RateLimiter::availableIn($verifyKey);
+            return back()->withErrors(['code' => 'Too many verification attempts. Try again in ' . ceil($seconds / 60) . ' minute(s).']);
+        }
+
         if (!$user) {
             $request->session()->forget('login_code_user_id');
             return redirect()->route('login');
@@ -67,8 +74,11 @@ class LoginCodeController extends Controller
 
         // Verify the code
         if ($user->login_code !== $request->code) {
+            RateLimiter::hit($verifyKey, 600);
             return back()->withErrors(['code' => 'The verification code you entered is not valid.']);
         }
+
+        RateLimiter::clear($verifyKey);
 
         // Clear the login code
         $user->update([
@@ -101,6 +111,12 @@ class LoginCodeController extends Controller
         $userId = $request->session()->get('login_code_user_id');
         $user = User::find($userId);
 
+        $resendKey = $this->resendThrottleKey($request, $userId);
+        if (RateLimiter::tooManyAttempts($resendKey, 3)) {
+            $seconds = RateLimiter::availableIn($resendKey);
+            return back()->withErrors(['code' => 'Too many resend requests. Try again in ' . ceil($seconds / 60) . ' minute(s).']);
+        }
+
         if (!$user) {
             $request->session()->forget('login_code_user_id');
             return redirect()->route('login');
@@ -108,6 +124,7 @@ class LoginCodeController extends Controller
 
         // Generate new code
         $code = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        RateLimiter::hit($resendKey, 600);
         
         $user->update([
             'login_code' => $code,
@@ -136,5 +153,15 @@ class LoginCodeController extends Controller
         }
         
         return $masked . '@' . $domain;
+    }
+
+    private function verifyThrottleKey(Request $request, int|string $userId): string
+    {
+        return 'login-code:verify:' . $userId . '|' . $request->ip();
+    }
+
+    private function resendThrottleKey(Request $request, int|string $userId): string
+    {
+        return 'login-code:resend:' . $userId . '|' . $request->ip();
     }
 }
