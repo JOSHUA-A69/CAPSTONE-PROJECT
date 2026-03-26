@@ -54,7 +54,7 @@ COPY --from=frontend /app/public/build/ /var/www/html/public/build/
 COPY . .
 
 # Ensure permissions are correct
-# We assume the container runs as root or www-data. 
+# We assume the container runs as root or www-data.
 # Apache usually runs as www-data.
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
@@ -64,7 +64,7 @@ RUN chown -R www-data:www-data /var/www/html \
 COPY docker/prod/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose port (Render sets $PORT, but Apache defaults to 80. 
+# Expose port (Render sets $PORT, but Apache defaults to 80.
 # We configure Apache to listen on port 80. Render's load balancer maps to this.)
 EXPOSE 80
 

@@ -62,7 +62,7 @@
                                 <span class="text-xs text-gray-500 dark:text-gray-400 font-medium px-3 py-1 bg-gray-50 dark:bg-gray-700 rounded-full"
                                       x-text="formatTime(message.created_at)"></span>
                             </div>
-                           
+
                             <!-- Message Row -->
                             <div :class="message.sender_id === currentUserId ? 'flex justify-end' : 'flex justify-start'" class="mb-1">
                                 <div class="flex items-start gap-2 max-w-[75%] md:max-w-[65%]">
@@ -465,10 +465,43 @@
 
 
                 setupBroadcasting() {
-                    // Polling every 3 seconds for new messages
-                    setInterval(() => {
-                        this.pollNewMessages();
-                    }, 3000);
+                    // Use SSE for real-time chat updates (no more polling!)
+                    if (window.sseClient) {
+                        // Connect to chat-specific SSE stream
+                        window.sseClient.connectChat(this.otherUserId);
+
+                        // Listen for new messages from SSE
+                        window.sseClient.on('chat:new_messages', async (data) => {
+                            if (data && data.messages && data.messages.length > 0) {
+                                const lastId = this.messages.length ? this.messages[this.messages.length - 1].id : 0;
+                                const incoming = data.messages.filter(m => m.id > lastId);
+
+                                if (incoming.length) {
+                                    // Add new messages
+                                    for (const message of incoming) {
+                                        this.messages.push(message);
+                                    }
+                                    this.$nextTick(() => this.scrollToBottom());
+                                    await this.markAsRead();
+                                }
+                            }
+                        });
+
+                        // Listen for unread count updates
+                        window.sseClient.on('chat:unread_update', (data) => {
+                            if (data && typeof data.count !== 'undefined') {
+                                window.dispatchEvent(new CustomEvent('chat:unread-updated', { detail: { count: data.count } }));
+                            }
+                        });
+
+                        console.log('[Chat] SSE connected for conversation with user', this.otherUserId);
+                    } else {
+                        // Fallback to polling if SSE not available
+                        console.log('[Chat] SSE not available, using polling fallback');
+                        setInterval(() => {
+                            this.pollNewMessages();
+                        }, 3000);
+                    }
                 },
 
 

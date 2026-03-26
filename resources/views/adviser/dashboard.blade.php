@@ -160,7 +160,7 @@
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-1">
                                         <h4 class="font-semibold text-base sm:text-lg text-gray-800 truncate">Pending</h4>
-                                        <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold bg-amber-100 text-amber-700 rounded-full min-w-[24px] h-6">{{ $pendingCount }}</span>
+                                        <span data-stat="pending_bookings" class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold bg-amber-100 text-amber-700 rounded-full min-w-[24px] h-6">{{ $pendingCount }}</span>
                                     </div>
                                     <p class="text-xs sm:text-sm text-gray-500">Requests awaiting your review</p>
                                 </div>
@@ -182,7 +182,7 @@
                                         </svg>
                                     </div>
                                     @if($cancellationCount > 0)
-                                        <span class="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded-full">{{ $cancellationCount }}</span>
+                                        <span data-stat="pending_cancellations" class="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 px-1.5 py-0.5 sm:px-2 sm:py-1 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded-full">{{ $cancellationCount }}</span>
                                     @endif
                                 </div>
                                 <div class="flex-1 min-w-0">
@@ -214,7 +214,7 @@
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-1">
                                         <h4 class="font-semibold text-base sm:text-lg text-gray-800 truncate">Approved</h4>
-                                        <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold bg-blue-100 text-blue-700 rounded-full min-w-[24px] h-6">{{ $adviserApprovedCount }}</span>
+                                        <span data-stat="approved_bookings" class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold bg-blue-100 text-blue-700 rounded-full min-w-[24px] h-6">{{ $adviserApprovedCount }}</span>
                                     </div>
                                     <p class="text-xs sm:text-sm text-gray-500">Awaiting admin approval</p>
                                 </div>

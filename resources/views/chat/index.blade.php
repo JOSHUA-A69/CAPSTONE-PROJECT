@@ -1191,10 +1191,51 @@
 
                     this.scrollToBottom();
 
+                    // Stop polling and switch to SSE if available
                     if (this.pollHandle) {
                         clearInterval(this.pollHandle);
                     }
-                    this.pollHandle = setInterval(() => this.pollNewMessages(), 30000);
+
+                    // Setup SSE for real-time updates
+                    this.setupSSE(conversation.id);
+                },
+
+                setupSSE(conversationWithId) {
+                    // Use SSE for real-time chat updates if available
+                    if (window.sseClient) {
+                        // Disconnect from any previous chat stream
+                        window.sseClient.disconnectChat();
+
+                        // Connect to the new conversation
+                        window.sseClient.connectChat(conversationWithId);
+
+                        // Listen for new messages via SSE
+                        window.sseClient.on('chat:new_messages', (data) => {
+                            if (data && data.messages) {
+                                // Get existing message IDs to avoid duplicates
+                                const existingIds = new Set(this.messages.map(m => m.id));
+                                const incoming = data.messages.filter(message => !existingIds.has(message.id));
+
+                                if (incoming.length) {
+                                    this.messages.push(...incoming);
+                                    this.messages.sort((a, b) => a.id - b.id);
+                                    this.scrollToBottom();
+                                    this.markAsRead();
+                                }
+                            }
+                        });
+
+                        // Listen for chat unread updates
+                        window.sseClient.on('chat:unread_update', (data) => {
+                            if (data && typeof data.count !== 'undefined') {
+                                // Update global chat badge
+                                window.dispatchEvent(new CustomEvent('chat:unread-updated', { detail: { count: data.count } }));
+                            }
+                        });
+                    } else {
+                        // Fallback to polling if SSE is not available
+                        this.pollHandle = setInterval(() => this.pollNewMessages(), 3000);
+                    }
                 },
 
                 async loadMessages() {

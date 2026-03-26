@@ -104,7 +104,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($users as $user)
-                                <tr class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+                                <tr data-user-id="{{ $user->id }}" class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="flex-shrink-0 h-10 w-10">
@@ -276,7 +276,7 @@
                 <!-- Mobile Card View -->
                 <div class="md:hidden">
                     @forelse($users as $user)
-                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0" x-data="{ showConfirm: false, isArchiving: false }">
+                        <div data-user-id="{{ $user->id }}" class="p-4 border-b border-gray-200 dark:border-gray-700 last:border-b-0" x-data="{ showConfirm: false, isArchiving: false }">
                             <!-- User Header -->
                             <div class="flex items-start justify-between mb-3">
                                 <div class="flex items-center gap-3">
@@ -445,3 +445,48 @@
         </div>
     </div>
 </x-app-layout>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    if (!window.realtimeUpdates) {
+        return;
+    }
+
+    const removeUserFromList = (userId) => {
+        if (!userId) {
+            return;
+        }
+
+        document.querySelectorAll(`[data-user-id="${userId}"]`).forEach((el) => {
+            el.remove();
+        });
+
+        if (!document.querySelector('[data-user-id]')) {
+            window.location.reload();
+        }
+    };
+
+    window.realtimeUpdates.on('User:delete', (data) => {
+        removeUserFromList(data?.id);
+    });
+
+    window.realtimeUpdates.on('User:update', (data) => {
+        // Keep rendering logic simple and consistent by reloading after user updates.
+        if (data?.id) {
+            window.location.reload();
+        }
+    });
+
+    window.realtimeUpdates.on('User:create', (data) => {
+        if (data?.id) {
+            window.location.reload();
+        }
+    });
+
+    window.realtimeUpdates.on('User:restore', (data) => {
+        if (data?.id) {
+            window.location.reload();
+        }
+    });
+});
+</script>

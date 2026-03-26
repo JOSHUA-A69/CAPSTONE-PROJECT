@@ -332,3 +332,32 @@ docker compose up -d
 
 php artisan serve
 npm run dev
+
+## To run locally
+
+docker compose up -d --build
+docker compose exec app composer install
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
+docker compose exec app npm ci && npm run build
+docker compose exec app php artisan storage:link
+
+then
+
+http://localhost:8000
+
+## To Pause the editing
+
+docker compose down
+
+## TO Start
+
+docker compose up
+npmrundev
+
+
+
+* **App** : [http://localhost:8000](vscode-file://vscode-app/c:/Users/HP%20User/AppData/Local/Programs/Microsoft%20VS%20Code/ce099c1ed2/resources/app/out/vs/code/electron-browser/workbench/workbench.html)
+* and Db host below
+
+[http://localhost:8080](vscode-file://vscode-app/c:/Users/HP%20User/AppData/Local/Programs/Microsoft%20VS%20Code/ce099c1ed2/resources/app/out/vs/code/electron-browser/workbench/workbench.html)

@@ -62,7 +62,7 @@
             <div class="mt-auto">
                 @include('layouts.footer')
             </div>
-    </div>
+        </div>
 
     <!-- Screen reader announcements for dynamic content -->
         <div id="sr-announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
