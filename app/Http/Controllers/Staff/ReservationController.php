@@ -280,6 +280,7 @@ class ReservationController extends Controller
 
         $reservation->update([
             'status' => 'rejected',
+            'rejected_by' => Auth::id(),
         ]);
 
         $reservation->history()->create([
@@ -288,6 +289,9 @@ class ReservationController extends Controller
             'remarks' => 'Marked as not available by staff: ' . $reason,
             'performed_at' => now(),
         ]);
+
+        // Notify all parties of the rejection
+        $this->notificationService->notifyStaffRejected($reservation, $reason, Auth::user());
 
         return Redirect::back()->with('status', 'reservation-not-available');
     }
@@ -328,8 +332,8 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation uses an external priest. You cannot assign an internal priest. Admin should confirm the external priest instead.');
         }
 
-        // Allow if status is either adviser_approved or pending_priest_assignment
-        if (!in_array($reservation->status, ['adviser_approved', 'pending_priest_assignment'])) {
+        // Allow if status is either adviser_approved, pending_priest_assignment, or pending_priest_reassignment
+        if (!in_array($reservation->status, ['adviser_approved', 'pending_priest_assignment', 'pending_priest_reassignment'])) {
             return Redirect::back()
                 ->with('error', 'This reservation is not ready for priest assignment.');
         }
@@ -351,8 +355,10 @@ class ReservationController extends Controller
                 ->with('error', 'This priest already has an assignment at this date and time.');
         }
 
+        // Check if we need to send notification (if not yet notified OR if priest changed)
+        $shouldNotify = is_null($reservation->priest_notified_at) || $reservation->officiant_id !== $priest->id;
+
         // Assign priest and update status to pending priest confirmation
-        $alreadyNotified = !is_null($reservation->priest_notified_at);
         $reservation->update([
             'officiant_id' => $priest->id,
             'status' => 'pending_priest_confirmation',
@@ -369,8 +375,8 @@ class ReservationController extends Controller
             'performed_at' => now(),
         ]);
 
-        // Send notification to the priest (only if not already notified)
-        if (!$alreadyNotified) {
+        // Send notification to the priest
+        if ($shouldNotify) {
             $this->notificationService->notifyPriestAssigned($reservation->fresh());
         }
 

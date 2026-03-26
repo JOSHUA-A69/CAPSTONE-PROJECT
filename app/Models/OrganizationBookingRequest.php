@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use DateTimeInterface;
 
 /**
  * Organization Booking Request Model
@@ -47,6 +48,15 @@ class OrganizationBookingRequest extends Model
         'estimated_participants' => 'integer',
     ];
 
+    /**
+     * Ensure JSON serialization emits local, timezone-naive datetimes
+     * to prevent UTC shifts on the client calendar.
+     */
+    protected function serializeDate(DateTimeInterface $date): string
+    {
+        return $date->setTimezone(config('app.timezone'))->format('Y-m-d\TH:i:s');
+    }
+
     // ===========================
     // Relationships
     // ===========================
@@ -56,7 +66,7 @@ class OrganizationBookingRequest extends Model
      */
     public function requestor()
     {
-        return $this->belongsTo(User::class, 'requestor_id');
+        return $this->belongsTo(User::class, 'requestor_id')->withTrashed();
     }
 
     /**
@@ -64,7 +74,7 @@ class OrganizationBookingRequest extends Model
      */
     public function organization()
     {
-        return $this->belongsTo(Organization::class, 'organization_id', 'org_id');
+        return $this->belongsTo(Organization::class, 'organization_id', 'org_id')->withTrashed();
     }
 
     /**
@@ -72,7 +82,7 @@ class OrganizationBookingRequest extends Model
      */
     public function approvedBy()
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'approved_by')->withTrashed();
     }
 
     /**
@@ -80,7 +90,7 @@ class OrganizationBookingRequest extends Model
      */
     public function rejectedBy()
     {
-        return $this->belongsTo(User::class, 'rejected_by');
+        return $this->belongsTo(User::class, 'rejected_by')->withTrashed();
     }
 
     // ===========================

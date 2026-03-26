@@ -1,112 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Approved by Adviser</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: #16a34a;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 5px 5px 0 0;
-        }
-        .content {
-            background-color: #f8f9fa;
-            padding: 30px;
-            border-radius: 0 0 5px 5px;
-        }
-        .success-badge {
-            background-color: #dcfce7;
-            color: #166534;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-            margin: 20px 0;
-        }
-        .details {
-            background-color: white;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 5px;
-            border-left: 4px solid #16a34a;
-        }
-        .details-row {
-            margin: 10px 0;
-        }
-        .label {
-            font-weight: bold;
-            color: #555;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #666;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>✅ Reservation Approved by Adviser</h1>
-    </div>
-    <div class="content">
-        <p>Dear {{ $requestor->first_name }},</p>
+@extends('emails.layouts.default')
 
-        <div class="success-badge">
+@section('title', 'Reservation Approved by Adviser')
+
+@section('content')
+    <h1 style="color: #333333; font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 24px;">
+        Reservation Approved by Adviser
+    </h1>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        Dear {{ $requestor->first_name }},
+    </p>
+
+    <div style="background-color: #dcfce7; border-left: 4px solid #16a34a; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+        <p style="margin: 0; color: #166534; font-weight: 500;">
             Your organization adviser has approved your reservation request!
-        </div>
-
-        <p>Your reservation is now awaiting final approval from the CREaM administrator, who will assign a priest to officiate your service.</p>
-
-        <div class="details">
-            <h3>Reservation Details</h3>
-            <div class="details-row">
-                <span class="label">Service:</span> {{ $reservation->service->service_name }}
-            </div>
-            <div class="details-row">
-                <span class="label">Date & Time:</span> {{ $reservation->schedule_date->format('F d, Y - h:i A') }}
-            </div>
-            <div class="details-row">
-                <span class="label">Venue:</span>
-                @if($reservation->custom_venue_name)
-                    📍 {{ $reservation->custom_venue_name }} <em>(Custom Location)</em>
-                @else
-                    {{ $reservation->venue->name }}
-                @endif
-            </div>
-            <div class="details-row">
-                <span class="label">Approved By:</span> {{ $adviser->full_name }}
-            </div>
-            @if($remarks)
-            <div class="details-row">
-                <span class="label">Remarks:</span> {{ $remarks }}
-            </div>
-            @endif
-        </div>
-
-        <p><strong>Next Steps:</strong></p>
-        <ul>
-            <li>CREaM administrator will review and assign a priest</li>
-            <li>The assigned priest will confirm availability</li>
-            <li>You will receive a final confirmation email</li>
-        </ul>
-
-        <div class="footer">
-            <p>Center for Religious Education and Mission (CREaM)<br>
-            Holy Name University<br>
-            Tagbilaran City, Bohol</p>
-        </div>
+        </p>
     </div>
-</body>
-</html>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        Your reservation is now awaiting final approval from the CREaM administrator, who will assign a priest to officiate your service.
+    </p>
+
+    <div style="background-color: #f3f4f6; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
+        <h2 style="color: #333333; font-size: 18px; font-weight: bold; margin-top: 0; margin-bottom: 16px;">
+            Reservation Details
+        </h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666; width: 140px;">Service:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->service->service_name }}</td>
+            </tr>
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Date & Time:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $reservation->schedule_date->format('F d, Y - h:i A') }}</td>
+            </tr>
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Venue:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">
+                    @if($reservation->custom_venue_name)
+                        {{ $reservation->custom_venue_name }} (Custom Location)
+                    @else
+                        {{ $reservation->venue->name }}
+                    @endif
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Approved By:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $adviser->full_name }}</td>
+            </tr>
+            @if($remarks)
+            <tr>
+                <td style="padding-bottom: 8px; color: #666666;">Remarks:</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $remarks }}</td>
+            </tr>
+            @endif
+        </table>
+    </div>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 16px;">
+        <strong>Next Steps:</strong>
+    </p>
+    <ul style="font-size: 16px; line-height: 24px; margin-bottom: 24px; padding-left: 20px; color: #333333;">
+        <li style="margin-bottom: 8px;">CREaM administrator will review and assign a priest</li>
+        <li style="margin-bottom: 8px;">The assigned priest will confirm availability</li>
+        <li style="margin-bottom: 8px;">You will receive a final confirmation email</li>
+    </ul>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        You can track the status of your request through the <a href="{{ config('app.url') }}" style="color: #2563eb; text-decoration: none;">eReligiousServices portal</a>.
+    </p>
+@endsection

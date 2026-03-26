@@ -43,11 +43,11 @@ class ReservationRequest extends FormRequest
             'service_id' => ['nullable', 'integer', Rule::exists('services', 'service_id')],
             'service_category' => ['required', 'in:institutional_mass,non_institutional_mass,other_services'],
             'venue_id' => ['required'],
-            'organization_ids' => ['required', 'array', 'min:1'],
+            'organization_ids' => ['nullable', 'array'],
             'organization_ids.*' => ['integer', Rule::exists('organizations', 'org_id')],
             'priest_selection_type' => ['required', 'in:specific,any_available,external'],
             'schedule_date' => ['required', 'date', 'after:now'],
-            'schedule_time' => ['nullable', 'date_format:H:i'],
+            'schedule_time' => ['nullable', 'date_format:H:i,H:i:s'],
             'activity_name' => ['required', 'string', 'max:255'],
             'theme' => ['nullable', 'string', 'max:1000'],
             'purpose' => ['nullable', 'string', 'max:150'],
@@ -74,7 +74,7 @@ class ReservationRequest extends FormRequest
         // Service selection validation based on category
         if ($this->service_category === 'other_services') {
             // Require a custom service type string when "Other Services" is chosen
-            $rules['other_service_type'] = ['required', 'string', 'max:255'];
+            $rules['other_service_type'] = ['required', 'string', 'max:50'];
             // service_id is not required in this path
             $rules['service_id'] = ['nullable', 'integer', Rule::exists('services', 'service_id')];
         } else {

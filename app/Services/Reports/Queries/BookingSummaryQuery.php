@@ -63,11 +63,18 @@ class BookingSummaryQuery implements ReportQuery
 
         $rows = [];
         foreach ($periods as $p) {
+            $date = \Carbon\Carbon::createFromFormat('Y-m', $p);
+            $monthName = $date->format('F Y');
+            $c = (int) ($created[$p] ?? 0);
+            $a = (int) ($approved[$p] ?? 0);
+            $cn = (int) ($cancelled[$p] ?? 0);
+
             $rows[] = [
                 'period' => $p,
-                'created' => (int) ($created[$p] ?? 0),
-                'approved' => (int) ($approved[$p] ?? 0),
-                'cancelled' => (int) ($cancelled[$p] ?? 0),
+                'created' => $c,
+                'approved' => $a,
+                'cancelled' => $cn,
+                'summary' => "In {$monthName}, there were {$c} new requests, {$a} approvals, and {$cn} cancellations.",
             ];
         }
 

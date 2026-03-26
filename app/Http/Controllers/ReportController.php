@@ -8,7 +8,6 @@ use App\Services\Reports\Filters\ReportFilter;
 use App\Services\Reports\ReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class ReportController extends Controller
@@ -51,7 +50,7 @@ class ReportController extends Controller
         }
 
         // Common lists for simple selects
-        $services = \App\Models\Service::orderBy('service_name')->get(['service_id', 'service_name']);
+        $services = \App\Models\Service::withTrashed()->orderBy('service_name')->get(['service_id', 'service_name']);
 
         return view('reports.index', [
             'types' => $allowed,
@@ -136,6 +135,7 @@ class ReportController extends Controller
     public function download(Request $request)
     {
         $path = (string) $request->query('path');
+        $this->authorizeReportPath($path);
         abort_unless(Storage::exists($path), 404);
         return Storage::download($path);
     }
@@ -143,8 +143,21 @@ class ReportController extends Controller
     public function view(Request $request)
     {
         $path = (string) $request->query('path');
+        $this->authorizeReportPath($path);
         abort_unless(Storage::exists($path), 404);
         $content = Storage::get($path);
-        return response($content)->header('Content-Type', 'text/html');
+        $mime = Storage::mimeType($path) ?: 'application/octet-stream';
+        return response($content)->header('Content-Type', $mime);
+    }
+
+    private function authorizeReportPath(string $path): void
+    {
+        $normalized = str_replace('\\', '/', trim($path));
+        $userId = (int) Auth::id();
+        $prefix = "reports/{$userId}/";
+
+        abort_if($userId <= 0, 403);
+        abort_if($normalized === '' || str_contains($normalized, '..'), 403);
+        abort_unless(str_starts_with($normalized, $prefix), 403);
     }
 }

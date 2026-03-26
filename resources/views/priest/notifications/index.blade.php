@@ -8,15 +8,24 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Action Buttons -->
-            <div class="mb-4 flex justify-end gap-3">
-                <button onclick="clearAllNotifications()" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="mb-4 flex justify-end gap-2 sm:gap-3 flex-wrap">
+                <a href="{{ route('priest.notifications.archived') }}" class="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-gray-600 hover:bg-gray-700 text-white rounded-lg sm:rounded-xl transition-all duration-200 ease-in-out hover:shadow-md flex items-center gap-1.5 sm:gap-2 font-medium">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                    </svg>
+                    <span class="hidden sm:inline">View Archived</span>
+                    <span class="sm:hidden">Archived</span>
+                </a>
+                <button onclick="clearAllNotifications()" class="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg sm:rounded-xl transition-all duration-200 ease-in-out hover:shadow-md flex items-center gap-1.5 sm:gap-2 font-medium">
+                    <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                     </svg>
-                    Clear All
+                    <span class="hidden sm:inline">Clear All</span>
+                    <span class="sm:hidden">Clear</span>
                 </button>
-                <button onclick="markAllAsRead()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
-                    Mark All as Read
+                <button onclick="markAllAsRead()" class="px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:rounded-xl transition-all duration-200 ease-in-out hover:shadow-md font-medium">
+                    <span class="hidden sm:inline">Mark All as Read</span>
+                    <span class="sm:hidden">Mark Read</span>
                 </button>
             </div>
 
@@ -52,7 +61,7 @@
                                     </div>
 
                                     <p class="text-sm text-gray-900 dark:text-gray-100 {{ $notification->isUnread() ? 'font-semibold' : 'font-normal' }} mb-1">
-                                        {!! $notification->message !!}
+                                        {{ $notification->message }}
                                     </p>
 
                                     @if($notification->reservation)
@@ -73,7 +82,7 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
                                     </button>
-                                    
+
                                     @if($notification->type === 'Assignment' && $notification->reservation_id)
                                         <a href="{{ route('priest.notifications.assignment', $notification->notification_id) }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none transition">
                                             View Details

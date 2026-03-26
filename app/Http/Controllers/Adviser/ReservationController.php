@@ -25,25 +25,64 @@ class ReservationController extends Controller
         $this->availabilityService = $availabilityService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         // Get organizations where this adviser is assigned
         $adviserOrgs = Auth::user()->organizations->pluck('org_id');
 
+        // Start building the query
+        // Check both direct org_id (legacy) and many-to-many relationship
+        $query = Reservation::with(['user', 'service', 'venue', 'organization'])
+            ->where(function ($q) use ($adviserOrgs) {
+                $q->whereIn('org_id', $adviserOrgs)
+                  ->orWhereHas('organizations', function ($subQ) use ($adviserOrgs) {
+                      $subQ->whereIn('organizations.org_id', $adviserOrgs);
+                  });
+            });
+
+        // Apply filters
+        if ($request->has('filter')) {
+            $filter = $request->input('filter');
+            switch ($filter) {
+                case 'pending':
+                    $query->where('status', 'pending');
+                    break;
+                case 'adviser_approved':
+                    $query->where('status', 'adviser_approved');
+                    break;
+                case 'upcoming':
+                    $query->whereIn('status', ['admin_approved', 'approved'])
+                          ->where('schedule_date', '>=', now());
+                    break;
+                case 'unnoticed':
+                    $query->unnoticedByAdviser();
+                    break;
+                default:
+                    $query->whereIn('status', ['pending', 'adviser_approved', 'admin_approved', 'approved', 'rejected']);
+                    break;
+            }
+        } else {
+            // Default view
+            $query->whereIn('status', ['pending', 'adviser_approved', 'admin_approved', 'approved', 'rejected']);
+        }
+
         // Get reservations linked to those organizations
-        $reservations = Reservation::with(['user', 'service', 'venue', 'organization'])
-            ->whereIn('org_id', $adviserOrgs)
-            ->whereIn('status', ['pending', 'adviser_approved', 'admin_approved', 'approved', 'rejected'])
-            ->orderByRaw("CASE
+        $reservations = $query->orderByRaw("CASE
                 WHEN status = 'pending' THEN 1
                 WHEN status = 'adviser_approved' THEN 2
                 ELSE 3
             END")
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         // Get count of unnoticed requests (>24 hours old)
-        $unnoticedCount = Reservation::whereIn('org_id', $adviserOrgs)
+        $unnoticedCount = Reservation::where(function ($q) use ($adviserOrgs) {
+                $q->whereIn('org_id', $adviserOrgs)
+                  ->orWhereHas('organizations', function ($subQ) use ($adviserOrgs) {
+                      $subQ->whereIn('organizations.org_id', $adviserOrgs);
+                  });
+            })
             ->unnoticedByAdviser()
             ->count();
 
@@ -56,7 +95,12 @@ class ReservationController extends Controller
         $adviserOrgs = Auth::user()->organizations->pluck('org_id');
 
         $reservation = Reservation::with(['user', 'service', 'venue', 'organization', 'history'])
-            ->whereIn('org_id', $adviserOrgs)
+            ->where(function ($q) use ($adviserOrgs) {
+                $q->whereIn('org_id', $adviserOrgs)
+                  ->orWhereHas('organizations', function ($subQ) use ($adviserOrgs) {
+                      $subQ->whereIn('organizations.org_id', $adviserOrgs);
+                  });
+            })
             ->findOrFail($reservation_id);
 
         return view('adviser.reservations.show', compact('reservation'));
@@ -72,14 +116,14 @@ class ReservationController extends Controller
 
         // Check if adviser is associated with any organization in this reservation
         $reservationOrgIds = $reservation->organizations->pluck('org_id');
-        
+
         // Support both multi-org and legacy single org_id
         if ($reservationOrgIds->isEmpty()) {
             $reservationOrgIds = collect([$reservation->org_id]);
         }
 
         $matchingOrgId = $adviserOrgIds->intersect($reservationOrgIds)->first();
-        
+
         if (!$matchingOrgId) {
             abort(403, 'You are not the adviser for any organization in this reservation.');
         }
@@ -159,7 +203,7 @@ class ReservationController extends Controller
                 // Send notifications to requestor and CREaM admin/staff
                 $this->notificationService->notifyAdviserApproved($reservation, $remarks);
 
-                $message = 'All advisers have approved. Reservation is now awaiting priest confirmation.';
+                $message = 'Adviser have approved. Reservation is now awaiting priest confirmation.';
             } else {
                 // Still waiting for other advisers
                 $pending = $reservation->pendingAdviserCount();
@@ -227,14 +271,14 @@ class ReservationController extends Controller
 
         // Check if adviser is associated with any organization in this reservation
         $reservationOrgIds = $reservation->organizations->pluck('org_id');
-        
+
         // Support both multi-org and legacy single org_id
         if ($reservationOrgIds->isEmpty()) {
             $reservationOrgIds = collect([$reservation->org_id]);
         }
 
         $matchingOrgId = $adviserOrgIds->intersect($reservationOrgIds)->first();
-        
+
         if (!$matchingOrgId) {
             abort(403, 'You are not the adviser for any organization in this reservation.');
         }
@@ -273,11 +317,12 @@ class ReservationController extends Controller
 
             // Check if this is a single-org reservation or if all orgs have now responded
             $totalOrgs = $reservation->organizations->count();
-            
+
             if ($totalOrgs <= 1) {
                 // Single org - reject the whole reservation
                 $reservation->update([
                     'status' => 'rejected',
+                    'rejected_by' => $adviser->id,
                     'adviser_responded_at' => now(),
                 ]);
                 $message = 'Reservation has been rejected.';

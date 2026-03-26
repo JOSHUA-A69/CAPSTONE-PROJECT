@@ -47,7 +47,7 @@ class OrganizationBookingRejectionNotification extends Mailable
             with: [
                 'request' => $this->bookingRequest,
                 'organization' => $this->bookingRequest->organization,
-                'adviser' => $this->bookingRequest->organization->adviser,
+                'adviser' => $this->bookingRequest->organization?->adviser,
                 'reason' => $this->reason,
                 'comments' => $this->comments,
             ],

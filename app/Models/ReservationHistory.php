@@ -55,12 +55,12 @@ class ReservationHistory extends Model
 
     public function performedBy()
     {
-        return $this->belongsTo(User::class, 'performed_by', 'id');
+        return $this->belongsTo(User::class, 'performed_by', 'id')->withTrashed();
     }
 
     public function archivedBy()
     {
-        return $this->belongsTo(User::class, 'archived_by', 'id');
+        return $this->belongsTo(User::class, 'archived_by', 'id')->withTrashed();
     }
 
     // Scope for non-archived history

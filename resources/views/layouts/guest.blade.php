@@ -13,14 +13,14 @@
 
     <!-- Favicon -->
     <link rel="icon" href="/images/ers-logo.png" />
-    
+
     <!-- Animation Mode: none for auth pages (login/register) -->
     <script>
         window.ANIMATIONS_MODE = 'none';
     </script>
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- Dark Mode Initialization Script -->
     <script>
         // Initialize dark mode from localStorage before page renders
@@ -32,9 +32,9 @@
     </script>
     </head>
     <body class="font-sans text-gray-900 dark:text-gray-100 antialiased text-base lg:text-[18px] no-animations">
-        <div class="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-            <div class="flex-1 flex flex-col sm:justify-center items-center pt-8 sm:pt-6 pb-12 px-4">
-                <div class="w-full sm:max-w-2xl lg:max-w-3xl mt-6 px-6 sm:px-8 py-8 bg-white dark:bg-gray-800 shadow-xl overflow-hidden sm:rounded-xl border border-gray-200 dark:border-gray-700">
+        <div class="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900">
+            <div class="flex-1 flex flex-col sm:justify-center items-center pt-4 sm:pt-6 pb-6 sm:pb-10 px-3 sm:px-4">
+                <div class="w-full guest-content-box bg-white dark:bg-gray-900 shadow-2xl overflow-hidden rounded-3xl border border-gray-100 dark:border-gray-800 backdrop-blur-sm">
                     @isset($slot)
                         {{ $slot }}
                     @else
@@ -45,5 +45,39 @@
 
             @include('layouts.footer')
         </div>
+
+        <style>
+            /* Default: login and other small auth pages */
+            .guest-content-box {
+                max-width: 24rem; /* max-w-sm on mobile */
+            }
+            /* Tablet+ for small pages */
+            @media (min-width: 640px) {
+                .guest-content-box {
+                    max-width: 24rem; /* max-w-sm */
+                }
+            }
+            /* When register page is loaded, widen container */
+            .guest-register-page .guest-content-box {
+                max-width: 100%; /* full width on mobile */
+            }
+            @media (min-width: 640px) {
+                .guest-register-page .guest-content-box {
+                    max-width: 42rem; /* sm:max-w-2xl */
+                }
+            }
+            @media (min-width: 1024px) {
+                .guest-register-page .guest-content-box {
+                    max-width: 64rem; /* lg:max-w-4xl */
+                }
+            }
+            @media (min-width: 1280px) {
+                .guest-register-page .guest-content-box {
+                    max-width: 80rem; /* xl:max-w-6xl */
+                }
+            }
+        </style>
+
+        @stack('scripts')
     </body>
 </html>

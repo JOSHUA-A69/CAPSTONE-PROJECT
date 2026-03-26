@@ -27,7 +27,19 @@ class PdfExporter implements ReportExporter
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
             $pdfOutput = $dompdf->output();
-            Storage::put($path, $pdfOutput);
+            
+            // Use temporary file to avoid passing binary string to filesystem driver
+            $tempPath = tempnam(sys_get_temp_dir(), 'pdf_export_');
+            file_put_contents($tempPath, $pdfOutput);
+
+            try {
+                // putFileAs handles the upload safely from the file path
+                Storage::putFileAs($dir, new \Illuminate\Http\File($tempPath), $filename);
+            } finally {
+                if (file_exists($tempPath)) {
+                    unlink($tempPath);
+                }
+            }
         } else {
             // Fallback: save HTML so it can still be viewed
             $filename = self::filename($meta->type, 'html');

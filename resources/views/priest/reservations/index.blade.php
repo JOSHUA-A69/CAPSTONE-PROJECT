@@ -1,10 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <div>
-            <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
-                My Assigned Services
-            </h2>
-            <p class="text-muted text-sm mt-1">Manage your service assignments and confirmations</p>
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 dark:text-gray-200 tracking-tight">
+                    My Assigned Services
+                </h2>
+                <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-1 max-w-lg">
+                    Manage your service assignments and confirmations
+                </p>
+            </div>
+            <!-- Optional: Mobile menu button or additional actions can go here -->
         </div>
     </x-slot>
 
@@ -66,41 +71,85 @@
                 </div>
             @endif
 
-            <!-- Filter Tabs -->
-            <div class="mb-6 flex flex-wrap gap-2 justify-between items-center">
-                <div class="flex flex-wrap gap-2">
+            <!-- Filter Tabs - Enhanced Mobile Responsive Design -->
+            <div class="mb-6">
+                <!-- Mobile: Stacked layout with full-width buttons -->
+                <div class="block sm:hidden">
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <a href="{{ route('priest.reservations.index') }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm {{ !request('status') && !request('time') ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300' }}">
+                            All
+                        </a>
+                        <a href="{{ route('priest.reservations.index', ['status' => 'pending_priest_confirmation']) }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm {{ request('status') === 'pending_priest_confirmation' ? 'bg-yellow-600 text-white shadow-yellow-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:border-yellow-300' }}">
+                            <span class="flex items-center gap-1.5">
+                                Pending
+                                @if($pendingConfirmationCount > 0)
+                                    <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">{{ $pendingConfirmationCount }}</span>
+                                @endif
+                            </span>
+                        </a>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <a href="{{ route('priest.reservations.index', ['time' => 'upcoming']) }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm {{ request('time') === 'upcoming' ? 'bg-green-600 text-white shadow-green-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300' }}">
+                            <span class="flex items-center gap-1">
+                                Upcoming
+                                @if($upcomingCount > 0)
+                                    <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-green-500 rounded-full">{{ $upcomingCount }}</span>
+                                @endif
+                            </span>
+                        </a>
+                        <a href="{{ route('priest.reservations.index', ['time' => 'past']) }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm {{ request('time') === 'past' ? 'bg-gray-600 text-white shadow-gray-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300' }}">
+                            Past
+                        </a>
+                        <a href="{{ route('priest.reservations.declined') }}"
+                           class="flex items-center justify-center px-3 py-2.5 text-xs font-semibold rounded-xl transition-all duration-200 shadow-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300">
+                            <span class="flex items-center gap-1">
+                                Declined
+                                @if($declinedCount > 0)
+                                    <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full">{{ $declinedCount }}</span>
+                                @endif
+                            </span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Desktop: Horizontal layout -->
+                <div class="hidden sm:flex flex-wrap gap-3 items-center">
                     <a href="{{ route('priest.reservations.index') }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 {{ !request('status') && !request('time') ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] {{ !request('status') && !request('time') ? 'bg-indigo-600 text-white shadow-indigo-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-300' }}">
                         All
                     </a>
                     <a href="{{ route('priest.reservations.index', ['status' => 'pending_priest_confirmation']) }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 {{ request('status') === 'pending_priest_confirmation' ? 'bg-yellow-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        <span class="flex items-center gap-1">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] {{ request('status') === 'pending_priest_confirmation' ? 'bg-yellow-600 text-white shadow-yellow-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 hover:border-yellow-300' }}">
+                        <span class="flex items-center gap-2">
                             Pending Confirmation
                             @if($pendingConfirmationCount > 0)
-                                <span class="badge-warning ml-1">{{ $pendingConfirmationCount }}</span>
+                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">{{ $pendingConfirmationCount }}</span>
                             @endif
                         </span>
                     </a>
                     <a href="{{ route('priest.reservations.index', ['time' => 'upcoming']) }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 {{ request('time') === 'upcoming' ? 'bg-green-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                        <span class="flex items-center gap-1">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] {{ request('time') === 'upcoming' ? 'bg-green-600 text-white shadow-green-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-green-50 dark:hover:bg-green-900/20 hover:border-green-300' }}">
+                        <span class="flex items-center gap-2">
                             Upcoming
                             @if($upcomingCount > 0)
-                                <span class="badge-success ml-1">{{ $upcomingCount }}</span>
+                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-green-500 rounded-full">{{ $upcomingCount }}</span>
                             @endif
                         </span>
                     </a>
                     <a href="{{ route('priest.reservations.index', ['time' => 'past']) }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 {{ request('time') === 'past' ? 'bg-gray-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] {{ request('time') === 'past' ? 'bg-gray-600 text-white shadow-gray-200' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300' }}">
                         Past Services
                     </a>
                     <a href="{{ route('priest.reservations.declined') }}"
-                       class="px-4 py-2 rounded-lg transition-colors duration-150 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <span class="flex items-center gap-1">
+                       class="px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md transform hover:scale-[1.02] bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300">
+                        <span class="flex items-center gap-2">
                             Declined Services
                             @if($declinedCount > 0)
-                                <span class="badge-secondary ml-1">{{ $declinedCount }}</span>
+                                <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">{{ $declinedCount }}</span>
                             @endif
                         </span>
                     </a>
@@ -243,8 +292,8 @@
                                         $reservation->priest_confirmation !== 'declined')
                                         <!-- Inline Decline Panel (more reliable than overlay modal) -->
                                         <div id="declinePanel-{{ $reservation->reservation_id }}" class="hidden mt-4 p-4 border border-red-200 dark:border-red-800 rounded-lg bg-red-50 dark:bg-red-900/10">
-                              <form method="POST" action="{{ route('priest.reservations.decline', $reservation->reservation_id) }}"
-                                  onsubmit="return confirm(`Are you sure you want to DECLINE this reservation?\n\nService: {{ addslashes($reservation->service->service_name) }}\nDate: {{ $reservation->schedule_date->format('M d, Y - g:i A') }}`)">
+                              <form id="declineForm-{{ $reservation->reservation_id }}" method="POST" action="{{ route('priest.reservations.decline', $reservation->reservation_id) }}"
+                                  onsubmit="showDeclineConfirmation(event, '{{ $reservation->reservation_id }}', '{{ addslashes($reservation->service->service_name) }}', '{{ $reservation->schedule_date->format('M d, Y - g:i A') }}')">
                                                 @csrf
                                                 <label class="block text-sm font-medium text-red-900 dark:text-red-200 mb-2">
                                                     Reason for declining <span class="text-red-600">*</span>
@@ -279,3 +328,96 @@
         </div>
     </div>
 </x-app-layout>
+
+<!-- Decline Confirmation Modal -->
+<div id="declineConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[110] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-md transform transition-all">
+        <div class="px-6 py-5 border-b dark:border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Confirm Decline</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-5">
+            <p class="text-gray-700 dark:text-gray-300 mb-4">Are you sure you want to <strong>DECLINE</strong> this reservation?</p>
+            <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-4 space-y-2">
+                <div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Service</p>
+                    <p id="declineService" class="text-sm font-semibold text-gray-900 dark:text-white"></p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">Date & Time</p>
+                    <p id="declineDate" class="text-sm font-semibold text-gray-900 dark:text-white"></p>
+                </div>
+            </div>
+            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p class="text-sm text-amber-800 dark:text-amber-200">
+                    <strong>Important:</strong> Administrators and the requestor will be immediately notified of your decline with your reason.
+                </p>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 rounded-b-lg flex gap-3">
+            <button type="button" onclick="confirmDecline()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-md transition duration-200 flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Yes, Decline
+            </button>
+            <button type="button" onclick="hideDeclineConfirmation()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-semibold py-2.5 px-4 rounded-md transition duration-200">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentDeclineReservationId = null;
+
+function showDeclineConfirmation(event, reservationId, serviceName, dateTime) {
+    event.preventDefault();
+    currentDeclineReservationId = reservationId;
+
+    // Update modal with reservation details
+    document.getElementById('declineService').textContent = serviceName;
+    document.getElementById('declineDate').textContent = dateTime;
+
+    // Show the modal
+    const modal = document.getElementById('declineConfirmModal');
+    modal.classList.remove('hidden');
+}
+
+function hideDeclineConfirmation() {
+    document.getElementById('declineConfirmModal').classList.add('hidden');
+    currentDeclineReservationId = null;
+}
+
+function confirmDecline() {
+    if (currentDeclineReservationId) {
+        const form = document.getElementById('declineForm-' + currentDeclineReservationId);
+        if (form) {
+            form.submit();
+        }
+    }
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        hideDeclineConfirmation();
+    }
+});
+
+// Close modal on outside click
+document.getElementById('declineConfirmModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        hideDeclineConfirmation();
+    }
+});
+</script>

@@ -92,6 +92,8 @@ class Reservation extends Model
         'priest_notified_at',
         'priest_confirmation',
         'priest_confirmed_at',
+        'approved_by',
+        'rejected_by',
         'cancellation_reason',
         'cancelled_by',
     ];
@@ -119,12 +121,12 @@ class Reservation extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function organization()
     {
-        return $this->belongsTo(Organization::class, 'org_id', 'org_id');
+        return $this->belongsTo(Organization::class, 'org_id', 'org_id')->withTrashed();
     }
 
     /**
@@ -134,7 +136,7 @@ class Reservation extends Model
     {
         return $this->belongsToMany(Organization::class, 'reservation_organization', 'reservation_id', 'organization_id')
             ->withPivot('notified', 'notified_at', 'approval_status', 'rejection_reason', 'responded_by', 'responded_at')
-            ->withTimestamps();
+            ->withTimestamps()->withTrashed(); // Include soft-deleted
     }
 
     /**
@@ -144,7 +146,7 @@ class Reservation extends Model
     {
         return $this->belongsToMany(User::class, 'reservation_priest', 'reservation_id', 'priest_id')
             ->withPivot('confirmation_status', 'decline_reason', 'notified', 'notified_at', 'responded_at')
-            ->withTimestamps();
+            ->withTimestamps()->withTrashed(); // Include soft-deleted
     }
 
     public function venue()
@@ -154,7 +156,7 @@ class Reservation extends Model
 
     public function service()
     {
-        return $this->belongsTo(Service::class, 'service_id', 'service_id');
+        return $this->belongsTo(Service::class, 'service_id', 'service_id')->withTrashed();
     }
 
     /**
@@ -162,7 +164,7 @@ class Reservation extends Model
      */
     public function officiant()
     {
-        return $this->belongsTo(User::class, 'officiant_id');
+        return $this->belongsTo(User::class, 'officiant_id')->withTrashed();
     }
 
     /**
@@ -170,7 +172,23 @@ class Reservation extends Model
      */
     public function cancelledByUser()
     {
-        return $this->belongsTo(User::class, 'cancelled_by');
+        return $this->belongsTo(User::class, 'cancelled_by')->withTrashed();
+    }
+
+    /**
+     * User who rejected this reservation
+     */
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by')->withTrashed();
+    }
+
+    /**
+     * User who approved this reservation
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by')->withTrashed();
     }
 
     public function history()
@@ -220,10 +238,11 @@ class Reservation extends Model
      */
     public function scopeAwaitingPriestConfirmation(Builder $query): Builder
     {
-        return $query->whereIn('status', ['adviser_approved', 'admin_approved'])
+        return $query->whereIn('status', ['pending', 'adviser_approved', 'admin_approved', 'pending_priest_confirmation'])
             ->where(function ($q) {
                 $q->whereNull('priest_confirmation')
-                    ->orWhere('priest_confirmation', 'pending');
+                    ->orWhere('priest_confirmation', 'pending')
+                    ->orWhere('priest_confirmation', '!=', 'confirmed');
             });
     }
 
@@ -502,7 +521,7 @@ class Reservation extends Model
         // Admin has approved, waiting for final priest confirmation
         if ($this->status === 'admin_approved') {
             if ($this->priest_confirmation === 'confirmed' || $this->allPriestsConfirmed()) {
-                return 'Approved by Admin';
+                return 'Awaiting Admin';
             }
             return 'Awaiting Priest';
         }

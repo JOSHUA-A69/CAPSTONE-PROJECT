@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputs = document.querySelectorAll('input:not([type="hidden"]), textarea, select');
     
     inputs.forEach(input => {
-        // Add smooth focus transition
+        // Add smooth focus transition (subtle scale effect)
         input.addEventListener('focus', function() {
             this.style.transform = 'scale(1.01)';
             this.style.transition = 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -18,19 +18,8 @@ document.addEventListener('DOMContentLoaded', function() {
             this.style.transform = 'scale(1)';
         });
         
-        // Add floating label effect if input has value
-        input.addEventListener('input', function() {
-            const label = this.previousElementSibling;
-            if (label && label.tagName === 'LABEL') {
-                if (this.value) {
-                    label.style.transform = 'translateY(-1.5rem) scale(0.85)';
-                    label.style.color = 'rgb(59, 130, 246)';
-                } else {
-                    label.style.transform = '';
-                    label.style.color = '';
-                }
-            }
-        });
+        // Labels remain static - no floating animation
+        // Labels are styled with .form-label class and stay above inputs
     });
     
     // Enhanced form submission

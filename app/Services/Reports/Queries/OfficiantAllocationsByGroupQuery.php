@@ -48,11 +48,11 @@ class OfficiantAllocationsByGroupQuery implements ReportQuery
             $total = max((int) $row->reservations, 1);
             $approved = (int) $row->approved_reservations;
             return [
-                'organization' => (string) ($row->organization ?? '—'),
-                'officiant' => trim((string) ($row->officiant ?? '')) ?: '—',
-                'reservations' => (int) $row->reservations,
-                'approved_reservations' => $approved,
-                'approval_rate_pct' => round(($approved / $total) * 100, 2),
+                'Organization' => (string) ($row->organization ?? '—'),
+                'Officiant' => trim((string) ($row->officiant ?? '')) ?: '—',
+                'Reservations' => (int) $row->reservations,
+                'Approved Reservations' => $approved,
+                'Approval Rate (%)' => round(($approved / $total) * 100, 2),
             ];
         })->toArray();
 

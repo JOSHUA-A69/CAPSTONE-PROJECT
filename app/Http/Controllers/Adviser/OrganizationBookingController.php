@@ -189,8 +189,9 @@ class OrganizationBookingController extends Controller
             $events[] = [
                 'id' => $r->id,
                 'title' => $r->activity_name,
-                // Use stored datetime as-is (no timezone mutation)
-                'start' => optional($r->requested_date)->toIso8601String(),
+                // Emit start as local naive datetime to avoid UTC shifts
+                'start' => optional($r->requested_date)->setTimezone(config('app.timezone'))->format('Y-m-d\TH:i:s'),
+                'allDay' => false,
                 'extendedProps' => [
                     'id' => $r->id,
                     'status' => $r->status,

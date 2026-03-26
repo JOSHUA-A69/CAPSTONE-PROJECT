@@ -33,10 +33,14 @@ class Message extends Model
     public function getAttachmentUrlAttribute()
     {
         if ($this->attachment_path) {
-            // Add a cache-busting query param based on last update to avoid stale caches
-            $url = asset('storage/' . $this->attachment_path);
-            $version = optional($this->updated_at)->timestamp ?? time();
-            return $url . '?v=' . $version;
+            try {
+                // Add a cache-busting query param based on last update to avoid stale caches
+                $url = \Illuminate\Support\Facades\Storage::url($this->attachment_path);
+                $version = optional($this->updated_at)->timestamp ?? time();
+                return $url . '?v=' . $version;
+            } catch (\Throwable $e) {
+                return null;
+            }
         }
         return null;
     }
@@ -65,7 +69,7 @@ class Message extends Model
      */
     public function sender(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'sender_id');
+        return $this->belongsTo(User::class, 'sender_id')->withTrashed();
     }
 
     /**
@@ -73,7 +77,7 @@ class Message extends Model
      */
     public function receiver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'receiver_id');
+        return $this->belongsTo(User::class, 'receiver_id')->withTrashed();
     }
 
     /**
@@ -85,7 +89,7 @@ class Message extends Model
             $q->where('sender_id', $userId1)->where('receiver_id', $userId2);
         })->orWhere(function ($q) use ($userId1, $userId2) {
             $q->where('sender_id', $userId2)->where('receiver_id', $userId1);
-        })->orderBy('created_at', 'asc');
+        })->orderBy('created_at', 'asc')->orderBy('id', 'asc');
     }
 
     /**

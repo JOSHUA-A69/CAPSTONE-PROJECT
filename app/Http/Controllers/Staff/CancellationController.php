@@ -103,6 +103,39 @@ class CancellationController extends Controller
     }
 
     /**
+     * Reject cancellation
+     */
+    public function reject($id)
+    {
+        $cancellation = ReservationCancellation::with('reservation')->findOrFail($id);
+
+        if ($cancellation->status === 'rejected') {
+            return redirect()->route('staff.cancellations.show', $id)
+                ->with('info', 'This cancellation has already been rejected.');
+        }
+
+        $cancellation->update([
+            'status' => 'rejected',
+        ]);
+
+        ReservationHistory::create([
+            'reservation_id' => $cancellation->reservation_id,
+            'action' => 'cancellation_rejected_by_staff',
+            'details' => 'Cancellation request rejected by staff ' . Auth::user()->name,
+            'performed_by' => Auth::id(),
+        ]);
+
+        $this->cancellationService->notifyCancellationRejected(
+            $cancellation, 
+            Auth::user()->name, 
+            'Staff'
+        );
+
+        return redirect()->route('staff.cancellations.show', $id)
+            ->with('success', 'Cancellation request rejected. The reservation remains active.');
+    }
+
+    /**
      * Complete the cancellation process
      */
     private function completeCancellation(ReservationCancellation $cancellation)

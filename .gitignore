@@ -41,3 +41,8 @@ zznotes/
 
 # Personal development notes
 /ZzNotes/
+
+.env.prod.secrets
+
+# Ignore local image documentation folder
+/image/README/

@@ -258,6 +258,15 @@
 let calendar;
 let currentFilter = '';
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const calendarEl = document.getElementById('calendar');
     
@@ -349,22 +358,29 @@ function showEventDetails(event) {
     const statusText = getStatusText(event.extendedProps.status, event.extendedProps.is_overdue);
     const location = event.extendedProps.location || event.extendedProps.venue || 'TBD';
     const organization = event.extendedProps.organization || 'Organization';
-    const requestor = event.extendedProps.requestor || 'Requestor';
     const purpose = event.extendedProps.purpose || 'No description provided.';
+    const safeTitle = escapeHtml(event.title || 'Organization Activity');
+    const safeStatusText = escapeHtml(statusText);
+    const safeDateStr = escapeHtml(dateStr);
+    const safeLocation = escapeHtml(location);
+    const safeOrganization = escapeHtml(organization);
+    const safePurpose = escapeHtml(purpose);
+    const detailsId = Number.parseInt(event.extendedProps.id, 10);
+    const safeDetailsId = Number.isNaN(detailsId) ? '' : String(detailsId);
 
     const details = `
         <div class="bg-white dark:bg-gray-800 rounded-2xl border border-indigo-100 dark:border-gray-700 shadow-md">
             <div class="p-6">
                 <div class="flex items-start justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${event.title || 'Organization Activity'}</h3>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-${statusColor === 'success' ? 'green-100' : statusColor === 'warning' ? 'yellow-100' : statusColor === 'danger' ? 'red-100' : 'gray-100'} text-${statusColor === 'success' ? 'green-700' : statusColor === 'warning' ? 'yellow-700' : statusColor === 'danger' ? 'red-700' : 'gray-700'}">${statusText}</span>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">${safeTitle}</h3>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-${statusColor === 'success' ? 'green-100' : statusColor === 'warning' ? 'yellow-100' : statusColor === 'danger' ? 'red-100' : 'gray-100'} text-${statusColor === 'success' ? 'green-700' : statusColor === 'warning' ? 'yellow-700' : statusColor === 'danger' ? 'red-700' : 'gray-700'}">${safeStatusText}</span>
                 </div>
 
                 <div class="flex items-center text-gray-600 dark:text-gray-300 gap-2 mb-4">
                     <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
-                    <span>${dateStr}</span>
+                    <span>${safeDateStr}</span>
                 </div>
 
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -372,23 +388,23 @@ function showEventDetails(event) {
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 12.414a4 4 0 10-5.657 5.657l4.243 4.243a8 8 0 1011.314-11.314l-4.243 4.243z"></path>
                         </svg>
-                        <span>${location}</span>
+                        <span>${safeLocation}</span>
                         <span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">Custom</span>
                     </div>
                     <div class="flex items-center gap-2 text-indigo-700 dark:text-indigo-300">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
-                        <span>${organization}</span>
+                        <span>${safeOrganization}</span>
                     </div>
                 </div>
 
                 <div class="rounded-xl bg-gray-50 dark:bg-gray-700/50 p-4 text-gray-600 dark:text-gray-300 mb-4">
-                    ${purpose}
+                    ${safePurpose}
                 </div>
 
                 <div class="flex items-center justify-end gap-3">
-                    <a href="/adviser/organization-bookings/${event.extendedProps.id}" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium shadow-sm transition">
+                    <a href="/adviser/organization-bookings/${safeDetailsId}" class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium shadow-sm transition">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -402,7 +418,7 @@ function showEventDetails(event) {
     
     document.getElementById('eventDetails').innerHTML = details;
     document.getElementById('viewDetailsBtn').href = 
-        `/adviser/organization-bookings/${event.extendedProps.id}`;
+        `/adviser/organization-bookings/${safeDetailsId}`;
     
     new bootstrap.Modal(document.getElementById('eventModal')).show();
 }

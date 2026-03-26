@@ -88,6 +88,34 @@
                         <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->custom_venue_name }}</p>
                     </div>
                     @endif
+
+                    @php
+                        $assignedPriests = isset($reservation->priests) ? $reservation->priests : collect();
+                    @endphp
+
+                    @if($assignedPriests->count() > 0)
+                        <div class="md:col-span-2">
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Assigned Priests</p>
+                            <ul class="list-disc list-inside">
+                                @foreach($assignedPriests as $p)
+                                    <li class="font-medium text-gray-900 dark:text-white">{{ $p->full_name }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @elseif($reservation->priest_selection_type === 'external' && $reservation->external_priest_name)
+                        <div class="md:col-span-2">
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">External Priest <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 ml-2">External</span></p>
+                            <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->external_priest_name }}</p>
+                            @if($reservation->external_priest_contact)
+                                <p class="text-sm text-gray-500 mt-1">{{ $reservation->external_priest_contact }}</p>
+                            @endif
+                        </div>
+                    @elseif($reservation->officiant)
+                        <div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Assigned Priest</p>
+                            <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->officiant?->full_name ?? 'Unknown Priest' }}</p>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -135,10 +163,11 @@
             @if(in_array($reservation->status, ['adviser_approved', 'approved']))
                 @php
                     // Calculate days until the mass
-                    $daysUntilMass = now()->diffInDays($reservation->schedule_date, false);
+                    // Round up to the nearest whole number (e.g., 5.8 days becomes 6 days)
+                    $daysUntilMass = (int) ceil(now()->diffInDays($reservation->schedule_date, false));
                     $canCancel = $daysUntilMass >= 6; // Can only cancel if 6 or more days before
                 @endphp
-                
+
                 <div class="border-t pt-6 mt-6">
                     <div class="max-w-4xl mx-auto space-y-6">
                         @if($canCancel)
@@ -176,7 +205,7 @@
                                     This reservation is scheduled for <strong>{{ $reservation->schedule_date->format('F d, Y \\a\\t g:i A') }}</strong>
                                 </p>
                                 <p class="text-gray-600 dark:text-gray-300">
-                                    You can only cancel approvals for masses scheduled <strong>6 or more days</strong> in advance. 
+                                    You can only cancel approvals for masses scheduled <strong>6 or more days</strong> in advance.
                                     This mass is only <strong>{{ $daysUntilMass }}</strong> day(s) away.
                                 </p>
                             </div>
@@ -185,6 +214,23 @@
                 </div>
             @elseif($reservation->status === 'pending')
             <div class="border-t pt-6 mt-6">
+                @php
+                    $currentUser = auth()->user();
+                    $currentAdviserOrgs = $currentUser->organizations->pluck('org_id');
+                    // Find the relevant organization pivot for this adviser
+                    $relevantOrg = $reservation->organizations->whereIn('org_id', $currentAdviserOrgs)->first();
+                    $hasApproved = $relevantOrg && $relevantOrg->pivot->approval_status === 'approved';
+                @endphp
+
+                @if($hasApproved)
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 text-center">
+                        <svg class="w-12 h-12 mx-auto text-blue-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <h3 class="text-lg font-bold text-blue-700 dark:text-blue-300">You have approved this reservation</h3>
+                        <p class="text-blue-600 dark:text-blue-400 mt-1">Waiting for other advisers to approve.</p>
+                    </div>
+                @else
                 <div class="max-w-4xl mx-auto space-y-6">
                     <!-- Approve Form -->
                     <form method="POST" action="{{ route('adviser.reservations.approve', $reservation->reservation_id) }}" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
@@ -224,6 +270,7 @@
                         </button>
                     </div>
                 </div>
+                @endif
             </div>
             @else
             <div class="border-t dark:border-gray-700 pt-6 mt-6">
@@ -261,8 +308,8 @@
 </div>
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-50">
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
+<div id="rejectModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-[100] items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4">
         <div class="px-6 py-4 border-b dark:border-gray-700">
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Reject Reservation</h3>
         </div>
@@ -274,14 +321,56 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">This reason will be sent to the requestor.</p>
             </div>
             <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex gap-3">
-                <button type="submit" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200">
-                    Reject
+                <button type="button" onclick="showConfirmRejectModal()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200">
+                    Submit Decline
                 </button>
                 <button type="button" onclick="hideRejectModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-md transition duration-200">
                     Cancel
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Reject Confirmation Modal -->
+<div id="rejectConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden z-[110] items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="px-6 py-4 border-b dark:border-gray-700">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                    <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Confirm Decline</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">This action cannot be undone</p>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-4">
+            <div class="mb-4">
+                <p class="text-gray-700 dark:text-gray-300 mb-2">Are you sure you want to <strong>DECLINE</strong> this reservation?</p>
+                <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1"><strong>Service:</strong> {{ $reservation->service->service_name ?? 'N/A' }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1"><strong>Date:</strong> {{ optional($reservation->schedule_date)->format('F d, Y h:i A') ?? 'Not scheduled' }}</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400"><strong>Requestor:</strong> {{ $reservation->user->first_name }} {{ $reservation->user->last_name }}</p>
+                </div>
+            </div>
+            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
+                <p class="text-sm text-amber-800 dark:text-amber-200">
+                    <strong>Important:</strong> The requestor and staff will be notified immediately of this decision along with your reason for declining.
+                </p>
+            </div>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex gap-3">
+            <button type="button" onclick="confirmReject()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 rounded-md transition duration-200">
+                Yes, Decline Reservation
+            </button>
+            <button type="button" onclick="hideConfirmRejectModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-semibold py-2.5 px-4 rounded-md transition duration-200">
+                Cancel
+            </button>
+        </div>
     </div>
 </div>
 
@@ -307,17 +396,50 @@ function hideRejectModal() {
     m.classList.remove('flex');
 }
 
-// Close modal on ESC key
+function showConfirmRejectModal() {
+    // Validate that reason is filled
+    const reasonTextarea = document.querySelector('#rejectModal textarea[name="reason"]');
+    if (!reasonTextarea.value.trim()) {
+        alert('Please provide a reason for declining this reservation.');
+        reasonTextarea.focus();
+        return;
+    }
+
+    const confirmModal = document.getElementById('rejectConfirmModal');
+    confirmModal.classList.remove('hidden');
+    confirmModal.classList.add('flex');
+}
+
+function hideConfirmRejectModal() {
+    const confirmModal = document.getElementById('rejectConfirmModal');
+    confirmModal.classList.add('hidden');
+    confirmModal.classList.remove('flex');
+}
+
+function confirmReject() {
+    // Submit the form from the reject modal
+    const form = document.querySelector('#rejectModal form');
+    form.submit();
+}
+
+// Close modals on ESC key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
+        hideRejectModal();
+        hideConfirmRejectModal();
+    }
+});
+
+// Close modals on outside click
+document.getElementById('rejectModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
         hideRejectModal();
     }
 });
 
-// Close modal on outside click
-document.getElementById('rejectModal')?.addEventListener('click', function(e) {
+document.getElementById('rejectConfirmModal')?.addEventListener('click', function(e) {
     if (e.target === this) {
-        hideRejectModal();
+        hideConfirmRejectModal();
     }
 });
 </script>

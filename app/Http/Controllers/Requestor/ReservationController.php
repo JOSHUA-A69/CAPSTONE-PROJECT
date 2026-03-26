@@ -166,9 +166,20 @@ class ReservationController extends Controller
             $data = $request->validated();
             $data['user_id'] = Auth::id();
 
-            // Always start at pending status for adviser approval
-            $data['status'] = 'pending';
-            $data['adviser_notified_at'] = now(); // Adviser is notified immediately (email + in-app)
+            // Note: schedule_date and schedule_time are already merged in ReservationRequest::prepareForValidation
+            // format is 'Y-m-d H:i' or 'Y-m-d H:i:s'
+
+            $organizationIds = $request->input('organization_ids', []);
+
+            if (empty($organizationIds)) {
+                $data['status'] = 'adviser_approved';
+                $data['adviser_notified_at'] = null;
+                $data['adviser_responded_at'] = now();
+                $data['admin_notified_at'] = now();
+            } else {
+                $data['status'] = 'pending';
+                $data['adviser_notified_at'] = now();
+            }
 
             // Handle custom venue
             if ($request->venue_id === 'custom') {
@@ -200,7 +211,6 @@ class ReservationController extends Controller
             }
 
             // Keep the first organization for backwards compatibility
-            $organizationIds = $request->input('organization_ids', []);
             $data['org_id'] = !empty($organizationIds) ? $organizationIds[0] : null;
 
             // Handle priest selection based on type
@@ -256,7 +266,12 @@ class ReservationController extends Controller
             }
 
             // Create history record with appropriate message
-            $historyRemarks = 'Reservation request submitted by requestor - pending adviser review';
+            $historyRemarks = 'Reservation request submitted by requestor';
+            if (empty($organizationIds)) {
+                $historyRemarks .= ' - pending admin review';
+            } else {
+                $historyRemarks .= ' - pending adviser review';
+            }
             if ($data['priest_selection_type'] === 'any_available') {
                 $historyRemarks .= ' (Admin will assign priest)';
             } elseif ($data['priest_selection_type'] === 'external') {
@@ -395,6 +410,33 @@ class ReservationController extends Controller
         if (in_array($reservation->status, ['cancelled', 'rejected'])) {
             return Redirect::back()
                 ->with('error', 'This reservation cannot be cancelled as it is already ' . $reservation->status);
+        }
+
+        // Allow immediate cancellation if status is pending (no approvals yet)
+        if ($reservation->status === 'pending') {
+            $reservation->update([
+                'status' => 'cancelled',
+                'cancellation_reason' => $request->input('reason'),
+                'cancelled_by' => Auth::id(),
+            ]);
+
+            $reservation->history()->create([
+                'performed_by' => Auth::id(),
+                'action' => 'cancelled',
+                'remarks' => 'Cancelled by requestor (while pending). Reason: ' . $request->input('reason'),
+                'performed_at' => now(),
+            ]);
+
+            // Notify staff
+            $this->notificationService->notifyCancellation(
+                $reservation,
+                $request->input('reason'),
+                Auth::user()->full_name
+            );
+
+            return Redirect::route('requestor.reservations.index')
+                ->with('status', 'reservation-cancelled')
+                ->with('message', 'Reservation cancelled successfully.');
         }
 
         // Check if there's already a pending cancellation request

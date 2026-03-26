@@ -32,7 +32,11 @@ class ReservationController extends Controller
     public function index(Request $request)
     {
         $status = $request->input('status');
-        $timeFilter = $request->input('time', 'upcoming'); // upcoming or past
+        
+        // Default time filter: 'upcoming' normally, but 'all' (null) if checking pending confirmations
+        // This ensures priests see ALL assignments needing action, even if the date has passed
+        $defaultTime = ($status === 'pending_priest_confirmation') ? null : 'upcoming';
+        $timeFilter = $request->input('time', $defaultTime);
 
         $query = Reservation::with(['user', 'service', 'venue', 'organization'])
             ->forPriest(Auth::id());
@@ -212,26 +216,33 @@ class ReservationController extends Controller
                 'performed_at' => now(),
             ]);
 
-            // Reload reservation with fresh priests data
-            $reservation->load('priests');
+            // Perform a robust check: properly reload relations + direct DB check
+            $reservation->refresh(); 
+            
+            // Check if there are any unconfirmed priests for this reservation
+            $hasUnconfirmed = DB::table('reservation_priest')
+                ->where('reservation_id', $reservation->reservation_id)
+                ->where('confirmation_status', '!=', 'confirmed')
+                ->exists();
 
-            // Check if all priests have now confirmed
-            $allPriestsConfirmed = $reservation->allPriestsConfirmed();
-            $totalPriests = $reservation->priests->count();
-            $confirmedCount = $reservation->confirmedPriestCount();
-
-            if ($allPriestsConfirmed || $totalPriests <= 1) {
-                // All priests confirmed OR single priest - mark approved
+            if (!$hasUnconfirmed) {
+                // All priests confirmed - update confirmation status
+                // Status moves to 'admin_approved' so Admin can give Final Approval
                 $reservation->update([
                     'priest_confirmation' => 'confirmed',
                     'priest_confirmed_at' => now(),
-                    'status' => 'approved',
+                    'status' => 'admin_approved',
                 ]);
 
-                // Notify admin that all priests confirmed and reservation is ready
-                $this->notificationService->notifyAllPriestsConfirmed($reservation);
+                // Notify admin that all priests confirmed and reservation is ready for final approval
+                try {
+                    $this->notificationService->notifyAllPriestsConfirmed($reservation);
+                } catch (\Exception $e) {
+                     // Log but don't fail the transaction
+                     \Log::warning('Failed to notify admin of all priests confirmed: ' . $e->getMessage());
+                }
 
-                $message = "You have confirmed your availability. Reservation is now approved.";
+                $message = "You have confirmed your availability. The Admin will now finalize the reservation.";
             } else {
                 // Still waiting for other priests
                 // Update legacy field for this priest if they're the officiant
@@ -251,7 +262,7 @@ class ReservationController extends Controller
 
             DB::commit();
 
-            $serviceName = $reservation->activity_name ?? $reservation->service->service_name;
+            $serviceName = $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service';
             $serviceDate = $reservation->schedule_date->format('F d, Y \a\t g:i A');
             
             return Redirect::route('priest.reservations.index')
@@ -312,9 +323,9 @@ class ReservationController extends Controller
             'priest_id' => $priestId,
             'reason' => $reason,
             'declined_at' => now(),
-            'reservation_activity_name' => $reservation->activity_name ?? $reservation->service->service_name,
+            'reservation_activity_name' => $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service',
             'reservation_schedule_date' => $reservation->schedule_date,
-            'reservation_venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
+            'reservation_venue' => $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A',
         ]);
 
         // Default transition after decline
@@ -464,7 +475,7 @@ class ReservationController extends Controller
             $this->notificationService->notifyPriestDeclined($reservation, $reason, $priestId);
         }
 
-        $serviceName = $reservation->activity_name ?? $reservation->service->service_name;
+        $serviceName = $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service';
         $serviceDate = $reservation->schedule_date->format('F d, Y \a\t g:i A');
         
         $message = $isCancellation
@@ -561,10 +572,10 @@ class ReservationController extends Controller
                 'data' => [
                     'priest_name' => $priestName,
                     'priest_id' => $priestId,
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                     'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
-                    'requestor_name' => $reservation->user->first_name . ' ' . $reservation->user->last_name,
-                    'venue' => $reservation->custom_venue_name ?? $reservation->venue->name ?? 'N/A',
+                    'requestor_name' => $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User',
+                    'venue' => $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A',
                     'action' => 'undecline',
                     'decline_count' => $totalDeclines,
                 ],

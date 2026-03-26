@@ -59,50 +59,81 @@ class VenueUtilizationAvailabilityTrendsQuery implements ReportQuery
         $schedRows = $schedQuery->get();
 
         // Merge per venue + period
-        $key = fn($row) => ($row->period ?? '') . '|' . ((string) ($row->venue ?? 'Unassigned'));
+        // Key: Period|Venue
         $map = [];
 
         foreach ($resRows as $row) {
-            $k = $key($row);
+            $k = ($row->period ?? '') . '|' . ((string) ($row->venue ?? 'Unassigned'));
             $map[$k] = [
                 'period' => (string) $row->period,
                 'venue' => (string) ($row->venue ?? 'Unassigned'),
-                'reservation_events' => (int) $row->reservation_events,
-                'approved_reservations' => (int) $row->approved_reservations,
-                'schedule_events' => 0,
-                'schedule_hours' => 0.0,
-                'total_events' => 0,
+                'res_count' => (int) $row->reservation_events,
+                'sched_count' => 0,
+                'sched_hours' => 0.0,
             ];
         }
 
         foreach ($schedRows as $row) {
-            $k = $key($row);
+            $k = ($row->period ?? '') . '|' . ((string) ($row->venue ?? 'Unassigned'));
             if (!isset($map[$k])) {
                 $map[$k] = [
                     'period' => (string) $row->period,
                     'venue' => (string) ($row->venue ?? 'Unassigned'),
-                    'reservation_events' => 0,
-                    'approved_reservations' => 0,
-                    'schedule_events' => (int) $row->schedule_events,
-                    'schedule_hours' => (float) ($row->schedule_hours ?? 0.0),
-                    'total_events' => 0,
+                    'res_count' => 0,
+                    'sched_count' => (int) $row->schedule_events,
+                    'sched_hours' => (float) ($row->schedule_hours ?? 0.0),
                 ];
             } else {
-                $map[$k]['schedule_events'] += (int) $row->schedule_events;
-                $map[$k]['schedule_hours'] += (float) ($row->schedule_hours ?? 0.0);
+                $map[$k]['sched_count'] += (int) $row->schedule_events;
+                $map[$k]['sched_hours'] += (float) ($row->schedule_hours ?? 0.0);
             }
         }
 
-        $rows = array_values(array_map(function ($row) {
-            $row['total_events'] = (int) $row['reservation_events'] + (int) $row['schedule_events'];
-            return $row;
-        }, $map));
+        // Post-process grouping by Period
+        $grouped = collect($map)->sortByDesc('period')->groupBy('period');
+        $finalRows = [];
 
-        // Sort for readability
-        usort($rows, function ($a, $b) {
-            return [$a['period'], $a['venue']] <=> [$b['period'], $b['venue']];
-        });
+        foreach ($grouped as $period => $items) {
+            if (!$period) continue;
+            
+            $monthObj = \Carbon\Carbon::createFromFormat('Y-m', $period);
+            $monthLabel = $monthObj ? $monthObj->format('F Y') : $period;
 
-        return $rows;
+            // Stats for Header
+            $totalRes = $items->sum('res_count');
+            $totalSched = $items->sum('sched_count');
+            $totalHours = $items->sum('sched_hours');
+            $grandTotal = $totalRes + $totalSched;
+
+            // 1. Header Row
+            $finalRows[] = [
+                'Month' => $monthLabel,
+                'Venue' => 'MONTHLY TOTALS',
+                'Reservations' => (string) $totalRes,
+                'Liturgical Schedules' => "{$totalSched} (" . round($totalHours, 1) . "h)",
+                'Total Events' => (string) $grandTotal,
+            ];
+
+            // 2. Details per Venue
+            foreach ($items->sortBy('venue') as $item) {
+                $vRes = (int) $item['res_count'];
+                $vSched = (int) $item['sched_count'];
+                $vHours = round((float) $item['sched_hours'], 1);
+                $vTotal = $vRes + $vSched;
+
+                $finalRows[] = [
+                    'Month' => '',
+                    'Venue' => $item['venue'],
+                    'Reservations' => $vRes > 0 ? (string) $vRes : '—',
+                    'Liturgical Schedules' => $vSched > 0 ? "{$vSched} ({$vHours}h)" : '—',
+                    'Total Events' => $vTotal > 0 ? (string) $vTotal : '—',
+                ];
+            }
+
+            // Spacer
+            $finalRows[] = array_fill_keys(['Month', 'Venue', 'Reservations', 'Liturgical Schedules', 'Total Events'], '');
+        }
+
+        return $finalRows;
     }
 }

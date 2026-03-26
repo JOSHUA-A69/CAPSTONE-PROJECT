@@ -20,6 +20,27 @@ class CancellationController extends Controller
     }
 
     /**
+     * List cancellation requests
+     */
+    public function index()
+    {
+        $adviserOrgIds = Auth::user()->organizations->pluck('org_id');
+
+        $cancellations = ReservationCancellation::whereHas('reservation', function($q) use ($adviserOrgIds) {
+                $q->whereIn('org_id', $adviserOrgIds)
+                  ->orWhereHas('organizations', function($sq) use ($adviserOrgIds) {
+                      $sq->whereIn('organizations.org_id', $adviserOrgIds);
+                  });
+            })
+            ->with(['reservation.organization', 'requestor'])
+            ->orderByRaw('adviser_confirmed_at IS NULL DESC') // Pending first
+            ->latest()
+            ->paginate(10);
+
+        return view('adviser.cancellations.index', compact('cancellations'));
+    }
+
+    /**
      * Show cancellation details
      */
     public function show($id)
@@ -34,9 +55,12 @@ class CancellationController extends Controller
             'priestConfirmer'
         ])->findOrFail($id);
 
-        // Ensure this adviser is related to the organization
+        // Ensure this adviser is related to the organization (either main org or shared)
         $adviserOrgIds = Auth::user()->organizations->pluck('org_id');
-        if (!$adviserOrgIds->contains($cancellation->reservation->org_id)) {
+        $hasAccess = $adviserOrgIds->contains($cancellation->reservation->org_id) ||
+                     $cancellation->reservation->organizations()->whereIn('organizations.org_id', $adviserOrgIds)->exists();
+
+        if (!$hasAccess) {
             abort(403, 'Unauthorized access to this cancellation.');
         }
 
@@ -50,9 +74,12 @@ class CancellationController extends Controller
     {
         $cancellation = ReservationCancellation::with('reservation')->findOrFail($id);
 
-        // Ensure this adviser is related to the organization
+        // Ensure this adviser is related to the organization (either main org or shared)
         $adviserOrgIds = Auth::user()->organizations->pluck('org_id');
-        if (!$adviserOrgIds->contains($cancellation->reservation->org_id)) {
+        $hasAccess = $adviserOrgIds->contains($cancellation->reservation->org_id) ||
+                     $cancellation->reservation->organizations()->whereIn('organizations.org_id', $adviserOrgIds)->exists();
+
+        if (!$hasAccess) {
             abort(403, 'Unauthorized access to this cancellation.');
         }
 
@@ -83,6 +110,55 @@ class CancellationController extends Controller
 
         return redirect()->route('adviser.cancellations.show', $id)
             ->with('success', 'Cancellation confirmed successfully.');
+    }
+
+    /**
+     * Reject cancellation
+     */
+    public function reject($id)
+    {
+        $cancellation = ReservationCancellation::with('reservation')->findOrFail($id);
+
+        // Ensure this adviser is related to the organization (either main org or shared)
+        $adviserOrgIds = Auth::user()->organizations->pluck('org_id');
+        $hasAccess = $adviserOrgIds->contains($cancellation->reservation->org_id) ||
+                     $cancellation->reservation->organizations()->whereIn('organizations.org_id', $adviserOrgIds)->exists();
+
+        if (!$hasAccess) {
+            abort(403, 'Unauthorized access to this cancellation.');
+        }
+
+        // Check if already processed
+        if ($cancellation->status === 'rejected') {
+            return redirect()->route('adviser.cancellations.show', $id)
+                ->with('info', 'This cancellation has already been rejected.');
+        }
+
+        // Mark as rejected
+        $cancellation->update([
+            'status' => 'rejected',
+            // We do NOT set adviser_confirmed_at because they rejected it, not confirmed it.
+            // But if we want to indicate they "handled" it, we might want to track that separately.
+            // For now, status='rejected' is enough to stop the process.
+        ]);
+
+        // Add to history
+        ReservationHistory::create([
+            'reservation_id' => $cancellation->reservation_id,
+            'action' => 'cancellation_rejected_by_adviser',
+            'details' => 'Cancellation request rejected by adviser ' . Auth::user()->name,
+            'performed_by' => Auth::id(),
+        ]);
+
+        // Send notification
+        $this->cancellationService->notifyCancellationRejected(
+            $cancellation, 
+            Auth::user()->name, 
+            'Adviser'
+        );
+
+        return redirect()->route('adviser.cancellations.show', $id)
+            ->with('success', 'Cancellation request rejected. The reservation remains active.');
     }
 
     /**

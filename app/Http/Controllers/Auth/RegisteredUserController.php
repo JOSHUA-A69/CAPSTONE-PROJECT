@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\SystemSetting;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,15 +35,30 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $rules = [
-            'first_name' => ['required', 'string', 'max:255'],
+            'first_name' => ['required', 'string', 'min:2', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')],
-            'phone' => ['required', 'string', 'max:50'],
+            'last_name' => ['required', 'string', 'min:2', 'max:255'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', Rule::unique('users')],
+            'phone' => ['required', 'string', 'regex:/^[0-9]{10,11}$/', 'max:11'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             // Make role optional; default handled below to 'requestor'
             'role' => ['nullable', 'in:admin,staff,adviser,requestor,priest'],
         ];
+
+        $messages = [
+            'first_name.required' => 'First name is required.',
+            'first_name.min' => 'First name must be at least 2 characters.',
+            'last_name.required' => 'Last name is required.',
+            'last_name.min' => 'Last name must be at least 2 characters.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email is already registered.',
+            'phone.required' => 'Phone number is required.',
+            'phone.regex' => 'Phone must be 10-11 digits (e.g., 09123456789).',
+            'password.required' => 'Password is required.',
+            'password.confirmed' => 'Passwords do not match.',
+        ];
+
         // If role selection is disabled, force role to requestor regardless of input
         if (!config('registration.allow_role_selection')) {
             $request->merge(['role' => 'requestor']);
@@ -50,16 +66,16 @@ class RegisteredUserController extends Controller
 
         // If the chosen role is elevated, require a valid elevated code
         $elevatedRoles = config('registration.elevated_roles', []);
-        $elevatedCodes = config('registration.elevated_codes', []);
         if (in_array($request->input('role'), $elevatedRoles, true)) {
-            $rules['elevated_code'] = ['required', function ($attribute, $value, $fail) use ($elevatedCodes) {
-                if (empty($elevatedCodes) || !in_array(trim((string)$value), $elevatedCodes, true)) {
+            $rules['elevated_code'] = ['required', function ($attribute, $value, $fail) {
+                $validCode = SystemSetting::getElevatedCode();
+                if (trim((string)$value) !== $validCode) {
                     $fail('The provided elevated registration code is invalid.');
                 }
             }];
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, $messages);
 
         // Accept the chosen role from the form. Accounts will be created with
         // a 'pending' status and must verify email to become active.

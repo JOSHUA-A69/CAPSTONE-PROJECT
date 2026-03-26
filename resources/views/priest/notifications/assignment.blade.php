@@ -56,7 +56,7 @@
                         <div class="flex">
                             <dt class="font-medium text-gray-500 dark:text-gray-400 w-40">Requestor:</dt>
                             <dd class="text-gray-900 dark:text-gray-100">
-                                {{ $notification->reservation->user->first_name }} {{ $notification->reservation->user->last_name }}
+                                {{ $notification->reservation->user?->full_name ?? 'Unknown Requestor' }}
                             </dd>
                         </div>
                         <div class="flex">

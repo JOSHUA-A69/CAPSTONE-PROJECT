@@ -47,7 +47,7 @@
                                 </span>
                             @endif
                             <div class="text-lg text-gray-900 dark:text-white leading-relaxed">
-                                {!! $notification->message !!}
+                                {{ $notification->message }}
                             </div>
                             <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
                                 {{ $notification->sent_at ? $notification->sent_at->format('F j, Y \a\t g:i A') : $notification->created_at->format('F j, Y \a\t g:i A') }}
@@ -132,11 +132,11 @@
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Requestor</label>
-                                <p class="mt-1 text-base text-gray-900 dark:text-white">{{ $notification->reservation->user->full_name ?? 'N/A' }}</p>
+                                <p class="mt-1 text-base text-gray-900 dark:text-white">{{ $notification->reservation->user?->full_name ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Organization</label>
-                                <p class="mt-1 text-base text-gray-900 dark:text-white">{{ $notification->reservation->organization->org_name ?? 'N/A' }}</p>
+                                <p class="mt-1 text-base text-gray-900 dark:text-white">{{ $notification->reservation->organization?->org_name ?? 'N/A' }}</p>
                             </div>
                             <div>
                                 <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Venue</label>

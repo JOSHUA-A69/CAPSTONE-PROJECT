@@ -37,7 +37,9 @@ class OrganizationBookingNotificationService
 
         try {
             // Send email notification
-            Mail::to($adviser->email)->send(new OrganizationBookingAdviserNotification($request));
+            if ($adviser->email) {
+                Mail::to($adviser->email)->send(new OrganizationBookingAdviserNotification($request));
+            }
             
             // Create in-app database notification for adviser
             Notification::create([
@@ -49,7 +51,7 @@ class OrganizationBookingNotificationService
                     'organization_booking_request_id' => $request->id,
                     'activity_name' => $request->activity_name,
                     'organization_name' => $organization->org_name,
-                    'requestor_name' => $request->requestor->full_name,
+                    'requestor_name' => $request->requestor ? $request->requestor->full_name : 'Unknown User',
                 ],
             ]);
             
@@ -73,9 +75,13 @@ class OrganizationBookingNotificationService
         $requestor = $request->requestor;
         $organization = $request->organization;
         
+        if (!$requestor) return false;
+
         try {
             // Send email notification
-            Mail::to($requestor->email)->send(new OrganizationBookingApprovalNotification($request, $comments));
+            if ($requestor->email) {
+                Mail::to($requestor->email)->send(new OrganizationBookingApprovalNotification($request, $comments));
+            }
             
             // Create in-app database notification
             Notification::create([
@@ -108,9 +114,13 @@ class OrganizationBookingNotificationService
         $requestor = $request->requestor;
         $organization = $request->organization;
         
+        if (!$requestor) return false;
+
         try {
             // Send email notification
-            Mail::to($requestor->email)->send(new OrganizationBookingRejectionNotification($request, $reason, $comments));
+            if ($requestor->email) {
+                Mail::to($requestor->email)->send(new OrganizationBookingRejectionNotification($request, $reason, $comments));
+            }
             
             // Create in-app database notification
             Notification::create([

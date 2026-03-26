@@ -15,6 +15,7 @@ class OrganizationActivitiesQuery implements ReportQuery
                 'reservation_history.reservation_id',
                 'reservation_history.action',
                 'reservation_history.created_at',
+                'reservation_history.remarks',
                 'organizations.org_name as organization',
                 'services.service_name as service',
                 'reservations.activity_name',
@@ -38,18 +39,35 @@ class OrganizationActivitiesQuery implements ReportQuery
             $query->whereIn('reservations.service_id', $filter->services);
         }
         if (!empty($filter->adviser_id)) {
-            // Filter by adviser via organizations table
-            $query->join('organizations', 'organizations.org_id', '=', 'reservations.org_id')
-                  ->where('organizations.adviser_id', '=', $filter->adviser_id);
+            $query->join('organizations as org_auth', 'org_auth.org_id', '=', 'reservations.org_id')
+                  ->where('org_auth.adviser_id', '=', $filter->adviser_id);
         }
 
-        $rows = $query->limit(5000)->get()->map(function ($row) {
+        // Limit to 1000 to prevent PDF memory exhaustion
+        $rows = $query->limit(1000)->get()->map(function ($row) {
+            $dateStr = optional($row->created_at)->format('Y-m-d H:i');
+            $orgName = $row->organization ?? '—';
+            $activityName = $row->activity_name ?? $row->service ?? 'Event';
+            
+            // Format Action: "admin_approved" -> "Admin Approved"
+            $actionLabel = ucwords(str_replace('_', ' ', $row->action));
+
+            // Formal Description
+            $remarks = $row->remarks ?? '';
+            // Remove technical prefixes if present (e.g., "Ref: ")
+            if (str_starts_with($remarks, 'Ref: ')) {
+                $remarks = substr($remarks, 5);
+            }
+            
+            // Ensure strictly formal tone
+            $description = $remarks ?: "The reservation state was updated to {$actionLabel}.";
+
             return [
-                'date' => optional($row->created_at)->toDateTimeString(),
-                'reservation' => (string) ($row->activity_name ?? ('#' . (int) $row->reservation_id)),
-                'action' => (string) $row->action,
-                'organization' => (string) ($row->organization ?? '—'),
-                'service' => (string) ($row->service ?? '—'),
+                'Date' => $dateStr,
+                'Organization' => $orgName,
+                'Activity' => $activityName,
+                'Action' => $actionLabel,
+                'Description' => $description,
             ];
         })->toArray();
 

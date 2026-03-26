@@ -138,7 +138,7 @@
     </div>
 
     @vite(['resources/js/app.js'])
-    <script id="publicCalendarData" type="application/json">{!! json_encode($schedules) !!}</script>
+    <script id="publicCalendarData" type="application/json">@json($schedules)</script>
     
     <script>
         // Shared event type maps for colors and labels
@@ -188,6 +188,13 @@
 
         let fullCalendarInstance = null;
         let allSchedules = [];
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[char]));
 
         // Initialize calendar when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
@@ -340,7 +347,7 @@
                     const label = EVENT_TYPE_LABELS[serviceFilter] || serviceFilter;
                     filterTagsDiv.innerHTML += `
                         <span class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-800 text-emerald-800 dark:text-emerald-100 rounded-full text-sm font-medium">
-                            ${label}
+                            ${escapeHtml(label)}
                         </span>
                     `;
                 }
@@ -349,7 +356,7 @@
                     const label = MASS_SUBTYPE_LABELS[massSubtypeFilter] || massSubtypeFilter;
                     filterTagsDiv.innerHTML += `
                         <span class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 rounded-full text-sm font-medium">
-                            ${label}
+                            ${escapeHtml(label)}
                         </span>
                     `;
                 }
@@ -376,7 +383,7 @@
             legendEl.innerHTML = uniqueTypes.map(t => `
                 <div class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     <span class="inline-block w-4 h-4 rounded" style="background-color: ${EVENT_TYPE_COLORS[t] || EVENT_TYPE_COLORS['other']}"></span>
-                    <span class="font-medium text-gray-800 dark:text-gray-200">${EVENT_TYPE_LABELS[t] || t}</span>
+                    <span class="font-medium text-gray-800 dark:text-gray-200">${escapeHtml(EVENT_TYPE_LABELS[t] || t)}</span>
                 </div>
             `).join('');
         }
@@ -404,19 +411,25 @@
                 const timeLabel = r.start_time + (r.end_time ? ' - ' + r.end_time : '');
                 const venue = r?.venue?.name || r.location || 'Location TBA';
                 const presider = r?.priest?.name || r?.external_priest_name || '';
+                const safeTitle = escapeHtml(r.title);
+                const safeDateLabel = escapeHtml(dateLabel);
+                const safeTimeLabel = escapeHtml(timeLabel);
+                const safeVenue = escapeHtml(venue);
+                const safePresider = escapeHtml(presider);
+                const safeScheduleId = escapeHtml(r.schedule_id);
                 const externalBadge = r?.priest?.name ? '' : (r?.external_priest_name ? '<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">External</span>' : '');
-                return `<button type="button" class="public-event-row w-full text-left mb-3 last:mb-0 p-4 rounded-xl border-2 bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-800 transition shadow-sm flex items-start gap-4 focus:outline-none focus:ring-2 focus:ring-indigo-400" style="border-left:6px solid ${color}" data-schedule-id="${r.schedule_id}" aria-label="View event ${r.title}">
+                return `<button type="button" class="public-event-row w-full text-left mb-3 last:mb-0 p-4 rounded-xl border-2 bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-800 transition shadow-sm flex items-start gap-4 focus:outline-none focus:ring-2 focus:ring-indigo-400" style="border-left:6px solid ${color}" data-schedule-id="${safeScheduleId}" aria-label="View event ${safeTitle}">
                     <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center" style="background:${color};color:#fff;">
                         <span class="font-extrabold text-xs leading-tight">${dateLabel.split(' ')[1]}<br>${dateLabel.split(' ')[2]}</span>
                     </div>
                     <div class="flex-1">
                         <div class="flex items-center justify-between gap-3">
-                            <div class="text-gray-900 dark:text-white font-bold">${r.title}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">${dateLabel}</div>
+                            <div class="text-gray-900 dark:text-white font-bold">${safeTitle}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">${safeDateLabel}</div>
                         </div>
-                        <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">⏰ ${timeLabel}</div>
-                        <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">📍 ${venue}</div>
-                        ${presider ? `<div class="mt-1 text-sm text-gray-700 dark:text-gray-300">👤 Presider: ${presider}${externalBadge}</div>` : ''}
+                        <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">⏰ ${safeTimeLabel}</div>
+                        <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">📍 ${safeVenue}</div>
+                        ${presider ? `<div class="mt-1 text-sm text-gray-700 dark:text-gray-300">👤 Presider: ${safePresider}${externalBadge}</div>` : ''}
                     </div>
                 </button>`;
             }).join('');
@@ -444,15 +457,20 @@
             const externalPriestName = schedule?.external_priest_name;
             const presiderName = internalPriestName || externalPriestName || '';
             const isExternal = !internalPriestName && !!externalPriestName;
+            const safeTitle = escapeHtml(schedule.title);
+            const safeTypeLabel = escapeHtml(typeLabel);
+            const safePresiderName = escapeHtml(presiderName);
+            const safeLocation = escapeHtml(schedule.location);
+            const safeDescription = escapeHtml(schedule.description);
 
             const shareUrl = window.location.origin + window.location.pathname + '#schedule-' + schedule.schedule_id;
             content.innerHTML = `
                 <div class="p-6" style="border-top: 4px solid ${color}">
                     <div class="flex items-start justify-between mb-4">
                         <div class="flex-1">
-                            <h3 id="eventModalTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-2">${schedule.title}</h3>
+                            <h3 id="eventModalTitle" class="text-2xl font-bold text-gray-900 dark:text-white mb-2">${safeTitle}</h3>
                             <span class="inline-block px-3 py-1 rounded-full text-sm font-medium text-white" style="background-color: ${color}">
-                                ${typeLabel}
+                                ${safeTypeLabel}
                             </span>
                         </div>
                         <button aria-label="Close" onclick="closeEventModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 ml-4 focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-full p-1">
@@ -479,20 +497,20 @@
                             <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <span><strong>Presider:</strong> ${presiderName}${isExternal ? ' <span class=\"ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 align-middle\">External</span>' : ''}</span>
+                            <span><strong>Presider:</strong> ${safePresiderName}${isExternal ? ' <span class=\"ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 align-middle\">External</span>' : ''}</span>
                         </div>` : ''}
                         ${schedule.location ? `
                         <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                             <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                             </svg>
-                            <span>${schedule.location}</span>
+                            <span>${safeLocation}</span>
                         </div>` : ''}
                     </div>
                     ${schedule.description ? `
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                         <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Description</h4>
-                        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">${schedule.description}</p>
+                        <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">${safeDescription}</p>
                     </div>` : ''}
                     <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-3">
                         <button onclick="window.publicCalendarSetDate('${schedule.schedule_date}'); closeEventModal();" class="flex-1 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">View In Calendar</button>

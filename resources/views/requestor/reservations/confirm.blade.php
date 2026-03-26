@@ -39,7 +39,7 @@
                 @if($reservation->organization)
                 <div>
                     <dt class="form-label">Organization</dt>
-                    <dd class="mt-1 text-body">{{ $reservation->organization->org_name }}</dd>
+                    <dd class="mt-1 text-body">{{ $reservation->organization?->org_name }}</dd>
                 </div>
                 @endif
                 @if($reservation->purpose)

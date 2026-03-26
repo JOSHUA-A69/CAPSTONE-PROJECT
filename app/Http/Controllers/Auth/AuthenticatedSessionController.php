@@ -4,11 +4,15 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Mail\LoginVerificationCode;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use App\Providers\RouteServiceProvider;
+use App\Models\User;
+use Carbon\Carbon;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -27,30 +31,31 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $request->session()->regenerate();
+        // Get the authenticated user
+        /** @var User $user */
+        $user = Auth::user();
+        
+        // Log out the user temporarily (we'll log them back in after verification)
+        Auth::logout();
 
-    // Role-based redirect: prefer the role landing route but allow an
-    // 'intended' redirect only if it points into the same role area.
-    $routeName = RouteServiceProvider::routeNameForRole(Auth::user()->role);
-    $rolePath = RouteServiceProvider::redirectTo(Auth::user()->role);
+        // Generate 4-digit code
+        $code = str_pad(random_int(0, 9999), 4, '0', STR_PAD_LEFT);
+        
+        // Save code to user
+        $user->update([
+            'login_code' => $code,
+            'login_code_expires_at' => Carbon::now()->addMinutes(10),
+        ]);
 
-        // Get intended URL from the session (if any)
-        $intended = $request->session()->pull('url.intended');
+        // Send verification email
+        Mail::to($user->email)->send(new LoginVerificationCode($user, $code));
 
-        if ($intended) {
-            // Normalize intended path (strip host)
-            $intendedPath = parse_url($intended, PHP_URL_PATH) ?: '/';
+        // Store user ID and remember preference in session
+        $request->session()->put('login_code_user_id', $user->id);
+        $request->session()->put('login_remember', $request->boolean('remember'));
 
-            // Allow the intended redirect only when it belongs to the same
-            // role-area (e.g. /admin/* for admin) to avoid sending users
-            // back to unrelated pages.
-            if (str_starts_with($intendedPath, $rolePath)) {
-                return redirect($intended);
-            }
-        }
-
-        // Default: send user to their role landing route
-        return redirect()->route($routeName);
+        // Redirect to verification page
+        return redirect()->route('login.code.show');
     }
 
     /**

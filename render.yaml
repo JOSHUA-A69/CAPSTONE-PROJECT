@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: eReligiousServices
+    env: docker
+    dockerfilePath: docker/prod/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: APP_NAME
+        value: eReligiousServices
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        sync: false
+      - key: APP_KEY
+        sync: false
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: 4000
+      - key: DB_DATABASE
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: MYSQL_ATTR_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
+      - key: FILESYSTEM_DISK
+        value: cloudinary
+      - key: CLOUDINARY_URL
+        sync: false
+
+# Databases
+# Using external TiDB Cloud (Serverless MySQL)
+# No internal services defined

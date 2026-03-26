@@ -24,7 +24,7 @@ class OfficiantsUpdatedSchedulesQuery implements ReportQuery
                 'ls.schedule_date',
                 'ls.start_time',
                 'ls.end_time',
-                'v.name as venue',
+                DB::raw("COALESCE(v.name, ls.location) as venue"),
             ])
             ->leftJoin('users as u', 'u.id', '=', 'ls.priest_id')
             ->leftJoin('venues as v', 'v.venue_id', '=', 'ls.venue_id')
@@ -42,7 +42,7 @@ class OfficiantsUpdatedSchedulesQuery implements ReportQuery
                 'reservations.schedule_date',
                 DB::raw('TIME(reservations.schedule_date) as start_time'),
                 DB::raw('NULL as end_time'),
-                'v.name as venue',
+                DB::raw("COALESCE(v.name, reservations.custom_venue_name) as venue"),
             ])
             ->leftJoin('users as u', 'u.id', '=', 'reservations.officiant_id')
             ->leftJoin('venues as v', 'v.venue_id', '=', 'reservations.venue_id')
@@ -65,16 +65,19 @@ class OfficiantsUpdatedSchedulesQuery implements ReportQuery
                 return $row->updated_date . ' ' . $row->updated_time;
             })
             ->map(function ($row) {
+                $typeRaw = (string) ($row->event_type ?? '—');
+                $typeLabel = ucwords(str_replace('_', ' ', $typeRaw));
+
                 return [
-                    'updated_date' => (string) $row->updated_date,
-                    'updated_time' => (string) ($row->updated_time ?? ''),
-                    'officiant' => trim((string) ($row->officiant ?? '')) ?: '—',
-                    'title' => (string) ($row->title ?? '—'),
-                    'type' => (string) ($row->event_type ?? '—'),
-                    'schedule_date' => (string) ($row->schedule_date ?? ''),
-                    'start_time' => (string) ($row->start_time ?? ''),
-                    'end_time' => (string) ($row->end_time ?? ''),
-                    'venue' => (string) ($row->venue ?? '—'),
+                    'Updated Date' => (string) $row->updated_date,
+                    'Updated Time' => (string) ($row->updated_time ?? ''),
+                    'Officiant' => trim((string) ($row->officiant ?? '')) ?: '—',
+                    'Title' => (string) ($row->title ?? '—'),
+                    'Type' => $typeLabel,
+                    'Schedule Date' => (string) ($row->schedule_date ?? ''),
+                    'Start Time' => (string) ($row->start_time ?? ''),
+                    'End Time' => (string) ($row->end_time ?? ''),
+                    'Venue' => (string) ($row->venue ?? '—'),
                 ];
             })
             ->values()

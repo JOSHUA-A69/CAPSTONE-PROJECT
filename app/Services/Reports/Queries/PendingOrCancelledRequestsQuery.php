@@ -46,17 +46,44 @@ class PendingOrCancelledRequestsQuery implements ReportQuery
             $query->whereIn('reservations.service_id', $filter->services);
         }
 
-        $rows = $query->get()->map(function ($row) {
+        $rows = $query->limit(1000)->get()->map(function ($row) {
+            $dateFull = \Carbon\Carbon::parse($row->date . ' ' . $row->time);
+            $dateStr = $dateFull->format('M d, Y h:i A');
+            
+            $statusRaw = $row->status;
+            // Clean up status labels
+            $statusLabel = match($statusRaw) {
+                'adviser_approved' => 'Adviser Approved (Pending Admin)',
+                'admin_approved' => 'Approved', // Should normally not be here if filtering pending/cancelled, but logic allows it
+                default => ucwords($statusRaw),
+            };
+
+            $venue = (string) ($row->venue ?? '—');
+            $requester = trim((string) ($row->requester ?? '')) ?: 'Unknown User';
+            $serviceName = $row->service ?? 'Event';
+            $activity = (string) ($row->activity_name ?? $serviceName);
+            $purpose = (string) ($row->purpose ?? '');
+            
+            // Build detailed description string
+            $detailsParts = [];
+            if ($requester !== 'Unknown User') {
+                $detailsParts[] = "By: {$requester}";
+            }
+            if ($venue !== '—') {
+                $detailsParts[] = "Venue: {$venue}";
+            }
+            if ($purpose) {
+                $detailsParts[] = "Purpose: {$purpose}";
+            }
+            
+            $details = implode(' | ', $detailsParts);
+
             return [
-                'date' => (string) $row->date,
-                'time' => (string) ($row->time ?? ''),
-                'status' => (string) $row->status,
-                'service' => (string) ($row->service ?? '—'),
-                'venue' => (string) ($row->venue ?? '—'),
-                'organization' => (string) ($row->organization ?? '—'),
-                'requester' => trim((string) ($row->requester ?? '')) ?: '—',
-                'activity' => (string) ($row->activity_name ?? '—'),
-                'purpose' => (string) ($row->purpose ?? '—'),
+                'Date' => $dateStr,
+                'Organization' => (string) ($row->organization ?? '—'),
+                'Activity' => $activity,
+                'Status' => $statusLabel,
+                'Details' => $details,
             ];
         })->toArray();
 

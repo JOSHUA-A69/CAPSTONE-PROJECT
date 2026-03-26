@@ -1,9 +1,27 @@
-<div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial; color: #111;">
-    <h2>Hello {{ $user->first_name }},</h2>
+@extends('emails.layouts.default')
 
-    <p>Your account at eReligiousServices has been activated and is now ready to use.</p>
+@section('title', 'Account Activated')
 
-    <p>You can now sign in at <a href="{{ config('app.url') }}">{{ config('app.url') }}</a>.</p>
+@section('content')
+    <h1 style="color: #333333; font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 24px;">
+        Account Activated
+    </h1>
 
-    <p>Thank you,<br />The CREaM Team</p>
-</div>
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        Hello {{ $user->first_name }},
+    </p>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        Your account at eReligiousServices has been activated and is now ready to use.
+    </p>
+
+    <div style="text-align: center; margin-bottom: 24px; padding: 20px 0;">
+        <a href="{{ config('app.url') }}" style="background-color: #4f46e5; color: #ffffff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">
+            Sign In Now
+        </a>
+    </div>
+
+    <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
+        Or visit this link: <a href="{{ config('app.url') }}" style="color: #4f46e5;">{{ config('app.url') }}</a>
+    </p>
+@endsection

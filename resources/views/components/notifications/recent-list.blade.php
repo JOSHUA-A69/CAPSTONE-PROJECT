@@ -27,7 +27,6 @@
                     str_contains(strtolower($type), 'cancel') || str_contains(strtolower($type), 'declin') => 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300',
                     default => 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
                 };
-                $safeMessage = strip_tags((string) $n->message, '<strong><b><em><i><br>');
                 // Default link: role notifications index
                 $indexRoute = match($role) {
                     'admin' => route('admin.notifications.index'),
@@ -46,7 +45,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-sm text-gray-900 dark:text-gray-100 leading-snug line-clamp-2 break-words overflow-hidden">
-                            {!! $safeMessage !!}
+                            {{ $n->message }}
                         </p>
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">
                             {{ $timeAgo }}

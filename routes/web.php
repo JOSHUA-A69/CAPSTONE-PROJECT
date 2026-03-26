@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\ReportController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -79,10 +80,12 @@ if (app()->environment('local')) {
             200,
             ['Content-Type' => 'text/html']
         );
-    })->middleware('auth')->name('dev.test-unnoticed');
+    })->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])->name('dev.test-unnoticed');
 
     // Debug notifications page
-    Route::get('/dev/debug-notifications', [\App\Http\Controllers\DebugController::class, 'notifications'])->middleware('auth')->name('dev.debug-notifications');
+    Route::get('/dev/debug-notifications', [\App\Http\Controllers\DebugController::class, 'notifications'])
+        ->middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])
+        ->name('dev.debug-notifications');
 }
 
 // Default dashboard: redirect users to their role-specific dashboard
@@ -129,7 +132,7 @@ Route::middleware('auth')->group(function () {
 // ==========================
 // Chat Routes (Requestor & Admin)
 // ==========================
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', \App\Http\Middleware\RoleMiddleware::class . ':admin,requestor'])->group(function () {
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::get('/chat/{userId}', [ChatController::class, 'show'])->name('chat.show');
     Route::post('/chat/send', [ChatController::class, 'store'])->name('chat.send');
@@ -138,10 +141,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chat/messages/{userId}', [ChatController::class, 'getMessages'])->name('chat.messages');
     Route::get('/chat/unread/count', [ChatController::class, 'unreadCount'])->name('chat.unread.count');
     Route::post('/chat/mark-read/{userId}', [ChatController::class, 'markAsRead'])->name('chat.mark-read');
+    Route::post('/chat/clear/{userId}', [ChatController::class, 'clearConversation'])->name('chat.clear');
+    
+    // FAQ Management Routes
+    Route::get('/faqs', [FaqController::class, 'index'])->name('faqs.index');
+    Route::post('/admin/faqs', [FaqController::class, 'store'])->name('faqs.store');
+    Route::put('/admin/faqs/{faq}', [FaqController::class, 'update'])->name('faqs.update');
+    Route::delete('/admin/faqs/{faq}', [FaqController::class, 'destroy'])->name('faqs.destroy');
+    Route::post('/admin/faqs/reorder', [FaqController::class, 'reorder'])->name('faqs.reorder');
+    
     // Temporary debug endpoint to inspect unread sources (admin-only)
-    Route::get('/dev/chat/unread/debug', [ChatController::class, 'debugUnread'])->name('chat.unread.debug');
+    Route::post('/dev/chat/unread/debug', [ChatController::class, 'debugUnread'])
+        ->middleware([\App\Http\Middleware\RoleMiddleware::class . ':admin'])
+        ->name('chat.unread.debug');
     // Temporary debug endpoint to mark ALL unread as read for current user (admin-only)
-    Route::post('/dev/chat/unread/mark-all', [ChatController::class, 'debugMarkAllUnreadAsRead'])->name('chat.unread.mark-all');
+    Route::post('/dev/chat/unread/mark-all', [ChatController::class, 'debugMarkAllUnreadAsRead'])
+        ->middleware([\App\Http\Middleware\RoleMiddleware::class . ':admin'])
+        ->name('chat.unread.mark-all');
 });
 
 // Authentication routes (Laravel Breeze/Jetstream/etc.)
@@ -282,8 +298,10 @@ Route::prefix('adviser')->name('adviser.')->middleware(['auth', 'verified', \App
     Route::get('/notifications/{id}', [\App\Http\Controllers\Adviser\NotificationController::class, 'show'])->name('notifications.show');
 
     // Cancellation Routes
+    Route::get('/cancellations', [\App\Http\Controllers\Adviser\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Adviser\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Adviser\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+    Route::post('/cancellations/{id}/reject', [\App\Http\Controllers\Adviser\CancellationController::class, 'reject'])->name('cancellations.reject');
 
     // Reservation Routes
     Route::get('/reservations', [\App\Http\Controllers\Adviser\ReservationController::class, 'index'])->name('reservations.index');
@@ -314,6 +332,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/reservations/{reservation_id}/reject', [\App\Http\Controllers\Admin\ReservationController::class, 'reject'])->name('reservations.reject');
     Route::post('/reservations/{reservation_id}/cancel', [\App\Http\Controllers\Admin\ReservationController::class, 'cancel'])->name('reservations.cancel');
     Route::post('/reservations/{reservation_id}/confirm-external', [\App\Http\Controllers\Admin\ReservationController::class, 'confirmExternal'])->name('reservations.confirm-external');
+    Route::post('/reservations/{reservation_id}/decline-assignment', [\App\Http\Controllers\Admin\ReservationController::class, 'declineAssignment'])->name('reservations.decline-assignment');
     Route::post('/reservations/{reservation_id}/final-approve', [\App\Http\Controllers\Admin\ReservationController::class, 'finalApprove'])->name('reservations.final-approve');
 
     // Admin Service Routes (when admin is assigned as priest)
@@ -329,6 +348,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     Route::post('/services/manage', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'store'])->name('services.manage.store');
     Route::put('/services/manage/{id}', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'update'])->name('services.manage.update');
     Route::delete('/services/manage/{id}', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'destroy'])->name('services.manage.destroy');
+    Route::post('/services/manage/{id}/restore', [\App\Http\Controllers\Admin\ServiceManagementController::class, 'restore'])->name('services.manage.restore');
     
     // Parameterized service routes (MUST be after specific routes)
     Route::post('/services/{reservation_id}/confirm', [\App\Http\Controllers\Admin\ServiceController::class, 'confirm'])->name('services.confirm');
@@ -338,6 +358,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Admin\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Admin\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+    Route::post('/cancellations/{id}/reject', [\App\Http\Controllers\Admin\CancellationController::class, 'reject'])->name('cancellations.reject');
 
     // Change Request Routes (for reservation edits)
     Route::get('/change-requests', [\App\Http\Controllers\Admin\ChangeRequestController::class, 'index'])->name('change-requests.index');
@@ -347,6 +368,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'verified', \App\Htt
 
     // Organizations (read-only admin view)
     Route::get('/organizations', [\App\Http\Controllers\Admin\OrganizationController::class, 'index'])->name('organizations.index');
+
+    // Elevated Code Management (Admin only)
+    Route::get('/elevated-code', [\App\Http\Controllers\Admin\ElevatedCodeController::class, 'index'])->name('elevated-code.index');
+    Route::put('/elevated-code', [\App\Http\Controllers\Admin\ElevatedCodeController::class, 'update'])->name('elevated-code.update');
 
     // Organization Booking Routes (Admin oversight and management)
     Route::get('/organization-bookings', [\App\Http\Controllers\Admin\OrganizationBookingController::class, 'index'])->name('organization-bookings.index');
@@ -391,6 +416,7 @@ Route::prefix('staff')->name('staff.')->middleware(['auth', 'verified', \App\Htt
     // Cancellation Routes
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Staff\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Staff\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+    Route::post('/cancellations/{id}/reject', [\App\Http\Controllers\Staff\CancellationController::class, 'reject'])->name('cancellations.reject');
 
     // Services Management (Staff can edit only; no add/delete)
     Route::get('/services/manage', [\App\Http\Controllers\Staff\ServiceManagementController::class, 'index'])->name('services.manage');
@@ -419,8 +445,10 @@ Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\H
     Route::post('/notifications/{id}/mark-read', [\App\Http\Controllers\Priest\NotificationController::class, 'markAsRead'])->name('notifications.mark-read');
 
     // Cancellation Routes
+    Route::get('/cancellations', [\App\Http\Controllers\Priest\CancellationController::class, 'index'])->name('cancellations.index');
     Route::get('/cancellations/{id}', [\App\Http\Controllers\Priest\CancellationController::class, 'show'])->name('cancellations.show');
     Route::post('/cancellations/{id}/confirm', [\App\Http\Controllers\Priest\CancellationController::class, 'confirm'])->name('cancellations.confirm');
+    Route::post('/cancellations/{id}/reject', [\App\Http\Controllers\Priest\CancellationController::class, 'reject'])->name('cancellations.reject');
 
     // History routes
     Route::post('/history/{historyId}/archive', [\App\Http\Controllers\Priest\HistoryController::class, 'archive'])->name('history.archive');
@@ -444,3 +472,494 @@ Route::prefix('priest')->name('priest.')->middleware(['auth', 'verified', \App\H
 Route::middleware(['auth', \App\Http\Middleware\RoleMiddleware::class . ':admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('venues', \App\Http\Controllers\Admin\VenueController::class);
 });
+
+// Email Preview Routes (For Development/Testing)
+if (app()->environment('local')) {
+    Route::prefix('dev/emails')->group(function () {
+        
+        $getDummyReservation = function () {
+            $user = new \App\Models\User([
+                'first_name' => 'John', 'last_name' => 'Doe', 'email' => 'john@example.com'
+            ]);
+            $service = new \App\Models\Service(['service_name' => 'Baptism']);
+            $venue = new \App\Models\Venue(['name' => 'Main Church']);
+            $org = new \App\Models\Organization(['name' => 'Knights of Columbus']);
+            $reservation = new \App\Models\Reservation([
+                'schedule_date' => now()->addDays(5)->setHour(10)->setMinute(0),
+                'status' => 'pending',
+                'rejection_reason' => 'Schedule conflict',
+                'purpose' => 'Thanksgiving Mass',
+                'custom_venue_name' => null,
+            ]);
+            $reservation->reservation_id = 123;
+            $reservation->created_at = now(); // Ensure created_at is set for templates that use it
+            $reservation->setRelation('user', $user);
+            $reservation->setRelation('service', $service);
+            $reservation->setRelation('venue', $venue);
+            $reservation->setRelation('organization', $org);
+            return $reservation;
+        };
+
+        $getDummyOrgBooking = function () {
+            $user = new \App\Models\User([
+                'first_name' => 'Jane', 'last_name' => 'Smith', 'email' => 'jane@org.com'
+            ]);
+            $adviser = new \App\Models\User([
+                'first_name' => 'Prof.', 'last_name' => 'Adviser', 'email' => 'adviser@school.edu'
+            ]);
+            $org = new \App\Models\Organization(['name' => 'Catholic Youth Ministry']);
+            $booking = new \App\Models\OrganizationBookingRequest([
+                'activity_name' => 'Youth Fellowship',
+                'requested_date' => now()->addDays(10)->setHour(14)->setMinute(0),
+                'status' => 'pending',
+                'rejection_reason' => 'Venue maintenance',
+            ]);
+            $booking->created_at = now();
+            $booking->id = 789;
+            $booking->setRelation('requestor', $user);
+            $booking->setRelation('organization', $org);
+            $org->setRelation('adviser', $adviser);
+            
+            return [$booking, $adviser, $org, $user];
+        };
+
+        Route::get('/', function () {
+            $links = [
+                'Login Verification' => '/dev/emails/auth/login-verification',
+                'Account Activated' => '/dev/emails/auth/account-activated',
+                'Password Reset' => '/dev/emails/auth/password-reset',
+                'Verify Email' => '/dev/emails/auth/verify-email',
+                '---' => '#',
+                'Reservation: Submitted' => '/dev/emails/reservation/submitted',
+                'Reservation: Submitted (To Adviser)' => '/dev/emails/reservation/submitted-adviser',
+                'Reservation: Admin Rejected' => '/dev/emails/reservation/admin-rejected',
+                'Reservation: Cancellation Request' => '/dev/emails/reservation/cancellation-requested',
+                'Reservation: Unresponsive Escalation' => '/dev/emails/reservation/cancellation-unresponsive',
+                'Reservation: Adviser Approved' => '/dev/emails/reservation/adviser-approved',
+                'Reservation: Adviser Approved (To Admin)' => '/dev/emails/reservation/adviser-approved-admin',
+                'Reservation: Adviser Rejected' => '/dev/emails/reservation/adviser-rejected',
+                'Reservation: Adviser Rejected (To Admin)' => '/dev/emails/reservation/adviser-rejected-admin',
+                'Reservation: Priest Assigned' => '/dev/emails/reservation/priest-assigned',
+                'Reservation: Priest Assigned (To Requestor)' => '/dev/emails/reservation/priest-assigned-requestor',
+                'Reservation: Priest Declined' => '/dev/emails/reservation/priest-declined',
+                'Reservation: Cancelled' => '/dev/emails/reservation/cancelled',
+                'Reservation: Requestor Confirmation' => '/dev/emails/reservation/requestor-confirmation',
+                'Reservation: Full Approval' => '/dev/emails/reservation/final-approved',
+                'Reservation: Priest Confirmed (To User)' => '/dev/emails/reservation/confirmed',
+                'Reservation: Adviser Pending (Reminder)' => '/dev/emails/reservation/adviser-pending',
+                'Reservation: Priest Confirmed (To Adviser)' => '/dev/emails/reservation/adviser-priest-confirmed',
+                'Reservation: Unnoticed Alert (24h)' => '/dev/emails/reservation/unnoticed-alert',
+                'Reservation: Priest Confirmed (To Admin)' => '/dev/emails/reservation/priest-confirmed-admin',
+                'Reservation: All Priests Confirmed' => '/dev/emails/reservation/all-priests-confirmed',
+                'Reservation: Requestor Confirmed (To Admin)' => '/dev/emails/reservation/requestor-confirmed-admin',
+                'Reservation: Priest Cancelled (To Requestor)' => '/dev/emails/reservation/priest-cancelled-requestor',
+                'Reservation: Priest Cancelled (To Admin)' => '/dev/emails/reservation/priest-cancelled-admin',
+                'Reservation: Cancellation Confirmed' => '/dev/emails/reservation/cancellation-confirmed',
+                'Reservation: Reassigned (To Requestor)' => '/dev/emails/reservation/requestor-reassigned',
+                'Reservation: Priest Restored (To Admin)' => '/dev/emails/reservation/priest-restored-admin',
+                'Reservation: Final Approval (To Adviser)' => '/dev/emails/reservation/final-approval-adviser',
+                'Reservation: Final Approval (To Priest)' => '/dev/emails/reservation/final-approval-priest',
+                '---' => '#',
+                'Org Booking: Adviser Notification' => '/dev/emails/org/adviser-notification',
+                'Org Booking: Approved' => '/dev/emails/org/approved',
+                'Org Booking: Rejected' => '/dev/emails/org/rejected',
+                'Org Booking: Staff Reminder' => '/dev/emails/org/staff-reminder',
+                '---' => '#',
+                'Report: Ready' => '/dev/emails/reports/ready',
+                'Report: Empty' => '/dev/emails/reports/empty',
+                'Report: Failed' => '/dev/emails/reports/failed',
+            ];
+            $html = '<div style="font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">';
+            $html .= '<h1 style="color: #333;">Email Styling Previews</h1>';
+            $html .= '<p>Click to view the rendered email templates with dummy data.</p><ul style="line-height: 1.8;">';
+            foreach($links as $text => $url) {
+                 if($text === '---') { $html .= '<hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">'; continue; }
+                 $html .= "<li><a href='$url' target='_blank' style='color: #2563eb; text-decoration: none;'>$text</a></li>";
+            }
+            $html .= '</ul></div>';
+            return $html;
+        });
+
+        Route::get('/reservation/submitted', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.submitted', [
+                'reservation' => $r, 'requestor' => $r->user, 'service' => $r->service, 'venue' => $r->venue, 'organization' => $r->organization
+            ]);
+        });
+        Route::get('/reservation/adviser-approved', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            return view('emails.reservations.adviser-approved', [
+                'reservation' => $r, 
+                'requestor' => $r->user, 
+                'service' => $r->service, 
+                'adviser' => $adviser,
+                'remarks' => 'Everything looks good. Proceed.'
+            ]);
+        });
+        Route::get('/reservation/adviser-rejected', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            return view('emails.reservations.adviser-rejected', [
+                'reservation' => $r, 
+                'requestor' => $r->user, 
+                'service' => $r->service, 
+                'adviser' => $adviser,
+                'reason' => 'Scheduling conflict with another event.'
+            ]);
+        });
+        Route::get('/reservation/priest-assigned', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $priest = new \App\Models\User(['first_name' => 'Fr. Michael', 'last_name' => 'Torres']);
+            return view('emails.reservations.priest-assigned', [
+                'reservation' => $r, 
+                'priest' => $priest, 
+                'service' => $r->service,
+                'venue' => $r->venue
+            ]);
+        });
+        Route::get('/reservation/priest-declined', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $priest = new \App\Models\User(['first_name' => 'Fr. Michael', 'last_name' => 'Torres', 'email' => 'fr.michael@example.com']);
+            return view('emails.reservations.priest-declined', [
+                'reservation' => $r, 
+                'priest' => $priest, 
+                'service' => $r->service,
+                'venue' => $r->venue,
+                'reason' => 'Health issues'
+            ]);
+        });
+        Route::get('/reservation/cancelled', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.cancelled', [
+                'reservation' => $r, 
+                'service' => $r->service,
+                'cancelledBy' => 'Admin (Staff Name)',
+                'reason' => 'Duplicate booking.'
+            ]);
+        });
+
+
+        Route::get('/reservation/requestor-confirmation', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.requestor-confirmation', [
+                'reservation' => $r, 
+                'confirmationUrl' => '#',
+            ]);
+        });
+        
+        Route::get('/reservation/final-approved', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.final-approved', [
+                'reservation' => $r,
+                'priestNames' => 'Fr. John Doe, Fr. Jane Smith',
+            ]);
+        });
+        
+        Route::get('/reservation/confirmed', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.confirmed', [
+                'reservation' => $r,
+                'priestName' => 'Fr. John Doe',
+            ]);
+        });
+        
+        Route::get('/reservation/adviser-pending', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof. Pending', 'last_name' => 'Adviser']);
+            $r->organization->setRelation('adviser', $adviser);
+            return view('emails.reservations.adviser-pending', [
+                'reservation' => $r,
+                'adviser' => $adviser,
+            ]);
+        });
+        
+        Route::get('/reservation/adviser-priest-confirmed', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            return view('emails.reservations.adviser-priest-confirmed', [
+                'reservation' => $r,
+                'adviser' => $adviser,
+                'priestName' => 'Fr. John Doe',
+            ]);
+        });
+
+        Route::get('/org/adviser-notification', function () use ($getDummyOrgBooking) {
+            list($b, $adviser, $org, $user) = $getDummyOrgBooking();
+            return view('emails.organization-booking.adviser-notification', ['request' => $b, 'organization' => $org, 'requestor' => $b->requestor]);
+        });
+        Route::get('/org/approved', function () use ($getDummyOrgBooking) {
+            list($b, $adviser, $org, $user) = $getDummyOrgBooking();
+            return view('emails.organization-booking.approval-notification', [
+                'request' => $b, 
+                'requestor' => $b->requestor,
+                'organization' => $org,
+                'adviser' => $adviser,
+                'comments' => 'Have a great event!'
+            ]);
+        });
+        Route::get('/org/rejected', function () use ($getDummyOrgBooking) {
+            list($b, $adviser, $org, $user) = $getDummyOrgBooking();
+            return view('emails.organization-booking.rejection-notification', [
+                'request' => $b, 'organization' => $org, 'adviser' => $adviser, 
+                'reason' => 'Venue is under maintenance.', 'comments' => 'Please reschedule.'
+            ]);
+        });
+        Route::get('/org/staff-reminder', function () use ($getDummyOrgBooking) {
+            list($b, $adviser, $org, $user) = $getDummyOrgBooking();
+            $b->adviser_notified_at = now()->subDays(3);
+            return view('emails.organization-booking.staff-reminder', [
+                'request' => $b,
+                'organization' => $org,
+                'adviser' => $adviser,
+                'requestor' => $b->requestor,
+                'daysPending' => 3
+            ]);
+        });
+
+        Route::get('/auth/login-verification', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.login-verification-code', ['code' => '123456', 'user' => $r->user]);
+        });
+        
+        Route::get('/auth/account-activated', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.account-activated', ['user' => $r->user]);
+        });
+
+        // Report Notifications
+        Route::get('/reports/ready', function () {
+            return view('emails.reports.ready', [
+                'rowsCount' => 45,
+                'url' => '#', 
+            ]);
+        });
+        
+        Route::get('/reports/empty', function () {
+            return view('emails.reports.empty');
+        });
+
+        Route::get('/reports/failed', function () {
+            return view('emails.reports.failed', [
+                'errorMessage' => 'Database connection timeout occurred during query execution.'
+            ]);
+        });
+
+        Route::get('/auth/password-reset', function () {
+            $user = new \App\Models\User(['first_name' => 'John', 'last_name' => 'Doe', 'email' => 'john@example.com']);
+            return view('emails.auth.password-reset', [
+                'user' => $user,
+                'url' => 'http://localhost/reset-password/token123',
+            ]);
+        });
+
+        Route::get('/auth/verify-email', function () {
+            $user = new \App\Models\User(['first_name' => 'Jane', 'last_name' => 'Smith']);
+            return view('emails.auth.verify-email', [
+                'user' => $user,
+                'url' => 'http://localhost/verify-email/hash123',
+            ]);
+        });
+        
+        Route::get('/reservation/admin-rejected', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.admin-rejected', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'reason' => 'Schedule conflict with parish event',
+                'adminName' => 'Admin User'
+            ]);
+        });
+
+        Route::get('/reservation/cancellation-requested', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $cancellation = new \App\Models\ReservationCancellation([
+                'reason' => 'Emergency family matter'
+            ]);
+            return view('emails.reservations.cancellation-requested', [
+                'reservation' => $r,
+                'cancellation' => $cancellation,
+                'requestorName' => $r->user->full_name,
+                'recipientName' => 'Fr. John / Adviser',
+                'reason' => $cancellation->reason
+            ]);
+        });
+
+        Route::get('/reservation/cancellation-unresponsive', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.cancellation-unresponsive', [
+                'reservation' => $r,
+                'role' => 'priest',
+                'contactInfo' => [
+                    'name' => 'Fr. John Doe',
+                    'email' => 'priest@example.com',
+                    'phone' => '09123456789',
+                    'role' => 'Assigned Priest'
+                ]
+            ]);
+        });
+
+        Route::get('/reservation/unnoticed-alert', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User([
+                'first_name' => 'Prof.', 'last_name' => 'Adviser', 
+                'email' => 'adviser@school.edu',
+                'phone' => '09123456789'
+            ]);
+            return view('emails.reservations.unnoticed-alert', [
+                'reservation' => $r,
+                'hoursPending' => 26,
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
+                'orgName' => $r->organization->org_name ?? 'Catholic Youth Ministry',
+                'adviserName' => $adviser->first_name . ' ' . $adviser->last_name,
+                'adviserEmail' => $adviser->email,
+                'adviserPhone' => $adviser->phone
+            ]);
+        });
+
+        Route::get('/reservation/priest-confirmed-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $priest = new \App\Models\User(['first_name' => 'Fr. Michael', 'last_name' => 'Torres']);
+            return view('emails.reservations.priest-confirmed-admin', [
+                'reservation' => $r,
+                'priestName' => $priest->first_name . ' ' . $priest->last_name,
+                'venueName' => $r->venue->name ?? 'Main Venue',
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name
+            ]);
+        });
+
+        Route::get('/reservation/all-priests-confirmed', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.all-priests-confirmed', [
+                'reservation' => $r,
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
+                'priestNames' => 'Fr. John Doe, Fr. Michael Torres'
+            ]);
+        });
+
+        Route::get('/reservation/requestor-confirmed-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.requestor-confirmed-admin', [
+                'reservation' => $r,
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name
+            ]);
+        });
+        
+        Route::get('/reservation/priest-cancelled-requestor', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.priest-cancelled-confirmation-requestor', [
+                'reservation' => $r,
+                'priestName' => 'Fr. John Doe',
+                'reason' => 'Emergency personal matter',
+                'venueName' => $r->venue->name ?? 'Main Venue',
+                'requestor' => $r->user
+            ]);
+        });
+
+        Route::get('/reservation/priest-cancelled-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.priest-cancelled-confirmation-admin', [
+                'reservation' => $r,
+                'priestName' => 'Fr. John Doe',
+                'reason' => 'Emergency personal matter',
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name
+            ]);
+        });
+
+        Route::get('/reservation/cancellation-confirmed', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.cancellation-confirmed', [
+                'reservation' => $r,
+                'requestor' => $r->user
+            ]);
+        });
+
+        Route::get('/reservation/requestor-reassigned', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.requestor-priest-reassigned', [
+                'reservation' => $r,
+                'oldPriestName' => 'Fr. Old Priest',
+                'newPriestName' => 'Fr. New Priest',
+                'requestorName' => $r->user->first_name
+            ]);
+        });
+
+        Route::get('/reservation/priest-restored-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.priest-restored-admin', [
+                'reservation' => $r,
+                'priestName' => 'Fr. Restored Priest',
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name
+            ]);
+        });
+
+        Route::get('/reservation/final-approval-adviser', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.final-approval-adviser', [
+                'reservation' => $r,
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
+                'venueName' => $r->venue->name ?? 'Main Venue'
+            ]);
+        });
+
+        Route::get('/reservation/final-approval-priest', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            return view('emails.reservations.final-approval-priest', [
+                'reservation' => $r,
+                'priestName' => 'Fr. John Doe',
+                'requestorName' => $r->user->first_name . ' ' . $r->user->last_name,
+                'venueName' => $r->venue->name ?? 'Main Venue',
+                'isMainPriest' => true
+            ]);
+        });
+
+        Route::get('/reservation/submitted-adviser', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            return view('emails.reservations.submitted-adviser', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'service' => $r->service,
+                'venue' => $r->venue,
+                'organization' => $r->organization,
+                'adviser' => $adviser
+            ]);
+        });
+
+        Route::get('/reservation/adviser-approved-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            $r->organization->setRelation('adviser', $adviser);
+            return view('emails.reservations.adviser-approved-admin', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'adviser' => $adviser,
+                'remarks' => 'Everything is in order.'
+            ]);
+        });
+
+        Route::get('/reservation/adviser-rejected-admin', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $adviser = new \App\Models\User(['first_name' => 'Prof.', 'last_name' => 'Adviser']);
+            $r->organization->setRelation('adviser', $adviser);
+            return view('emails.reservations.adviser-rejected-admin', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'adviser' => $adviser,
+                'reason' => 'Schedule conflict with another university event.'
+            ]);
+        });
+
+        Route::get('/reservation/priest-assigned-requestor', function () use ($getDummyReservation) {
+            $r = $getDummyReservation();
+            $priest = new \App\Models\User(['first_name' => 'Fr. Michael', 'last_name' => 'Torres']);
+            return view('emails.reservations.priest-assigned-requestor', [
+                'reservation' => $r,
+                'requestor' => $r->user,
+                'priest' => $priest,
+                'service' => $r->service,
+                'venue' => $r->venue
+            ]);
+        });
+    });
+}

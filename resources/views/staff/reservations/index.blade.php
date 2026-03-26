@@ -34,6 +34,7 @@
                         <option value="">All</option>
                         <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="adviser_approved" {{ request('status') === 'adviser_approved' ? 'selected' : '' }}>Adviser Approved</option>
+                        <option value="pending_priest_reassignment" {{ request('status') === 'pending_priest_reassignment' ? 'selected' : '' }}>Priest Declined (Reassign)</option>
                         <option value="admin_approved" {{ request('status') === 'admin_approved' ? 'selected' : '' }}>Admin Approved</option>
                         <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
                         <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
@@ -53,9 +54,10 @@
         </div>
     </form>
 
-    <!-- Reservations Table -->
+    <!-- Reservations Card -->
     <div class="card">
-        <div class="overflow-x-auto">
+        <!-- Desktop Table View -->
+        <div class="hidden lg:block overflow-x-auto">
             @if($reservations->isEmpty())
             <div class="p-12 text-center">
                 <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,10 +87,10 @@
                             #{{ $r->reservation_id }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->user->full_name ?? $r->user->email }}</div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->user?->full_name ?? $r->user?->email ?? 'Unknown User (ID: '.$r->user_id.')' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-gray-300">{{ $r->organization->org_name ?? '—' }}</div>
+                            <div class="text-sm text-gray-900 dark:text-gray-300">{{ $r->organization?->org_name ?? '—' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-gray-300">{{ $r->service->service_name ?? '—' }}</div>
@@ -128,6 +130,82 @@
                 </tbody>
             </table>
             </div>
+            @endif
+        </div>
+
+        <!-- Mobile & Tablet Card View -->
+        <div class="lg:hidden">
+            @if($reservations->isEmpty())
+                <div class="p-8 text-center">
+                    <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-muted dark:text-gray-400 text-lg">No reservations found</p>
+                </div>
+            @else
+                <div class="space-y-3 p-4">
+                    @foreach($reservations as $r)
+                        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-150 p-4">
+                            <!-- Header: ID, Status Badge -->
+                            <div class="flex items-start justify-between gap-3 mb-3">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-xs font-mono text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">#{{ $r->reservation_id }}</span>
+                                    @if($r->status === 'pending')
+                                        <span class="badge-warning text-xs">Awaiting Adviser</span>
+                                    @elseif($r->status === 'adviser_approved')
+                                        <span class="badge-warning text-xs">Awaiting Priest</span>
+                                    @elseif($r->status === 'admin_approved')
+                                        <span class="badge-info text-xs">Awaiting Admin</span>
+                                    @elseif($r->status === 'approved')
+                                        <span class="badge-success text-xs">Approved</span>
+                                    @elseif($r->status === 'confirmed')
+                                        <span class="badge-success text-xs">Confirmed</span>
+                                    @elseif($r->status === 'completed')
+                                        <span class="badge-success text-xs">Completed</span>
+                                    @elseif($r->status === 'rejected')
+                                        <span class="badge-danger text-xs">Rejected</span>
+                                    @elseif($r->status === 'cancelled')
+                                        <span class="badge-secondary text-xs">Cancelled</span>
+                                    @else
+                                        <span class="badge-secondary text-xs">{{ ucfirst(str_replace('_', ' ', $r->status)) }}</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Requestor Name -->
+                            <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3 truncate">
+                                {{ $r->user?->full_name ?? $r->user?->email ?? 'Unknown User' }}
+                            </h3>
+
+                            <!-- Info Grid -->
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Service</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $r->service->service_name ?? '—' }}</p>
+                                </div>
+                                <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Schedule</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ optional($r->schedule_date)->format('M d, Y') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ optional($r->schedule_date)->format('h:i A') }}</p>
+                                </div>
+                                <div class="col-span-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3">
+                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Organization</p>
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $r->organization?->org_name ?? '—' }}</p>
+                                </div>
+                            </div>
+
+                            <!-- Action Button -->
+                            <a href="{{ route('staff.reservations.show', $r->reservation_id) }}"
+                               class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors duration-150">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                View Details
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
             @endif
         </div>
     </div>

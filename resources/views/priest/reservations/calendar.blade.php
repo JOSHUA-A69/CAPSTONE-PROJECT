@@ -339,6 +339,6 @@
             calendar.render();
         }
     </script>
-    <script id="priest-reservations-json" type="application/json">{!! $reservations->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
-    <script id="priest-schedules-json" type="application/json">{!! ($schedules ?? collect())->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
+    <script id="priest-reservations-json" type="application/json">@json($reservations)</script>
+    <script id="priest-schedules-json" type="application/json">@json($schedules ?? collect())</script>
     @endpush

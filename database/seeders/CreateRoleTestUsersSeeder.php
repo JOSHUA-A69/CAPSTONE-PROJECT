@@ -22,7 +22,8 @@ class CreateRoleTestUsersSeeder extends Seeder
         ];
 
         foreach ($roles as $role => $data) {
-            $existing = User::where('email', $data['email'])->first();
+            $existing = User::withTrashed()->where('email', $data['email'])->first();
+            
             if (!$existing) {
                 User::create([
                     'first_name' => $data['first_name'],
@@ -35,6 +36,9 @@ class CreateRoleTestUsersSeeder extends Seeder
                     'email_verified_at' => now(),
                     'status' => 'active',
                 ]);
+            } else if ($existing->trashed()) {
+                // Determine if we should restore. For seeders, restoring is usually fine.
+                $existing->restore();
             }
         }
     }

@@ -1,19 +1,20 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-6xl mx-auto py-8 px-4">
-    <h1 class="text-3xl font-bold mb-6 flex items-center gap-3">
-        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Unified Calendar (Admin)
+<div class="max-w-6xl mx-auto py-3 sm:py-6 px-2 sm:px-4">
+    <h1 class="text-lg sm:text-2xl lg:text-3xl font-bold mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+        <svg class="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span class="sm:hidden">Calendar</span>
+        <span class="hidden sm:inline">Unified Calendar (Admin)</span>
     </h1>
 
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+    <div class="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-2 sm:p-4 overflow-hidden">
         <div id="adminCalendar"></div>
     </div>
 
     @php $hasSchedules = isset($schedules) && $schedules && $schedules->count() > 0; @endphp
     @if($reservations->isEmpty() && ! $hasSchedules)
-        <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm font-semibold">
+        <div class="mt-3 sm:mt-4 p-2 sm:p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg text-yellow-800 dark:text-yellow-200 text-xs sm:text-sm font-semibold">
             No upcoming items found.
         </div>
     @endif
@@ -25,6 +26,371 @@
     .fc .admin-presider {
         box-shadow: 0 0 0 2px #FACC15;
         border-color: #FACC15 !important;
+    }
+
+    /* Button Styles */
+    .fc .fc-button-primary {
+        background-color: #6366f1 !important;
+        border-color: #6366f1 !important;
+        font-weight: 500;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem !important;
+        border-radius: 0.375rem !important;
+        transition: all 0.2s ease;
+        margin: 0 0.0625rem;
+        min-height: 1.75rem;
+        text-transform: capitalize;
+    }
+
+    .fc .fc-button-primary:hover {
+        background-color: #4f46e5 !important;
+        border-color: #4f46e5 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(99, 102, 241, 0.35);
+    }
+
+    .fc .fc-button-primary:disabled,
+    .fc .fc-button-primary.fc-button-active {
+        background-color: #4f46e5 !important;
+        border-color: #4f46e5 !important;
+        opacity: 1;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+    }
+
+    /* Toolbar Styles */
+    .fc .fc-toolbar {
+        margin-bottom: 0.75rem !important;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .fc .fc-toolbar-title {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        color: #374151;
+    }
+
+    .dark .fc .fc-toolbar-title {
+        color: #e5e7eb;
+    }
+
+    .dark .fc .fc-toolbar {
+        border-bottom-color: #374151;
+    }
+
+    .fc .fc-toolbar-chunk {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Compact Day Grid (Month View) */
+    .fc .fc-daygrid-day {
+        min-height: 60px !important;
+    }
+
+    .fc .fc-daygrid-day-frame {
+        min-height: 55px !important;
+        padding: 2px !important;
+    }
+
+    .fc .fc-daygrid-day-top {
+        padding: 2px 4px !important;
+    }
+
+    .fc .fc-daygrid-day-number {
+        font-size: 0.75rem !important;
+        font-weight: 500;
+        padding: 2px 4px !important;
+    }
+
+    .fc .fc-daygrid-day-events {
+        margin-top: 1px !important;
+    }
+
+    .fc .fc-daygrid-event {
+        margin: 1px 2px !important;
+        padding: 1px 3px !important;
+        border-radius: 3px !important;
+        font-size: 0.65rem !important;
+    }
+
+    .fc .fc-daygrid-more-link {
+        font-size: 0.65rem !important;
+        font-weight: 600;
+        color: #6366f1;
+    }
+
+    /* Column Headers */
+    .fc .fc-col-header-cell {
+        padding: 6px 2px !important;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    }
+
+    .dark .fc .fc-col-header-cell {
+        background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    }
+
+    .fc .fc-col-header-cell-cushion {
+        font-size: 0.7rem !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        color: #6b7280;
+        padding: 4px !important;
+    }
+
+    .dark .fc .fc-col-header-cell-cushion {
+        color: #9ca3af;
+    }
+
+    /* Week View Enhancements */
+    .fc-timeGridWeek-view .fc-timegrid-slot {
+        height: 28px !important;
+    }
+
+    .fc-timeGridWeek-view .fc-timegrid-slot-label {
+        font-size: 0.65rem !important;
+        color: #9ca3af;
+        vertical-align: top;
+        padding-top: 2px !important;
+    }
+
+    .fc-timeGridWeek-view .fc-timegrid-col {
+        min-width: 50px !important;
+    }
+
+    .fc-timeGridWeek-view .fc-timegrid-event {
+        border-radius: 4px !important;
+        font-size: 0.65rem !important;
+        padding: 2px 4px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    .fc-timeGridWeek-view .fc-timegrid-event .fc-event-title {
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .fc-timeGridWeek-view .fc-timegrid-event .fc-event-time {
+        font-size: 0.6rem !important;
+        opacity: 0.85;
+    }
+
+    .fc-timeGridWeek-view .fc-timegrid-now-indicator-line {
+        border-color: #ef4444 !important;
+        border-width: 2px;
+    }
+
+    .fc-timeGridWeek-view .fc-timegrid-now-indicator-arrow {
+        border-color: #ef4444 !important;
+    }
+
+    /* List View Compact */
+    .fc-listWeek-view .fc-list-event {
+        font-size: 0.75rem;
+    }
+
+    .fc-listWeek-view .fc-list-event-title {
+        font-weight: 500;
+    }
+
+    .fc-listWeek-view .fc-list-day-cushion {
+        padding: 4px 8px !important;
+        font-size: 0.75rem;
+        background: #f3f4f6;
+    }
+
+    .dark .fc-listWeek-view .fc-list-day-cushion {
+        background: #1f2937;
+    }
+
+    /* Today Highlight */
+    .fc .fc-day-today {
+        background-color: rgba(99, 102, 241, 0.08) !important;
+    }
+
+    .dark .fc .fc-day-today {
+        background-color: rgba(99, 102, 241, 0.15) !important;
+    }
+
+    /* Table Borders */
+    .fc-theme-standard td,
+    .fc-theme-standard th {
+        border-color: #e5e7eb !important;
+    }
+
+    .dark .fc-theme-standard td,
+    .dark .fc-theme-standard th {
+        border-color: #374151 !important;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 640px) {
+        .fc .fc-toolbar {
+            flex-direction: row;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .fc .fc-toolbar-chunk {
+            width: auto;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .fc .fc-button-primary {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem !important;
+            min-height: 1.5rem;
+        }
+
+        .fc .fc-toolbar-title {
+            font-size: 1rem !important;
+        }
+
+        .fc .fc-daygrid-day {
+            min-height: 50px !important;
+        }
+
+        .fc .fc-daygrid-day-frame {
+            min-height: 45px !important;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            font-size: 0.6rem !important;
+        }
+
+        .fc .fc-daygrid-day-number {
+            font-size: 0.65rem !important;
+        }
+
+        .fc .fc-daygrid-event {
+            font-size: 0.55rem !important;
+            padding: 1px 2px !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-slot {
+            height: 24px !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-slot-label {
+            font-size: 0.55rem !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-event {
+            font-size: 0.55rem !important;
+        }
+    }
+
+    /* Extra small screens (360px and below) */
+    @media (max-width: 360px) {
+        .fc .fc-toolbar {
+            flex-direction: column;
+            gap: 0.375rem;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .fc .fc-toolbar-chunk {
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .fc .fc-button-primary {
+            font-size: 0.6rem !important;
+            padding: 0.15rem 0.3rem !important;
+            min-height: 1.25rem;
+            margin: 0 0.0625rem;
+        }
+
+        .fc .fc-toolbar-title {
+            font-size: 0.875rem !important;
+        }
+
+        .fc .fc-view-harness {
+            overflow-x: hidden !important;
+        }
+
+        .fc .fc-scrollgrid {
+            width: 100% !important;
+        }
+
+        .fc .fc-daygrid-day {
+            min-height: 40px !important;
+        }
+
+        .fc .fc-daygrid-day-frame {
+            min-height: 35px !important;
+            padding: 1px !important;
+        }
+
+        .fc .fc-daygrid-day-top {
+            padding: 1px 2px !important;
+        }
+
+        .fc .fc-col-header-cell {
+            padding: 3px 1px !important;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            font-size: 0.5rem !important;
+            padding: 2px !important;
+            letter-spacing: 0;
+        }
+
+        .fc .fc-daygrid-day-number {
+            font-size: 0.55rem !important;
+            padding: 1px 2px !important;
+        }
+
+        .fc .fc-daygrid-event {
+            font-size: 0.45rem !important;
+            padding: 0 1px !important;
+            margin: 0 1px !important;
+            line-height: 1.1;
+        }
+
+        .fc .fc-daygrid-more-link {
+            font-size: 0.45rem !important;
+        }
+
+        .fc .fc-daygrid-day-events {
+            margin-top: 0 !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-col {
+            min-width: 35px !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-slot {
+            height: 20px !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-slot-label {
+            font-size: 0.45rem !important;
+        }
+
+        .fc-timeGridWeek-view .fc-timegrid-event {
+            font-size: 0.45rem !important;
+            padding: 1px 2px !important;
+        }
+
+        .fc-listWeek-view .fc-list-event {
+            font-size: 0.65rem;
+        }
+
+        .fc-listWeek-view .fc-list-day-cushion {
+            padding: 3px 6px !important;
+            font-size: 0.65rem;
+        }
     }
 </style>
 @endpush
@@ -293,12 +659,45 @@
         const calendar = new Calendar(calendarHost, {
             plugins: [dayGridPlugin, timeGridPlugin, listPlugin],
             initialView: 'dayGridMonth',
+            timeZone: "{{ config('app.timezone') }}",
             headerToolbar: {
-                left: 'prev,next today',
+                left: 'prev,next',
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,listWeek'
             },
+            buttonText: {
+                today: 'Today',
+                month: 'Month',
+                week: 'Week',
+                list: 'List'
+            },
             height: 'auto',
+            contentHeight: 'auto',
+            aspectRatio: 1.8,
+            dayMaxEvents: 3,
+            moreLinkClick: 'popover',
+            slotMinTime: '06:00:00',
+            slotMaxTime: '22:00:00',
+            slotDuration: '00:30:00',
+            nowIndicator: true,
+            dayGridMonth: {
+                dayMaxEvents: 2,
+                dayMaxEventRows: 2,
+            },
+            timeGridWeek: {
+                slotMinTime: '06:00:00',
+                slotMaxTime: '22:00:00',
+                slotDuration: '01:00:00',
+                slotLabelInterval: '02:00:00',
+                allDaySlot: true,
+                slotLabelFormat: {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    omitZeroMinute: false,
+                    hour12: true
+                }
+            },
+            slotEventOverlap: false,
             events: [...reservationEvents, ...scheduleEvents, ...orgBookingEvents],
             eventClick(info) {
                 const { extendedProps } = info.event;
@@ -427,8 +826,8 @@
         calendar.render();
     }
 </script>
-<script id="admin-reservations-json" type="application/json">{!! $reservations->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
-<script id="admin-schedules-json" type="application/json">{!! ($schedules ?? collect())->toJson(JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES) !!}</script>
+<script id="admin-reservations-json" type="application/json">@json($reservations)</script>
+<script id="admin-schedules-json" type="application/json">@json($schedules ?? collect())</script>
 <script id="admin-org-bookings-json" type="application/json">@json($orgBookings ?? [])</script>
-<script id="admin-id-json" type="application/json">{!! json_encode($adminId) !!}</script>
+<script id="admin-id-json" type="application/json">@json($adminId)</script>
 @endpush

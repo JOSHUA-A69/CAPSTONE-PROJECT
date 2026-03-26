@@ -304,15 +304,27 @@ git pull https://github.com/JOSHUA-A69/CAPSTONE-PROJECT.git
 
 composer install
 
+##if need i update
+
+composer update -- **ignore**-**platform**-**reqs**
+
+##if di jud mogana sa
+
+docker compose exec app composer update --ignore-platform-req=ext-zip
+
 npm install
 
 php artisan migrate
 
+docker exec laravel_app php artisan migrate
+
 php artisan cache:clear
 php artisan config:clear
 
-docker compose up -df
+docker exec laravel_app php artisan cache:clear
+docker exec laravel_app php artisan config:clear
 
+<<<<<<< HEAD
 ## TO push
 
 git add .
@@ -354,3 +366,13 @@ git commit -m "Feature: describe what you changed"
 # 6. Push to GitHub
 
 git push origin new-feature
+=======
+npm run build
+
+docker compose up -d
+
+## if you want live server
+
+php artisan serve
+npm run dev
+>>>>>>> 56613816fbd83f1f65538c204b9ca99b7291d83b

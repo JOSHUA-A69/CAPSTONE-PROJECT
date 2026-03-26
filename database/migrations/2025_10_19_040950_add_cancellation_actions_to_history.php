@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip for SQLite as it doesn't support MODIFY
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+        
         DB::statement("ALTER TABLE reservation_history MODIFY COLUMN action ENUM(
             'created',
             'updated',

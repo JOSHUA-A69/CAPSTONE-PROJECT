@@ -172,10 +172,13 @@ class ReservationController extends Controller
         }
 
         // If the authenticated admin is already the assigned priest but not in allowed status, block reassignment
+        // REMOVED: Allow admin to reassign even if they are the current officiant (e.g. to decline/delegate)
+        /*
         if (!empty($reservation->officiant_id) && $reservation->officiant_id === $authUser->id) {
             return Redirect::back()
                 ->withErrors(['officiant_id' => 'You are the assigned priest and cannot reassign another priest.']);
         }
+        */
 
         // Proceed with standard assignment flow (requires selecting a priest)
         $request->validate([
@@ -223,6 +226,17 @@ class ReservationController extends Controller
             'approved_by' => Auth::id(),
         ]);
 
+        // Sync to pivot table to ensure consistency (removes old priest, adds new one)
+        $reservation->priests()->sync([
+            $priest->id => [
+                'confirmation_status' => 'pending',
+                'notified' => true,
+                'notified_at' => now(),
+                'created_at' => now(),
+                'updated_at' => now()
+            ]
+        ]);
+
         // Create history
         $remarks = $request->input('remarks', $isReassignment ? 'Priest reassigned after decline' : 'Priest assigned by admin');
         $reservation->history()->create([
@@ -261,7 +275,7 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation cannot be rejected.');
         }
 
-        $reason = $request->input('reason');
+        $reason = trim(strip_tags((string) $request->input('reason')));
 
         $reservation->update([
             'status' => 'rejected',
@@ -353,7 +367,7 @@ class ReservationController extends Controller
     {
         // In-app notification to requestor
         try {
-            $message = "Your reservation for <strong>{$reservation->service->service_name}</strong> has been approved by the admin. Your reservation with {$reservation->external_priest_name} is confirmed for " . $reservation->schedule_date->format('M d, Y h:i A');
+            $message = "Your reservation for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> has been approved by the admin. Your reservation with {$reservation->external_priest_name} is confirmed for " . $reservation->schedule_date->format('M d, Y h:i A');
             
             $notificationData = [
                 'user_id' => $reservation->user_id,
@@ -365,7 +379,7 @@ class ReservationController extends Controller
             
             if (Schema::hasColumn('notifications', 'data')) {
                 $notificationData['data'] = json_encode([
-                    'service_name' => $reservation->service->service_name,
+                    'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                     'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
                     'external_priest_name' => $reservation->external_priest_name,
                     'action' => 'external_priest_confirmed',
@@ -382,7 +396,7 @@ class ReservationController extends Controller
         if ($reservation->organization && $reservation->organization->adviser) {
             try {
                 $adviser = $reservation->organization->adviser;
-                $message = "Reservation for <strong>{$reservation->service->service_name}</strong> with external priest has been confirmed by admin.";
+                $message = "Reservation for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> with external priest has been confirmed by admin.";
                 
                 $notificationData = [
                     'user_id' => $adviser->id,
@@ -394,7 +408,7 @@ class ReservationController extends Controller
                 
                 if (Schema::hasColumn('notifications', 'data')) {
                     $notificationData['data'] = json_encode([
-                        'service_name' => $reservation->service->service_name,
+                        'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
                         'schedule_date' => $reservation->schedule_date->format('Y-m-d H:i:s'),
                         'action' => 'external_priest_confirmed',
                     ]);
@@ -416,17 +430,15 @@ class ReservationController extends Controller
     {
         $reservation = Reservation::with(['priests', 'user', 'service', 'organization'])->findOrFail($reservation_id);
 
-        // Only allow final approval if status is admin_approved (all priests confirmed, waiting for admin)
-        if (!in_array($reservation->status, ['admin_approved'])) {
+        // Allow approval if admin_approved OR adviser_approved (handling manual overrides or sync issues)
+        if (!in_array($reservation->status, ['admin_approved', 'adviser_approved'])) {
             return Redirect::back()
                 ->with('error', 'This reservation is not ready for final approval. Current status: ' . $reservation->status);
         }
 
-        // Verify all priests have confirmed
-        if (!$reservation->allPriestsConfirmed() && $reservation->priest_confirmation !== 'confirmed') {
-            return Redirect::back()
-                ->with('error', 'Cannot approve: Not all priests have confirmed their availability.');
-        }
+        // Warning instead of blocker: Check confirmation but allow Admin to override if they choose to
+        // We will assume if Admin clicks "Final Approve", they are overriding any missing confirmations.
+        // if (!$reservation->allPriestsConfirmed() && $reservation->priest_confirmation !== 'confirmed') { ... }
 
         DB::beginTransaction();
         try {
@@ -483,7 +495,7 @@ class ReservationController extends Controller
                 ->with('error', 'This reservation cannot be cancelled as it is already ' . $reservation->status . '.');
         }
 
-        $reason = $request->input('reason');
+        $reason = trim(strip_tags((string) $request->input('reason')));
 
         // Update reservation status and audit fields
         $reservation->update([
@@ -510,6 +522,137 @@ class ReservationController extends Controller
         return Redirect::back()
             ->with('status', 'reservation-cancelled')
             ->with('message', 'Reservation cancelled and all parties have been notified.');
+    }
+
+    /**
+     * Decline assignment as priest (when Admin is the assigned priest)
+     */
+    public function declineAssignment(Request $request, $reservation_id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500',
+            'replacement_priest_id' => 'nullable|exists:users,id',
+        ]);
+
+        $reservation = Reservation::findOrFail($reservation_id);
+        $priestId = Auth::id();
+
+        // Verify the authenticated user (admin) is actually the assigned priest
+        $isOfficiant = $reservation->officiant_id === $priestId;
+        $isAssignedInPivot = $reservation->priests()->where('users.id', $priestId)->exists();
+             
+        if (!$isOfficiant && !$isAssignedInPivot) {
+            return Redirect::back()
+                ->with('error', 'You are not assigned to this reservation.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $reason = trim(strip_tags((string) $request->input('reason')));
+            $replacementId = $request->input('replacement_priest_id');
+
+            // 1. Create PriestDecline record
+            \App\Models\PriestDecline::create([
+                'reservation_id' => $reservation->reservation_id,
+                'priest_id' => $priestId,
+                'reason' => $reason,
+                'declined_at' => now(),
+                'reservation_activity_name' => $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service',
+                'reservation_schedule_date' => $reservation->schedule_date,
+                'reservation_venue' => $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A',
+            ]);
+
+            // 2. Update pivot status if exists
+            if ($isAssignedInPivot) {
+                $reservation->priests()->updateExistingPivot($priestId, [
+                    'confirmation_status' => 'declined',
+                    'decline_reason' => $reason,
+                    'responded_at' => now(),
+                ]);
+            }
+
+            // 3. Handle Replacement or Default Decline
+            if ($replacementId) {
+                $newPriest = User::find($replacementId);
+
+                // Update reservation to new priest immediately
+                $reservation->update([
+                    'officiant_id' => $newPriest->id,
+                    'status' => 'admin_approved',
+                    'priest_confirmation' => 'pending',
+                    'priest_notified_at' => now(),
+                    'approved_by' => Auth::id(), // Re-approve as admin
+                ]);
+
+                // Sync pivot for new priest (removing old one implicity or explicitly)
+                // We use sync to ensure dirty state is cleared, but be careful not to remove other priests if multiple assigned
+                // For now, assuming single replacement flow for officiant
+                 $reservation->priests()->syncWithoutDetaching([
+                    $newPriest->id => [
+                        'confirmation_status' => 'pending',
+                        'notified' => true,
+                        'notified_at' => now(),
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                ]);
+                
+                // Remove self from pivot if needed, or leave as declined? 
+                // Usually better to leave as declined record in pivot, but syncWithoutDetaching keeps it.
+                // But we updated pivot to 'declined' earlier.
+
+                // History
+                $reservation->history()->create([
+                    'performed_by' => $priestId,
+                    'action' => 'priest_declined',
+                    'remarks' => "Admin declined and reassigned to Fr. {$newPriest->last_name}. Reason: {$reason}",
+                    'performed_at' => now(),
+                ]);
+
+                // Notify new priest
+                $this->notificationService->notifyPriestAssigned($reservation);
+
+                $message = "You have declined the assignment and successfully reassigned it to Fr. {$newPriest->last_name}.";
+            } else {
+                // No replacement selected yet
+                $reservation->update([
+                    'status' => 'priest_declined',
+                    'priest_confirmation' => 'declined',
+                ]);
+
+                // History
+                $reservation->history()->create([
+                    'performed_by' => $priestId,
+                    'action' => 'priest_declined',
+                    'remarks' => 'Admin (as Priest) declined assignment: ' . $reason,
+                    'performed_at' => now(),
+                ]);
+
+                $message = 'You have declined the assignment. Please assign a replacement priest when ready.';
+            }
+
+            // 5. Notify parties (generic decline notification only if no immediate replacement?)
+            // If replaced immediately, we notified the NEW priest above. Requestor sees change in logs.
+            // If NO replacement, proceed with old notification logic
+            if (!$replacementId) {
+                try {
+                    $this->notificationService->notifyPriestDeclined($reservation, $reason, Auth::id()); 
+                } catch (\Exception $e) {
+                    Log::warning('Notification failed during admin decline: ' . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+
+            return Redirect::back()
+                ->with('status', 'assignment-declined')
+                ->with('message', $message);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Admin decline assignment failed: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'Failed to decline: ' . $e->getMessage());
+        }
     }
 
     /**

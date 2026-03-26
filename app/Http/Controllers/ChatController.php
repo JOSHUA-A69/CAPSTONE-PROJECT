@@ -94,7 +94,7 @@ class ChatController extends Controller
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('chat_attachments', $fileName, 'public');
+            $filePath = $file->storeAs('chat_attachments', $fileName);
 
             $messageData['attachment_path'] = $filePath;
             $messageData['attachment_name'] = $file->getClientOriginalName();
@@ -146,30 +146,54 @@ class ChatController extends Controller
 
         $user = Auth::user();
         $receiverId = $request->receiver_id;
+        $receiver = User::findOrFail($receiverId);
 
         // Only requestors can use this endpoint
         if ($user->role !== 'requestor') {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // 1. Send the question first
-        $questionMessage = Message::create([
-            'sender_id' => $user->id,
-            'receiver_id' => $receiverId,
-            'message' => $request->question,
-            'is_auto_reply' => false,
-        ]);
-        $questionMessage->load(['sender', 'receiver']);
+        // Requestors can only send FAQ prompts to admins
+        if ($receiver->role !== 'admin') {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
-        // 2. Send the automated reply (from admin to requestor)
-        $autoReplyMessage = Message::create([
-            'sender_id' => $receiverId, // Admin/receiver sends the auto-reply
-            'receiver_id' => $user->id, // To the requestor
-            'message' => "🤖 **Automated FAQ Response:**\n\n" . $request->answer . "\n\n_If you need further assistance, please type your question below and an admin will respond shortly._",
-            'is_auto_reply' => true,
-            'read_at' => now(), // Mark as read immediately since it's automated
-        ]);
-        $autoReplyMessage->load(['sender', 'receiver']);
+        // Create both messages at once using DB transaction for better performance
+        DB::beginTransaction();
+        try {
+            $now = now();
+            
+            // 1. Send the question first
+            $questionMessage = Message::create([
+                'sender_id' => $user->id,
+                'receiver_id' => $receiverId,
+                'message' => $request->question,
+                'is_auto_reply' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            // 2. Send the automated reply immediately after (with microsecond difference)
+            $autoReplyMessage = Message::create([
+                'sender_id' => $user->id,
+                'receiver_id' => $user->id,
+                'message' => "🤖 **Automated FAQ Response:**\n\n" . $request->answer . "\n\n_If you need further assistance, please type your question below and an admin will respond shortly._",
+                'is_auto_reply' => true,
+                'read_at' => $now,
+                'created_at' => $now->copy()->addMicroseconds(1000), // Minimal delay for ordering
+                'updated_at' => $now->copy()->addMicroseconds(1000),
+            ]);
+
+            DB::commit();
+
+            // Load relationships efficiently in batch
+            $questionMessage->load(['sender:id,first_name,last_name,profile_picture', 'receiver:id,first_name,last_name,profile_picture']);
+            $autoReplyMessage->load(['sender:id,first_name,last_name,profile_picture', 'receiver:id,first_name,last_name,profile_picture']);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['error' => 'Failed to send FAQ response'], 500);
+        }
 
         return response()->json([
             'success' => true,
@@ -254,23 +278,17 @@ class ChatController extends Controller
     {
         $userId = Auth::id();
 
-        // Exclude messages cleared via chat resets (per-conversation clear)
-        $count = DB::table('messages')
-            ->leftJoin('chat_resets as cr', function ($join) use ($userId) {
-                $join->on('cr.other_user_id', '=', 'messages.sender_id')
-                     ->where('cr.user_id', '=', $userId);
-            })
-            ->where('messages.receiver_id', $userId)
-            // Only count messages sent by other users
-            ->where('messages.sender_id', '<>', $userId)
-            ->whereNull('messages.read_at')
-            ->where(function ($q) {
-                $q->whereNull('cr.cleared_at')
-                  ->orWhereColumn('messages.created_at', '>', 'cr.cleared_at');
-            })
-            // Use DISTINCT to avoid any accidental duplicates from joins
-            ->distinct()
-            ->count('messages.id');
+        // Cache for 10 seconds to reduce database load
+        $cacheKey = "chat.unread.{$userId}";
+        
+        $count = cache()->remember($cacheKey, 10, function () use ($userId) {
+            // Simplified query - avoid complex JOIN for better performance
+            return DB::table('messages')
+                ->where('receiver_id', $userId)
+                ->where('sender_id', '<>', $userId)
+                ->whereNull('read_at')
+                ->count();
+        });
 
         return response()->json(['count' => $count])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -438,9 +456,9 @@ class ChatController extends Controller
     {
         $userId = Auth::id();
 
-        // Get all admins
-        $conversations = DB::table('messages')
-            ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture')
+        // Get all admins with their conversation stats
+        $adminsWithConversations = DB::table('messages')
+            ->select('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture', 'users.role')
             ->selectRaw('MAX(CASE WHEN cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at THEN messages.created_at END) as last_message_at')
             ->selectRaw('COUNT(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) AND messages.receiver_id = ? AND messages.read_at IS NULL THEN 1 END) as unread_count', [$userId])
             ->selectRaw('SUM(CASE WHEN (cr.cleared_at IS NULL OR messages.created_at > cr.cleared_at) THEN 1 ELSE 0 END) as message_count')
@@ -461,19 +479,40 @@ class ChatController extends Controller
                 $query->where('messages.sender_id', $userId)
                     ->orWhere('messages.receiver_id', $userId);
             })
-            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture')
-            ->orderBy('last_message_at', 'desc')
+            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.email', 'users.profile_picture', 'users.role')
+            ->get()
+            ->keyBy('id');
+
+        // Get ALL admins (including those without conversations)
+        $allAdmins = User::where('role', 'admin')
+            ->select('id', 'first_name', 'last_name', 'email', 'profile_picture', 'role')
             ->get();
 
-        // If no conversations yet, get all admins
-        if ($conversations->isEmpty()) {
-            $conversations = User::where('role', 'admin')
-                ->select('id', 'first_name', 'last_name', 'email', 'profile_picture')
-                ->selectRaw('NULL as last_message_at')
-                ->selectRaw('0 as unread_count')
-                ->selectRaw('0 as message_count')
-                ->get();
-        }
+        // Merge: use conversation data if exists, otherwise use defaults
+        $conversations = $allAdmins->map(function ($admin) use ($adminsWithConversations) {
+            if ($adminsWithConversations->has($admin->id)) {
+                return $adminsWithConversations->get($admin->id);
+            }
+            
+            // Admin with no conversation yet
+            return (object) [
+                'id' => $admin->id,
+                'first_name' => $admin->first_name,
+                'last_name' => $admin->last_name,
+                'email' => $admin->email,
+                'profile_picture' => $admin->profile_picture,
+                'role' => $admin->role,
+                'last_message_at' => null,
+                'unread_count' => 0,
+                'message_count' => 0,
+            ];
+        });
+
+        // Sort: admins with recent messages first, then alphabetically
+        $conversations = $conversations->sortBy([
+            ['last_message_at', 'desc'],
+            ['first_name', 'asc'],
+        ])->values();
 
         return $conversations;
     }

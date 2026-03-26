@@ -123,8 +123,8 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Requested by</label>
-                                    <p class="mt-1">{{ $reservation->user->full_name }}</p>
-                                    <p class="text-sm text-gray-500">{{ $reservation->user->email }}</p>
+                                    <p class="mt-1">{{ $reservation->user?->full_name ?? 'Unknown User' }}</p>
+                                    <p class="text-sm text-gray-500">{{ $reservation->user?->email }}</p>
                                 </div>
                                 <div>
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Contact Person</label>

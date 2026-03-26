@@ -4,6 +4,15 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin from '@fullcalendar/interaction';
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // Helper: normalize a date-like value to 'YYYY-MM-DD' without timezone
 function normalizeDateStr(val) {
     const s = String(val ?? '').trim();
@@ -39,6 +48,16 @@ function normalizeTimeStr(val) {
         return t;
     }
     return '00:00:00';
+}
+
+// Function to update the fallback panel based on current viewport
+function updateFallbackPanel(calendar, calendarEl) {
+    // Remove existing fallback if any
+    const existing = calendarEl.querySelector('.fc-empty-fallback');
+    if (existing) existing.remove();
+    
+    // Fallback panel disabled - returning early
+    return;
 }
 
 window.initStaffCalendar = function(schedules) {
@@ -158,7 +177,7 @@ window.initStaffCalendar = function(schedules) {
                 timeDiv.style.display = 'flex';
                 timeDiv.style.alignItems = 'center';
                 timeDiv.style.gap = '4px';
-                timeDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg><span>${timeStr}</span>`;
+                timeDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg><span>${escapeHtml(timeStr)}</span>`;
                 wrapper.appendChild(timeDiv);
             }
             
@@ -170,7 +189,7 @@ window.initStaffCalendar = function(schedules) {
             titleDiv.style.display = 'flex';
             titleDiv.style.alignItems = 'center';
             titleDiv.style.gap = '4px';
-            titleDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg><span>${arg.event.title}</span>`;
+            titleDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/><path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/></svg><span>${escapeHtml(arg.event.title)}</span>`;
             wrapper.appendChild(titleDiv);
             
             // Add location with icon if available
@@ -186,7 +205,7 @@ window.initStaffCalendar = function(schedules) {
                 locationDiv.style.display = 'flex';
                 locationDiv.style.alignItems = 'center';
                 locationDiv.style.gap = '4px';
-                locationDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg><span>${locationText}</span>`;
+                locationDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg><span>${escapeHtml(locationText)}</span>`;
                 wrapper.appendChild(locationDiv);
             }
             
@@ -205,7 +224,7 @@ window.initStaffCalendar = function(schedules) {
                 priestDiv.style.alignItems = 'center';
                 priestDiv.style.gap = '4px';
                 const externalBadge = internalPriest ? '' : ' <span style="font-size: 0.68rem; opacity: 0.85;">(External)</span>';
-                priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${presiderName}${externalBadge}</span>`;
+                priestDiv.innerHTML = `<svg style="width: 12px; height: 12px; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg><span>${escapeHtml(presiderName)}${externalBadge}</span>`;
                 wrapper.appendChild(priestDiv);
             }
             
@@ -277,167 +296,8 @@ window.initStaffCalendar = function(schedules) {
                 setTimeout(alignEvents, 50);
                 setTimeout(alignEvents, 100);
                 
-                const view = viewInfo.view;
-                const calendarStart = view.activeStart;
-                const calendarEnd = view.activeEnd;
-
-                // Count events within the current visible range
-                const eventsInRange = calendar.getEvents().filter(ev => {
-                    const evStart = ev.start;
-                    // Some events may be all-day; ensure we compare date ranges
-                    return evStart >= calendarStart && evStart < calendarEnd;
-                });
-
-                // Remove existing fallback if any
-                const existing = calendarEl.querySelector('.fc-empty-fallback');
-                if (existing) existing.remove();
-
-                if (eventsInRange.length === 0) {
-                    // Build enhanced fallback panel
-                    const panel = document.createElement('div');
-                    panel.className = 'fc-empty-fallback';
-                    panel.style.cssText = `
-                        padding: 40px 32px;
-                        text-align: center;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        border-radius: 20px;
-                        margin: 16px;
-                        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
-                    `;
-
-                    // Icon
-                    const icon = document.createElement('div');
-                    icon.style.cssText = 'font-size: 48px; margin-bottom: 16px;';
-                    icon.innerHTML = '📅';
-                    panel.appendChild(icon);
-
-                    const title = document.createElement('div');
-                    title.style.cssText = `
-                        font-size: 24px;
-                        font-weight: 800;
-                        color: #ffffff;
-                        margin-bottom: 8px;
-                        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                    `;
-                    title.textContent = 'No events in this range';
-                    panel.appendChild(title);
-
-                    const subtitle = document.createElement('div');
-                    subtitle.style.cssText = `
-                        color: rgba(255, 255, 255, 0.9);
-                        margin-bottom: 24px;
-                        font-size: 16px;
-                        font-weight: 500;
-                    `;
-                    subtitle.textContent = 'Here are the next upcoming events:';
-                    panel.appendChild(subtitle);
-
-                    // Show up to 5 upcoming events from the full events list
-                    const upcoming = calendar.getEvents().filter(e => e.start >= new Date()).sort((a,b)=>a.start-b.start).slice(0,5);
-                    if (upcoming.length === 0) {
-                        const none = document.createElement('div');
-                        none.style.cssText = `
-                            color: rgba(255, 255, 255, 0.85);
-                            font-size: 15px;
-                            padding: 16px;
-                            background: rgba(255, 255, 255, 0.15);
-                            border-radius: 12px;
-                            backdrop-filter: blur(10px);
-                        `;
-                        none.innerHTML = '✨ No upcoming events available.';
-                        panel.appendChild(none);
-                    } else {
-                        const list = document.createElement('ul');
-                        list.style.cssText = `
-                            list-style: none;
-                            padding: 0;
-                            margin: 0;
-                            max-width: 600px;
-                            margin: 0 auto;
-                        `;
-                        upcoming.forEach((ev, index) => {
-                            const li = document.createElement('li');
-                            li.style.cssText = `
-                                padding: 16px 20px;
-                                margin: 12px 0;
-                                background: rgba(255, 255, 255, 0.95);
-                                border-radius: 16px;
-                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                                text-align: left;
-                                transition: all 0.3s ease;
-                                cursor: pointer;
-                                backdrop-filter: blur(10px);
-                                border: 2px solid rgba(255, 255, 255, 0.3);
-                            `;
-                            li.onmouseover = function() {
-                                this.style.transform = 'translateY(-2px)';
-                                this.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
-                            };
-                            li.onmouseout = function() {
-                                this.style.transform = 'translateY(0)';
-                                this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                            };
-                            
-                            const eventColor = ev.backgroundColor || '#8B5CF6';
-                            const dateTime = ev.start.toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true
-                            });
-                            
-                            const presiderName = ev.extendedProps.scheduleData?.priest?.name || ev.extendedProps.scheduleData?.external_priest_name;
-                            const presiderBadge = ev.extendedProps.scheduleData?.priest ? '' : (presiderName ? ' (External)' : '');
-                            li.innerHTML = `
-                                <div style="display: flex; align-items: center; gap: 16px;">
-                                    <div style="
-                                        width: 48px;
-                                        height: 48px;
-                                        background: ${eventColor};
-                                        border-radius: 12px;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        font-size: 20px;
-                                        flex-shrink: 0;
-                                        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-                                    ">
-                                        ${index === 0 ? '🔔' : '📌'}
-                                    </div>
-                                    <div style="flex: 1;">
-                                        <div style="
-                                            font-weight: 700;
-                                            font-size: 16px;
-                                            color: #1f2937;
-                                            margin-bottom: 4px;
-                                        ">${dateTime} — ${ev.title}</div>
-                                        <div style="
-                                            color: #6b7280;
-                                            font-size: 14px;
-                                            display: flex;
-                                            align-items: center;
-                                            gap: 6px;
-                                        ">
-                                            <span style="font-size: 12px;">📍</span>
-                                            ${ev.extendedProps.scheduleData?.venue?.name || ev.extendedProps.location || 'Location TBA'}
-                                        </div>
-                                        ${presiderName ? `<div style="color: #6b7280; font-size: 14px; display: flex; align-items: center; gap: 6px; margin-top: 6px;">
-                                            <span style="font-size: 12px;">👤</span>
-                                            Presider: ${presiderName}${presiderBadge}
-                                        </div>` : ''}
-                                    </div>
-                                </div>
-                            `;
-                            list.appendChild(li);
-                        });
-                        panel.appendChild(list);
-                    }
-
-                    // Append fallback into calendar container below header
-                    const innerWrap = calendarEl.querySelector('.fc-view-harness') || calendarEl;
-                    innerWrap.insertBefore(panel, innerWrap.firstChild);
-                }
+                // Update fallback panel using the new responsive function
+                updateFallbackPanel(calendar, calendarEl);
             } catch (e) {
                 console.error('datesSet handler error:', e);
             }
@@ -451,6 +311,17 @@ window.initStaffCalendar = function(schedules) {
     
     // Store calendar instance globally for access from modal functions
     window.calendarInstance = calendar;
+    
+    // Add responsive resize listener
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        // Debounce resize events to avoid excessive re-rendering
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            // Update fallback panel directly for responsive design
+            updateFallbackPanel(calendar, calendarEl);
+        }, 150);
+    });
 };
 
 function getEventColor(eventType) {
@@ -470,18 +341,22 @@ function getEventColor(eventType) {
 }
 
 function createTooltip(event) {
+    const isMobile = window.innerWidth <= 480;
+    const isSmallMobile = window.innerWidth <= 400;
+    const isExtraSmallMobile = window.innerWidth <= 320;
+    
     const tooltip = document.createElement('div');
     tooltip.className = 'fc-tooltip';
     tooltip.style.cssText = `
         position: fixed;
         z-index: 99999;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: 3px solid #ffffff;
-        padding: 14px 18px;
-        border-radius: 12px;
+        border: ${isExtraSmallMobile ? '1px' : isSmallMobile ? '2px' : '3px'} solid #ffffff;
+        padding: ${isExtraSmallMobile ? '5px 7px' : isSmallMobile ? '7px 9px' : isMobile ? '10px 14px' : '14px 18px'};
+        border-radius: ${isExtraSmallMobile ? '5px' : isSmallMobile ? '7px' : '12px'};
         box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-        min-width: 220px;
-        max-width: 350px;
+        min-width: ${isExtraSmallMobile ? '120px' : isSmallMobile ? '150px' : '220px'};
+        max-width: ${isExtraSmallMobile ? '200px' : isSmallMobile ? '230px' : '350px'};
         pointer-events: none;
     `;
     
@@ -495,12 +370,15 @@ function createTooltip(event) {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
     
-    let content = '<div style="color: #ffffff; text-align: center; font-size: 16px; font-weight: 700; line-height: 1.4;">' + massType + '</div>';
+    const titleSize = isExtraSmallMobile ? '10px' : isSmallMobile ? '11px' : isMobile ? '14px' : '16px';
+    const detailSize = isExtraSmallMobile ? '8px' : isSmallMobile ? '9px' : isMobile ? '11px' : '13px';
+    
+    let content = `<div style="color: #ffffff; text-align: center; font-size: ${titleSize}; font-weight: 700; line-height: 1.3;">${escapeHtml(massType)}</div>`;
 
-    // Presider line (internal or external)
+    // Presider line (internal or external) - hide on extra small mobile
     const presiderName = event.extendedProps.scheduleData?.priest?.name || event.extendedProps.scheduleData?.external_priest_name;
-    if (presiderName) {
-        content += '<div style="margin-top: 8px; color: #fff; text-align: center; font-size: 13px; font-weight: 600;">Presider: ' + presiderName + (event.extendedProps.scheduleData?.priest ? '' : ' (External)') + '</div>';
+    if (presiderName && !isExtraSmallMobile) {
+        content += `<div style="margin-top: ${isSmallMobile ? '3px' : '8px'}; color: #fff; text-align: center; font-size: ${detailSize}; font-weight: 600;">Presider: ${escapeHtml(presiderName)}${event.extendedProps.scheduleData?.priest ? '' : ' (Ext)'}</div>`;
     }
     
     tooltip.innerHTML = content;
@@ -583,7 +461,7 @@ window.initPublicCalendar = function(schedules) {
             eventText.style.marginBottom = '2px';
             
             let timeStr = arg.timeText || '';
-            eventText.innerHTML = `<strong style="font-size: 0.8rem;">${timeStr}</strong> ${arg.event.title}`;
+            eventText.innerHTML = `<strong style="font-size: 0.8rem;">${escapeHtml(timeStr)}</strong> ${escapeHtml(arg.event.title)}`;
             
             wrapper.appendChild(eventText);
             
@@ -596,7 +474,7 @@ window.initPublicCalendar = function(schedules) {
                 locationDiv.style.fontSize = '0.7rem';
                 locationDiv.style.opacity = '0.9';
                 locationDiv.style.marginTop = '2px';
-                locationDiv.innerHTML = `📍 ${locationText}`;
+                locationDiv.innerHTML = `📍 ${escapeHtml(locationText)}`;
                 wrapper.appendChild(locationDiv);
             }
             
@@ -611,7 +489,7 @@ window.initPublicCalendar = function(schedules) {
                 priestDiv.style.opacity = '0.9';
                 priestDiv.style.fontWeight = '600';
                 priestDiv.style.marginTop = '2px';
-                priestDiv.innerHTML = `� ${presiderName}${internalPriest ? '' : ' (External)'}`;
+                priestDiv.innerHTML = `� ${escapeHtml(presiderName)}${internalPriest ? '' : ' (External)'}`;
                 wrapper.appendChild(priestDiv);
             }
             

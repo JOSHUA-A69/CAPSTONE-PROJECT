@@ -60,13 +60,19 @@ class XlsxExporter implements ReportExporter
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        // Write to storage without sending bytes to HTTP output
+        // Write to storage using a temporary file to avoid binary string issues with some drivers
         $writer = new Xlsx($spreadsheet);
-        ob_start();
-        $writer->save('php://output');
-        $contents = ob_get_clean();
+        
+        $tempPath = tempnam(sys_get_temp_dir(), 'xlsx_export_');
+        $writer->save($tempPath);
 
-        Storage::put($path, $contents);
+        try {
+             Storage::putFileAs($dir, new \Illuminate\Http\File($tempPath), $filename);
+        } finally {
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+        }
 
         return ReportResult::ready(path: $path, filename: $filename, rowsCount: count($rows), meta: $meta);
     }

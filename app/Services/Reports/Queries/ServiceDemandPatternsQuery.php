@@ -45,13 +45,13 @@ class ServiceDemandPatternsQuery implements ReportQuery
             $total = max((int) $row->requests, 1);
             $approved = (int) $row->approved;
             return [
-                'period' => (string) $row->period,
-                'service' => (string) ($row->service ?? '—'),
-                'requests' => (int) $row->requests,
-                'approved' => $approved,
-                'pending' => (int) $row->pending,
-                'approval_rate_pct' => round(($approved / $total) * 100, 2),
-                'avg_lead_days' => $row->avg_lead_days !== null ? (float) $row->avg_lead_days : null,
+                'Period' => (string) $row->period,
+                'Service' => (string) ($row->service ?? '—'),
+                'Total Requests' => (int) $row->requests,
+                'Approved' => $approved,
+                'Pending' => (int) $row->pending,
+                'Approval Rate (%)' => round(($approved / $total) * 100, 2),
+                'Avg Lead Time (Days)' => $row->avg_lead_days !== null ? (float) $row->avg_lead_days : null,
             ];
         })->toArray();
 

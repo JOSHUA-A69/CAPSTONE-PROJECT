@@ -6,6 +6,9 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+
+
+
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -27,5 +30,11 @@ class DatabaseSeeder extends Seeder
 
     // Seed common venues for scheduling
     $this->call(BaselineVenuesSeeder::class);
+
+    // Seed sample reservations for calendar testing
+    $this->call(SampleReservationsSeeder::class);
     }
 }
+
+
+

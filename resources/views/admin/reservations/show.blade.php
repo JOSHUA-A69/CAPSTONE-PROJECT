@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <div class="flex flex-col gap-2 items-start">
             <h2 class="text-heading text-2xl font-bold text-gray-800 dark:text-gray-200">
                 Reservation Details
             </h2>
 
-            <a href="{{ route('admin.reservations.index') }}" class="btn-ghost">
+            <a href="{{ route('admin.reservations.index') }}" class="btn-ghost self-start">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
@@ -19,8 +19,8 @@
             <!-- Success/Error Messages -->
             @if(session('status'))
                 <div class="mb-6">
-                    <span class="badge-success">
-                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                    <span class="badge-success whitespace-normal h-auto py-2 inline-block">
+                        <svg class="w-4 h-4 mr-1.5 inline-block -mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                         </svg>
                         {{ session('message', session('status')) }}
@@ -30,8 +30,8 @@
 
             @if(session('error'))
                 <div class="mb-6">
-                    <span class="badge-danger">
-                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                    <span class="badge-danger whitespace-normal h-auto py-2 inline-block">
+                        <svg class="w-4 h-4 mr-1.5 inline-block -mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                         </svg>
                         {{ session('error') }}
@@ -50,8 +50,12 @@
                 
                 $statusLabel = match($reservation->status) {
                     'approved' => 'Approved by Admin',
-                    'admin_approved' => 'Awaiting Admin (All Priests Confirmed)',
-                    'adviser_approved' => 'Awaiting Priest',
+                    'admin_approved' => ($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed()) 
+                        ? 'Ready for Final Approval' 
+                        : 'Awaiting Priest Confirmation',
+                    'adviser_approved' => ($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed())
+                        ? 'Ready for Final Approval (Status Pending)' 
+                        : 'Awaiting Priest',
                     'pending' => 'Awaiting Adviser',
                     'confirmed' => 'Confirmed',
                     'completed' => 'Completed',
@@ -66,13 +70,13 @@
                         <div>
                             <h3 class="form-label mb-2">Current Status</h3>
                             @if(in_array($reservation->status, ['approved', 'confirmed', 'completed']))
-                                <span class="badge-success text-lg">{{ $statusLabel }}</span>
+                                <span class="badge-success text-lg whitespace-normal text-center inline-block">{{ $statusLabel }}</span>
                             @elseif(in_array($reservation->status, ['rejected', 'cancelled']))
-                                <span class="badge-danger text-lg">{{ $statusLabel }}</span>
+                                <span class="badge-danger text-lg whitespace-normal text-center inline-block">{{ $statusLabel }}</span>
                             @elseif($reservation->status === 'admin_approved')
-                                <span class="badge-info text-lg">{{ $statusLabel }}</span>
+                                <span class="badge-info text-lg whitespace-normal text-center inline-block">{{ $statusLabel }}</span>
                             @else
-                                <span class="badge-warning text-lg">{{ $statusLabel }}</span>
+                                <span class="badge-warning text-lg whitespace-normal text-center inline-block">{{ $statusLabel }}</span>
                             @endif
                         </div>
                         <div class="text-left sm:text-right">
@@ -101,15 +105,15 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label class="form-label">Service</label>
-                                    <p class="text-heading">{{ $reservation->service->service_name ?? '—' }}</p>
+                                    <p class="text-heading break-words">{{ $reservation->service->service_name ?? '—' }}</p>
                                 </div>
 
                                 <div>
                                     <label class="form-label">Venue</label>
-                                    <p class="text-heading">
+                                    <p class="text-heading break-words">
                                         @if($reservation->custom_venue_name)
                                             {{ $reservation->custom_venue_name }}
-                                            <span class="badge-info ml-2">Custom</span>
+                                            <span class="badge-info ml-2 whitespace-normal inline-block">Custom</span>
                                         @else
                                             {{ $reservation->venue->name ?? '—' }}
                                         @endif
@@ -118,7 +122,7 @@
 
                                 <div>
                                     <label class="form-label">Schedule</label>
-                                    <p class="text-heading text-indigo-600">
+                                    <p class="text-heading text-indigo-600 break-words">
                                         {{ optional($reservation->schedule_date)->format('M d, Y') }}<br>
                                         <span class="text-sm">{{ optional($reservation->schedule_date)->format('h:i A') }}</span>
                                     </p>
@@ -130,30 +134,30 @@
                                 </div>
 
                                 @if($reservation->activity_name)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Activity Name</label>
-                                    <p class="mt-1 text-base font-semibold">{{ $reservation->activity_name }}</p>
+                                    <p class="mt-1 text-base font-semibold break-words">{{ $reservation->activity_name }}</p>
                                 </div>
                                 @endif
 
                                 @if($reservation->theme)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Theme</label>
-                                    <p class="mt-1 text-base">{{ $reservation->theme }}</p>
+                                    <p class="mt-1 text-base break-words">{{ $reservation->theme }}</p>
                                 </div>
                                 @endif
 
                                 @if($reservation->purpose)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Purpose</label>
-                                    <p class="mt-1 text-base">{{ $reservation->purpose }}</p>
+                                    <p class="mt-1 text-base break-words">{{ $reservation->purpose }}</p>
                                 </div>
                                 @endif
 
                                 @if($reservation->details)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Additional Details</label>
-                                    <p class="mt-1 text-base">{{ $reservation->details }}</p>
+                                    <p class="mt-1 text-base break-words">{{ $reservation->details }}</p>
                                 </div>
                                 @endif
                             </div>
@@ -170,23 +174,23 @@
                                 Requester Information
                             </h3>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Name</label>
-                                    <p class="mt-1 text-base">{{ $reservation->user->name ?? '—' }}</p>
+                                    <p class="mt-1 text-base break-words">{{ $reservation->user?->name ?? 'Unknown User' }}</p>
                                 </div>
 
                                 <div>
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Email</label>
-                                    <p class="mt-1 text-base">{{ $reservation->user->email ?? '—' }}</p>
+                                    <p class="mt-1 text-base break-all">{{ $reservation->user?->email ?? '—' }}</p>
                                 </div>
 
                                 @if($reservation->organization)
-                                <div class="col-span-2">
+                                <div class="col-span-1 md:col-span-2">
                                     <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Organization</label>
-                                    <p class="mt-1 text-base font-semibold">{{ $reservation->organization->org_name }}</p>
+                                    <p class="mt-1 text-base font-semibold break-words">{{ $reservation->organization->org_name }}</p>
                                     @if($reservation->organization->adviser)
-                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
                                             Adviser: {{ $reservation->organization->adviser->name }}
                                         </p>
                                     @endif
@@ -216,13 +220,13 @@
                                 <div class="space-y-3">
                                     <div>
                                         <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Priest Name</label>
-                                        <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $reservation->external_priest_name }}</p>
+                                        <p class="font-semibold text-lg text-gray-900 dark:text-gray-100 break-words">{{ $reservation->external_priest_name }}</p>
                                     </div>
                                     
                                     @if($reservation->external_priest_contact)
                                     <div>
                                         <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Contact Information</label>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $reservation->external_priest_contact }}</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 break-words">{{ $reservation->external_priest_contact }}</p>
                                     </div>
                                     @else
                                     <div>
@@ -262,8 +266,8 @@
                             <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700 space-y-3">
                                 @foreach($assignedPriests as $p)
                                 <div>
-                                    <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $p->full_name ?? $p->name }}</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ $p->email }}</p>
+                                    <p class="font-semibold text-lg text-gray-900 dark:text-gray-100 break-words">{{ $p->full_name ?? $p->name }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 break-all">{{ $p->email }}</p>
                                 </div>
                                 @endforeach
                             </div>
@@ -280,24 +284,90 @@
                             </h3>
 
                             <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg border border-purple-200 dark:border-purple-700">
-                                <p class="font-semibold text-lg text-gray-900 dark:text-gray-100">{{ $reservation->officiant->full_name ?? $reservation->officiant->name }}</p>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $reservation->officiant->email }}</p>
+                                <p class="font-semibold text-lg text-gray-900 dark:text-gray-100 break-words">{{ $reservation->officiant?->full_name ?? $reservation->officiant?->name ?? 'Unknown Priest' }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1 break-all">{{ $reservation->officiant?->email }}</p>
                             </div>
                         </div>
                     </div>
                     @endif
 
-                    <!-- Assign Priest Form (only shown when priest has declined/rejected) -->
-                    @php $authIsAssignedPriest = auth()->id() === optional($reservation->officiant)->id; @endphp
+                    <!-- Admin/Priest Decline Action -->
+                    @php 
+                        $authIsAssignedPriest = auth()->id() === optional($reservation->officiant)->id 
+                                             || $reservation->priests->contains('id', auth()->id());
+                        
+                        // Check if I have already declined
+                        $myPivot = $reservation->priests->where('id', auth()->id())->first();
+                        $hasDeclined = $reservation->status === 'priest_declined' 
+                                    || ($myPivot && $myPivot->pivot->confirmation_status === 'declined');
+                    @endphp
+
+                    @if($authIsAssignedPriest && !$hasDeclined && !in_array($reservation->status, ['cancelled', 'rejected', 'completed', 'approved']))
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg mb-6 border-l-4 border-red-500">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Decline Assignment
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                                You are currently assigned to this reservation. If you cannot make it, please decline to allow reassignment.
+                            </p>
+                            
+                            <form action="{{ route('admin.reservations.decline-assignment', $reservation->reservation_id) }}" method="POST"
+                                  onsubmit="return confirm('Are you sure you want to decline this assignment?');">
+                                @csrf
+                                <div class="mb-4">
+                                    <label for="decline_reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reason (Required)</label>
+                                    <textarea name="reason" id="decline_reason" rows="2" required 
+                                              class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-red-500 focus:ring-red-500"
+                                              placeholder="Why are you declining?"></textarea>
+                                    @error('reason')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                                <div class="mb-4">
+                                    <label for="replacement_priest_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Replacement (Optional)</label>
+                                    <select name="replacement_priest_id" id="replacement_priest_id" 
+                                            class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <option value="">-- I will assign later --</option>
+                                        @foreach($availablePriests as $priest)
+                                            @if($priest->is_available && $priest->id !== auth()->id())
+                                                <option value="{{ $priest->id }}">Fr. {{ $priest->first_name }} {{ $priest->last_name }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
+                                    @error('replacement_priest_id')
+                                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">If you select a replacement, they will be assigned immediately.</p>
+                                </div>
+                                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700 transition">
+                                    Decline & Reassign
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Assign Priest Form (only shown when priest has declined/rejected OR when pending assignment) -->
                     @if($reservation->priest_selection_type !== 'external'
-                        && in_array($reservation->status, ['priest_declined', 'pending_priest_reassignment'])
-                        && !$authIsAssignedPriest)
+                        && (in_array($reservation->status, ['priest_declined', 'pending_priest_reassignment'])
+                            || ($reservation->status === 'adviser_approved' && !$reservation->officiant_id))
+                        )
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
-                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Assign Priest</h3>
+                            <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
+                                Assign Priest
+                            </h3>
                             @if(in_array($reservation->status, ['priest_declined','pending_priest_reassignment']))
                                 <div class="mb-4 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded text-sm text-purple-800 dark:text-purple-300">
                                     This reservation's priest slot is open due to a prior decline. Please assign a new priest.
+                                </div>
+                            @elseif($reservation->status === 'adviser_approved')
+                                <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded text-sm text-blue-800 dark:text-blue-300">
+                                    Requestor selected "Any Available Priest". Please assign a priest to proceed.
                                 </div>
                             @endif
 
@@ -398,20 +468,27 @@
                     @endif
 
                     <!-- Final Approve Button - When all priests have confirmed and reservation is awaiting admin final approval -->
-                    @if($reservation->status === 'admin_approved')
+                    @if($reservation->status === 'admin_approved' || ($reservation->status === 'adviser_approved' && ($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed() || $reservation->officiant_id || $reservation->priests->isNotEmpty())))
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg border-2 border-green-500 dark:border-green-400">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 text-green-700 dark:text-green-300 flex items-center">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                 </svg>
-                                Final Approval Required
+                                Final Approval {{ $reservation->status === 'adviser_approved' ? '(Override)' : 'Required' }}
                             </h3>
 
+                            @if(!($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed()))
+                            <div class="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-300">
+                                <p class="font-medium mb-1">⚠️ Note: Priest confirmation is still pending.</p>
+                                <p>You can force-approve this reservation if you have confirmed the schedule offline.</p>
+                            </div>
+                            @elseif($reservation->status === 'admin_approved' || ($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed()))
                             <div class="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded text-sm text-green-800 dark:text-green-300">
                                 <p class="font-medium mb-2">✅ All priests have confirmed their availability</p>
-                                <p>This reservation is ready for your final approval. Review the details and click the button below to complete the approval process.</p>
+                                <p>This reservation is ready for your final approval. Review the details and click the button below.</p>
                             </div>
+                            @endif
 
                             @if($reservation->priests->isNotEmpty())
                             <div class="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
@@ -451,6 +528,8 @@
 
                     <!-- Reject Button -->
                     @if($reservation->status === 'pending_priest_assignment' || $reservation->status === 'adviser_approved')
+                    {{-- Only show Reject button if not waiting for final approval --}}
+                    @if(!($reservation->priest_confirmation === 'confirmed' || $reservation->allPriestsConfirmed()))
                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Reject Reservation</h3>
@@ -478,6 +557,7 @@
                             </form>
                         </div>
                     </div>
+                    @endif
                     @endif
 
                     <!-- Cancel Reservation -->

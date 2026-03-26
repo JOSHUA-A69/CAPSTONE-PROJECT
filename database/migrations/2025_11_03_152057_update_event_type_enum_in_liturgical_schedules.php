@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip for SQLite as it doesn't support MODIFY
+        if (config('database.default') === 'sqlite') {
+            return;
+        }
+        
         // Change event_type from ENUM to VARCHAR to support new mass types
         DB::statement("ALTER TABLE liturgical_schedules MODIFY event_type VARCHAR(255) NOT NULL DEFAULT 'other'");
     }

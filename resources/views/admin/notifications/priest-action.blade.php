@@ -166,7 +166,7 @@
                             <p class="text-sm text-gray-500 dark:text-gray-400">
                                 Service Requestor
                             </p>
-                            @if($notification->reservation->user->email)
+                            @if($notification->reservation->user?->email)
                             <p class="text-sm text-gray-600 dark:text-gray-400">
                                 📧 {{ $notification->reservation->user->email }}
                             </p>

@@ -1,8 +1,9 @@
-<footer class="bg-[#2ecc71] dark:bg-dark-bg text-white mt-16 no-animations relative overflow-hidden">
+<footer class="bg-[#2ecc71] dark:bg-dark-bg text-white mt-6 sm:mt-8 lg:mt-16 no-animations relative overflow-hidden">
     <!-- Decorative wave top -->
     <div class="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-transparent to-[#2ecc71] dark:to-dark-bg opacity-50"></div>
-    
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-12 text-sm lg:text-base relative">
+
+    <!-- Desktop Footer (lg and above) -->
+    <div class="hidden lg:block max-w-7xl mx-auto px-6 lg:px-8 py-12 text-sm lg:text-base relative">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 items-start">
 
             <!-- Left: Logo + description -->
@@ -97,6 +98,81 @@
                     </a>
                     <a href="mailto:cream@hnu.edu.ph" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white/90 dark:text-dark-muted transition-all duration-300 hover:bg-white/20 hover:text-white dark:hover:text-emerald-300 hover:scale-110 hover:-translate-y-1">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8.5v7A2.5 2.5 0 0 0 5.5 18h13a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 18.5 6h-13A2.5 2.5 0 0 0 3 8.5z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.5L12 13 3 8.5"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Footer (below lg) - Match Screenshot Layout -->
+    <div class="lg:hidden max-w-7xl mx-auto px-3 py-4 sm:py-6 relative">
+        <!-- Logo + Description Section -->
+        <div class="flex items-start gap-2.5 sm:gap-3 mb-4 sm:mb-6">
+            <img src="/images/ers-logo.png" alt="eReligiousServices" class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover shadow-md flex-shrink-0" />
+            <div class="flex-1 min-w-0">
+                <div class="text-base sm:text-lg font-bold text-white truncate">eReligiousServices</div>
+                <div class="text-xs sm:text-sm text-white/90 font-medium mb-1.5 sm:mb-2">HNU CREaM</div>
+                <p class="text-[11px] sm:text-sm text-white/90 leading-relaxed line-clamp-3">The Center for Religious Education and Mission serves as the hub of Catholic and Christian formation at Holy Name University.</p>
+            </div>
+        </div>
+
+        <!-- Three Columns Section - Horizontally Aligned -->
+        <div class="flex flex-row justify-between gap-1.5 sm:gap-2 mb-4 sm:mb-6">
+            <!-- Quick Links -->
+            <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-white mb-2 sm:mb-3 text-[11px] sm:text-sm">Quick Links</h4>
+                <ul class="space-y-1.5 sm:space-y-2 text-white/90 text-[10px] sm:text-xs">
+                    <li><a href="#" class="hover:text-white transition-colors block truncate">Home</a></li>
+                    <li><a href="{{ route('login') }}" class="hover:text-white transition-colors block truncate">Sign In</a></li>
+                    <li><a href="{{ route('register') }}" class="hover:text-white transition-colors block truncate">Register</a></li>
+                </ul>
+            </div>
+
+            <!-- Our Services -->
+            <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-white mb-2 sm:mb-3 text-[11px] sm:text-sm">Services</h4>
+                <ul class="space-y-1.5 sm:space-y-2 text-white/90 text-[10px] sm:text-xs">
+                    <li><a href="#" class="hover:text-white transition-colors block truncate">Liturgical</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors block truncate">Retreats</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors block truncate">Prayer</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors block truncate">Outreach</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact -->
+            <div class="flex-1 min-w-0">
+                <h4 class="font-bold text-white mb-2 sm:mb-3 text-[11px] sm:text-sm">Contact</h4>
+                <ul class="space-y-1.5 sm:space-y-2 text-white/90 text-[10px] sm:text-xs">
+                    <li class="flex items-start gap-1">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0 mt-0.5 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+                        <span class="truncate">HNU, Bohol</span>
+                    </li>
+                    <li class="flex items-center gap-1">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                        <span class="truncate">411-3715</span>
+                    </li>
+                    <li class="flex items-center gap-1">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8.5v7A2.5 2.5 0 0 0 5.5 18h13a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 18.5 6h-13A2.5 2.5 0 0 0 3 8.5z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.5L12 13 3 8.5"></path></svg>
+                        <a href="mailto:cream@hnu.edu.ph" class="hover:text-white transition-colors truncate">cream@hnu.edu.ph</a>
+                    </li>
+                    <li class="flex items-center gap-1">
+                        <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0 opacity-80" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6a1 1 0 001 1h3"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span class="truncate">8AM-5PM</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer Bottom - Copyright + Social -->
+        <div class="border-t border-white/20 pt-3 sm:pt-4">
+            <div class="flex items-center justify-between gap-2">
+                <div class="text-[10px] sm:text-sm text-white/90 truncate">© {{ date('Y') }} HNU CREaM</div>
+                <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <a href="https://www.facebook.com/profile.php?id=100080138541118" target="_blank" rel="noopener" class="w-7 h-7 sm:w-8 sm:h-8 bg-white/10 rounded-full flex items-center justify-center text-white/90 transition-all duration-300 hover:bg-white/20 hover:scale-110">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12.07C22 6.48 17.52 2 11.93 2S2 6.48 2 12.07C2 17.09 5.66 21.24 10.44 21.95v-6.96H7.9v-2.99h2.54V9.83c0-2.5 1.49-3.88 3.77-3.88 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.99h-2.34v6.96C18.34 21.24 22 17.09 22 12.07z"/></svg>
+                    </a>
+                    <a href="mailto:cream@hnu.edu.ph" class="w-7 h-7 sm:w-8 sm:h-8 bg-white/10 rounded-full flex items-center justify-center text-white/90 transition-all duration-300 hover:bg-white/20 hover:scale-110">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8.5v7A2.5 2.5 0 0 0 5.5 18h13a2.5 2.5 0 0 0 2.5-2.5v-7A2.5 2.5 0 0 0 18.5 6h-13A2.5 2.5 0 0 0 3 8.5z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.5L12 13 3 8.5"></path></svg>
                     </a>
                 </div>
             </div>

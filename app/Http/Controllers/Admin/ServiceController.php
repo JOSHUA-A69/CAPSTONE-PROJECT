@@ -193,9 +193,9 @@ class ServiceController extends Controller
                 'priest_id' => Auth::id(),
                 'reason' => $reason,
                 'declined_at' => now(),
-                'reservation_activity_name' => $reservation->activity_name ?? ($reservation->service->service_name ?? 'N/A'),
+                'reservation_activity_name' => $reservation->activity_name ?? ($reservation->service?->service_name ?? 'N/A'),
                 'reservation_schedule_date' => $reservation->schedule_date,
-                'reservation_venue' => $reservation->custom_venue_name ?? ($reservation->venue->name ?? 'N/A'),
+                'reservation_venue' => $reservation->custom_venue_name ?? ($reservation->venue?->name ?? 'N/A'),
             ]);
 
             // Always mark the current assignment as declined

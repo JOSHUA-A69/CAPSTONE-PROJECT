@@ -1,885 +1,446 @@
 @extends('layouts.app')
 
 @section('content')
-<style>
-    @media print {
-        .no-print { display: none; }
-    }
 
-    .form-container {
-        max-width: 900px;
-        margin: 2rem auto;
-        background: #ffffff;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.05);
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .dark .form-container {
-        background: #1f2937;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Validation States */
-    .form-table input.is-invalid,
-    .form-table select.is-invalid,
-    .form-table textarea.is-invalid {
-        background: #fef2f2;
-        border-bottom: 2px solid #dc2626 !important;
-    }
-
-    .dark .form-table input.is-invalid,
-    .dark .form-table select.is-invalid,
-    .dark .form-table textarea.is-invalid {
-        background: #7f1d1d;
-        border-bottom: 2px solid #ef4444 !important;
-    }
-
-    .form-table input.is-valid,
-    .form-table select.is-valid,
-    .form-table textarea.is-valid {
-        background: #f0fdf4;
-        border-bottom: 2px solid #16a34a !important;
-    }
-
-    .dark .form-table input.is-valid,
-    .dark .form-table select.is-valid,
-    .dark .form-table textarea.is-valid {
-        background: #14532d;
-        border-bottom: 2px solid #22c55e !important;
-    }
-
-    .error-message {
-        color: #dc2626;
-        font-size: 12px;
-        margin-top: 2px;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .success-indicator {
-        color: #16a34a;
-        font-size: 16px;
-        margin-left: 4px;
-    }
-
-    .required-indicator {
-        color: #dc2626;
-        font-weight: bold;
-        margin-left: 2px;
-    }
-
-    .char-counter {
-        font-size: 12px;
-        color: #6b7280;
-        text-align: right;
-        margin-top: 2px;
-    }
-
-    .char-counter.warning {
-        color: #d97706;
-    }
-
-    .char-counter.danger {
-        color: #dc2626;
-    }
-
-    .help-icon {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 18px;
-        height: 18px;
-        border-radius: 50%;
-        background: #e5e7eb;
-        color: #6b7280;
-        font-size: 12px;
-        font-weight: bold;
-        margin-left: 4px;
-        cursor: help;
-        border: none;
-        transition: all 0.2s ease;
-    }
-
-    .help-icon:hover {
-        background: #059669;
-        color: white;
-    }
-
-    .tooltip {
-        position: relative;
-    }
-
-    .tooltip .tooltiptext {
-        visibility: hidden;
-        width: 220px;
-        background-color: #1f2937;
-        color: #fff;
-        text-align: left;
-        border-radius: 6px;
-        padding: 8px 10px;
-        position: absolute;
-        z-index: 1;
-        bottom: 125%;
-        left: 50%;
-        margin-left: -110px;
-        opacity: 0;
-        transition: opacity 0.3s;
-        font-size: 12px;
-        line-height: 1.5;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    }
-
-    .tooltip .tooltiptext::after {
-        content: "";
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: #1f2937 transparent transparent transparent;
-    }
-
-    .tooltip:hover .tooltiptext {
-        visibility: visible;
-        opacity: 1;
-    }
-
-    .loading-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .loading-overlay.active {
-        display: flex;
-    }
-
-    .spinner {
-        border: 4px solid #f3f4f6;
-        border-top: 4px solid #059669;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
-    .form-header {
-        text-align: center;
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        padding: 18px;
-        background: linear-gradient(135deg, #047857 0%, #059669 100%);
-        color: #ffffff;
-        text-transform: uppercase;
-        border-bottom: 3px solid #059669;
-    }
-
-    .dark .form-header {
-        background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
-        border-bottom: 3px solid #10b981;
-    }
-
-    .form-table {
-        border-collapse: collapse;
-        width: 100%;
-        font-size: 14px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        line-height: 1.5;
-    }
-
-    .form-table td {
-        border: 1px solid #d1d5db;
-        padding: 10px 12px;
-        vertical-align: top;
-        background: #ffffff;
-    }
-
-    .dark .form-table td {
-        border: 1px solid #374151;
-        background: #1f2937;
-    }
-
-    .form-table label {
-        font-weight: 600;
-        display: inline;
-        margin-right: 6px;
-        color: #374151;
-        font-size: 13px;
-    }
-
-    .dark .form-table label {
-        color: #e5e7eb;
-    }
-
-    .form-table input[type="text"],
-    .form-table input[type="date"],
-    .form-table input[type="time"],
-    .form-table input[type="number"],
-    .form-table select,
-    .form-table textarea {
-        border: none;
-        outline: none;
-        background: transparent;
-        width: 100%;
-        font-size: 14px;
-        padding: 4px 0;
-        font-family: inherit;
-        color: #1f2937;
-        transition: background-color 0.15s ease;
-    }
-
-    .dark .form-table input[type="text"],
-    .dark .form-table input[type="date"],
-    .dark .form-table input[type="time"],
-    .dark .form-table input[type="number"],
-    .dark .form-table select,
-    .dark .form-table textarea {
-        color: #f3f4f6;
-    }
-
-    /* Dark mode calendar and clock icons */
-    .dark .form-table input[type="date"]::-webkit-calendar-picker-indicator,
-    .dark .form-table input[type="time"]::-webkit-calendar-picker-indicator {
-        filter: invert(1);
-        cursor: pointer;
-    }
-
-    /* For Firefox */
-    .dark .form-table input[type="date"],
-    .dark .form-table input[type="time"] {
-        color-scheme: dark;
-    }
-
-    .form-table input[type="text"]:focus,
-    .form-table input[type="date"]:focus,
-    .form-table input[type="time"]:focus,
-    .form-table input[type="number"]:focus,
-    .form-table select:focus,
-    .form-table textarea:focus {
-        background: #f9fafb;
-        border-radius: 2px;
-    }
-
-    .dark .form-table input[type="text"]:focus,
-    .dark .form-table input[type="date"]:focus,
-    .dark .form-table input[type="time"]:focus,
-    .dark .form-table input[type="number"]:focus,
-    .dark .form-table select:focus,
-    .dark .form-table textarea:focus {
-        background: #374151;
-        border-radius: 2px;
-    }
-
-    .form-table textarea {
-        resize: none;
-        line-height: 1.5;
-    }
-
-    .form-table select {
-        cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-        background-position: right 4px center;
-        background-repeat: no-repeat;
-        background-size: 1.2em;
-        padding-right: 1.5em;
-    }
-
-    .section-header {
-        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-        font-weight: 700;
-        text-align: left;
-        color: #1f2937;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        padding: 12px !important;
-    }
-
-    .dark .section-header {
-        background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-        color: #f3f4f6;
-    }
-
-    .form-note {
-        font-style: italic;
-        font-size: 12px;
-        padding: 10px !important;
-        background: #ecfdf5;
-        border-top: 2px solid #34d399;
-        color: #065f46;
-    }
-
-    .dark .form-note {
-        background: #064e3b;
-        border-top: 2px solid #10b981;
-        color: #a7f3d0;
-    }
-
-    .form-actions {
-        padding: 20px;
-        background: #f9fafb;
-        border-top: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .dark .form-actions {
-        background: #111827;
-        border-top: 1px solid #374151;
-    }
-
-    .form-actions .office-label {
-        font-size: 11px;
-        color: #6b7280;
-        font-weight: 500;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .dark .form-actions .office-label {
-        color: #9ca3af;
-    }
-
-    .btn-group {
-        display: flex;
-        gap: 12px;
-    }
-
-    .btn {
-        padding: 12px 28px;
-        font-size: 14px;
-        font-weight: 600;
-        border-radius: 6px;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        border: none;
-        letter-spacing: 0.3px;
-    }
-
-    .btn-cancel {
-        background: #ffffff;
-        color: #374151;
-        border: 1.5px solid #d1d5db;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    }
-
-    .btn-cancel:hover {
-        background: #f9fafb;
-        border-color: #9ca3af;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-    }
-
-    .btn-submit {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        color: #ffffff;
-        box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
-    }
-
-    .btn-submit:hover {
-        background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-        box-shadow: 0 4px 8px rgba(5, 150, 105, 0.4);
-        transform: translateY(-1px);
-    }
-
-    .dark .btn-cancel {
-        background: #374151;
-        color: #f3f4f6;
-        border-color: #4b5563;
-    }
-
-    .dark .btn-cancel:hover {
-        background: #4b5563;
-        border-color: #6b7280;
-    }
-
-    .org-info-box {
-        margin-top: 8px;
-        padding: 10px;
-        background: #f0fdf4;
-        border-radius: 6px;
-        border-left: 3px solid #10b981;
-    }
-
-    .dark .org-info-box {
-        background: #064e3b;
-        border-left: 3px solid #34d399;
-    }
-
-    .org-info-box .org-desc {
-        font-size: 12px;
-        color: #065f46;
-        margin-bottom: 4px;
-    }
-
-    .dark .org-info-box .org-desc {
-        color: #a7f3d0;
-    }
-
-    .org-info-box .org-adviser {
-        font-size: 11px;
-        color: #047857;
-        font-weight: 500;
-    }
-
-    .dark .org-info-box .org-adviser {
-        color: #6ee7b7;
-    }
-
-    /* Screen reader only */
-    .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border-width: 0;
-    }
-</style>
-
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
-</div>
-
-
-
-<div class="form-container">
-    <!-- Validation Errors -->
-    @if ($errors->any())
-    <div class="no-print" style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 16px; margin: 0;">
-        <div style="display: flex; align-items: start; gap: 12px;">
-            <svg style="width: 24px; height: 24px; color: #dc2626; flex-shrink: 0;" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-            </svg>
-            <div style="flex: 1;">
-                <h3 style="font-weight: 600; color: #991b1b; margin-bottom: 8px; font-size: 14px;">Please correct the following errors:</h3>
-                <ul style="list-style: disc; margin-left: 20px; color: #dc2626; font-size: 12px;">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+<div class="py-12">
+    <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        
+        <!-- Loading Overlay -->
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden" id="loadingOverlay">
+            <div class="text-center text-white">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+                <p class="mt-4 text-sm font-medium">Submitting your request...</p>
             </div>
+        </div>
+
+        <!-- Validation Errors Summary -->
+        @if ($errors->any())
+        <div class="mb-6 bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 rounded-r-lg shadow-sm">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-red-800 dark:text-red-200">Please correct the following errors:</h3>
+                    <div class="mt-2 text-sm text-red-700 dark:text-red-300">
+                        <ul class="list-disc list-inside space-y-1">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-2xl border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
+            
+            <!-- Header Section -->
+            <div class="p-8 text-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div class="flex flex-col items-center">
+                    <div class="mb-4">
+                        <div class="w-24 h-24 bg-teal-600 rounded-full flex items-center justify-center shadow-lg p-1">
+                            <div class="w-full h-full bg-white dark:bg-gray-800 rounded-full flex items-center justify-center p-2">
+                                <img src="/images/ers-logo.png" alt="eReligiousServices" class="w-full h-full object-contain" />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
+                        Organization Activity Booking
+                    </h2>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm max-w-xl mx-auto">
+                        Submit your organization's activity proposal for adviser approval. Please ensure all details are accurate.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Help Section (Collapsible) -->
+            <div class="border-b border-gray-200 dark:border-gray-700 bg-teal-50 dark:bg-gray-900/50">
+                <details class="group p-4" open>
+                    <summary class="flex items-center justify-between cursor-pointer list-none text-sm font-medium text-teal-700 dark:text-teal-300">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Need help?
+                        </span>
+                        <span class="transition group-open:rotate-180">
+                            <svg fill="none" class="w-4 h-4" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </span>
+                    </summary>
+                    <div class="text-xs text-teal-600 dark:text-teal-400 mt-3 ml-7 space-y-1 transition-all duration-300">
+                        <p><strong>Required fields are marked with <span class="text-red-500">*</span></strong></p>
+                        <ul class="list-disc pl-4 space-y-1 opacity-80">
+                            <li>Select your organization from the dropdown list</li>
+                            <li>Your request will be sent to your organization's adviser for approval</li>
+                            <li>Requests should be submitted at least 7 days before the event</li>
+                        </ul>
+                    </div>
+                </details>
+            </div>
+
+            <form method="POST" action="{{ route('requestor.organization-bookings.store') }}" id="organizationBookingForm" novalidate class="p-6 md:p-8 space-y-8">
+                @csrf
+
+                <!-- Section 1: Organization Selection -->
+                <div class="space-y-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-l-4 border-teal-500 pl-3">Organization Information</h3>
+                    
+                    <div class="bg-teal-50 dark:bg-teal-900/20 rounded-xl p-5 border border-teal-100 dark:border-teal-800/30">
+                        <label for="organization_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Select Organization <span class="text-red-500">*</span>
+                        </label>
+                        <select name="organization_id" id="organization_id" required
+                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
+                            <option value="">-- Select an organization --</option>
+                            @foreach($organizations as $org)
+                                <option value="{{ $org->org_id }}" 
+                                        data-adviser="{{ $org->adviser ? $org->adviser->full_name : 'No adviser assigned' }}"
+                                        data-desc="{{ $org->org_desc }}"
+                                        {{ old('organization_id') == $org->org_id ? 'selected' : '' }}>
+                                    {{ $org->org_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('organization_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+
+                        <!-- Dynamic Org Info -->
+                        <div id="org-info" class="hidden mt-4 pt-4 border-t border-teal-200 dark:border-teal-700/50 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-xs uppercase font-semibold text-teal-600 dark:text-teal-400">Description</span>
+                                <p id="org-description" class="text-sm text-gray-600 dark:text-gray-300 mt-1"></p>
+                            </div>
+                            <div>
+                                <span class="text-xs uppercase font-semibold text-teal-600 dark:text-teal-400">Adviser</span>
+                                <p id="org-adviser" class="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Activity Details -->
+                <div class="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-l-4 border-teal-500 pl-3">Activity Details</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Activity Name -->
+                        <div class="col-span-1 md:col-span-2">
+                            <label for="activity_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Activity Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="activity_name" id="activity_name" value="{{ old('activity_name') }}" required maxlength="200"
+                                placeholder="e.g., Christmas Concert, Youth Retreat, Community Service"
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
+                            <div class="flex justify-between mt-1">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Official event name</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400" id="activity_name_counter">0 / 200</span>
+                            </div>
+                            @error('activity_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Date -->
+                        <div>
+                            <label for="requested_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Date of Activity <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" name="requested_date" id="requested_date" value="{{ old('requested_date') }}" required min="{{ date('Y-m-d', strtotime('+1 day')) }}"
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Must be at least 7 days from today</p>
+                            @error('requested_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Time -->
+                        <div>
+                            <label for="requested_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Time <span class="text-red-500">*</span>
+                            </label>
+                            <input type="time" name="requested_time" id="requested_time" value="{{ old('requested_time', '08:00') }}" required
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
+                            @error('requested_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                         <!-- Purpose -->
+                         <div class="col-span-1 md:col-span-2">
+                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="md:col-span-2">
+                                    <label for="purpose" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Purpose <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea name="purpose" id="purpose" rows="4" maxlength="1000" required placeholder="Describe the purpose and goals of this activity..."
+                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">{{ old('purpose') }}</textarea>
+                                    <div class="text-right text-xs text-gray-500 dark:text-gray-400 mt-1" id="purpose_counter">0 / 1000</div>
+                                    @error('purpose') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label for="estimated_participants" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                        Expected Participants
+                                    </label>
+                                    <input type="number" name="estimated_participants" id="estimated_participants" value="{{ old('estimated_participants') }}" min="1" max="10000" placeholder="e.g., 35"
+                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
+                                    @error('estimated_participants') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Venue & Requirements -->
+                <div class="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-l-4 border-teal-500 pl-3">Venue & Requirements</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Venue -->
+                        <div>
+                            <label for="requested_venue" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Preferred Venue
+                            </label>
+                            <input type="text" name="requested_venue" id="requested_venue" value="{{ old('requested_venue') }}" placeholder="e.g., Church Hall, Outdoor Area" maxlength="255"
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
+                            @error('requested_venue') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Special Requirements -->
+                        <div class="md:col-span-2">
+                             <label for="special_requirements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Special Requirements
+                            </label>
+                            <textarea name="special_requirements" id="special_requirements" rows="3" maxlength="1000" placeholder="List any special equipment, setup needs, or accommodations..."
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">{{ old('special_requirements') }}</textarea>
+                            <div class="text-right text-xs text-gray-500 dark:text-gray-400 mt-1" id="requirements_counter">0 / 1000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="pt-8 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                        Holy Name University - CREaM Office
+                    </div>
+                    <div class="flex items-center gap-3 w-full sm:w-auto">
+                        <a href="{{ route('requestor.organization-bookings.index') }}" class="w-full sm:w-auto px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-4 focus:ring-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 text-center transition-all">
+                            Cancel
+                        </a>
+                        <button type="submit" id="submitBtn" class="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700 focus:ring-4 focus:ring-teal-300 dark:focus:ring-teal-800 shadow-md transform transition-all hover:-translate-y-0.5 relative overflow-hidden">
+                            <span id="submitText">Submit Request</span>
+                            <span id="submitLoader" style="display: none;">
+                                <svg class="inline w-4 h-4 mr-2 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processing...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+            </form>
         </div>
     </div>
-    @endif
-
-    <form method="POST" action="{{ route('requestor.organization-bookings.store') }}" id="organizationBookingForm" novalidate>
-        @csrf
-
-        <!-- Form Header -->
-        <div class="form-header">
-            🏢 Organization Booking Request Form
-        </div>
-
-        <!-- Help Section -->
-        <div class="no-print" style="background: #ecfdf5; border-bottom: 1px solid #a7f3d0; padding: 12px 16px;">
-            <details style="cursor: pointer;">
-                <summary style="font-weight: 600; font-size: 12px; color: #047857; user-select: none;">
-                    📖 Need help filling this form? Click here
-                </summary>
-                <div style="margin-top: 8px; font-size: 11px; color: #065f46; line-height: 1.6;">
-                    <p><strong>Required fields are marked with <span style="color: #dc2626;">*</span></strong></p>
-                    <ul style="margin: 8px 0 0 20px; list-style: disc;">
-                        <li>Select your organization from the dropdown list</li>
-                        <li>Your request will be sent to your organization's adviser for approval</li>
-                        <li>Provide complete and accurate information about your activity</li>
-                        <li>Requests should be submitted at least 7 days before the event</li>
-                    </ul>
-                </div>
-            </details>
-        </div>
-
-        <style>
-            .dark .no-print[style*="background: #ecfdf5"] {
-                background: #064e3b !important;
-                border-bottom: 1px solid #10b981 !important;
-            }
-            .dark .no-print[style*="background: #ecfdf5"] summary {
-                color: #6ee7b7 !important;
-            }
-            .dark .no-print[style*="background: #ecfdf5"] div {
-                color: #a7f3d0 !important;
-            }
-        </style>
-
-        <!-- Form Table -->
-        <table class="form-table">
-            <!-- Organization Selection Section -->
-            <tr>
-                <td colspan="2" class="section-header">
-                    📋 Organization Information
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <label for="organization_id">
-                        Select Organization<span class="required-indicator" aria-label="required">*</span>
-                        <span class="tooltip help-icon" role="tooltip">
-                            ?
-                            <span class="tooltiptext">Choose your organization from the list. Your adviser will review and approve this request.</span>
-                        </span>
-                    </label>
-                    <select
-                        name="organization_id"
-                        id="organization_id"
-                        required
-                        aria-required="true"
-                        class="@error('organization_id') is-invalid @enderror"
-                        @error('organization_id') aria-invalid="true" @enderror
-                    >
-                        <option value="">-- Select an organization --</option>
-                        @foreach($organizations as $org)
-                            <option value="{{ $org->org_id }}" 
-                                    data-adviser="{{ $org->adviser ? $org->adviser->full_name : 'No adviser assigned' }}"
-                                    data-desc="{{ $org->org_desc }}"
-                                    {{ old('organization_id') == $org->org_id ? 'selected' : '' }}>
-                                {{ $org->org_name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('organization_id')
-                        <div class="error-message" role="alert">⚠️ {{ $message }}</div>
-                    @enderror
-                    
-                    <!-- Organization Info Display -->
-                    <div id="org-info" class="org-info-box hidden">
-                        <div id="org-description" class="org-desc"></div>
-                        <div id="org-adviser" class="org-adviser"></div>
-                    </div>
-                </td>
-            </tr>
-
-            <!-- Activity Details Section -->
-            <tr>
-                <td colspan="2" class="section-header">
-                    📝 Activity Details
-                </td>
-            </tr>
-            <tr>
-                <!-- Activity Name (60% width) -->
-                <td style="width: 60%;">
-                    <label for="activity_name">
-                        Activity Name<span class="required-indicator" aria-label="required">*</span>
-                        <span class="tooltip help-icon" role="tooltip">
-                            ?
-                            <span class="tooltiptext">Enter the official name of your organization's activity or event</span>
-                        </span>
-                    </label>
-                    <input
-                        type="text"
-                        name="activity_name"
-                        id="activity_name"
-                        value="{{ old('activity_name') }}"
-                        required
-                        aria-required="true"
-                        maxlength="200"
-                        placeholder="e.g., Christmas Concert, Youth Retreat, Community Service"
-                        class="@error('activity_name') is-invalid @enderror"
-                        @error('activity_name') aria-invalid="true" @enderror
-                    >
-                    <div class="char-counter" id="activity_name_counter" aria-live="polite">0 / 200 characters</div>
-                    @error('activity_name')
-                        <div class="error-message" role="alert">⚠️ {{ $message }}</div>
-                    @enderror
-                </td>
-                <!-- Date & Time (40% width) -->
-                <td style="width: 40%;">
-                    <div style="margin-bottom: 8px;">
-                        <label for="requested_date">
-                            Date of Activity<span class="required-indicator" aria-label="required">*</span>
-                            <span class="tooltip help-icon" role="tooltip">
-                                ?
-                                <span class="tooltiptext">Select the date of your event. Should be at least 7 days from today.</span>
-                            </span>
-                        </label>
-                        <input
-                            type="date"
-                            name="requested_date"
-                            id="requested_date"
-                            value="{{ old('requested_date') }}"
-                            required
-                            aria-required="true"
-                            min="{{ date('Y-m-d', strtotime('+1 day')) }}"
-                            class="@error('requested_date') is-invalid @enderror"
-                            @error('requested_date') aria-invalid="true" @enderror
-                        >
-                        @error('requested_date')
-                            <div class="error-message">⚠️ {{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div>
-                        <label for="requested_time">
-                            Time<span class="required-indicator">*</span>
-                        </label>
-                        <input
-                            type="time"
-                            name="requested_time"
-                            id="requested_time"
-                            value="{{ old('requested_time', '08:00') }}"
-                            required
-                            class="@error('requested_time') is-invalid @enderror"
-                        >
-                        @error('requested_time')
-                            <div class="error-message">⚠️ {{ $message }}</div>
-                        @enderror
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <!-- Purpose (60% width) -->
-                <td style="width: 60%;">
-                    <label for="purpose">
-                        Purpose<span class="required-indicator" aria-label="required">*</span>
-                        <span class="tooltip help-icon" role="tooltip">
-                            ?
-                            <span class="tooltiptext">Describe the purpose and goals of this activity. Explain why it's important for your organization.</span>
-                        </span>
-                    </label>
-                    <textarea
-                        name="purpose"
-                        id="purpose"
-                        rows="4"
-                        maxlength="1000"
-                        placeholder="Describe the purpose and goals of this activity..."
-                        required
-                        class="@error('purpose') is-invalid @enderror"
-                    >{{ old('purpose') }}</textarea>
-                    <div class="char-counter" id="purpose_counter" aria-live="polite">0 / 1000 characters</div>
-                    @error('purpose')
-                        <div class="error-message" role="alert">⚠️ {{ $message }}</div>
-                    @enderror
-                </td>
-                <!-- Participants (40% width) -->
-                <td style="width: 40%;">
-                    <label for="estimated_participants">
-                        Expected Number of Participants
-                        <span class="tooltip help-icon" role="tooltip">
-                            ?
-                            <span class="tooltiptext">Estimated number of attendees for your event. This helps with venue and resource planning.</span>
-                        </span>
-                    </label>
-                    <input
-                        type="number"
-                        name="estimated_participants"
-                        id="estimated_participants"
-                        value="{{ old('estimated_participants') }}"
-                        placeholder="e.g., 35"
-                        min="1"
-                        max="10000"
-                        class="@error('estimated_participants') is-invalid @enderror"
-                    >
-                    @error('estimated_participants')
-                        <div class="error-message">⚠️ {{ $message }}</div>
-                    @enderror
-                </td>
-            </tr>
-
-            <!-- Venue & Requirements Section -->
-            <tr>
-                <td colspan="2" class="section-header">
-                    📍 Venue & Requirements
-                </td>
-            </tr>
-            <tr>
-                <!-- Venue (50% width) -->
-                <td style="width: 50%;">
-                    <label for="requested_venue">
-                        Preferred Venue
-                        <span class="tooltip help-icon" role="tooltip">
-                            ?
-                            <span class="tooltiptext">Specify your preferred location for the activity (e.g., Church Hall, Outdoor Area, Conference Room)</span>
-                        </span>
-                    </label>
-                    <input
-                        type="text"
-                        name="requested_venue"
-                        id="requested_venue"
-                        value="{{ old('requested_venue') }}"
-                        placeholder="e.g., Church Hall, Outdoor Area"
-                        maxlength="255"
-                        class="@error('requested_venue') is-invalid @enderror"
-                    >
-                    @error('requested_venue')
-                        <div class="error-message">⚠️ {{ $message }}</div>
-                    @enderror
-                </td>
-                <!-- Special Requirements (50% width) -->
-                <td style="width: 50%;">
-                    <label for="special_requirements">
-                        Special Requirements
-                        <span class="tooltip help-icon" role="tooltip">
-                            ?
-                            <span class="tooltiptext">List any special equipment, setup needs, or accommodations required for your activity</span>
-                        </span>
-                    </label>
-                    <textarea
-                        name="special_requirements"
-                        id="special_requirements"
-                        rows="3"
-                        maxlength="1000"
-                        placeholder="Any special equipment, setup, or accommodation needs..."
-                        class="@error('special_requirements') is-invalid @enderror"
-                    >{{ old('special_requirements') }}</textarea>
-                    <div class="char-counter" id="requirements_counter" aria-live="polite">0 / 1000 characters</div>
-                    @error('special_requirements')
-                        <div class="error-message">⚠️ {{ $message }}</div>
-                    @enderror
-                </td>
-            </tr>
-
-            <!-- Note -->
-            <tr>
-                <td colspan="2" class="form-note">
-                    <strong>Note:</strong> Your request will be reviewed by your organization's adviser. You will receive a notification once it has been approved or if additional information is needed.
-                </td>
-            </tr>
-        </table>
-
-        <!-- Form Actions -->
-        <div class="form-actions">
-            <span class="office-label">Campus Ministry Office</span>
-            <div class="btn-group">
-                <a href="{{ route('requestor.organization-bookings.index') }}" class="btn btn-cancel">Cancel</a>
-                <button type="submit" class="btn btn-submit" id="submitBtn">
-                    📤 Submit Request
-                </button>
-            </div>
-        </div>
-    </form>
 </div>
 
-@push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Organization selection handler
-    const orgSelect = document.getElementById('organization_id');
-    const orgInfo = document.getElementById('org-info');
-    const orgDescription = document.getElementById('org-description');
-    const orgAdviser = document.getElementById('org-adviser');
-
-    orgSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        
-        if (this.value) {
-            const desc = selectedOption.dataset.desc || 'No description available';
-            const adviser = selectedOption.dataset.adviser || 'No adviser assigned';
-            orgDescription.textContent = desc;
-            orgAdviser.innerHTML = '<strong>Adviser:</strong> ' + adviser;
-            orgInfo.classList.remove('hidden');
-        } else {
-            orgInfo.classList.add('hidden');
-        }
-    });
-
-    // Character counter function
-    function setupCharCounter(inputId, counterId, maxLength) {
-        const input = document.getElementById(inputId);
+    // Character counter
+    function updateCharCounter(textareaId, counterId, maxLength) {
+        const textarea = document.getElementById(textareaId);
         const counter = document.getElementById(counterId);
-        
-        if (input && counter) {
-            function updateCounter() {
-                const length = input.value.length;
-                counter.textContent = `${length} / ${maxLength} characters`;
+
+        if (!textarea || !counter) return;
+
+        const updateCount = () => {
+            const length = textarea.value.length;
+            counter.textContent = `${length} / ${maxLength} characters`;
+
+            counter.classList.remove('text-amber-500', 'text-red-500');
+            if (length > maxLength * 0.9) {
+                counter.classList.add('text-red-500');
+            } else if (length > maxLength * 0.75) {
+                counter.classList.add('text-amber-500');
+            }
+        };
+
+        textarea.addEventListener('input', updateCount);
+        updateCount();
+    }
+
+    // Organization details toggle
+    function initOrgSelector() {
+        const orgSelect = document.getElementById('organization_id');
+        const orgInfo = document.getElementById('org-info');
+        const orgDescription = document.getElementById('org-description');
+        const orgAdviser = document.getElementById('org-adviser');
+
+        if(orgSelect) {
+            orgSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
                 
-                if (length >= maxLength * 0.9) {
-                    counter.classList.add('danger');
-                    counter.classList.remove('warning');
-                } else if (length >= maxLength * 0.7) {
-                    counter.classList.add('warning');
-                    counter.classList.remove('danger');
+                if (this.value) {
+                    const desc = selectedOption.dataset.desc || 'No description available';
+                    const adviser = selectedOption.dataset.adviser || 'No adviser assigned';
+                    
+                    if(orgDescription) orgDescription.textContent = desc;
+                    if(orgAdviser) orgAdviser.textContent = adviser;
+                    if(orgInfo) orgInfo.classList.remove('hidden');
                 } else {
-                    counter.classList.remove('warning', 'danger');
+                    if(orgInfo) orgInfo.classList.add('hidden');
                 }
+            });
+            
+            // Initial check
+            if (orgSelect.value) {
+                orgSelect.dispatchEvent(new Event('change'));
+            }
+        }
+    }
+
+    // Form validation
+    function validateForm() {
+        const form = document.getElementById('organizationBookingForm');
+        let isValid = true;
+        let errorMessages = [];
+
+        // Check required fields
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('border-red-500');
+                isValid = false;
+                
+                let label = getFieldLabel(field);
+                if (label && !errorMessages.includes(label)) {
+                    errorMessages.push(label);
+                }
+            } else {
+                field.classList.remove('border-red-500');
+            }
+        });
+
+         // Validate date (must be at least 7 days from now)
+        const dateInput = document.getElementById('requested_date');
+        if (dateInput && dateInput.value) {
+            const selectedDate = new Date(dateInput.value);
+            selectedDate.setHours(0, 0, 0, 0);
+
+            const minDate = new Date();
+            minDate.setDate(minDate.getDate() + 7);
+            minDate.setHours(0, 0, 0, 0);
+
+            if (selectedDate < minDate) {
+                dateInput.classList.add('border-red-500');
+                errorMessages.push('Event date must be at least 7 days from today');
+                isValid = false;
+            }
+        }
+
+        if (!isValid) {
+            showValidationErrorModal(errorMessages);
+        }
+
+        return isValid;
+    }
+
+    function getFieldLabel(field) {
+        const fieldLabels = {
+            'organization_id': 'Organization',
+            'activity_name': 'Activity Name',
+            'requested_date': 'Date of Activity',
+            'requested_time': 'Time',
+            'purpose': 'Purpose',
+            'estimated_participants': 'Expected Participants',
+            'requested_venue': 'Preferred Venue',
+            'special_requirements': 'Special Requirements'
+        };
+        
+        if (fieldLabels[field.id]) return fieldLabels[field.id];
+        return field.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function showValidationErrorModal(errors) {
+        const escapeHtml = (value) => String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+
+        const existingModal = document.getElementById('validationErrorModal');
+        if (existingModal) existingModal.remove();
+
+        const uniqueErrors = [...new Set(errors)];
+        const modalHtml = `
+            <div id="validationErrorModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in" onclick="if(event.target === this) closeValidationErrorModal()">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-slide-up">
+                    <div class="bg-red-50 dark:bg-red-900/30 p-6 text-center border-b border-red-100 dark:border-red-800/50">
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50 mb-4">
+                            <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-red-900 dark:text-red-100">Action Required</h3>
+                        <p class="text-sm text-red-700 dark:text-red-300 mt-1">Please fill in the required fields</p>
+                    </div>
+                    <div class="p-6">
+                        <ul class="max-h-48 overflow-y-auto space-y-2">
+                             ${uniqueErrors.map(err => `<li class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"><span class="text-red-500">•</span>${escapeHtml(err)}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="p-4 bg-gray-50 dark:bg-gray-700/50">
+                        <button onclick="closeValidationErrorModal()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-3 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none sm:text-sm">OK, I'll fix it</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        resetSubmitButton();
+    }
+
+    function closeValidationErrorModal() {
+        const modal = document.getElementById('validationErrorModal');
+        if (modal) modal.remove();
+        
+        const firstError = document.querySelector('.border-red-500');
+        if (firstError) {
+             firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+             setTimeout(() => firstError.focus(), 300);
+        }
+    }
+
+    function resetSubmitButton() {
+        const submitBtn = document.getElementById('submitBtn');
+        const submitText = document.getElementById('submitText');
+        const submitLoader = document.getElementById('submitLoader');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.style.display = 'inline';
+        if (submitLoader) submitLoader.style.display = 'none';
+        if (loadingOverlay) loadingOverlay.classList.remove('hidden');
+        if (loadingOverlay) loadingOverlay.classList.add('hidden');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initOrgSelector();
+        updateCharCounter('activity_name', 'activity_name_counter', 200);
+        updateCharCounter('purpose', 'purpose_counter', 1000);
+        updateCharCounter('special_requirements', 'requirements_counter', 1000);
+
+        const form = document.getElementById('organizationBookingForm');
+        form.addEventListener('submit', function(e) {
+            if (!validateForm()) {
+                e.preventDefault();
+                return false;
             }
             
-            input.addEventListener('input', updateCounter);
-            updateCounter(); // Initial count
-        }
-    }
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitLoader = document.getElementById('submitLoader');
+            const loadingOverlay = document.getElementById('loadingOverlay');
 
-    // Setup character counters
-    setupCharCounter('activity_name', 'activity_name_counter', 200);
-    setupCharCounter('purpose', 'purpose_counter', 1000);
-    setupCharCounter('special_requirements', 'requirements_counter', 1000);
-
-    // Trigger initial organization info display if value exists
-    if (orgSelect.value) {
-        orgSelect.dispatchEvent(new Event('change'));
-    }
-
-    // Form submission with loading overlay
-    const form = document.getElementById('organizationBookingForm');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const submitBtn = document.getElementById('submitBtn');
-
-    form.addEventListener('submit', function(e) {
-        // Basic validation
-        const requiredFields = form.querySelectorAll('[required]');
-        let isValid = true;
-
-        requiredFields.forEach(function(field) {
-            if (!field.value.trim()) {
-                isValid = false;
-                field.classList.add('is-invalid');
-            } else {
-                field.classList.remove('is-invalid');
-            }
-        });
-
-        if (isValid) {
-            loadingOverlay.classList.add('active');
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-        } else {
-            e.preventDefault();
-        }
-    });
-
-    // Real-time validation feedback
-    const inputs = form.querySelectorAll('input, select, textarea');
-    inputs.forEach(function(input) {
-        input.addEventListener('blur', function() {
-            if (this.hasAttribute('required')) {
-                if (this.value.trim()) {
-                    this.classList.remove('is-invalid');
-                    this.classList.add('is-valid');
-                } else {
-                    this.classList.add('is-invalid');
-                    this.classList.remove('is-valid');
-                }
-            }
-        });
-
-        input.addEventListener('input', function() {
-            if (this.classList.contains('is-invalid') && this.value.trim()) {
-                this.classList.remove('is-invalid');
-            }
+            submitText.style.display = 'none';
+            submitLoader.style.display = 'inline';
+            if (loadingOverlay) loadingOverlay.classList.remove('hidden');
         });
     });
-});
 </script>
-@endpush
+
 @endsection

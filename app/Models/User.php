@@ -54,6 +54,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'status',
         'user_role_id',
         'profile_picture',
+        'login_code',
+        'login_code_expires_at',
     ];
 
     /**
@@ -74,6 +76,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $appends = [
         'name',
         'full_name',
+        'profile_picture_url',
     ];
 
     /**
@@ -143,8 +146,13 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getProfilePictureUrlAttribute(): string
     {
-        if ($this->profile_picture && file_exists(public_path('storage/' . $this->profile_picture))) {
-            return asset('storage/' . $this->profile_picture);
+        try {
+            if ($this->profile_picture) {
+                return \Illuminate\Support\Facades\Storage::url($this->profile_picture);
+            }
+        } catch (\Throwable $e) {
+            // Fallback if Cloudinary config is invalid/missing
+            return asset('images/default-avatar.svg');
         }
 
         // Professional default avatar (local asset)
@@ -161,6 +169,27 @@ class User extends Authenticatable implements MustVerifyEmail
             return strtoupper(substr($parts[0], 0, 1) . substr($parts[count($parts) - 1], 0, 1));
         }
         return strtoupper(substr($this->full_name, 0, 2));
+    }
+
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new \App\Notifications\Auth\ResetPasswordNotification($token));
+    }
+
+    /**
+     * Send the email verification notification.
+     *
+     * @return void
+     */
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new \App\Notifications\Auth\VerifyEmailNotification);
     }
 }
 

@@ -68,7 +68,7 @@
                                 <div class="flex items-start gap-2 max-w-[75%] md:max-w-[65%]">
                                     <!-- Profile Picture (other user) -->
                                     <div x-show="message.sender_id !== currentUserId" class="flex-shrink-0 mt-0.5">
-                                        <img :src="message.sender.profile_picture"
+                                        <img :src="message.sender.profile_picture_url"
                                              :alt="message.sender.name"
                                              class="w-7 h-7 rounded-full object-cover">
                                     </div>

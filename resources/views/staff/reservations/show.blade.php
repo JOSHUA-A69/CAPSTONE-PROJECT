@@ -1,15 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
-                Reservation #{{ $reservation->reservation_id }}
-            </h2>
-
+        <h2 class="text-heading text-xl text-gray-800 dark:text-gray-200">
+            Reservation #{{ $reservation->reservation_id }}
+        </h2>
+        <div class="mt-3">
             <a href="{{ route('staff.reservations.index') }}" class="btn-ghost">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>
-                Back to Reservations
+                Back to Manage Reservations
             </a>
         </div>
     </x-slot>
@@ -218,6 +217,24 @@
                                         @endforeach
                                     </ul>
                                 </div>
+                                @elseif($reservation->priest_selection_type === 'external' && $reservation->external_priest_name)
+                                <div class="md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                    <label class="form-label">External Priest</label>
+                                    <div class="mt-3 flex items-center">
+                                        <svg class="w-10 h-10 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                        <div>
+                                            <p class="text-heading text-lg">{{ $reservation->external_priest_name }}</p>
+                                            @if($reservation->external_priest_contact)
+                                                <p class="text-muted">{{ $reservation->external_priest_contact }}</p>
+                                            @endif
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 mt-1">
+                                                External
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
                                 @elseif($reservation->officiant)
                                 <div class="md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <label class="form-label">Assigned Priest/Officiant</label>
@@ -226,8 +243,8 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
                                         <div>
-                                            <p class="text-heading text-lg">{{ $reservation->officiant->full_name }}</p>
-                                            <p class="text-muted">{{ $reservation->officiant->email }}</p>
+                                            <p class="text-heading text-lg">{{ $reservation->officiant?->full_name ?? 'Unknown Priest' }}</p>
+                                            <p class="text-muted">{{ $reservation->officiant?->email }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -292,9 +309,9 @@
                             <!-- Requestor -->
                             <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                                 <p class="form-label">Requestor</p>
-                                <p class="text-heading mt-1">{{ $reservation->user->full_name }}</p>
-                                <p class="text-muted">{{ $reservation->user->email }}</p>
-                                @if($reservation->user->phone)
+                                <p class="text-heading mt-1">{{ $reservation->user?->full_name ?? 'Unknown User' }}</p>
+                                <p class="text-muted">{{ $reservation->user?->email }}</p>
+                                @if($reservation->user?->phone)
                                 <a href="tel:{{ $reservation->user->phone }}" class="text-sm text-indigo-600 hover:text-indigo-900 flex items-center mt-2 transition-colors duration-150">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
@@ -312,8 +329,8 @@
                                 @if($reservation->organization->adviser)
                                 <div class="mt-3 text-sm">
                                     <p class="form-label text-xs">Adviser:</p>
-                                    <p class="text-heading">{{ $reservation->organization->adviser->full_name }}</p>
-                                    <p class="text-muted">{{ $reservation->organization->adviser->email }}</p>
+                                    <p class="text-heading">{{ $reservation->organization->adviser?->full_name ?? 'Unknown Adviser' }}</p>
+                                    <p class="text-muted">{{ $reservation->organization->adviser?->email }}</p>
                                 </div>
                                 @endif
                             </div>
@@ -321,8 +338,8 @@
 
                             <!-- Quick Contact Actions -->
                             <div class="space-y-2">
-                                @if($reservation->user->phone)
-                                <a href="tel:{{ $reservation->user->phone }}" class="btn-success w-full justify-center">
+                                @if($reservation->user?->phone)
+                                <a href="tel:{{ $reservation->user?->phone }}" class="btn-success w-full justify-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                     </svg>
@@ -330,12 +347,14 @@
                                 </a>
                                 @endif
 
+                                @if($reservation->user?->email)
                                 <a href="mailto:{{ $reservation->user->email }}" class="btn-primary w-full justify-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                     </svg>
                                     Send Email
                                 </a>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -493,8 +512,8 @@
                                     @if($reservation->officiant)
                                     <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded">
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Assigned to:</p>
-                                        <p class="font-semibold">{{ $reservation->officiant->full_name }}</p>
-                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $reservation->officiant->email }}</p>
+                                        <p class="font-semibold">{{ $reservation->officiant?->full_name }}</p>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ $reservation->officiant?->email }}</p>
                                         @if($reservation->priest_notified_at)
                                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                             Notified: {{ $reservation->priest_notified_at->format('M d, Y g:i A') }}

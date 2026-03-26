@@ -12,27 +12,30 @@
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
                     <!-- Action Buttons -->
-                    <div class="flex flex-wrap gap-3 mb-6">
-                        <a href="{{ route('requestor.notifications.archived') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex flex-wrap gap-2 sm:gap-3 mb-6">
+                        <a href="{{ route('requestor.notifications.archived') }}" class="inline-flex items-center px-2.5 sm:px-4 py-1.5 sm:py-2 bg-gray-600 hover:bg-gray-700 text-white text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl transition-all duration-200 ease-in-out hover:shadow-md">
+                            <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
                             </svg>
-                            View Archived
+                            <span class="hidden sm:inline">View Archived</span>
+                            <span class="sm:hidden">Archived</span>
                         </a>
 
                         @if($notifications->count() > 0)
-                            <button onclick="clearAllNotifications()" class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button onclick="clearAllNotifications()" class="inline-flex items-center px-2.5 sm:px-4 py-1.5 sm:py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl transition-all duration-200 ease-in-out hover:shadow-md">
+                                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
-                                Clear All
+                                <span class="hidden sm:inline">Clear All</span>
+                                <span class="sm:hidden">Clear</span>
                             </button>
 
-                            <button onclick="markAllAsRead()" class="inline-flex items-center px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button onclick="markAllAsRead()" class="inline-flex items-center px-2.5 sm:px-4 py-1.5 sm:py-2 bg-indigo-500 hover:bg-indigo-600 text-white text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl transition-all duration-200 ease-in-out hover:shadow-md">
+                                <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                 </svg>
-                                Mark All as Read
+                                <span class="hidden sm:inline">Mark All as Read</span>
+                                <span class="sm:hidden">Mark Read</span>
                             </button>
                         @endif
                     </div>
@@ -76,7 +79,7 @@
                                         </div>
 
                                         <p class="text-sm text-gray-900 dark:text-gray-100 mb-1">
-                                            {!! $notification->message !!}
+                                            {{ $notification->message }}
                                         </p>
 
                                         @if($notification->reservation)
@@ -93,7 +96,7 @@
 
                                     <div class="ml-4 flex-shrink-0 flex items-start gap-2">
                                         @if($notification->reservation_id)
-                                        <a href="{{ route('requestor.reservations.show', $notification->reservation_id) }}" 
+                                        <a href="{{ route('requestor.reservations.show', $notification->reservation_id) }}"
                                            class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-md transition-colors text-xs font-medium"
                                            title="View reservation">
                                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,8 +106,8 @@
                                             View
                                         </a>
                                         @endif
-                                        
-                                        <button onclick="archiveNotification({{ $notification->notification_id }})" 
+
+                                        <button onclick="archiveNotification({{ $notification->notification_id }})"
                                                 class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-red-100 text-gray-500 hover:text-red-600 rounded-full transition-colors"
                                                 title="Archive this notification">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
