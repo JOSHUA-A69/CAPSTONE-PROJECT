@@ -40,7 +40,7 @@ class ReservationController extends Controller
         $search = $request->input('q');
         $status = $request->input('status');
 
-        $query = Reservation::with(['user', 'service', 'venue', 'organization', 'officiant']);
+        $query = Reservation::with(['user', 'service', 'venue', 'organization', 'organizations', 'officiant']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -86,6 +86,7 @@ class ReservationController extends Controller
             'service',
             'venue',
             'organization.adviser',
+            'organizations.adviser',
             'officiant',
             'priests',
             'history.performedBy',
@@ -368,7 +369,7 @@ class ReservationController extends Controller
         // In-app notification to requestor
         try {
             $message = "Your reservation for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> has been approved by the admin. Your reservation with {$reservation->external_priest_name} is confirmed for " . $reservation->schedule_date->format('M d, Y h:i A');
-            
+
             $notificationData = [
                 'user_id' => $reservation->user_id,
                 'reservation_id' => $reservation->reservation_id,
@@ -376,7 +377,7 @@ class ReservationController extends Controller
                 'type' => 'Update',
                 'sent_at' => now(),
             ];
-            
+
             if (Schema::hasColumn('notifications', 'data')) {
                 $notificationData['data'] = json_encode([
                     'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
@@ -385,7 +386,7 @@ class ReservationController extends Controller
                     'action' => 'external_priest_confirmed',
                 ]);
             }
-            
+
             \App\Models\Notification::create($notificationData);
             Log::info('External priest confirmation notification sent to requestor (ID: ' . $reservation->user_id . ')');
         } catch (\Exception $e) {
@@ -397,7 +398,7 @@ class ReservationController extends Controller
             try {
                 $adviser = $reservation->organization->adviser;
                 $message = "Reservation for <strong>" . ($reservation->service?->service_name ?? 'Unknown Service') . "</strong> with external priest has been confirmed by admin.";
-                
+
                 $notificationData = [
                     'user_id' => $adviser->id,
                     'reservation_id' => $reservation->reservation_id,
@@ -405,7 +406,7 @@ class ReservationController extends Controller
                     'type' => 'Update',
                     'sent_at' => now(),
                 ];
-                
+
                 if (Schema::hasColumn('notifications', 'data')) {
                     $notificationData['data'] = json_encode([
                         'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
@@ -413,7 +414,7 @@ class ReservationController extends Controller
                         'action' => 'external_priest_confirmed',
                     ]);
                 }
-                
+
                 \App\Models\Notification::create($notificationData);
                 Log::info('External priest confirmation notification sent to adviser (ID: ' . $adviser->id . ')');
             } catch (\Exception $e) {
@@ -462,7 +463,7 @@ class ReservationController extends Controller
             DB::commit();
 
             $message = 'Reservation has been finally approved. The requestor has been notified.';
-            
+
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => $message]);
             }
@@ -540,7 +541,7 @@ class ReservationController extends Controller
         // Verify the authenticated user (admin) is actually the assigned priest
         $isOfficiant = $reservation->officiant_id === $priestId;
         $isAssignedInPivot = $reservation->priests()->where('users.id', $priestId)->exists();
-             
+
         if (!$isOfficiant && !$isAssignedInPivot) {
             return Redirect::back()
                 ->with('error', 'You are not assigned to this reservation.');
@@ -596,8 +597,8 @@ class ReservationController extends Controller
                         'updated_at' => now()
                     ]
                 ]);
-                
-                // Remove self from pivot if needed, or leave as declined? 
+
+                // Remove self from pivot if needed, or leave as declined?
                 // Usually better to leave as declined record in pivot, but syncWithoutDetaching keeps it.
                 // But we updated pivot to 'declined' earlier.
 
@@ -636,7 +637,7 @@ class ReservationController extends Controller
             // If NO replacement, proceed with old notification logic
             if (!$replacementId) {
                 try {
-                    $this->notificationService->notifyPriestDeclined($reservation, $reason, Auth::id()); 
+                    $this->notificationService->notifyPriestDeclined($reservation, $reason, Auth::id());
                 } catch (\Exception $e) {
                     Log::warning('Notification failed during admin decline: ' . $e->getMessage());
                 }

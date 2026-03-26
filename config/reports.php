@@ -129,6 +129,10 @@ return [
 
     'export_formats' => ['pdf', 'csv', 'excel'],
 
+    // Optional public path (relative to /public) used as full-width PDF report header banner.
+    // Example: public/hnu-report-header.png or public/images/hnu-report-header.png
+    'pdf_header_image' => env('REPORTS_PDF_HEADER_IMAGE', 'hnu-report-header.png'),
+
     // Default threshold to decide async job vs sync generation
     'async_threshold_rows' => 25000,
 ];

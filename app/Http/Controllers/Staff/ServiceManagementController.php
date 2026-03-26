@@ -25,7 +25,7 @@ class ServiceManagementController extends Controller
             'service_name' => 'required|string|max:255|unique:services,service_name,' . $id . ',service_id',
             'service_category' => ['nullable', 'string', Rule::in($this->getCategories())],
             'description' => 'nullable|string|max:500',
-            'duration' => 'nullable|integer|min:0|max:10080',
+            'duration' => 'nullable|integer|min:0|max:300',
         ]);
 
         $service->update($validated);

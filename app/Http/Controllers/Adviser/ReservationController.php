@@ -32,7 +32,7 @@ class ReservationController extends Controller
 
         // Start building the query
         // Check both direct org_id (legacy) and many-to-many relationship
-        $query = Reservation::with(['user', 'service', 'venue', 'organization'])
+        $query = Reservation::with(['user', 'service', 'venue', 'organization', 'organizations'])
             ->where(function ($q) use ($adviserOrgs) {
                 $q->whereIn('org_id', $adviserOrgs)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrgs) {
@@ -94,7 +94,7 @@ class ReservationController extends Controller
         // Get organizations where this adviser is assigned
         $adviserOrgs = Auth::user()->organizations->pluck('org_id');
 
-        $reservation = Reservation::with(['user', 'service', 'venue', 'organization', 'history'])
+        $reservation = Reservation::with(['user', 'service', 'venue', 'organization', 'organizations', 'history'])
             ->where(function ($q) use ($adviserOrgs) {
                 $q->whereIn('org_id', $adviserOrgs)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrgs) {

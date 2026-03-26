@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-950 py-16">
         <div class="max-w-[95%] mx-auto px-4 sm:px-6 lg:px-8">
-            
+
             <!-- Header -->
             <div class="text-center mb-16">
                 <div class="inline-flex items-center gap-3 px-8 py-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-full text-emerald-700 dark:text-emerald-300 mb-6 shadow-lg border border-emerald-200 dark:border-emerald-700">
@@ -68,7 +68,7 @@
                             </select>
                         </div>
                     </div>
-                    
+
                     <!-- Active Filters Display -->
                     <div id="activeFilters" class="mt-6 hidden">
                         <div class="flex items-center gap-2 flex-wrap">
@@ -130,7 +130,7 @@
     </div>
 
     <!-- Event Details Modal (Accessible) -->
-    <div id="eventDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" 
+    <div id="eventDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
          role="dialog" aria-modal="true" aria-labelledby="eventModalTitle" aria-describedby="eventModalDesc" onclick="closeEventModal()">
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full outline-none" tabindex="-1" onclick="event.stopPropagation()">
             <div id="modalContent"></div>
@@ -139,7 +139,7 @@
 
     @vite(['resources/js/app.js'])
     <script id="publicCalendarData" type="application/json">@json($schedules)</script>
-    
+
     <script>
         // Shared event type maps for colors and labels
         const EVENT_TYPE_COLORS = {
@@ -199,7 +199,7 @@
         // Initialize calendar when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             allSchedules = JSON.parse(document.getElementById('publicCalendarData').textContent || '[]');
-            
+
             // Initialize calendar with all schedules
             fullCalendarInstance = window.initPublicCalendar(allSchedules);
 
@@ -233,7 +233,7 @@
 
             // Build legend
             updateLegend();
-            
+
             // Trigger filter initialization if there's a pre-selected value
             const serviceFilter = document.getElementById('serviceFilter');
             if (serviceFilter && serviceFilter.value) {
@@ -250,15 +250,15 @@
             // Service filter change
             serviceFilter.addEventListener('change', function() {
                 const selectedService = this.value;
-                
+
                 // Show/hide mass subtype filter
                 if (selectedService === 'institutional_mass' || selectedService === 'non_institutional_mass') {
                     massSubtypeContainer.classList.remove('hidden');
-                    
+
                     // Show/hide appropriate optgroups
                     const institutionalOptions = document.getElementById('institutionalOptions');
                     const nonInstitutionalOptions = document.getElementById('nonInstitutionalOptions');
-                    
+
                     if (selectedService === 'institutional_mass') {
                         institutionalOptions.style.display = 'block';
                         nonInstitutionalOptions.style.display = 'none';
@@ -266,13 +266,13 @@
                         institutionalOptions.style.display = 'none';
                         nonInstitutionalOptions.style.display = 'block';
                     }
-                    
+
                     massSubtypeFilter.value = '';
                 } else {
                     massSubtypeContainer.classList.add('hidden');
                     massSubtypeFilter.value = '';
                 }
-                
+
                 applyFilters();
             });
 
@@ -293,9 +293,9 @@
         function applyFilters() {
             const serviceFilter = document.getElementById('serviceFilter').value;
             const massSubtypeFilter = document.getElementById('massSubtypeFilter').value;
-            
+
             console.log('Applying filters - Service:', serviceFilter, 'Mass Subtype:', massSubtypeFilter);
-            
+
             let filteredSchedules = allSchedules;
 
             // Apply service filter
@@ -327,7 +327,7 @@
 
             // Update active filters display
             updateActiveFilters(serviceFilter, massSubtypeFilter);
-            
+
             // Update legend
             updateLegend();
             // Re-render upcoming list under current filters
@@ -337,12 +337,12 @@
         function updateActiveFilters(serviceFilter, massSubtypeFilter) {
             const activeFiltersDiv = document.getElementById('activeFilters');
             const filterTagsDiv = document.getElementById('filterTags');
-            
+
             filterTagsDiv.innerHTML = '';
-            
+
             if (serviceFilter || massSubtypeFilter) {
                 activeFiltersDiv.classList.remove('hidden');
-                
+
                 if (serviceFilter) {
                     const label = EVENT_TYPE_LABELS[serviceFilter] || serviceFilter;
                     filterTagsDiv.innerHTML += `
@@ -351,7 +351,7 @@
                         </span>
                     `;
                 }
-                
+
                 if (massSubtypeFilter) {
                     const label = MASS_SUBTYPE_LABELS[massSubtypeFilter] || massSubtypeFilter;
                     filterTagsDiv.innerHTML += `
@@ -368,18 +368,18 @@
         function updateLegend() {
             const legendEl = document.getElementById('eventTypeLegend');
             if (!legendEl) return;
-            
+
             // Get current schedules (filtered or all)
             const currentSchedules = window.filteredSchedules || allSchedules;
-            
+
             // Get unique event types from current schedules
             const uniqueTypes = [...new Set(currentSchedules.map(s => s.event_type))];
-            
+
             if (uniqueTypes.length === 0) {
                 legendEl.innerHTML = '<div class="col-span-2 text-center text-gray-500 dark:text-gray-400 py-4">No events to display</div>';
                 return;
             }
-            
+
             legendEl.innerHTML = uniqueTypes.map(t => `
                 <div class="flex items-center gap-3 p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     <span class="inline-block w-4 h-4 rounded" style="background-color: ${EVENT_TYPE_COLORS[t] || EVENT_TYPE_COLORS['other']}"></span>
@@ -411,13 +411,20 @@
                 const timeLabel = r.start_time + (r.end_time ? ' - ' + r.end_time : '');
                 const venue = r?.venue?.name || r.location || 'Location TBA';
                 const presider = r?.priest?.name || r?.external_priest_name || '';
+                const mainCelebrant = r?.main_celebrant || '';
+                const organizations = r?.organizations || [];
                 const safeTitle = escapeHtml(r.title);
                 const safeDateLabel = escapeHtml(dateLabel);
                 const safeTimeLabel = escapeHtml(timeLabel);
                 const safeVenue = escapeHtml(venue);
                 const safePresider = escapeHtml(presider);
+                const safeMainCelebrant = escapeHtml(mainCelebrant);
                 const safeScheduleId = escapeHtml(r.schedule_id);
                 const externalBadge = r?.priest?.name ? '' : (r?.external_priest_name ? '<span class="ml-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">External</span>' : '');
+                const organizationsHtml = organizations.length > 0
+                    ? `<div class="mt-1 text-sm text-gray-700 dark:text-gray-300">🏢 ${escapeHtml(organizations.join(', '))}</div>`
+                    : '';
+                const presiderDisplay = mainCelebrant ? safeMainCelebrant : safePresider;
                 return `<button type="button" class="public-event-row w-full text-left mb-3 last:mb-0 p-4 rounded-xl border-2 bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-800 transition shadow-sm flex items-start gap-4 focus:outline-none focus:ring-2 focus:ring-indigo-400" style="border-left:6px solid ${color}" data-schedule-id="${safeScheduleId}" aria-label="View event ${safeTitle}">
                     <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center" style="background:${color};color:#fff;">
                         <span class="font-extrabold text-xs leading-tight">${dateLabel.split(' ')[1]}<br>${dateLabel.split(' ')[2]}</span>
@@ -429,7 +436,8 @@
                         </div>
                         <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">⏰ ${safeTimeLabel}</div>
                         <div class="mt-1 text-sm text-gray-700 dark:text-gray-300">📍 ${safeVenue}</div>
-                        ${presider ? `<div class="mt-1 text-sm text-gray-700 dark:text-gray-300">👤 Presider: ${safePresider}${externalBadge}</div>` : ''}
+                        ${presiderDisplay ? `<div class="mt-1 text-sm text-gray-700 dark:text-gray-300">👤 Presider: ${presiderDisplay}${externalBadge}</div>` : ''}
+                        ${organizationsHtml}
                     </div>
                 </button>`;
             }).join('');
@@ -448,20 +456,69 @@
         window.showPublicEventModal = function(schedule) {
             const modal = document.getElementById('eventDetailsModal');
             const content = document.getElementById('modalContent');
-            
+
             const color = EVENT_TYPE_COLORS[schedule.event_type] || EVENT_TYPE_COLORS['other'];
             const typeLabel = EVENT_TYPE_LABELS[schedule.event_type] || '📌 Other';
-            
+
             // Determine presider (internal priest or external)
             const internalPriestName = schedule?.priest?.name;
             const externalPriestName = schedule?.external_priest_name;
+            const mainCelebrant = schedule?.main_celebrant;
+            const allPriests = schedule?.all_priests || [];
             const presiderName = internalPriestName || externalPriestName || '';
             const isExternal = !internalPriestName && !!externalPriestName;
+            const organizations = schedule?.organizations || [];
+
             const safeTitle = escapeHtml(schedule.title);
             const safeTypeLabel = escapeHtml(typeLabel);
             const safePresiderName = escapeHtml(presiderName);
+            const safeMainCelebrant = escapeHtml(mainCelebrant || '');
             const safeLocation = escapeHtml(schedule.location);
             const safeDescription = escapeHtml(schedule.description);
+
+            // Build priests list HTML - show all priests if multiple
+            let priestsHtml = '';
+            if (allPriests.length > 1) {
+                priestsHtml = `
+                <div class="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                    <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                    <div>
+                        <strong>Celebrants:</strong>
+                        <ul class="mt-1 ml-2 space-y-1">
+                            ${allPriests.map(p => `<li class="text-sm">${escapeHtml(p)}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>`;
+            } else if (presiderName) {
+                const displayName = mainCelebrant || presiderName;
+                priestsHtml = `
+                <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+                    <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    <span><strong>Presider:</strong> ${escapeHtml(displayName)}${isExternal ? ' <span class="ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 align-middle">External</span>' : ''}</span>
+                </div>`;
+            }
+
+            // Build organizations HTML
+            let organizationsHtml = '';
+            if (organizations.length > 0) {
+                organizationsHtml = `
+                <div class="flex items-start gap-3 text-gray-700 dark:text-gray-300">
+                    <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    <div>
+                        <strong>Organization${organizations.length > 1 ? 's' : ''}:</strong>
+                        ${organizations.length === 1
+                            ? ` ${escapeHtml(organizations[0])}`
+                            : `<ul class="mt-1 ml-2 space-y-1">${organizations.map(o => `<li class="text-sm">${escapeHtml(o)}</li>`).join('')}</ul>`
+                        }
+                    </div>
+                </div>`;
+            }
 
             const shareUrl = window.location.origin + window.location.pathname + '#schedule-' + schedule.schedule_id;
             content.innerHTML = `
@@ -492,13 +549,8 @@
                             </svg>
                             <span>${schedule.start_time}${schedule.end_time ? ' - ' + schedule.end_time : ''}</span>
                         </div>
-                        ${presiderName ? `
-                        <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                            <span><strong>Presider:</strong> ${safePresiderName}${isExternal ? ' <span class=\"ml-1 inline-block px-1.5 py-0.5 text-[10px] rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 align-middle\">External</span>' : ''}</span>
-                        </div>` : ''}
+                        ${priestsHtml}
+                        ${organizationsHtml}
                         ${schedule.location ? `
                         <div class="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                             <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -518,7 +570,7 @@
                         <button onclick="closeEventModal()" class="flex-1 px-6 py-3 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 rounded-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">Close</button>
                     </div>
                 </div>`;
-            
+
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
             trapFocus(modal);
@@ -580,4 +632,3 @@
     </script>
 
     </x-guest-layout>
-    

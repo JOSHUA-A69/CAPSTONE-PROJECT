@@ -60,8 +60,16 @@
                         <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->user->phone ?? 'Not provided' }}</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Organization</p>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->organization->org_name ?? 'None' }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Organization{{ ($reservation->organizations ?? collect())->count() > 1 ? 's' : '' }}</p>
+                        @if(($reservation->organizations ?? collect())->isNotEmpty())
+                            <div class="mt-1 space-y-1">
+                                @foreach($reservation->organizations as $org)
+                                    <p class="font-medium text-gray-900 dark:text-white">{{ $org->org_name }}</p>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="font-medium text-gray-900 dark:text-white">{{ $reservation->organization->org_name ?? 'None' }}</p>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -76,7 +84,13 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Schedule</p>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ optional($reservation->schedule_date)->format('F d, Y h:i A') ?? 'Not scheduled' }}</p>
+                        <p class="font-medium text-gray-900 dark:text-white">{{ optional($reservation->schedule_date)->format('F d, Y') }}</p>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            <span class="font-medium">Time In:</span> {{ optional($reservation->schedule_date)->format('h:i A') }}
+                            @if($reservation->end_time)
+                                <br><span class="font-medium">Time Out:</span> {{ $reservation->end_time->format('h:i A') }}
+                            @endif
+                        </div>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600 dark:text-gray-400">Venue</p>

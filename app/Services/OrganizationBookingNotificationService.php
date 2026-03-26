@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\OrganizationBookingRequest;
+use App\Models\OrganizationBookingCancellation;
 use App\Models\User;
 use App\Models\Notification;
 use App\Mail\OrganizationBookingAdviserNotification;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * Organization Booking Notification Service
- * 
+ *
  * Handles all notification logic for the organization booking workflow:
  * - Notify advisers of new requests
  * - Notify requestors of approval/rejection
@@ -40,7 +41,7 @@ class OrganizationBookingNotificationService
             if ($adviser->email) {
                 Mail::to($adviser->email)->send(new OrganizationBookingAdviserNotification($request));
             }
-            
+
             // Create in-app database notification for adviser
             Notification::create([
                 'user_id' => $adviser->id,
@@ -54,13 +55,13 @@ class OrganizationBookingNotificationService
                     'requestor_name' => $request->requestor ? $request->requestor->full_name : 'Unknown User',
                 ],
             ]);
-            
+
             // Mark as notified
             $request->markAdviserNotified();
-            
+
             Log::info("Adviser notification sent for booking request #{$request->id} to {$adviser->email}");
             return true;
-            
+
         } catch (\Exception $e) {
             Log::error("Failed to send adviser notification for booking request #{$request->id}: " . $e->getMessage());
             return false;
@@ -74,7 +75,7 @@ class OrganizationBookingNotificationService
     {
         $requestor = $request->requestor;
         $organization = $request->organization;
-        
+
         if (!$requestor) return false;
 
         try {
@@ -82,7 +83,7 @@ class OrganizationBookingNotificationService
             if ($requestor->email) {
                 Mail::to($requestor->email)->send(new OrganizationBookingApprovalNotification($request, $comments));
             }
-            
+
             // Create in-app database notification
             Notification::create([
                 'user_id' => $requestor->id,
@@ -96,10 +97,10 @@ class OrganizationBookingNotificationService
                     'comments' => $comments,
                 ],
             ]);
-            
+
             Log::info("Approval notification sent for booking request #{$request->id} to {$requestor->email}");
             return true;
-            
+
         } catch (\Exception $e) {
             Log::error("Failed to send approval notification for booking request #{$request->id}: " . $e->getMessage());
             return false;
@@ -113,7 +114,7 @@ class OrganizationBookingNotificationService
     {
         $requestor = $request->requestor;
         $organization = $request->organization;
-        
+
         if (!$requestor) return false;
 
         try {
@@ -121,7 +122,7 @@ class OrganizationBookingNotificationService
             if ($requestor->email) {
                 Mail::to($requestor->email)->send(new OrganizationBookingRejectionNotification($request, $reason, $comments));
             }
-            
+
             // Create in-app database notification
             Notification::create([
                 'user_id' => $requestor->id,
@@ -136,10 +137,10 @@ class OrganizationBookingNotificationService
                     'comments' => $comments,
                 ],
             ]);
-            
+
             Log::info("Rejection notification sent for booking request #{$request->id} to {$requestor->email}");
             return true;
-            
+
         } catch (\Exception $e) {
             Log::error("Failed to send rejection notification for booking request #{$request->id}: " . $e->getMessage());
             return false;
@@ -153,14 +154,14 @@ class OrganizationBookingNotificationService
     {
         // Get all staff members
         $staffMembers = User::where('role', 'staff')->get();
-        
+
         if ($staffMembers->isEmpty()) {
             Log::warning("No staff members found to send reminder for overdue booking request #{$request->id}");
             return false;
         }
 
         $success = true;
-        
+
         foreach ($staffMembers as $staff) {
             try {
                 Mail::to($staff->email)->send(new OrganizationBookingStaffReminder($request));
@@ -185,20 +186,20 @@ class OrganizationBookingNotificationService
     public function processOverdueRequests()
     {
         $overdueRequests = OrganizationBookingRequest::needingReminder()->get();
-        
+
         $processedCount = 0;
         $successCount = 0;
 
         foreach ($overdueRequests as $request) {
             $processedCount++;
-            
+
             if ($this->sendStaffReminderForOverdueRequest($request)) {
                 $successCount++;
             }
         }
 
         Log::info("Processed {$processedCount} overdue booking requests, {$successCount} reminders sent successfully");
-        
+
         return [
             'processed' => $processedCount,
             'successful' => $successCount,
@@ -211,17 +212,17 @@ class OrganizationBookingNotificationService
     public function sendAdminStatisticsNotification($period = 'daily')
     {
         $admins = User::where('role', 'admin')->get();
-        
+
         if ($admins->isEmpty()) {
             return false;
         }
 
         // Calculate statistics based on period
         $stats = $this->calculateBookingStatistics($period);
-        
+
         // TODO: Create AdminStatisticsNotification mail class
         // This would include pending requests, approval rates, overdue requests, etc.
-        
+
         return true;
     }
 
@@ -252,5 +253,112 @@ class OrganizationBookingNotificationService
     public function getOrganizationsWithoutAdvisers()
     {
         return \App\Models\Organization::whereNull('adviser_id')->get();
+    }
+
+    /**
+     * Notify adviser about a cancellation request
+     */
+    public function notifyAdviserOfCancellationRequest(OrganizationBookingRequest $request)
+    {
+        $organization = $request->organization;
+        $adviser = $organization->adviser;
+
+        if (!$adviser) {
+            Log::warning("No adviser assigned to organization {$organization->org_name} for cancellation request");
+            return false;
+        }
+
+        try {
+            // Create in-app database notification for adviser
+            Notification::create([
+                'user_id' => $adviser->id,
+                'message' => "Cancellation request received for \"{$request->activity_name}\" from {$organization->org_name}. Please review and respond.",
+                'type' => 'org_booking_cancellation_request',
+                'sent_at' => now(),
+                'data' => [
+                    'organization_booking_request_id' => $request->id,
+                    'activity_name' => $request->activity_name,
+                    'organization_name' => $organization->org_name,
+                    'requestor_name' => $request->requestor ? $request->requestor->full_name : 'Unknown User',
+                ],
+            ]);
+
+            Log::info("Cancellation request notification sent for booking #{$request->id} to adviser {$adviser->email}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("Failed to send cancellation request notification for booking #{$request->id}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Notify requestor that their cancellation request was approved
+     */
+    public function notifyRequestorOfCancellationApproval(OrganizationBookingCancellation $cancellation)
+    {
+        $request = $cancellation->bookingRequest;
+        $requestor = $request->requestor;
+        $organization = $request->organization;
+
+        if (!$requestor) return false;
+
+        try {
+            // Create in-app database notification
+            Notification::create([
+                'user_id' => $requestor->id,
+                'message' => "Your cancellation request for \"{$request->activity_name}\" ({$organization->org_name}) has been approved. The booking has been cancelled.",
+                'type' => 'org_booking_cancellation_approved',
+                'sent_at' => now(),
+                'data' => [
+                    'organization_booking_request_id' => $request->id,
+                    'activity_name' => $request->activity_name,
+                    'organization_name' => $organization->org_name,
+                    'adviser_response' => $cancellation->adviser_response,
+                ],
+            ]);
+
+            Log::info("Cancellation approval notification sent for booking #{$request->id} to {$requestor->email}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("Failed to send cancellation approval notification for booking #{$request->id}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Notify requestor that their cancellation request was rejected
+     */
+    public function notifyRequestorOfCancellationRejection(OrganizationBookingCancellation $cancellation)
+    {
+        $request = $cancellation->bookingRequest;
+        $requestor = $request->requestor;
+        $organization = $request->organization;
+
+        if (!$requestor) return false;
+
+        try {
+            // Create in-app database notification
+            Notification::create([
+                'user_id' => $requestor->id,
+                'message' => "Your cancellation request for \"{$request->activity_name}\" ({$organization->org_name}) was not approved. The booking remains active.",
+                'type' => 'org_booking_cancellation_rejected',
+                'sent_at' => now(),
+                'data' => [
+                    'organization_booking_request_id' => $request->id,
+                    'activity_name' => $request->activity_name,
+                    'organization_name' => $organization->org_name,
+                    'adviser_response' => $cancellation->adviser_response,
+                ],
+            ]);
+
+            Log::info("Cancellation rejection notification sent for booking #{$request->id} to {$requestor->email}");
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error("Failed to send cancellation rejection notification for booking #{$request->id}: " . $e->getMessage());
+            return false;
+        }
     }
 }

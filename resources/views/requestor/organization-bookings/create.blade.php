@@ -4,7 +4,7 @@
 
 <div class="py-12">
     <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-        
+
         <!-- Loading Overlay -->
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden" id="loadingOverlay">
             <div class="text-center text-white">
@@ -37,7 +37,7 @@
         @endif
 
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-2xl border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
-            
+
             <!-- Header Section -->
             <div class="p-8 text-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <div class="flex flex-col items-center">
@@ -48,7 +48,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
                         Organization Activity Booking
                     </h2>
@@ -87,46 +87,67 @@
                 <!-- Section 1: Organization Selection -->
                 <div class="space-y-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-l-4 border-teal-500 pl-3">Organization Information</h3>
-                    
+
                     <div class="bg-teal-50 dark:bg-teal-900/20 rounded-xl p-5 border border-teal-100 dark:border-teal-800/30">
-                        <label for="organization_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Select Organization <span class="text-red-500">*</span>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            Select Organization(s) <span class="text-red-500">*</span>
                         </label>
-                        <select name="organization_id" id="organization_id" required
-                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
-                            <option value="">-- Select an organization --</option>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Select one or more organizations involved in this activity. The first selected will be the primary organization.</p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="organizations-container">
                             @foreach($organizations as $org)
-                                <option value="{{ $org->org_id }}" 
-                                        data-adviser="{{ $org->adviser ? $org->adviser->full_name : 'No adviser assigned' }}"
-                                        data-desc="{{ $org->org_desc }}"
-                                        {{ old('organization_id') == $org->org_id ? 'selected' : '' }}>
-                                    {{ $org->org_name }}
-                                </option>
+                                <label class="org-card relative flex items-center p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-teal-50 dark:hover:bg-teal-900/10 hover:border-teal-200 dark:hover:border-teal-500/30 transition-all cursor-pointer group shadow-sm" data-org-id="{{ $org->org_id }}">
+                                    <div class="flex items-center gap-3 w-full">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-teal-700 dark:group-hover:text-teal-300">
+                                                {{ $org->org_name }}
+                                            </p>
+                                            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                                Adviser: {{ $org->adviser ? $org->adviser->full_name : 'No adviser' }}
+                                            </p>
+                                            <!-- Primary badge -->
+                                            <div class="primary-org-badge hidden mt-1">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300">
+                                                    Primary
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <input type="checkbox" name="organization_ids[]" value="{{ $org->org_id }}"
+                                                {{ is_array(old('organization_ids')) && in_array($org->org_id, old('organization_ids')) ? 'checked' : '' }}
+                                                class="org-checkbox h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded transition-colors"
+                                                onchange="updatePrimaryOrgOptions()">
+                                        </div>
+                                    </div>
+                                </label>
                             @endforeach
-                        </select>
+                        </div>
+                        @error('organization_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         @error('organization_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 
-                        <!-- Dynamic Org Info -->
-                        <div id="org-info" class="hidden mt-4 pt-4 border-t border-teal-200 dark:border-teal-700/50 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-xs uppercase font-semibold text-teal-600 dark:text-teal-400">Description</span>
-                                <p id="org-description" class="text-sm text-gray-600 dark:text-gray-300 mt-1"></p>
-                            </div>
-                            <div>
-                                <span class="text-xs uppercase font-semibold text-teal-600 dark:text-teal-400">Adviser</span>
-                                <p id="org-adviser" class="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1"></p>
+                        <!-- Primary Organization Selection (shown when multiple orgs selected) -->
+                        <div id="primary_org_container" class="hidden mt-4 p-4 bg-teal-100 dark:bg-teal-800/30 rounded-xl border border-teal-200 dark:border-teal-700/50">
+                            <label class="block text-sm font-medium text-teal-800 dark:text-teal-200 mb-2">
+                                Select Primary Organization
+                            </label>
+                            <p class="text-xs text-teal-700 dark:text-teal-300 mb-3">The primary organization's adviser will be the main point of contact.</p>
+                            <div id="primary_org_options" class="space-y-2">
+                                <!-- Dynamically populated -->
                             </div>
                         </div>
+
+                        <!-- Hidden field for backward compatibility -->
+                        <input type="hidden" name="organization_id" id="primary_organization_id" value="{{ old('organization_id') }}">
                     </div>
                 </div>
 
                 <!-- Section 2: Activity Details -->
                 <div class="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-l-4 border-teal-500 pl-3">Activity Details</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <!-- Activity Name -->
-                        <div class="col-span-1 md:col-span-2">
+                        <div class="col-span-1 md:col-span-4">
                             <label for="activity_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Activity Name <span class="text-red-500">*</span>
                             </label>
@@ -151,20 +172,30 @@
                             @error('requested_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
 
-                        <!-- Time -->
+                        <!-- Time In -->
                         <div>
-                            <label for="requested_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Time <span class="text-red-500">*</span>
+                            <label for="time_in" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Time In (Start) <span class="text-red-500">*</span>
                             </label>
-                            <input type="time" name="requested_time" id="requested_time" value="{{ old('requested_time', '08:00') }}" required
+                            <input type="time" name="time_in" id="time_in" value="{{ old('time_in', '08:00') }}" required
                                 class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
-                            @error('requested_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            @error('time_in') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <!-- Time Out -->
+                        <div>
+                            <label for="time_out" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Time Out (End) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="time" name="time_out" id="time_out" value="{{ old('time_out', '17:00') }}" required
+                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
+                            @error('time_out') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
 
                          <!-- Purpose -->
-                         <div class="col-span-1 md:col-span-2">
-                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                <div class="md:col-span-2">
+                         <div class="col-span-1 md:col-span-4">
+                             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <div class="md:col-span-3">
                                     <label for="purpose" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                         Purpose <span class="text-red-500">*</span>
                                     </label>
@@ -180,6 +211,14 @@
                                     <input type="number" name="estimated_participants" id="estimated_participants" value="{{ old('estimated_participants') }}" min="1" max="10000" placeholder="e.g., 35"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
                                     @error('estimated_participants') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+
+                                    <label for="servers_needed" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 mt-4">
+                                        Number of Servers Needed
+                                    </label>
+                                    <input type="number" name="servers_needed" id="servers_needed" value="{{ old('servers_needed') }}" min="0" max="50" placeholder="e.g., 4"
+                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Altar servers or assistants needed</p>
+                                    @error('servers_needed') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
                              </div>
                         </div>
@@ -189,7 +228,7 @@
                 <!-- Section 3: Venue & Requirements -->
                 <div class="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-l-4 border-teal-500 pl-3">Venue & Requirements</h3>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Venue -->
                         <div>
@@ -202,7 +241,7 @@
                         </div>
 
                         <!-- Special Requirements -->
-                        <div class="md:col-span-2">
+                        <div class="md:col-span-4">
                              <label for="special_requirements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Special Requirements
                             </label>
@@ -266,32 +305,87 @@
 
     // Organization details toggle
     function initOrgSelector() {
-        const orgSelect = document.getElementById('organization_id');
-        const orgInfo = document.getElementById('org-info');
-        const orgDescription = document.getElementById('org-description');
-        const orgAdviser = document.getElementById('org-adviser');
+        // Initialize multi-organization selection
+        updatePrimaryOrgOptions();
+    }
 
-        if(orgSelect) {
-            orgSelect.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                
-                if (this.value) {
-                    const desc = selectedOption.dataset.desc || 'No description available';
-                    const adviser = selectedOption.dataset.adviser || 'No adviser assigned';
-                    
-                    if(orgDescription) orgDescription.textContent = desc;
-                    if(orgAdviser) orgAdviser.textContent = adviser;
-                    if(orgInfo) orgInfo.classList.remove('hidden');
-                } else {
-                    if(orgInfo) orgInfo.classList.add('hidden');
-                }
+    // Handle multiple organization selection
+    function updatePrimaryOrgOptions() {
+        const checkboxes = document.querySelectorAll('.org-checkbox:checked');
+        const container = document.getElementById('primary_org_container');
+        const optionsDiv = document.getElementById('primary_org_options');
+        const primaryOrgInput = document.getElementById('primary_organization_id');
+
+        // Reset all primary badges
+        document.querySelectorAll('.primary-org-badge').forEach(badge => {
+            badge.classList.add('hidden');
+        });
+
+        if (checkboxes.length > 1) {
+            // Show primary org selection
+            container.classList.remove('hidden');
+
+            // Build radio options
+            let html = '';
+            checkboxes.forEach((checkbox, index) => {
+                const orgId = checkbox.value;
+                const card = checkbox.closest('.org-card');
+                const orgName = card.querySelector('p.font-semibold').textContent.trim();
+                const isChecked = index === 0 ? 'checked' : '';
+
+                html += `
+                    <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-700/30 cursor-pointer transition-colors">
+                        <input type="radio" name="primary_org_radio" value="${orgId}" ${isChecked}
+                            class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300"
+                            onchange="updatePrimaryOrgBadge()">
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtmlForOrg(orgName)}</span>
+                    </label>
+                `;
             });
-            
-            // Initial check
-            if (orgSelect.value) {
-                orgSelect.dispatchEvent(new Event('change'));
+
+            optionsDiv.innerHTML = html;
+            updatePrimaryOrgBadge();
+        } else if (checkboxes.length === 1) {
+            // Single org - automatically primary
+            container.classList.add('hidden');
+            primaryOrgInput.value = checkboxes[0].value;
+
+            // Show badge
+            const card = checkboxes[0].closest('.org-card');
+            const badge = card.querySelector('.primary-org-badge');
+            if (badge) badge.classList.remove('hidden');
+        } else {
+            // No orgs selected
+            container.classList.add('hidden');
+            optionsDiv.innerHTML = '';
+            primaryOrgInput.value = '';
+        }
+    }
+
+    function updatePrimaryOrgBadge() {
+        // Reset all badges
+        document.querySelectorAll('.primary-org-badge').forEach(badge => {
+            badge.classList.add('hidden');
+        });
+
+        // Update hidden input and show badge
+        const selectedRadio = document.querySelector('input[name="primary_org_radio"]:checked');
+        const primaryOrgInput = document.getElementById('primary_organization_id');
+
+        if (selectedRadio) {
+            primaryOrgInput.value = selectedRadio.value;
+            const card = document.querySelector(`.org-card[data-org-id="${selectedRadio.value}"]`);
+            if (card) {
+                const badge = card.querySelector('.primary-org-badge');
+                if (badge) badge.classList.remove('hidden');
             }
         }
+    }
+
+    function escapeHtmlForOrg(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     // Form validation
@@ -300,13 +394,25 @@
         let isValid = true;
         let errorMessages = [];
 
+        // Check at least one organization is selected
+        const orgCheckboxes = document.querySelectorAll('.org-checkbox:checked');
+        if (orgCheckboxes.length === 0) {
+            errorMessages.push('Please select at least one organization');
+            isValid = false;
+
+            // Highlight org container
+            document.getElementById('organizations-container').classList.add('ring-2', 'ring-red-500', 'rounded-xl');
+        } else {
+            document.getElementById('organizations-container').classList.remove('ring-2', 'ring-red-500', 'rounded-xl');
+        }
+
         // Check required fields
         const requiredFields = form.querySelectorAll('[required]');
         requiredFields.forEach(field => {
             if (!field.value.trim()) {
                 field.classList.add('border-red-500');
                 isValid = false;
-                
+
                 let label = getFieldLabel(field);
                 if (label && !errorMessages.includes(label)) {
                     errorMessages.push(label);
@@ -345,13 +451,14 @@
             'organization_id': 'Organization',
             'activity_name': 'Activity Name',
             'requested_date': 'Date of Activity',
-            'requested_time': 'Time',
+            'time_in': 'Time In (Start)',
+            'time_out': 'Time Out (End)',
             'purpose': 'Purpose',
             'estimated_participants': 'Expected Participants',
             'requested_venue': 'Preferred Venue',
             'special_requirements': 'Special Requirements'
         };
-        
+
         if (fieldLabels[field.id]) return fieldLabels[field.id];
         return field.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
@@ -396,7 +503,7 @@
     function closeValidationErrorModal() {
         const modal = document.getElementById('validationErrorModal');
         if (modal) modal.remove();
-        
+
         const firstError = document.querySelector('.border-red-500');
         if (firstError) {
              firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -409,7 +516,7 @@
         const submitText = document.getElementById('submitText');
         const submitLoader = document.getElementById('submitLoader');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        
+
         if (submitBtn) submitBtn.disabled = false;
         if (submitText) submitText.style.display = 'inline';
         if (submitLoader) submitLoader.style.display = 'none';
@@ -429,7 +536,7 @@
                 e.preventDefault();
                 return false;
             }
-            
+
             const submitBtn = document.getElementById('submitBtn');
             const submitText = document.getElementById('submitText');
             const submitLoader = document.getElementById('submitLoader');

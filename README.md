@@ -325,15 +325,14 @@ docker exec laravel_app php artisan cache:clear
 docker exec laravel_app php artisan config:clear
 
 <<<<<<< HEAD
+
 ## TO push
 
 git add .
 git commit -m "Your commit message"
 git push origin new-feature
 
-## TO EDIT 
-
-
+## TO EDIT
 
 # Better workflow:
 
@@ -343,6 +342,12 @@ docker compose up
 
 then run;
 http://localhost:8000
+
+for mailhog;
+http://localhost:8025
+
+for database;
+[http://localhost:8080](vscode-file://vscode-app/c:/Users/HP%20User/AppData/Local/Programs/Microsoft%20VS%20Code/07ff9d6178/resources/app/out/vs/code/electron-browser/workbench/workbench.html)
 
 # 2. Edit files on your machine
 
@@ -366,7 +371,8 @@ git commit -m "Feature: describe what you changed"
 # 6. Push to GitHub
 
 git push origin new-feature
-=======
+===========================
+
 npm run build
 
 docker compose up -d
@@ -375,4 +381,3 @@ docker compose up -d
 
 php artisan serve
 npm run dev
->>>>>>> 56613816fbd83f1f65538c204b9ca99b7291d83b

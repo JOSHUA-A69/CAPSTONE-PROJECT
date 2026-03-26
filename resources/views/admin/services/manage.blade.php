@@ -248,6 +248,19 @@
                 </div>
             @endif
         </div>
+
+        @if($services->hasPages())
+            <div class="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <p class="text-sm text-gray-600 dark:text-gray-300">
+                        Showing {{ $services->firstItem() }} to {{ $services->lastItem() }} of {{ $services->total() }} services
+                    </p>
+                    <div>
+                        {{ $services->onEachSide(1)->links() }}
+                    </div>
+                </div>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -286,10 +299,27 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (minutes)</label>
-                                    <input type="number" name="duration" min="5" step="5"
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
-                                        placeholder="60">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration <span class="text-red-500">*</span></label>
+                                    <div class="flex gap-2">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Hours</label>
+                                            <input type="number" id="add_hours" min="0" max="5" value="1"
+                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                                                placeholder="0">
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Minutes</label>
+                                            <select id="add_minutes"
+                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors">
+                                                <option value="0">0</option>
+                                                <option value="15">15</option>
+                                                <option value="30">30</option>
+                                                <option value="45">45</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="duration" id="add_duration_hidden" value="60">
+                                    <p id="add_duration_error" class="mt-2 text-sm text-red-500 hidden">Duration cannot exceed 5 hours (300 minutes)</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
@@ -303,7 +333,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row-reverse gap-3">
-                <button type="button" onclick="document.getElementById('addServiceForm').submit()"
+                <button type="button" onclick="submitAddServiceForm()"
                     class="w-full sm:w-auto inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm transition-colors">
                     Create Service
                 </button>
@@ -351,9 +381,27 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration (minutes)</label>
-                                    <input type="number" id="edit_duration" name="duration" min="5" step="5"
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Duration <span class="text-red-500">*</span></label>
+                                    <div class="flex gap-2">
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Hours</label>
+                                            <input type="number" id="edit_hours" min="0" max="5"
+                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                                                placeholder="0">
+                                        </div>
+                                        <div class="flex-1">
+                                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Minutes</label>
+                                            <select id="edit_minutes"
+                                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors">
+                                                <option value="0">0</option>
+                                                <option value="15">15</option>
+                                                <option value="30">30</option>
+                                                <option value="45">45</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="duration" id="edit_duration_hidden" value="60">
+                                    <p id="edit_duration_error" class="mt-2 text-sm text-red-500 hidden">Duration cannot exceed 5 hours (300 minutes)</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
@@ -366,7 +414,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 dark:bg-gray-700/50 px-4 py-3 sm:px-6 flex flex-col sm:flex-row-reverse gap-3">
-                <button type="button" onclick="document.getElementById('editForm').submit()"
+                <button type="button" onclick="submitEditServiceForm()"
                     class="w-full sm:w-auto inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm transition-colors">
                     Save Changes
                 </button>
@@ -421,11 +469,55 @@
 </div>
 
 <script>
+    function submitAddServiceForm() {
+        const isValid = calculateDuration('add_hours', 'add_minutes', 'add_duration_hidden', 'add_duration_error');
+        if (isValid) {
+            document.getElementById('addServiceForm').submit();
+        }
+    }
+
+    function submitEditServiceForm() {
+        const isValid = calculateDuration('edit_hours', 'edit_minutes', 'edit_duration_hidden', 'edit_duration_error');
+        if (isValid) {
+            document.getElementById('editForm').submit();
+        }
+    }
+
     function openAddModal() {
         document.getElementById('addModal').classList.remove('hidden');
     }
     function closeAddModal() {
         document.getElementById('addModal').classList.add('hidden');
+    }
+
+    // Duration validation and calculation functions
+    function calculateDuration(hoursId, minutesId, hiddenInputId, errorId) {
+        const hoursInput = document.getElementById(hoursId);
+        const minutesSelect = document.getElementById(minutesId);
+        const hiddenInput = document.getElementById(hiddenInputId);
+        const errorMsg = document.getElementById(errorId);
+
+        const hours = parseInt(hoursInput.value) || 0;
+        const minutes = parseInt(minutesSelect.value) || 0;
+        const totalMinutes = hours * 60 + minutes;
+
+        hiddenInput.value = totalMinutes;
+
+        if (totalMinutes > 300) {
+            errorMsg.classList.remove('hidden');
+            return false;
+        } else {
+            errorMsg.classList.add('hidden');
+            return true;
+        }
+    }
+
+    // Add Service duration listeners
+    const addHours = document.getElementById('add_hours');
+    const addMinutes = document.getElementById('add_minutes');
+    if (addHours && addMinutes) {
+        addHours.addEventListener('change', () => calculateDuration('add_hours', 'add_minutes', 'add_duration_hidden', 'add_duration_error'));
+        addMinutes.addEventListener('change', () => calculateDuration('add_hours', 'add_minutes', 'add_duration_hidden', 'add_duration_error'));
     }
 
     // Modal logic for Edit
@@ -434,7 +526,9 @@
     const editForm = document.getElementById('editForm');
     const editName = document.getElementById('edit_service_name');
     const editCategory = document.getElementById('edit_service_category');
-    const editDuration = document.getElementById('edit_duration');
+    const editHours = document.getElementById('edit_hours');
+    const editMinutes = document.getElementById('edit_minutes');
+    const editDurationHidden = document.getElementById('edit_duration_hidden');
     const editDesc = document.getElementById('edit_description');
 
     editBtns.forEach(btn => {
@@ -443,17 +537,29 @@
             const name = btn.getAttribute('data-name');
             const cat = btn.getAttribute('data-category');
             const desc = btn.getAttribute('data-description');
-            const dur = btn.getAttribute('data-duration');
+            const dur = parseInt(btn.getAttribute('data-duration')) || 0;
+
+            // Convert minutes to hours and minutes
+            const hours = Math.floor(dur / 60);
+            const mins = dur % 60;
 
             editForm.action = `/admin/services/manage/${id}`;
             editName.value = name;
             editCategory.value = cat || "";
-            editDuration.value = dur || "";
+            editHours.value = hours;
+            editMinutes.value = mins;
+            editDurationHidden.value = dur;
             editDesc.value = desc || "";
 
             editModal.classList.remove('hidden');
         });
     });
+
+    // Edit Service duration listeners
+    if (editHours && editMinutes) {
+        editHours.addEventListener('change', () => calculateDuration('edit_hours', 'edit_minutes', 'edit_duration_hidden', 'edit_duration_error'));
+        editMinutes.addEventListener('change', () => calculateDuration('edit_hours', 'edit_minutes', 'edit_duration_hidden', 'edit_duration_error'));
+    }
 
     function closeEditModal() {
         editModal.classList.add('hidden');

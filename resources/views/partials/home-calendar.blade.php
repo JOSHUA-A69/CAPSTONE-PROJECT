@@ -824,6 +824,54 @@ function getReservationStatusLabel(status) {
     return labels[status] || status;
 }
 
+function getReservationOrganizations(res) {
+    if (!res) return [];
+
+    if (Array.isArray(res.organizations) && res.organizations.length > 0) {
+        return res.organizations
+            .map(function(org) { return org && org.org_name ? org.org_name : ''; })
+            .filter(function(name) { return !!name; });
+    }
+
+    if (res.organization && res.organization.org_name) {
+        return [res.organization.org_name];
+    }
+
+    return [];
+}
+
+function getReservationPriests(res) {
+    if (!res) return [];
+
+    var priests = [];
+
+    if (Array.isArray(res.priests) && res.priests.length > 0) {
+        for (var i = 0; i < res.priests.length; i++) {
+            var p = res.priests[i] || {};
+            var name = p.full_name || [p.first_name, p.middle_name, p.last_name].filter(Boolean).join(' ');
+            if (!name) continue;
+
+            var isMain = Boolean(p.pivot && p.pivot.is_main_celebrant) || (res.officiant_id && Number(res.officiant_id) === Number(p.id));
+            priests.push(isMain ? (name + ' (Main Celebrant)') : name);
+        }
+        return priests;
+    }
+
+    if (res.officiant) {
+        var officiantName = res.officiant.full_name || [res.officiant.first_name, res.officiant.middle_name, res.officiant.last_name].filter(Boolean).join(' ');
+        if (officiantName) {
+            priests.push(officiantName);
+            return priests;
+        }
+    }
+
+    if (res.external_priest_name) {
+        return [res.external_priest_name + ' (External)'];
+    }
+
+    return [];
+}
+
 function initializeReservationCalendar(reservations) {
     var calendarEl = document.getElementById('homepagecalendar');
     if (!calendarEl) return;
@@ -1032,7 +1080,8 @@ function renderReservationEventDetails(res) {
     if (!panel) return;
     var venueName = (res.venue && res.venue.name) ? res.venue.name : (res.custom_venue_name || '');
     var serviceName = (res.service && res.service.service_name) ? res.service.service_name : '';
-    var orgName = (res.organization && res.organization.org_name) ? res.organization.org_name : '';
+    var organizations = getReservationOrganizations(res);
+    var priests = getReservationPriests(res);
     var color = getReservationStatusColor(res.status);
     var dateObj = new Date((res.schedule_date || '').toString().slice(0,10));
     var dateLabel = isNaN(dateObj) ? res.schedule_date : dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -1047,7 +1096,8 @@ function renderReservationEventDetails(res) {
                 '<p><strong>Date:</strong> ' + escapeHtml(dateLabel) + '</p>' +
                 (serviceName ? '<p><strong>Service:</strong> ' + escapeHtml(serviceName) + '</p>' : '') +
                 (venueName ? '<p><strong>Venue:</strong> ' + escapeHtml(venueName) + '</p>' : '') +
-                (orgName ? '<p><strong>Organization:</strong> ' + escapeHtml(orgName) + '</p>' : '') +
+                (organizations.length ? '<p><strong>Organization' + (organizations.length > 1 ? 's' : '') + ':</strong> ' + escapeHtml(organizations.join(', ')) + '</p>' : '') +
+                (priests.length ? '<p><strong>Officiant' + (priests.length > 1 ? 's' : '') + ':</strong> ' + escapeHtml(priests.join(', ')) + '</p>' : '') +
                 (res.purpose ? '<p><strong>Purpose:</strong> ' + escapeHtml(res.purpose) + '</p>' : '') +
                 (res.participants_count ? '<p><strong>Participants:</strong> ' + escapeHtml(res.participants_count) + '</p>' : '') +
             '</div>' +
@@ -1067,8 +1117,14 @@ function showReservationModal(res) {
 
     var venueName = (res.venue && res.venue.name) ? res.venue.name : (res.custom_venue_name || 'Not specified');
     var serviceName = (res.service && res.service.service_name) ? res.service.service_name : 'Not specified';
-    var orgName = (res.organization && res.organization.org_name) ? res.organization.org_name : 'Not specified';
-    var officiantName = (res.officiant && res.officiant.name) ? res.officiant.name : 'Not assigned';
+    var organizations = getReservationOrganizations(res);
+    var priests = getReservationPriests(res);
+    var organizationsHtml = organizations.length > 1
+        ? '<ul class="mt-1 space-y-0.5">' + organizations.map(function(org) { return '<li class="text-gray-600 dark:text-gray-400 text-xs">' + escapeHtml(org) + '</li>'; }).join('') + '</ul>'
+        : '<p class="text-gray-600 dark:text-gray-400 text-xs">' + escapeHtml(organizations.length ? organizations[0] : 'Not specified') + '</p>';
+    var priestsHtml = priests.length > 1
+        ? '<ul class="mt-1 space-y-0.5">' + priests.map(function(priest) { return '<li class="text-gray-600 dark:text-gray-400 text-xs">' + escapeHtml(priest) + '</li>'; }).join('') + '</ul>'
+        : '<p class="text-gray-600 dark:text-gray-400 text-xs">' + escapeHtml(priests.length ? priests[0] : 'Not assigned') + '</p>';
     var color = getReservationStatusColor(res.status);
     var statusLabel = getReservationStatusLabel(res.status);
     var dateObj = new Date((res.schedule_date || '').toString().slice(0,10));
@@ -1109,11 +1165,11 @@ function showReservationModal(res) {
                 '</div>' +
                 '<div class="flex items-start gap-2">' +
                     '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>' +
-                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Organization</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + escapeHtml(orgName) + '</p></div>' +
+                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Organization' + (organizations.length > 1 ? 's' : '') + '</p>' + organizationsHtml + '</div>' +
                 '</div>' +
                 '<div class="flex items-start gap-2">' +
                     '<svg class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>' +
-                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Officiant</p><p class="text-gray-600 dark:text-gray-400 text-xs truncate">' + escapeHtml(officiantName) + '</p></div>' +
+                    '<div class="flex-1 min-w-0"><p class="font-semibold text-gray-700 dark:text-gray-300 text-xs">Officiant' + (priests.length > 1 ? 's' : '') + '</p>' + priestsHtml + '</div>' +
                 '</div>' +
                 (res.participants_count ?
                     '<div class="flex items-start gap-2">' +

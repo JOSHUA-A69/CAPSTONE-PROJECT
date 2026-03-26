@@ -88,9 +88,13 @@
                                     <p class="text-heading text-lg text-indigo-600">
                                         {{ $reservation->schedule_date->format('F d, Y') }}
                                     </p>
-                                    <p class="text-muted text-sm">
-                                        {{ $reservation->schedule_date->format('l, g:i A') }}
-                                    </p>
+                                    <div class="text-muted text-sm mt-1">
+                                        <span class="font-medium">{{ $reservation->schedule_date->format('l') }}</span><br>
+                                        <span class="font-medium">Time In:</span> {{ $reservation->schedule_date->format('g:i A') }}
+                                        @if($reservation->end_time)
+                                            <br><span class="font-medium">Time Out:</span> {{ $reservation->end_time->format('g:i A') }}
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div>
@@ -204,7 +208,19 @@
                                 </div>
                                 @endif
 
-                                @if($reservation->organization)
+                                @php
+                                    $reservationOrganizations = $reservation->organizations ?? collect();
+                                @endphp
+                                @if($reservationOrganizations->isNotEmpty())
+                                <div>
+                                    <label class="form-label">Organization{{ $reservationOrganizations->count() > 1 ? 's' : '' }}</label>
+                                    <div class="mt-1 space-y-1">
+                                        @foreach($reservationOrganizations as $org)
+                                            <p class="text-body">{{ $org->org_name }}</p>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @elseif($reservation->organization)
                                 <div>
                                     <label class="form-label">Organization</label>
                                     <p class="text-body">{{ $reservation->organization->org_name }}</p>

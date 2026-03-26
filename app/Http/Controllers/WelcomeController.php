@@ -17,19 +17,21 @@ class WelcomeController extends Controller
         // Caching for 5 minutes (300 seconds) to reduce DB load
         // Cached data includes reservations, schedules, services, venues
         // Cache key depends on the month filter if present
-        $cacheKey = 'welcome_page_data_' . ($request->query('month') ?? 'current');
+        $cacheKey = 'welcome_page_data_v2_' . ($request->query('month') ?? 'current');
 
         $data = Cache::remember($cacheKey, 300, function () use ($request) {
             // Fetch upcoming reservations (only necessary columns)
             $upcomingReservations = Reservation::with([
-                    'service:service_id,service_name,service_category', 
-                    'venue:venue_id,name', 
-                    'organization:org_id,org_name', 
-                    'officiant:id,first_name,last_name'
+                    'service:service_id,service_name,service_category',
+                    'venue:venue_id,name',
+                    'organization:org_id,org_name',
+                    'organizations:org_id,org_name',
+                    'officiant:id,first_name,middle_name,last_name',
+                    'priests:id,first_name,middle_name,last_name'
                 ])
                 ->select([
-                    'reservation_id', 'service_id', 'venue_id', 'org_id', 'officiant_id', 
-                    'schedule_date', 'status', 'activity_name', 'custom_venue_name', 'external_priest_name'
+                    'reservation_id', 'service_id', 'venue_id', 'org_id', 'officiant_id',
+                    'schedule_date', 'status', 'activity_name', 'custom_venue_name', 'external_priest_name', 'priest_selection_type'
                 ])
                 ->upcoming()
                 ->whereNotIn('status', ['cancelled', 'rejected'])
@@ -39,7 +41,7 @@ class WelcomeController extends Controller
 
             // Fetch liturgical schedules
             $allSchedules = LiturgicalSchedule::with(['priest:id,first_name,last_name', 'venue:venue_id,name'])
-                ->where('is_public', 1) 
+                ->where('is_public', 1)
                 ->where('schedule_date', '>=', Carbon::now()->startOfDay())
                 ->where('schedule_date', '<=', Carbon::now()->addMonths(6))
                 ->orderBy('schedule_date')

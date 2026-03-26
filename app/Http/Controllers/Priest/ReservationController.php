@@ -32,13 +32,13 @@ class ReservationController extends Controller
     public function index(Request $request)
     {
         $status = $request->input('status');
-        
+
         // Default time filter: 'upcoming' normally, but 'all' (null) if checking pending confirmations
         // This ensures priests see ALL assignments needing action, even if the date has passed
         $defaultTime = ($status === 'pending_priest_confirmation') ? null : 'upcoming';
         $timeFilter = $request->input('time', $defaultTime);
 
-        $query = Reservation::with(['user', 'service', 'venue', 'organization'])
+        $query = Reservation::with(['user', 'service', 'venue', 'organization', 'organizations'])
             ->forPriest(Auth::id());
 
         // Status filter - special handling for pending_priest_confirmation
@@ -92,6 +92,7 @@ class ReservationController extends Controller
             'service',
             'venue',
             'organization.adviser',
+            'organizations.adviser',
             'history.performedBy',
             'priests'
         ])
@@ -217,8 +218,8 @@ class ReservationController extends Controller
             ]);
 
             // Perform a robust check: properly reload relations + direct DB check
-            $reservation->refresh(); 
-            
+            $reservation->refresh();
+
             // Check if there are any unconfirmed priests for this reservation
             $hasUnconfirmed = DB::table('reservation_priest')
                 ->where('reservation_id', $reservation->reservation_id)
@@ -264,7 +265,7 @@ class ReservationController extends Controller
 
             $serviceName = $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service';
             $serviceDate = $reservation->schedule_date->format('F d, Y \a\t g:i A');
-            
+
             return Redirect::route('priest.reservations.index')
                 ->with('status', 'reservation-confirmed')
                 ->with('message', $message);
@@ -477,7 +478,7 @@ class ReservationController extends Controller
 
         $serviceName = $reservation->activity_name ?? $reservation->service?->service_name ?? 'Unknown Service';
         $serviceDate = $reservation->schedule_date->format('F d, Y \a\t g:i A');
-        
+
         $message = $isCancellation
             ? (($replacementId ?? false)
                 ? "Your confirmation for '{$serviceName}' on {$serviceDate} has been cancelled and reassigned to another priest. They have been notified to confirm their availability."

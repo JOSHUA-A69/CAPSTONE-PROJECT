@@ -22,16 +22,22 @@ class OrganizationBookingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'organization_id' => 'required|exists:organizations,org_id',
+            // Support both single organization_id (backward compat) and multiple organization_ids
+            'organization_id' => 'required_without:organization_ids|nullable|exists:organizations,org_id',
+            'organization_ids' => 'required_without:organization_id|nullable|array|min:1',
+            'organization_ids.*' => 'exists:organizations,org_id',
             'activity_name' => 'required|string|max:255|min:3',
             'purpose' => 'required|string|max:1000|min:10',
             'activity_details' => 'nullable|string|max:2000',
             'requested_date' => 'required|date|after:today',
-            // When creating, the form may send a separate time field.
-            // Make it optional so update forms using datetime-local still pass.
+            // Time in and time out fields for activity duration
+            'time_in' => 'required|date_format:H:i',
+            'time_out' => 'required|date_format:H:i|after:time_in',
+            // Keep for backward compatibility but make optional
             'requested_time' => 'nullable|date_format:H:i',
             'requested_venue' => 'nullable|string|max:255',
             'estimated_participants' => 'nullable|integer|min:1|max:10000',
+            'servers_needed' => 'nullable|integer|min:0|max:50',
             'special_requirements' => 'nullable|string|max:1000',
         ];
     }
@@ -42,8 +48,11 @@ class OrganizationBookingRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'organization_id.required' => 'Please select an organization for your request.',
+            'organization_id.required_without' => 'Please select at least one organization for your request.',
             'organization_id.exists' => 'The selected organization is not valid.',
+            'organization_ids.required_without' => 'Please select at least one organization for your request.',
+            'organization_ids.min' => 'Please select at least one organization.',
+            'organization_ids.*.exists' => 'One or more selected organizations are not valid.',
             'activity_name.required' => 'Activity name is required.',
             'activity_name.min' => 'Activity name must be at least 3 characters.',
             'activity_name.max' => 'Activity name cannot exceed 255 characters.',
@@ -51,13 +60,21 @@ class OrganizationBookingRequest extends FormRequest
             'purpose.min' => 'Purpose description must be at least 10 characters.',
             'purpose.max' => 'Purpose description cannot exceed 1000 characters.',
             'activity_details.max' => 'Activity details cannot exceed 2000 characters.',
-            'requested_date.required' => 'Please specify your requested date and time.',
-            'requested_date.date' => 'Please provide a valid date and time.',
+            'requested_date.required' => 'Please specify your requested date.',
+            'requested_date.date' => 'Please provide a valid date.',
             'requested_date.after' => 'Requested date must be in the future.',
+            'time_in.required' => 'Please specify the start time of your activity.',
+            'time_in.date_format' => 'Please provide a valid start time (HH:MM format).',
+            'time_out.required' => 'Please specify the end time of your activity.',
+            'time_out.date_format' => 'Please provide a valid end time (HH:MM format).',
+            'time_out.after' => 'End time must be after the start time.',
             'requested_venue.max' => 'Venue name cannot exceed 255 characters.',
             'estimated_participants.integer' => 'Number of participants must be a whole number.',
             'estimated_participants.min' => 'Number of participants must be at least 1.',
             'estimated_participants.max' => 'Number of participants cannot exceed 10,000.',
+            'servers_needed.integer' => 'Number of servers must be a whole number.',
+            'servers_needed.min' => 'Number of servers cannot be negative.',
+            'servers_needed.max' => 'Number of servers cannot exceed 50.',
             'special_requirements.max' => 'Special requirements cannot exceed 1000 characters.',
         ];
     }

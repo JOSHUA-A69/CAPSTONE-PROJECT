@@ -103,9 +103,14 @@
                                 <div>
                                     <label class="form-label">Schedule</label>
                                     <p class="text-heading text-indigo-600">
-                                        {{ optional($reservation->schedule_date)->format('M d, Y') }}<br>
-                                        <span class="text-sm">{{ optional($reservation->schedule_date)->format('h:i A') }}</span>
+                                        {{ optional($reservation->schedule_date)->format('M d, Y') }}
                                     </p>
+                                    <div class="text-sm text-body mt-1">
+                                        <span class="font-medium">Time In:</span> {{ optional($reservation->schedule_date)->format('h:i A') }}
+                                        @if($reservation->end_time)
+                                            <br><span class="font-medium">Time Out:</span> {{ $reservation->end_time->format('h:i A') }}
+                                        @endif
+                                    </div>
                                 </div>
 
                                 <div>
@@ -202,20 +207,43 @@
                                 @endphp
                                 @if($assignedPriests->count() > 0)
                                 <div class="md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                                    <label class="form-label">Assigned Priests</label>
-                                    <ul class="mt-3 space-y-2">
+                                    <label class="form-label">Assigned Priest{{ $assignedPriests->count() > 1 ? 's' : '' }}</label>
+                                    <div class="mt-3 space-y-3">
                                         @foreach($assignedPriests as $p)
-                                        <li class="flex items-center">
-                                            <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                            </svg>
-                                            <span class="text-heading">{{ $p->full_name }}</span>
-                                            @if($p->email)
-                                                <span class="text-muted ml-2">{{ $p->email }}</span>
-                                            @endif
-                                        </li>
+                                        <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                            <div class="flex-shrink-0">
+                                                <img class="h-10 w-10 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-600"
+                                                     src="{{ $p->profile_picture_url }}"
+                                                     alt="{{ $p->full_name }}">
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-heading">
+                                                    {{ $p->full_name }}
+                                                    @if(($p->pivot->is_main_celebrant ?? false) || ((int) $reservation->officiant_id === (int) $p->id))
+                                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                                                            Main Celebrant
+                                                        </span>
+                                                    @endif
+                                                </p>
+                                                @if($p->email)
+                                                    <p class="text-xs text-muted">{{ $p->email }}</p>
+                                                @endif
+                                                <p class="text-xs mt-1">
+                                                    @if($p->pivot->confirmation_status === 'confirmed')
+                                                        <span class="text-green-600 dark:text-green-400">✓ Confirmed</span>
+                                                    @elseif($p->pivot->confirmation_status === 'declined')
+                                                        <span class="text-red-600 dark:text-red-400">✗ Declined</span>
+                                                        @if($p->pivot->decline_reason)
+                                                            <span class="text-gray-500"> - {{ $p->pivot->decline_reason }}</span>
+                                                        @endif
+                                                    @else
+                                                        <span class="text-yellow-600 dark:text-yellow-400">⏳ Pending confirmation</span>
+                                                    @endif
+                                                </p>
+                                            </div>
+                                        </div>
                                         @endforeach
-                                    </ul>
+                                    </div>
                                 </div>
                                 @elseif($reservation->priest_selection_type === 'external' && $reservation->external_priest_name)
                                 <div class="md:col-span-2 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -321,8 +349,29 @@
                                 @endif
                             </div>
 
-                            <!-- Organization -->
-                            @if($reservation->organization)
+                            <!-- Organization(s) -->
+                            @php
+                                $reservationOrganizations = $reservation->organizations ?? collect();
+                            @endphp
+                            @if($reservationOrganizations->isNotEmpty())
+                            <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                                <p class="form-label">Organization{{ $reservationOrganizations->count() > 1 ? 's' : '' }}</p>
+                                <div class="mt-2 space-y-2">
+                                    @foreach($reservationOrganizations as $org)
+                                        <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                                            <p class="text-heading">{{ $org->org_name }}</p>
+                                            @if($org->adviser)
+                                                <div class="mt-1 text-sm">
+                                                    <p class="form-label text-xs">Adviser:</p>
+                                                    <p class="text-heading">{{ $org->adviser->full_name ?? 'Unknown Adviser' }}</p>
+                                                    <p class="text-muted">{{ $org->adviser->email }}</p>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @elseif($reservation->organization)
                             <div class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                                 <p class="form-label">Organization</p>
                                 <p class="text-heading mt-1">{{ $reservation->organization->org_name }}</p>

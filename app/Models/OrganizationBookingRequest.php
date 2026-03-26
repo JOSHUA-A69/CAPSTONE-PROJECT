@@ -8,7 +8,7 @@ use DateTimeInterface;
 
 /**
  * Organization Booking Request Model
- * 
+ *
  * Handles requests for organization-based activities where:
  * - Requestors choose an organization and submit booking details
  * - Organization advisers review and approve/reject requests
@@ -27,11 +27,16 @@ class OrganizationBookingRequest extends Model
         'requested_date',
         'requested_venue',
         'estimated_participants',
+        'servers_needed',
         'special_requirements',
         'status',
+        'cancellation_restricted',
         'rejection_reason',
         'adviser_comments',
         'submitted_at',
+        'session_started_at',
+        'session_expires_at',
+        'session_expired',
         'adviser_notified_at',
         'adviser_responded_at',
         'staff_reminded_at',
@@ -42,10 +47,15 @@ class OrganizationBookingRequest extends Model
     protected $casts = [
         'requested_date' => 'datetime',
         'submitted_at' => 'datetime',
+        'session_started_at' => 'datetime',
+        'session_expires_at' => 'datetime',
+        'session_expired' => 'boolean',
+        'cancellation_restricted' => 'boolean',
         'adviser_notified_at' => 'datetime',
         'adviser_responded_at' => 'datetime',
         'staff_reminded_at' => 'datetime',
         'estimated_participants' => 'integer',
+        'servers_needed' => 'integer',
     ];
 
     /**
@@ -91,6 +101,45 @@ class OrganizationBookingRequest extends Model
     public function rejectedBy()
     {
         return $this->belongsTo(User::class, 'rejected_by')->withTrashed();
+    }
+
+    /**
+     * Multiple organizations associated with this booking request
+     */
+    public function organizations()
+    {
+        return $this->belongsToMany(Organization::class, 'organization_booking_organizations', 'booking_request_id', 'organization_id')
+            ->withPivot('is_primary', 'notified', 'notified_at', 'approval_status', 'rejection_reason', 'responded_by', 'responded_at')
+            ->withTimestamps()
+            ->withTrashed();
+    }
+
+    /**
+     * Get the primary organization from the many-to-many relationship
+     */
+    public function primaryOrganization()
+    {
+        return $this->belongsToMany(Organization::class, 'organization_booking_organizations', 'booking_request_id', 'organization_id')
+            ->withPivot('is_primary')
+            ->wherePivot('is_primary', true)
+            ->withTrashed();
+    }
+
+    /**
+     * Cancellation requests for this booking
+     */
+    public function cancellationRequests()
+    {
+        return $this->hasMany(OrganizationBookingCancellation::class, 'booking_request_id');
+    }
+
+    /**
+     * Get the pending cancellation request if any
+     */
+    public function pendingCancellation()
+    {
+        return $this->hasOne(OrganizationBookingCancellation::class, 'booking_request_id')
+            ->where('status', 'pending');
     }
 
     // ===========================
@@ -139,6 +188,28 @@ class OrganizationBookingRequest extends Model
         return $query->where('organization_id', $organizationId);
     }
 
+    /**
+     * Scope for expired sessions that need to be released
+     */
+    public function scopeExpiredSessions($query)
+    {
+        return $query->where('status', 'pending')
+                    ->whereNotNull('session_expires_at')
+                    ->where('session_expires_at', '<', now())
+                    ->where('session_expired', false);
+    }
+
+    /**
+     * Scope for requests with active sessions (not yet expired)
+     */
+    public function scopeActiveSessions($query)
+    {
+        return $query->where('status', 'pending')
+                    ->whereNotNull('session_expires_at')
+                    ->where('session_expires_at', '>', now())
+                    ->where('session_expired', false);
+    }
+
     // ===========================
     // Accessors & Mutators
     // ===========================
@@ -169,8 +240,8 @@ class OrganizationBookingRequest extends Model
      */
     public function getIsOverdueAttribute()
     {
-        return $this->status === 'pending' && 
-               $this->adviser_notified_at && 
+        return $this->status === 'pending' &&
+               $this->adviser_notified_at &&
                $this->adviser_notified_at < now()->subDay();
     }
 
@@ -195,7 +266,7 @@ class OrganizationBookingRequest extends Model
     public function approve($adviser, $comments = null)
     {
         $adviserId = is_object($adviser) ? $adviser->id : $adviser;
-        
+
         return $this->update([
             'status' => 'approved',
             'approved_by' => $adviserId,
@@ -210,7 +281,7 @@ class OrganizationBookingRequest extends Model
     public function reject($adviser, $reason, $comments = null)
     {
         $adviserId = is_object($adviser) ? $adviser->id : $adviser;
-        
+
         return $this->update([
             'status' => 'rejected',
             'rejected_by' => $adviserId,
@@ -226,5 +297,163 @@ class OrganizationBookingRequest extends Model
     public function markStaffReminded()
     {
         return $this->update(['staff_reminded_at' => now()]);
+    }
+
+    // ===========================
+    // Session Timeout Methods
+    // ===========================
+
+    /**
+     * Start a booking session with timeout (default 30 minutes)
+     */
+    public function startSession($timeoutMinutes = 30)
+    {
+        return $this->update([
+            'session_started_at' => now(),
+            'session_expires_at' => now()->addMinutes($timeoutMinutes),
+            'session_expired' => false,
+        ]);
+    }
+
+    /**
+     * Extend the session by additional minutes
+     */
+    public function extendSession($additionalMinutes = 15)
+    {
+        if ($this->session_expires_at && !$this->session_expired) {
+            return $this->update([
+                'session_expires_at' => max($this->session_expires_at, now())->addMinutes($additionalMinutes),
+            ]);
+        }
+        return false;
+    }
+
+    /**
+     * Mark session as expired
+     */
+    public function expireSession()
+    {
+        return $this->update([
+            'session_expired' => true,
+            'status' => 'expired',
+        ]);
+    }
+
+    /**
+     * Check if session is still active
+     */
+    public function hasActiveSession(): bool
+    {
+        return $this->session_expires_at &&
+               $this->session_expires_at > now() &&
+               !$this->session_expired;
+    }
+
+    /**
+     * Get remaining session time in seconds
+     */
+    public function getRemainingSessionTimeAttribute(): int
+    {
+        if (!$this->hasActiveSession()) {
+            return 0;
+        }
+        return max(0, now()->diffInSeconds($this->session_expires_at, false));
+    }
+
+    // ===========================
+    // Cancellation Methods
+    // ===========================
+
+    /**
+     * Check if cancellation is allowed (adviser approval required for confirmed bookings)
+     */
+    public function canRequestCancellation(): bool
+    {
+        // Can always cancel if still pending
+        if ($this->status === 'pending') {
+            return true;
+        }
+
+        // Cannot cancel if already cancelled or rejected
+        if (in_array($this->status, ['cancelled', 'rejected', 'expired'])) {
+            return false;
+        }
+
+        // Confirmed bookings require adviser approval for cancellation
+        return true;
+    }
+
+    /**
+     * Check if cancellation requires adviser approval
+     */
+    public function requiresCancellationApproval(): bool
+    {
+        return $this->status === 'approved' && $this->cancellation_restricted;
+    }
+
+    /**
+     * Check if there's a pending cancellation request
+     */
+    public function hasPendingCancellation(): bool
+    {
+        return $this->cancellationRequests()->where('status', 'pending')->exists();
+    }
+
+    // ===========================
+    // Multi-Organization Methods
+    // ===========================
+
+    /**
+     * Get all organization names formatted for display
+     */
+    public function getAllOrganizationNamesAttribute(): string
+    {
+        if ($this->organizations->isNotEmpty()) {
+            $names = [];
+            foreach ($this->organizations as $org) {
+                $name = $org->org_name;
+                if ($org->pivot->is_primary) {
+                    $name .= ' (Primary)';
+                }
+                $names[] = $name;
+            }
+            return implode(', ', $names);
+        }
+
+        if ($this->organization) {
+            return $this->organization->org_name;
+        }
+
+        return 'No organization';
+    }
+
+    /**
+     * Check if all organization advisers have approved
+     */
+    public function allOrganizationsApproved(): bool
+    {
+        $organizations = $this->organizations;
+
+        if ($organizations->isEmpty()) {
+            return $this->status !== 'pending';
+        }
+
+        return $organizations->every(fn($org) => $org->pivot->approval_status === 'approved');
+    }
+
+    /**
+     * Check if any organization adviser has rejected
+     */
+    public function anyOrganizationRejected(): bool
+    {
+        return $this->organizations->contains(fn($org) => $org->pivot->approval_status === 'rejected');
+    }
+
+    /**
+     * Get count of pending organization approvals
+     */
+    public function pendingOrganizationCount(): int
+    {
+        return $this->organizations->filter(fn($org) => $org->pivot->approval_status === 'pending')->count();
     }
 }

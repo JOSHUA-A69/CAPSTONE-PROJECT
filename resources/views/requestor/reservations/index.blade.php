@@ -8,22 +8,14 @@
             <div>
                 <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">My Reservations</h1>
                 <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">View and manage your spiritual activity requests</p>
-                
-                @if(isset($statusFilter))
-                    @php
-                        $filterColors = [
-                            'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-                            'approved' => 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-                            'upcoming' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
-                        ];
-                        $colorClass = $filterColors[$statusFilter] ?? 'bg-gray-100 text-gray-800';
-                    @endphp
+
+                @if(!empty($serviceInfoFilter) || !empty($scheduleFilter) || !empty($statusFilter))
                     <div class="mt-3 inline-flex items-center gap-2">
-                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {{ $colorClass }}">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
                             <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"/>
                             </svg>
-                            Filtered: {{ ucfirst($statusFilter) }}
+                            Filters applied
                         </span>
                         <a href="{{ route('requestor.reservations.index') }}" class="text-sm font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 border-b border-transparent hover:border-blue-500 transition-colors">
                             Clear filter
@@ -32,12 +24,73 @@
                 @endif
             </div>
 
-            <a href="{{ route('requestor.reservations.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                New Reservation
-            </a>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                    type="button"
+                    id="toggleReservationFilters"
+                    class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-xs text-gray-700 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-1.447.894l-2-1A1 1 0 0110 18v-4.586L3.293 6.707A1 1 0 013 6V4z"></path>
+                    </svg>
+                    Filter
+                </button>
+                <a href="{{ route('requestor.reservations.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-700 focus:bg-blue-700 active:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    New Reservation
+                </a>
+            </div>
+        </div>
+
+        <div id="reservationFiltersPanel" class="mb-6 px-4 sm:px-0 {{ !empty($serviceInfoFilter) || !empty($scheduleFilter) || !empty($statusFilter) ? '' : 'hidden' }}">
+            <form method="GET" action="{{ route('requestor.reservations.index') }}" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm rounded-xl p-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="service_info" class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1">Service Info</label>
+                        <input
+                            id="service_info"
+                            name="service_info"
+                            type="text"
+                            value="{{ $serviceInfoFilter ?? '' }}"
+                            placeholder="Service or venue"
+                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label for="schedule_date" class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1">Schedule</label>
+                        <input
+                            id="schedule_date"
+                            name="schedule_date"
+                            type="date"
+                            value="{{ $scheduleFilter ?? '' }}"
+                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500" />
+                    </div>
+                    <div>
+                        <label for="status" class="block text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wide mb-1">Status</label>
+                        <select
+                            id="status"
+                            name="status"
+                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:border-blue-500 focus:ring-blue-500">
+                            <option value="">All statuses</option>
+                            <option value="pending" {{ ($statusFilter ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="adviser_approved" {{ ($statusFilter ?? '') === 'adviser_approved' ? 'selected' : '' }}>Awaiting Priest/Admin</option>
+                            <option value="admin_approved" {{ ($statusFilter ?? '') === 'admin_approved' ? 'selected' : '' }}>Waiting Final Approval</option>
+                            <option value="approved" {{ ($statusFilter ?? '') === 'approved' ? 'selected' : '' }}>Approved</option>
+                            <option value="confirmed" {{ ($statusFilter ?? '') === 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+                            <option value="completed" {{ ($statusFilter ?? '') === 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="cancelled" {{ ($statusFilter ?? '') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                            <option value="rejected" {{ ($statusFilter ?? '') === 'rejected' ? 'selected' : '' }}>Rejected</option>
+                            <option value="upcoming" {{ ($statusFilter ?? '') === 'upcoming' ? 'selected' : '' }}>Upcoming</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center justify-end gap-2">
+                    <a href="{{ route('requestor.reservations.index') }}" class="inline-flex items-center px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-semibold text-gray-700 dark:text-gray-200 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-600 transition">Clear</a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-xs font-semibold text-white uppercase tracking-widest hover:bg-blue-700 transition">
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
         </div>
 
         <!-- Alerts -->
@@ -224,14 +277,19 @@
                                             <span class="font-medium text-gray-900 dark:text-white">{{ $r->external_priest_name }}</span>
                                             <span class="text-xs text-gray-500 italic">External Priest</span>
                                         </div>
-                                    @elseif($r->officiant)
-                                        <span class="font-medium text-gray-900 dark:text-white block">Fr. {{ $r->officiant?->full_name ?? 'Unknown Priest' }}</span>
                                     @elseif($r->priests && $r->priests->isNotEmpty())
                                         <div class="flex flex-col space-y-0.5">
                                             @foreach($r->priests as $priest)
-                                                <span class="font-medium text-gray-900 dark:text-white">Fr. {{ $priest?->full_name }}</span>
+                                                <span class="font-medium text-gray-900 dark:text-white">
+                                                    Fr. {{ $priest?->full_name }}
+                                                    @if(($priest->pivot->is_main_celebrant ?? false) || ((int) $r->officiant_id === (int) $priest->id))
+                                                        <span class="text-xs text-amber-600 dark:text-amber-400">(Main Celebrant)</span>
+                                                    @endif
+                                                </span>
                                             @endforeach
                                         </div>
+                                    @elseif($r->officiant)
+                                        <span class="font-medium text-gray-900 dark:text-white block">Fr. {{ $r->officiant?->full_name ?? 'Unknown Priest' }}</span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-600 italic">Unassigned</span>
                                     @endif
@@ -241,14 +299,14 @@
                                         <a href="{{ route('requestor.reservations.show', $r->reservation_id) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 rounded-lg transition-colors">
                                             Details
                                         </a>
-                                        
+
                                         @php
                                             $canConfirmInline = $r->status === 'adviser_approved'
                                                 && $r->contacted_at
                                                 && !$r->requestor_confirmed_at
                                                 && !empty($r->requestor_confirmation_token);
                                         @endphp
-                                        
+
                                         @if($canConfirmInline)
                                             <a href="{{ route('requestor.reservations.show-confirmation', ['reservation_id' => $r->reservation_id, 'token' => $r->requestor_confirmation_token]) }}" class="text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-lg transition-colors">
                                                 Confirm
@@ -361,10 +419,15 @@
                                     @if($r->priest_selection_type === 'external' && $r->external_priest_name)
                                         <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $r->external_priest_name }}</span>
                                         <span class="block text-xs text-gray-500 italic">External</span>
+                                    @elseif($r->priests && $r->priests->isNotEmpty())
+                                        <span class="text-sm font-medium text-gray-900 dark:text-white">
+                                            Fr. {{ $r->priests->first()?->full_name ?? $r->priests->first()?->first_name }}
+                                        </span>
+                                        @if($r->priests->count() > 1)
+                                            <span class="block text-xs text-gray-500 dark:text-gray-400">+{{ $r->priests->count() - 1 }} more</span>
+                                        @endif
                                     @elseif($r->officiant)
                                         <span class="text-sm font-medium text-gray-900 dark:text-white">Fr. {{ $r->officiant?->full_name ?? 'Unknown' }}</span>
-                                    @elseif($r->priests && $r->priests->isNotEmpty())
-                                        <span class="text-sm font-medium text-gray-900 dark:text-white">Fr. {{ $r->priests->first()?->first_name }}</span>
                                     @else
                                         <span class="text-sm text-gray-400 dark:text-gray-500 italic">Unassigned</span>
                                     @endif
@@ -379,7 +442,7 @@
 
                             <!-- Card Actions -->
                             <div class="flex flex-wrap gap-2">
-                                <a href="{{ route('requestor.reservations.show', $r->reservation_id) }}" 
+                                <a href="{{ route('requestor.reservations.show', $r->reservation_id) }}"
                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
                                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -387,9 +450,9 @@
                                     </svg>
                                     Details
                                 </a>
-                                
+
                                 @if($canConfirmInline)
-                                    <a href="{{ route('requestor.reservations.show-confirmation', ['reservation_id' => $r->reservation_id, 'token' => $r->requestor_confirmation_token]) }}" 
+                                    <a href="{{ route('requestor.reservations.show-confirmation', ['reservation_id' => $r->reservation_id, 'token' => $r->requestor_confirmation_token]) }}"
                                        class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">
                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -413,10 +476,40 @@
                 </div>
             @endif
         </div>
-        
+
         <!-- Pagination -->
-        <div class="mt-6">
-            {{ $reservations->links() }}
+        <div class="mt-6 px-4 sm:px-0">
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                    Showing {{ $reservations->firstItem() ?? 0 }} to {{ $reservations->lastItem() ?? 0 }} of {{ $reservations->total() }} reservations
+                </p>
+
+                <div class="flex items-center gap-2">
+                    @if($reservations->onFirstPage())
+                        <span class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700 cursor-not-allowed">
+                            Previous
+                        </span>
+                    @else
+                        <a href="{{ $reservations->previousPageUrl() }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            Previous
+                        </a>
+                    @endif
+
+                    <span class="inline-flex items-center px-3 py-1.5 text-sm font-semibold rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        Page {{ $reservations->currentPage() }} of {{ $reservations->lastPage() }}
+                    </span>
+
+                    @if($reservations->hasMorePages())
+                        <a href="{{ $reservations->nextPageUrl() }}" class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            Next
+                        </a>
+                    @else
+                        <span class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700 cursor-not-allowed">
+                            Next
+                        </span>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -482,6 +575,7 @@
                     minlength="10"
                     class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-red-500 focus:ring-red-500 transition-shadow"
                     placeholder="Please explain why you are cancelling..."></textarea>
+                <p id="cancellationReasonError" class="mt-2 text-sm text-red-600 dark:text-red-400 hidden"></p>
                 @error('reason')
                     <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
@@ -505,11 +599,66 @@
 </div>
 
 <script>
+document.getElementById('toggleReservationFilters')?.addEventListener('click', function () {
+    const panel = document.getElementById('reservationFiltersPanel');
+    panel?.classList.toggle('hidden');
+});
+
+const cancelForm = document.getElementById('cancelForm');
+const cancellationReasonField = document.getElementById('cancellation_reason');
+const cancellationReasonError = document.getElementById('cancellationReasonError');
+
+function setCancellationReasonError(message) {
+    if (!cancellationReasonError || !cancellationReasonField) {
+        return;
+    }
+
+    if (message) {
+        cancellationReasonError.textContent = message;
+        cancellationReasonError.classList.remove('hidden');
+        cancellationReasonField.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+        cancellationReasonField.setAttribute('aria-invalid', 'true');
+        return;
+    }
+
+    cancellationReasonError.textContent = '';
+    cancellationReasonError.classList.add('hidden');
+    cancellationReasonField.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500');
+    cancellationReasonField.removeAttribute('aria-invalid');
+}
+
+cancelForm?.addEventListener('submit', function (event) {
+    const reason = (cancellationReasonField?.value || '').trim();
+
+    if (!reason) {
+        event.preventDefault();
+        setCancellationReasonError('You need to put a reason for cancellation first.');
+        cancellationReasonField?.focus();
+        return;
+    }
+
+    if (reason.length < 10) {
+        event.preventDefault();
+        setCancellationReasonError('Please provide at least 10 characters for the cancellation reason.');
+        cancellationReasonField?.focus();
+        return;
+    }
+
+    setCancellationReasonError('');
+});
+
+cancellationReasonField?.addEventListener('input', function () {
+    if ((this.value || '').trim().length > 0) {
+        setCancellationReasonError('');
+    }
+});
+
 function showCancelModal(reservationId, serviceName, schedule) {
     document.getElementById('cancelServiceName').textContent = serviceName;
     document.getElementById('cancelSchedule').textContent = schedule;
     document.getElementById('cancelForm').action = `/requestor/reservations/${reservationId}/cancel`;
-    
+    setCancellationReasonError('');
+
     const modal = document.getElementById('cancelModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex'); // Changed to flex for centering
@@ -521,6 +670,7 @@ function hideCancelModal() {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
     document.getElementById('cancellation_reason').value = '';
+    setCancellationReasonError('');
     document.body.style.overflow = ''; // Restore scrolling
 }
 

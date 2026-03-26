@@ -1,19 +1,76 @@
 <section class="card">
-    <!-- Success Message at Top -->
+    <!-- Success Popup -->
     @if (session('status') === 'password-updated')
         <div
             x-data="{ show: true }"
             x-show="show"
-            x-transition
+            x-transition:enter="transform transition ease-out duration-400"
+            x-transition:enter-start="translate-x-16 opacity-0"
+            x-transition:enter-end="translate-x-0 opacity-100"
+            x-transition:leave="transform transition ease-in duration-300"
+            x-transition:leave-start="translate-x-0 opacity-100"
+            x-transition:leave-end="translate-x-16 opacity-0"
             x-init="setTimeout(() => show = false, 5000)"
-            class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 dark:border-green-400 rounded-lg shadow-lg">
+            style="display: none;"
+            class="fixed top-5 right-5 z-[110] w-[min(92vw,24rem)] p-4 bg-green-50 dark:bg-green-900/90 border border-green-300 dark:border-green-500 rounded-xl shadow-2xl">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-green-600 dark:text-green-300 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                </svg>
+                <div class="min-w-0 flex-1">
+                    <p class="text-green-800 dark:text-green-100 font-semibold">{{ __('Password updated successfully!') }}</p>
+                    <p class="text-sm text-green-700 dark:text-green-200 mt-1">{{ __('Your password has been securely updated.') }}</p>
+                </div>
+                <button
+                    type="button"
+                    @click="show = false"
+                    class="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white transition-colors"
+                    aria-label="Close success message">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="mt-3 h-1.5 rounded-full bg-green-200 dark:bg-green-700 overflow-hidden">
+                <div class="h-full bg-green-500 dark:bg-green-300 origin-left" style="animation: passwordToastProgress 5s linear forwards;"></div>
+            </div>
+            <style>
+                @keyframes passwordToastProgress {
+                    from { transform: scaleX(1); }
+                    to { transform: scaleX(0); }
+                }
+            </style>
+        </div>
+    @endif
+
+    <!-- Fallback Success Banner -->
+    @if (session('status') === 'password-updated')
+        <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500 dark:border-green-400 rounded-lg shadow-lg">
             <div class="flex items-center gap-3">
                 <svg class="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                 </svg>
                 <div>
                     <p class="text-green-700 dark:text-green-200 font-semibold">{{ __('Password updated successfully!') }}</p>
-                    <p class="text-sm text-green-600 dark:text-green-300 mt-1">Your password has been securely updated.</p>
+                    <p class="text-sm text-green-600 dark:text-green-300 mt-1">{{ __('Your password has been securely updated.') }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if ($errors->updatePassword->any())
+        <div
+            x-data="{ show: true }"
+            x-show="show"
+            x-transition
+            class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 dark:border-red-400 rounded-lg shadow-lg">
+            <div class="flex items-center gap-3">
+                <svg class="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10A8 8 0 112 10a8 8 0 0116 0zM9 7a1 1 0 012 0v3a1 1 0 01-2 0V7zm1 7a1.25 1.25 0 100-2.5A1.25 1.25 0 0010 14z" clip-rule="evenodd" />
+                </svg>
+                <div>
+                    <p class="text-red-700 dark:text-red-200 font-semibold">{{ __('Password update failed.') }}</p>
+                    <p class="text-sm text-red-600 dark:text-red-300 mt-1">{{ __('Please review the validation errors and try again.') }}</p>
                 </div>
             </div>
         </div>
@@ -38,7 +95,7 @@
     </div>
 
     <div class="card-body">
-        <form method="post" action="{{ route('password.update') }}" class="space-y-6" x-data="passwordForm()">
+        <form method="post" action="{{ route('password.update') }}" class="space-y-6" x-data="passwordForm()" @submit="validateBeforeSubmit($event)">
             @csrf
             @method('put')
 
@@ -209,6 +266,16 @@
                     </div>
                 </div>
 
+                @if ($errors->updatePassword->has('password'))
+                    @php
+                        $confirmationRelatedError = collect($errors->updatePassword->get('password'))
+                            ->first(fn ($message) => str_contains(strtolower($message), 'confirm'));
+                    @endphp
+                    @if ($confirmationRelatedError)
+                        <p class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $confirmationRelatedError }}</p>
+                    @endif
+                @endif
+
                 <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
             </div>
 
@@ -322,6 +389,32 @@ function passwordForm() {
                 this.passwordsMatch = false;
                 this.passwordMatchMessage = 'Passwords do not match';
             }
+        },
+
+        validateBeforeSubmit(event) {
+            const passwordField = document.getElementById('update_password_password');
+            const confirmationField = document.getElementById('update_password_password_confirmation');
+            const password = passwordField ? passwordField.value : '';
+            const confirmation = confirmationField ? confirmationField.value : '';
+
+            if (!confirmation) {
+                this.passwordsMatch = false;
+                this.passwordMatchMessage = 'Please confirm your new password';
+                event.preventDefault();
+                confirmationField?.focus();
+                return;
+            }
+
+            if (password !== confirmation) {
+                this.passwordsMatch = false;
+                this.passwordMatchMessage = 'Passwords do not match';
+                event.preventDefault();
+                confirmationField?.focus();
+                return;
+            }
+
+            this.passwordsMatch = true;
+            this.passwordMatchMessage = 'Passwords match!';
         }
     }
 }

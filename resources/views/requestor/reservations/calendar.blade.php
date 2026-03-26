@@ -38,13 +38,13 @@
     .calendar-container {
         padding: 10px;
     }
-    
+
     /* Enhanced calendar event styling */
     .fc-event-content-enhanced {
         cursor: pointer;
         transition: all 0.15s ease;
     }
-    
+
     .fc-event {
         border-radius: 3px !important;
         border-width: 0 !important;
@@ -52,28 +52,28 @@
         box-shadow: 0 1px 2px rgba(0,0,0,0.06);
         transition: all 0.15s ease;
     }
-    
+
     .fc-event:hover {
         box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         transform: translateY(-1px);
     }
-    
+
     .fc-daygrid-event {
         margin: 1px 2px;
         padding: 0;
     }
-    
+
     /* Calendar title styling */
     .fc .fc-toolbar-title {
         font-size: 1.1rem;
         font-weight: 600;
         color: #1f2937;
     }
-    
+
     .dark .fc .fc-toolbar-title {
         color: #f3f4f6;
     }
-    
+
     /* Button styling - Clean and minimal */
     .fc .fc-button-primary {
         background-color: #5b5fc7 !important;
@@ -87,24 +87,24 @@
         min-height: 30px;
         text-transform: capitalize;
     }
-    
+
     .fc .fc-button-primary:hover {
         background-color: #4a4eb5 !important;
         border-color: #4a4eb5 !important;
     }
-    
+
     .fc .fc-button-primary:disabled {
         background-color: #d1d5db !important;
         border-color: #d1d5db !important;
         color: #6b7280 !important;
         opacity: 1;
     }
-    
+
     .fc .fc-button-active {
         background-color: #4338ca !important;
         border-color: #4338ca !important;
     }
-    
+
     /* Toolbar layout */
     .fc .fc-toolbar {
         margin-bottom: 12px !important;
@@ -113,13 +113,13 @@
         flex-wrap: wrap;
         justify-content: center;
     }
-    
+
     .fc .fc-toolbar-chunk {
         display: flex;
         align-items: center;
         gap: 4px;
     }
-    
+
     /* Button groups */
     .fc .fc-button-group {
         display: flex;
@@ -127,29 +127,29 @@
         border-radius: 6px;
         overflow: hidden;
     }
-    
+
     .fc .fc-button-group > .fc-button {
         border-radius: 0 !important;
         margin: 0 !important;
     }
-    
+
     .fc .fc-button-group > .fc-button:first-child {
         border-radius: 6px 0 0 6px !important;
     }
-    
+
     .fc .fc-button-group > .fc-button:last-child {
         border-radius: 0 6px 6px 0 !important;
     }
-    
+
     /* Table styling */
     .fc-theme-standard td, .fc-theme-standard th {
         border-color: #e5e7eb;
     }
-    
+
     .dark .fc-theme-standard td, .dark .fc-theme-standard th {
         border-color: #374151;
     }
-    
+
     /* Column headers */
     .fc .fc-col-header-cell {
         background-color: #f9fafb;
@@ -161,39 +161,39 @@
         padding: 8px 0;
         border-bottom: 1px solid #e5e7eb;
     }
-    
+
     .dark .fc .fc-col-header-cell {
         background-color: #1f2937;
         color: #9ca3b8;
         border-bottom-color: #374151;
     }
-    
+
     /* Day cells */
     .fc .fc-daygrid-day-top {
         padding: 4px;
         font-weight: 500;
         justify-content: center;
     }
-    
+
     .fc .fc-daygrid-day.fc-day-today {
         background-color: #fefce8 !important;
     }
-    
+
     .dark .fc .fc-daygrid-day.fc-day-today {
         background-color: rgba(234, 179, 8, 0.1) !important;
     }
-    
+
     .fc .fc-daygrid-day-number {
         color: #374151;
         font-size: 0.8rem;
         font-weight: 500;
         padding: 0;
     }
-    
+
     .dark .fc .fc-daygrid-day-number {
         color: #d1d5db;
     }
-    
+
     .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
         background-color: #eab308;
         color: white;
@@ -206,79 +206,79 @@
         font-weight: 600;
         font-size: 0.7rem;
     }
-    
+
     /* Day cell frame - balanced height */
     .fc .fc-daygrid-day-frame {
         min-height: 60px;
     }
-    
+
     /* List view styling */
     .fc-list {
         border: none !important;
     }
-    
+
     .fc-list-day-cushion {
         background-color: #f9fafb !important;
         padding: 10px 12px !important;
         font-size: 0.8rem;
     }
-    
+
     .dark .fc-list-day-cushion {
         background-color: #1f2937 !important;
     }
-    
+
     .fc-list-event td {
         padding: 10px 12px !important;
         font-size: 0.85rem;
     }
-    
+
     .fc-list-empty {
         background-color: #f9fafb !important;
         text-align: center;
         padding: 40px 20px !important;
     }
-    
+
     .fc-list-empty-cushion {
         font-size: 0.9rem;
         color: #6b7280;
     }
-    
+
     /* Time grid (Week view) */
     .fc-timegrid-slot {
         height: 2.5em !important;
     }
-    
+
     .fc-timegrid-slot-label {
         font-size: 0.65rem !important;
         color: #9ca3af;
     }
-    
+
     .fc-timegrid-axis {
         width: 45px !important;
     }
-    
+
     /* Scrollbar styling */
     .fc-scroller {
         scrollbar-width: thin;
         scrollbar-color: #e5e7eb transparent;
     }
-    
+
     .fc-scroller::-webkit-scrollbar {
         width: 6px;
         height: 6px;
     }
-    
+
     .fc-scroller::-webkit-scrollbar-thumb {
         background-color: #d1d5db;
         border-radius: 4px;
     }
-    
+
     /* ========== MOBILE STYLES (max-width: 480px) ========== */
     @media (max-width: 480px) {
         .calendar-container {
             padding: 6px;
         }
-        
+
         /* Toolbar - centered stacked layout */
         .fc .fc-toolbar {
             display: flex;
@@ -287,122 +287,122 @@
             gap: 8px;
             margin-bottom: 10px !important;
         }
-        
+
         .fc .fc-toolbar-chunk {
             justify-content: center;
         }
-        
+
         /* Title */
         .fc .fc-toolbar-title {
             font-size: 1rem !important;
             font-weight: 600;
         }
-        
+
         /* Compact buttons */
         .fc .fc-button-primary {
             font-size: 0.65rem !important;
             padding: 5px 10px !important;
             min-height: 28px;
         }
-        
+
         /* Column headers */
         .fc .fc-col-header-cell {
             font-size: 0.6rem;
             padding: 6px 0;
         }
-        
+
         /* Day numbers */
         .fc .fc-daygrid-day-number {
             font-size: 0.75rem;
         }
-        
+
         .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
             width: 20px;
             height: 20px;
             font-size: 0.65rem;
         }
-        
+
         /* Day cell frame */
         .fc .fc-daygrid-day-frame {
             min-height: 50px;
         }
-        
+
         /* Week view */
         .fc-timegrid-slot {
             height: 2em !important;
         }
-        
+
         .fc-timegrid-slot-label {
             font-size: 0.55rem !important;
         }
-        
+
         .fc-timegrid-axis {
             width: 35px !important;
         }
-        
+
         /* List view */
         .fc-list-day-cushion {
             padding: 8px 10px !important;
             font-size: 0.75rem;
         }
-        
+
         .fc-list-event td {
             padding: 8px 10px !important;
             font-size: 0.8rem;
         }
     }
-    
+
     /* Tablet */
     @media (min-width: 481px) and (max-width: 768px) {
         .calendar-container {
             padding: 10px;
         }
-        
+
         .fc .fc-toolbar {
             flex-direction: row;
             justify-content: space-between;
         }
-        
+
         .fc .fc-toolbar-title {
             font-size: 1.1rem !important;
         }
-        
+
         .fc .fc-daygrid-day-frame {
             min-height: 55px;
         }
     }
-    
+
     /* Desktop */
     @media (min-width: 769px) {
         .calendar-container {
             padding: 16px;
         }
-        
+
         .fc .fc-toolbar {
             flex-direction: row;
             justify-content: space-between;
             margin-bottom: 16px !important;
         }
-        
+
         .fc .fc-toolbar-title {
             font-size: 1.25rem !important;
         }
-        
+
         .fc .fc-button-primary {
             font-size: 0.75rem;
             padding: 6px 14px !important;
             min-height: 34px;
         }
-        
+
         .fc .fc-col-header-cell {
             font-size: 0.7rem;
             padding: 10px 4px;
         }
-        
+
         .fc .fc-daygrid-day-frame {
             min-height: 80px;
         }
-        
+
         .fc .fc-daygrid-day.fc-day-today .fc-daygrid-day-number {
             width: 26px;
             height: 26px;
@@ -474,7 +474,7 @@
 
         function extractTimePart(value) {
             if (!value) return null;
-            
+
             // Prefer string manipulation to preserve raw time if possible
             if (typeof value === 'string') {
                 if (value.includes('T')) {
@@ -734,13 +734,13 @@
                     const displayTime = extendedProps.scheduleTime || raw.schedule_time;
                     rows.push(`<strong>Time:</strong> ${displayTime ? escapeHtml(displayTime) : formatTimeDisplay(info.event.start)}`);
                     rows.push(`<strong>Service:</strong> ${escapeHtml(extendedProps.service || '—')}`);
-                    
+
                     let statusLabel = formatLabel(extendedProps.status);
                     if (extendedProps.status === 'adviser_approved') {
                          statusLabel = (raw.priest_selection_type === 'external') ? 'Awaiting Admin' : 'Awaiting Priest';
                     }
                     rows.push(`<strong>Status:</strong> ${escapeHtml(statusLabel)}`);
-                    
+
                     if (raw.purpose) rows.push(`<strong>Purpose:</strong> ${escapeHtml(raw.purpose)}`);
                     if (raw.theme) rows.push(`<strong>Theme:</strong> ${escapeHtml(raw.theme)}`);
                     if (raw.details) rows.push(`<strong>Details:</strong> ${escapeHtml(raw.details)}`);
@@ -750,8 +750,23 @@
                     if (raw.prayer_leader) rows.push(`<strong>Prayer Leader:</strong> ${escapeHtml(raw.prayer_leader)}`);
                     if (extendedProps.participants) rows.push(`<strong>Participants:</strong> ${escapeHtml(extendedProps.participants)}`);
                     if (extendedProps.venue) rows.push(`<strong>Venue:</strong> ${escapeHtml(extendedProps.venue)}`);
-                    if (raw.officiant) {
-                        const priestName = raw.officiant.full_name || [raw.officiant.first_name, raw.officiant.last_name].filter(Boolean).join(' ');
+                    const assignedPriests = [];
+                    if (Array.isArray(raw.priests) && raw.priests.length > 0) {
+                        raw.priests.forEach(priest => {
+                            const priestName = priest.full_name || [priest.first_name, priest.middle_name, priest.last_name].filter(Boolean).join(' ');
+                            if (!priestName) return;
+
+                            const isMainCelebrant = Boolean(priest?.pivot?.is_main_celebrant)
+                                || (raw.officiant_id && Number(raw.officiant_id) === Number(priest.id));
+
+                            assignedPriests.push(isMainCelebrant ? `${priestName} (Main Celebrant)` : priestName);
+                        });
+                    }
+
+                    if (assignedPriests.length > 0) {
+                        rows.push(`<strong>Assigned Priest${assignedPriests.length > 1 ? 's' : ''}:</strong> ${escapeHtml(assignedPriests.join(', '))}`);
+                    } else if (raw.officiant) {
+                        const priestName = raw.officiant.full_name || [raw.officiant.first_name, raw.officiant.middle_name, raw.officiant.last_name].filter(Boolean).join(' ');
                         if (priestName) {
                             rows.push(`<strong>Assigned Priest:</strong> ${escapeHtml(priestName)}`);
                         }
@@ -771,6 +786,22 @@
                         ];
                         const externalName = externalCandidates.find(v => v && String(v).trim());
                         if (externalName) rows.push(`<strong>Presider:</strong> ${escapeHtml(externalName)} (External)`);
+                    }
+
+                    const organizations = [];
+                    if (Array.isArray(raw.organizations) && raw.organizations.length > 0) {
+                        raw.organizations.forEach(organization => {
+                            const orgName = organization?.org_name || organization?.name;
+                            if (orgName) {
+                                organizations.push(orgName);
+                            }
+                        });
+                    } else if (raw.organization && raw.organization.org_name) {
+                        organizations.push(raw.organization.org_name);
+                    }
+
+                    if (organizations.length > 0) {
+                        rows.push(`<strong>Organization${organizations.length > 1 ? 's' : ''}:</strong> ${escapeHtml(organizations.join(', '))}`);
                     }
                 } else if (extendedProps.entryType === 'org_booking') {
                     const displayTime = extendedProps.scheduleTime;
@@ -833,18 +864,18 @@
             eventContent(arg) {
                 const wrapper = document.createElement('div');
                 wrapper.className = 'fc-event-content-enhanced';
-                
+
                 const isMobile = window.innerWidth < 480;
                 const isSmallMobile = window.innerWidth < 380;
-                
+
                 wrapper.style.padding = isMobile ? '1px 2px' : '3px 5px';
                 wrapper.style.fontSize = isMobile ? '0.6rem' : '0.72rem';
                 wrapper.style.lineHeight = '1.2';
                 wrapper.style.overflow = 'hidden';
-                
+
                 const { extendedProps } = arg.event;
                 const isReservation = extendedProps.entryType === 'reservation';
-                
+
                 // Title with time - compact for mobile
                 const titleDiv = document.createElement('div');
                 titleDiv.style.fontWeight = '600';
@@ -853,30 +884,30 @@
                 titleDiv.style.whiteSpace = 'nowrap';
                 titleDiv.style.overflow = 'hidden';
                 titleDiv.style.textOverflow = 'ellipsis';
-                
+
                 let displayTime = '';
                 if (isReservation && extendedProps.scheduleTime) {
                     displayTime = extendedProps.scheduleTime.substring(0, 5);
                 } else if (arg.timeText) {
                     displayTime = arg.timeText;
                 }
-                
+
                 // On very small screens, just show time or truncated title
                 if (isSmallMobile) {
-                    titleDiv.innerHTML = displayTime 
+                    titleDiv.innerHTML = displayTime
                         ? `<span style="font-weight: 700;">${escapeHtml(displayTime)}</span>`
                         : escapeHtml(arg.event.title.substring(0, 8));
                 } else if (isMobile) {
-                    titleDiv.innerHTML = displayTime 
+                    titleDiv.innerHTML = displayTime
                         ? `<span style="font-weight: 700;">${escapeHtml(displayTime)}</span> ${escapeHtml(arg.event.title.substring(0, 12))}`
                         : escapeHtml(arg.event.title.substring(0, 15));
                 } else {
-                    titleDiv.innerHTML = displayTime 
+                    titleDiv.innerHTML = displayTime
                         ? `<span style="font-weight: 700; color: rgba(255,255,255,0.95);">${escapeHtml(displayTime)}</span> ${escapeHtml(arg.event.title)}`
                         : escapeHtml(arg.event.title);
                 }
                 wrapper.appendChild(titleDiv);
-                
+
                 // Only show additional info on larger screens
                 if (!isMobile) {
                     // Service name for reservations
@@ -892,7 +923,7 @@
                         serviceDiv.innerHTML = `📋 ${escapeHtml(extendedProps.service)}`;
                         wrapper.appendChild(serviceDiv);
                     }
-                    
+
                     // Venue
                     if (extendedProps.venue) {
                         const venueDiv = document.createElement('div');
@@ -907,7 +938,7 @@
                         wrapper.appendChild(venueDiv);
                     }
                 }
-                
+
                 // Status badge - compact version for all screens
                 if (isReservation && extendedProps.status && !isSmallMobile) {
                     const statusDiv = document.createElement('div');
@@ -919,7 +950,7 @@
                     statusDiv.style.fontWeight = '600';
                     statusDiv.style.textTransform = 'uppercase';
                     statusDiv.style.letterSpacing = '0.3px';
-                    
+
                     const status = extendedProps.status.toLowerCase();
                     if (status === 'approved') {
                         statusDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.9)';
@@ -943,10 +974,10 @@
                         statusDiv.style.color = 'white';
                         statusDiv.innerHTML = isMobile ? '•' : escapeHtml(formatLabel(extendedProps.status));
                     }
-                    
+
                     wrapper.appendChild(statusDiv);
                 }
-                
+
                 return { domNodes: [wrapper] };
             }
         });

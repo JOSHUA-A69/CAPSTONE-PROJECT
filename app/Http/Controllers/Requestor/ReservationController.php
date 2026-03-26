@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use App\Support\Notifications as NotificationHelper;
 
 class ReservationController extends Controller
@@ -36,12 +37,31 @@ class ReservationController extends Controller
 
     public function index(Request $request)
     {
-        $query = Reservation::with(['service', 'venue', 'organization', 'officiant'])
+        $query = Reservation::with(['service', 'venue', 'organization', 'organizations', 'officiant', 'priests'])
             ->where('user_id', Auth::id());
 
-        // Apply status filter if provided
+        $serviceInfoFilter = trim((string) $request->get('service_info', ''));
+        $scheduleFilter = $request->get('schedule_date');
         $statusFilter = $request->get('status');
-        
+
+        if ($serviceInfoFilter !== '') {
+            $query->where(function ($innerQuery) use ($serviceInfoFilter) {
+                $innerQuery
+                    ->whereHas('service', function ($serviceQuery) use ($serviceInfoFilter) {
+                        $serviceQuery->where('service_name', 'like', '%' . $serviceInfoFilter . '%');
+                    })
+                    ->orWhereHas('venue', function ($venueQuery) use ($serviceInfoFilter) {
+                        $venueQuery->where('name', 'like', '%' . $serviceInfoFilter . '%');
+                    })
+                    ->orWhere('custom_venue_name', 'like', '%' . $serviceInfoFilter . '%');
+            });
+        }
+
+        if (!empty($scheduleFilter)) {
+            $query->whereDate('schedule_date', $scheduleFilter);
+        }
+
+        // Keep legacy grouped status filters while supporting exact status matching.
         if ($statusFilter === 'pending') {
             // Show pending and adviser_approved (waiting for admin approval)
             $query->whereIn('status', ['pending', 'adviser_approved']);
@@ -52,11 +72,13 @@ class ReservationController extends Controller
             // Show upcoming approved reservations
             $query->whereIn('status', ['admin_approved', 'approved', 'confirmed'])
                   ->where('schedule_date', '>=', now());
+        } elseif (!empty($statusFilter)) {
+            $query->where('status', $statusFilter);
         }
 
-        $reservations = $query->orderByDesc('created_at')->paginate(15);
+        $reservations = $query->orderByDesc('created_at')->paginate(5)->withQueryString();
 
-        return view('requestor.reservations.index', compact('reservations', 'statusFilter'));
+        return view('requestor.reservations.index', compact('reservations', 'statusFilter', 'serviceInfoFilter', 'scheduleFilter'));
     }
 
     /**
@@ -67,7 +89,10 @@ class ReservationController extends Controller
         $reservations = Reservation::with([
                 'service:service_id,service_name,service_category',
                 'venue:venue_id,name',
-            'officiant:id,first_name,middle_name,last_name'
+                'officiant:id,first_name,middle_name,last_name',
+                'priests:id,first_name,middle_name,last_name,email',
+                'organizations:org_id,org_name',
+                'organization:org_id,org_name'
             ])
             ->where('user_id', Auth::id())
             ->whereDate('schedule_date', '>=', now()->toDateString())
@@ -162,7 +187,7 @@ class ReservationController extends Controller
     {
         try {
             DB::beginTransaction();
-            
+
             $data = $request->validated();
             $data['user_id'] = Auth::id();
 
@@ -215,6 +240,10 @@ class ReservationController extends Controller
 
             // Handle priest selection based on type
             $priestIds = $request->input('priest_ids', []);
+            $mainCelebrantId = $request->input('main_celebrant_id');
+            $primaryPriestId = !empty($mainCelebrantId)
+                ? $mainCelebrantId
+                : (!empty($priestIds) ? $priestIds[0] : null);
             if ($data['priest_selection_type'] === 'any_available') {
                 // Remove officiant_id - admin will assign later
                 $data['officiant_id'] = null;
@@ -223,9 +252,14 @@ class ReservationController extends Controller
                 $data['officiant_id'] = null;
             } elseif ($data['priest_selection_type'] === 'specific' && !empty($priestIds)) {
                 // Set first priest as primary officiant for backward compatibility
-                $data['officiant_id'] = $priestIds[0];
+                $data['officiant_id'] = $primaryPriestId;
             }
             // For 'specific' type, officiant_id is already in the data from validation
+
+            // Keep compatibility with deployments where end_time has not been migrated yet.
+            if (!Schema::hasColumn('reservations', 'end_time')) {
+                unset($data['end_time']);
+            }
 
             // Remove form-only fields not part of reservations table
             unset($data['service_category']);
@@ -234,33 +268,52 @@ class ReservationController extends Controller
 
             // Attach all selected organizations
             if (!empty($organizationIds)) {
+                $hasOrgNotified = Schema::hasColumn('reservation_organization', 'notified');
+                $hasOrgNotifiedAt = Schema::hasColumn('reservation_organization', 'notified_at');
+
                 $orgData = [];
                 foreach ($organizationIds as $orgId) {
-                    $orgData[$orgId] = [
-                        'notified' => false,
+                    $pivotData = [
                         'created_at' => now(),
-                        'updated_at' => now()
+                        'updated_at' => now(),
                     ];
+
+                    if ($hasOrgNotified) {
+                        $pivotData['notified'] = false;
+                    }
+                    if ($hasOrgNotifiedAt) {
+                        $pivotData['notified_at'] = null;
+                    }
+
+                    $orgData[$orgId] = $pivotData;
                 }
                 $reservation->organizations()->attach($orgData);
-                
+
                 // Send notifications to all organizations
                 $this->notifyOrganizations($reservation, $organizationIds);
             }
 
             // Attach all selected priests (only for 'specific' type)
             if ($data['priest_selection_type'] === 'specific' && !empty($priestIds)) {
+                $supportsMainCelebrant = Reservation::supportsMainCelebrantPivotColumn();
+
                 $priestData = [];
                 foreach ($priestIds as $priestId) {
-                    $priestData[$priestId] = [
+                    $pivotData = [
                         'confirmation_status' => 'pending',
                         'notified' => false,
                         'created_at' => now(),
                         'updated_at' => now()
                     ];
+
+                    if ($supportsMainCelebrant) {
+                        $pivotData['is_main_celebrant'] = ((int) $priestId === (int) $primaryPriestId);
+                    }
+
+                    $priestData[$priestId] = $pivotData;
                 }
                 $reservation->priests()->attach($priestData);
-                
+
                 // Send notifications to all priests
                 $this->notifyPriests($reservation, $priestIds);
             }
@@ -312,7 +365,7 @@ class ReservationController extends Controller
             return Redirect::route('requestor.reservations.index')
                 ->with('success', 'Reservation Added Successfully!')
                 ->with('message', $message);
-                
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Reservation creation failed: ' . $e->getMessage());
@@ -325,9 +378,12 @@ class ReservationController extends Controller
      */
     protected function notifyOrganizations($reservation, $organizationIds)
     {
+        $hasOrgNotified = Schema::hasColumn('reservation_organization', 'notified');
+        $hasOrgNotifiedAt = Schema::hasColumn('reservation_organization', 'notified_at');
+
         foreach ($organizationIds as $orgId) {
             $organization = Organization::with('adviser')->find($orgId);
-            
+
             if ($organization && $organization->adviser) {
                 // Create notification for organization adviser
                 Notification::create([
@@ -339,13 +395,20 @@ class ReservationController extends Controller
                     'related_id' => $reservation->reservation_id,
                     'read' => false
                 ]);
-                
+
                 // Update pivot table
-                $reservation->organizations()->updateExistingPivot($orgId, [
-                    'notified' => true,
-                    'notified_at' => now()
-                ]);
-                
+                $pivotUpdate = [];
+                if ($hasOrgNotified) {
+                    $pivotUpdate['notified'] = true;
+                }
+                if ($hasOrgNotifiedAt) {
+                    $pivotUpdate['notified_at'] = now();
+                }
+
+                if (!empty($pivotUpdate)) {
+                    $reservation->organizations()->updateExistingPivot($orgId, $pivotUpdate);
+                }
+
                 Log::info("Notified organization {$organization->org_name} (adviser: {$organization->adviser->email})");
             }
         }
@@ -358,7 +421,7 @@ class ReservationController extends Controller
     {
         foreach ($priestIds as $priestId) {
             $priest = User::find($priestId);
-            
+
             if ($priest) {
                 // Create notification for priest
                 Notification::create([
@@ -371,13 +434,13 @@ class ReservationController extends Controller
                     'read' => false,
                     'action_required' => true
                 ]);
-                
+
                 // Update pivot table
                 $reservation->priests()->updateExistingPivot($priestId, [
                     'notified' => true,
                     'notified_at' => now()
                 ]);
-                
+
                 Log::info("Notified priest {$priest->full_name} ({$priest->email})");
             }
         }
@@ -385,7 +448,7 @@ class ReservationController extends Controller
 
     public function show($reservation_id)
     {
-        $reservation = Reservation::with(['service', 'venue', 'organization.adviser', 'officiant', 'priests', 'history.reservation'])
+        $reservation = Reservation::with(['service', 'venue', 'organization.adviser', 'organizations.adviser', 'officiant', 'priests', 'history.reservation'])
             ->where('user_id', Auth::id())
             ->findOrFail($reservation_id);
 
@@ -402,7 +465,7 @@ class ReservationController extends Controller
             'reason' => 'required|string|min:10|max:1000',
         ]);
 
-        $reservation = Reservation::with(['service', 'organization.adviser', 'officiant'])
+        $reservation = Reservation::with(['service', 'organization.adviser', 'organizations.adviser', 'officiant'])
             ->where('user_id', Auth::id())
             ->findOrFail($reservation_id);
 
@@ -485,7 +548,7 @@ class ReservationController extends Controller
      */
     public function showConfirmation($reservation_id, $token)
     {
-        $reservation = Reservation::with(['service', 'venue', 'organization'])
+        $reservation = Reservation::with(['service', 'venue', 'organization', 'organizations'])
             ->where('reservation_id', $reservation_id)
             ->where('user_id', Auth::id())
             ->where('requestor_confirmation_token', $token)
@@ -605,7 +668,7 @@ class ReservationController extends Controller
      */
     public function edit($reservation_id)
     {
-        $reservation = Reservation::with(['service', 'venue', 'organization', 'officiant'])
+        $reservation = Reservation::with(['service', 'venue', 'organization', 'organizations', 'officiant'])
             ->where('user_id', Auth::id())
             ->findOrFail($reservation_id);
 
@@ -632,7 +695,7 @@ class ReservationController extends Controller
      */
     public function update(Request $request, $reservation_id)
     {
-        $reservation = Reservation::with(['service', 'venue', 'organization', 'officiant'])
+        $reservation = Reservation::with(['service', 'venue', 'organization', 'organizations', 'officiant'])
             ->where('user_id', Auth::id())
             ->findOrFail($reservation_id);
 

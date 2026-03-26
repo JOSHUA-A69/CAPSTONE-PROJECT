@@ -47,7 +47,8 @@ class ReservationRequest extends FormRequest
             'organization_ids.*' => ['integer', Rule::exists('organizations', 'org_id')],
             'priest_selection_type' => ['required', 'in:specific,any_available,external'],
             'schedule_date' => ['required', 'date', 'after:now'],
-            'schedule_time' => ['nullable', 'date_format:H:i,H:i:s'],
+            'schedule_time' => ['required', 'date_format:H:i,H:i:s'],
+            'end_time' => ['required', 'after:schedule_date'],
             'activity_name' => ['required', 'string', 'max:255'],
             'theme' => ['nullable', 'string', 'max:1000'],
             'purpose' => ['nullable', 'string', 'max:150'],
@@ -64,7 +65,16 @@ class ReservationRequest extends FormRequest
         // Priest selection validation based on type
         if ($this->priest_selection_type === 'specific') {
             $rules['priest_ids'] = ['required', 'array', 'min:1'];
-            $rules['priest_ids.*'] = ['integer', Rule::exists('users', 'id')->whereIn('role', ['priest', 'admin'])];
+            $rules['priest_ids.*'] = [
+                'integer',
+                Rule::exists('users', 'id')->where(function ($query) {
+                    $query->whereIn('role', ['priest', 'admin']);
+                }),
+            ];
+            // Validate main_celebrant_id if multiple priests selected
+            if (is_array($this->priest_ids) && count($this->priest_ids) > 1) {
+                $rules['main_celebrant_id'] = ['required', 'integer', 'in:' . implode(',', $this->priest_ids)];
+            }
         } elseif ($this->priest_selection_type === 'external') {
             $rules['external_priest_name'] = ['required', 'string', 'max:255'];
             $rules['external_priest_contact'] = ['nullable', 'string', 'max:255'];
@@ -152,13 +162,13 @@ class ReservationRequest extends FormRequest
 
             if (!$result['priest_available'] && $priestId) {
                 $errorMsg = "The selected priest is not available at this time.";
-                
+
                 // Find time suggestions
                 $timeSuggestion = collect($suggestions)->firstWhere('type', 'time');
                 if ($timeSuggestion) {
                     $errorMsg .= " " . $timeSuggestion['message'];
                 }
-                
+
                 // Find priest suggestions
                 $priestSuggestion = collect($suggestions)->firstWhere('type', 'priest');
                 if ($priestSuggestion) {
@@ -170,7 +180,7 @@ class ReservationRequest extends FormRequest
 
             if (!$result['venue_available'] && $venueId) {
                 $errorMsg = "The selected venue is not available at this time.";
-                
+
                 // Find venue suggestions
                 $venueSuggestion = collect($suggestions)->firstWhere('type', 'venue');
                 if ($venueSuggestion) {
@@ -182,7 +192,7 @@ class ReservationRequest extends FormRequest
 
             // Add general error if both conflicts exist
             if (!$result['priest_available'] && !$result['venue_available']) {
-                $validator->errors()->add('schedule_date', 
+                $validator->errors()->add('schedule_date',
                     "This time slot is already taken. Please select another date, time, venue, or priest.");
             }
         }
@@ -197,7 +207,7 @@ class ReservationRequest extends FormRequest
             // Use the original input since prepareForValidation already merged them
             $dateInput = $this->input('schedule_date');
             $timeInput = $this->input('schedule_time');
-            
+
             if ($dateInput && $timeInput) {
                 // Check if date already has time component
                 if (strpos($dateInput, ':') !== false) {
@@ -227,10 +237,14 @@ class ReservationRequest extends FormRequest
             'priest_ids.required' => 'Please select at least one priest from the list.',
             'priest_ids.min' => 'Please select at least one priest.',
             'priest_ids.*.exists' => 'One or more selected priests are invalid.',
+            'main_celebrant_id.required' => 'Please select a main celebrant when multiple priests are assigned.',
+            'main_celebrant_id.in' => 'The selected main celebrant must be one of the assigned priests.',
             'external_priest_name.required' => 'Please provide the name of your external priest.',
             'service_category.required' => 'Please select a service category.',
             'service_category.in' => 'Invalid service category.',
             'other_service_type.required' => 'Please enter the service type you are requesting.',
+            'end_time.required' => 'Please specify the time out for your reservation.',
+            'end_time.after' => 'Time Out must be after Time In.',
         ];
     }
 
@@ -239,10 +253,19 @@ class ReservationRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        $mergeData = [];
+
         if ($this->has('schedule_date') && $this->has('schedule_time')) {
-            $this->merge([
-                'schedule_date' => $this->schedule_date . ' ' . $this->schedule_time,
-            ]);
+            $mergeData['schedule_date'] = $this->schedule_date . ' ' . $this->schedule_time;
+        }
+
+        // Combine date with end_time to create a full datetime
+        if ($this->has('schedule_date') && $this->has('end_time')) {
+            $mergeData['end_time'] = $this->schedule_date . ' ' . $this->end_time;
+        }
+
+        if (!empty($mergeData)) {
+            $this->merge($mergeData);
         }
     }
 }

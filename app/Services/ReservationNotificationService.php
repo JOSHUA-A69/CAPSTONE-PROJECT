@@ -19,6 +19,7 @@ use App\Mail\RequestorConfirmedToAdmin;
 use App\Mail\PriestCancelledConfirmationToRequestor;
 use App\Mail\PriestCancelledConfirmationToAdmin;
 use App\Mail\RequestorPriestReassigned;
+use App\Mail\ReservationNeedsPriestAssignmentAdmin;
 use App\Mail\ReservationFinalApprovalToAdviser;
 use App\Mail\ReservationFinalApprovalToPriest;
 use Illuminate\Support\Facades\Mail;
@@ -56,7 +57,7 @@ class ReservationNotificationService
         try {
             $serviceName = $reservation->service?->service_name ?? 'Unknown Service';
             $message = "Your reservation for <strong>{$serviceName}</strong> has been submitted. ";
-            
+
             if ($priestSelectionType === 'specific') {
                 $message .= "The adviser and priest have been notified. Kindly wait for their confirmations.";
             } elseif ($priestSelectionType === 'any_available') {
@@ -145,10 +146,10 @@ class ReservationNotificationService
         if ($priestSelectionType === 'specific' && $reservation->officiant_id) {
             // Specific priest selected - notify them directly
             $priest = User::find($reservation->officiant_id);
-            
+
             if ($priest) {
                 Log::info('Notifying priest: ' . $priest->full_name . ' (ID: ' . $priest->id . ') for reservation #' . $reservation->reservation_id);
-                
+
                 // Send email to priest
                 try {
                     if ($priest->email) {
@@ -162,7 +163,7 @@ class ReservationNotificationService
                 } catch (\Throwable $e) {
                     Log::warning('Failed to send priest email on submission: ' . $e->getMessage());
                 }
-                
+
                 // Create in-app notification for priest
                 try {
                      $serviceName = $reservation->service?->service_name ?? 'Unknown Service';
@@ -190,15 +191,16 @@ class ReservationNotificationService
                 }
             }
         } elseif ($priestSelectionType === 'any_available' || $priestSelectionType === 'external') {
-            // Notify admin/staff for priest assignment or external priest review
-            $admins = User::whereIn('role', ['admin', 'staff'])->get();
-            
+            // For Any Available Priest, notify all active admins in-app and by email.
+            // For External Priest, keep in-app admin action alerts.
+            $admins = User::where('role', 'admin')->where('status', 'active')->get();
+
             foreach ($admins as $admin) {
                 try {
                     $serviceName = $reservation->service?->service_name ?? 'Unknown Service';
                     $actionType = $priestSelectionType === 'any_available' ? 'assign an available priest' : 'review external priest details';
                     $message = "New reservation requires admin action: <strong>{$serviceName}</strong> on " . $reservation->schedule_date->format('M d, Y h:i A') . ". Please {$actionType}.";
-                    
+
                     $notificationData = [
                         'user_id' => $admin->id,
                         'reservation_id' => $reservation->reservation_id,
@@ -206,7 +208,7 @@ class ReservationNotificationService
                         'type' => 'Assignment',
                         'sent_at' => now(),
                     ];
-                    
+
                     if (Schema::hasColumn('notifications', 'data')) {
                         $dataContent = [
                             'service_name' => $reservation->service?->service_name ?? 'Unknown Service',
@@ -215,19 +217,28 @@ class ReservationNotificationService
                             'priest_selection_type' => $priestSelectionType,
                             'action' => $priestSelectionType === 'any_available' ? 'admin_priest_assignment_required' : 'admin_external_priest_review',
                         ];
-                        
+
                         if ($priestSelectionType === 'external') {
                             $dataContent['external_priest_name'] = $reservation->external_priest_name ?? 'N/A';
                             $dataContent['external_priest_contact'] = $reservation->external_priest_contact ?? 'N/A';
                         }
-                        
+
                         $notificationData['data'] = json_encode($dataContent);
                     }
-                    
+
                     Notification::create($notificationData);
-                    Log::info('In-app notification created for admin (ID: ' . $admin->id . ') - ' . $priestSelectionType);
+                    Log::info('In-app admin notification created (admin ID: ' . $admin->id . ') - ' . $priestSelectionType);
+
+                    if ($priestSelectionType === 'any_available' && !empty($admin->email)) {
+                        $this->sendMailableSafely($admin->email, new ReservationNeedsPriestAssignmentAdmin($reservation), [
+                            'action' => 'reservation_submitted_admin_priest_assignment_required',
+                            'reservation_id' => $reservation->reservation_id,
+                            'user_id' => $admin->id,
+                        ]);
+                        Log::info('Priest-assignment email sent to admin: ' . $admin->email . ' for reservation #' . $reservation->reservation_id);
+                    }
                 } catch (\Throwable $e) {
-                    Log::error('Failed to create admin in-app notification: ' . $e->getMessage());
+                    Log::error('Failed to notify admin for priest assignment workflow: ' . $e->getMessage());
                 }
             }
         }
@@ -376,7 +387,7 @@ class ReservationNotificationService
     public function notifyAdviserRejected(Reservation $reservation, string $reason, ?string $organizationName = null): void
     {
         $orgInfo = $organizationName ? " ({$organizationName})" : '';
-        
+
         // Email to requestor
         try {
             if ($reservation->user && $reservation->user->email) {
@@ -421,7 +432,7 @@ class ReservationNotificationService
 
         // In-app notification for requestor
         try {
-            $message = $organizationName 
+            $message = $organizationName
                 ? "Your reservation was not approved by the adviser of {$organizationName}"
                 : "Your reservation was not approved by your adviser";
             $notificationData = [
@@ -976,7 +987,7 @@ class ReservationNotificationService
 
     /**
      * Send follow-up notification for unnoticed reservation (adviser hasn't acted in 24+ hours)
-     * 
+     *
      * This method:
      * 1. Sends email notification to staff about the unnoticed reservation
      * 2. Sends in-app notification to staff with adviser contact info
@@ -1242,7 +1253,7 @@ class ReservationNotificationService
     {
         $requestorName = $reservation->user ? ($reservation->user->first_name . ' ' . $reservation->user->last_name) : 'Unknown User';
         $priestNames = $reservation->priests->map(fn($p) => 'Fr. ' . $p->first_name . ' ' . $p->last_name)->join(', ');
-        
+
         if (empty($priestNames) && $reservation->officiant) {
             $priestNames = 'Fr. ' . $reservation->officiant->first_name . ' ' . $reservation->officiant->last_name;
         }
@@ -1657,7 +1668,7 @@ class ReservationNotificationService
                 } else {
                     Log::error('Twilio Error: ' . $response->body());
                 }
-            } 
+            }
             elseif ($provider === 'semaphore') {
                 $apiKey = config('services.semaphore.api_key');
                 $senderName = config('services.semaphore.sender_name', 'CREaM-HNU');
@@ -2049,18 +2060,18 @@ class ReservationNotificationService
     {
         $requestor = $reservation->user;
         $requestorName = $requestor ? ($requestor->first_name . ' ' . $requestor->last_name) : 'Unknown User';
-        
+
         // Build priest names list
         $priestNames = $reservation->priests->map(function ($priest) {
             return 'Fr. ' . $priest->first_name . ' ' . $priest->last_name;
         })->implode(', ');
-        
+
         if (empty($priestNames) && $reservation->external_priest_name) {
             $priestNames = $reservation->external_priest_name . ' (External)';
         }
-        
+
         $venueName = $reservation->custom_venue_name ?? $reservation->venue?->name ?? 'N/A';
-        
+
         // Email notification to requestor
         if ($requestor && $requestor->email) {
             try {

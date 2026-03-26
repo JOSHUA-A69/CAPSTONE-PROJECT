@@ -3,7 +3,7 @@
 @section('content')
 <style>
     /* ===== UNIVERSAL RESPONSIVE DESIGN FOR SERVICES PAGE ===== */
-    
+
     /* Base styles - Desktop first */
     .services-container {
         max-width: 1400px;
@@ -13,30 +13,30 @@
         display: flex;
         flex-direction: column;
     }
-    
+
     .services-header h1 {
         font-size: 1.875rem;
         font-weight: 700;
         line-height: 1.2;
     }
-    
+
     .services-header p {
         font-size: 1rem;
         color: #6b7280;
     }
-    
+
     .services-table-container {
         flex: 1;
         overflow: hidden;
         border-radius: 12px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
-    
+
     .services-table {
         width: 100%;
         border-collapse: collapse;
     }
-    
+
     .services-table th {
         padding: 1rem;
         font-size: 0.875rem;
@@ -44,12 +44,12 @@
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
-    
+
     .services-table td {
         padding: 1rem;
         font-size: 0.875rem;
     }
-    
+
     .edit-btn {
         padding: 0.5rem 1rem;
         font-size: 0.875rem;
@@ -57,23 +57,23 @@
         border-radius: 6px;
         transition: all 0.2s;
     }
-    
+
     /* ===== LARGE SCREENS (1280px+) ===== */
     @media (min-width: 1280px) {
         .services-container {
             padding: 2rem 3rem;
         }
-        
+
         .services-header h1 {
             font-size: 2rem;
         }
-        
+
         .services-table th,
         .services-table td {
             padding: 1.25rem 1.5rem;
         }
     }
-    
+
     /* ===== MEDIUM SCREENS / TABLETS (768px - 1023px) ===== */
     @media (max-width: 1023px) and (min-width: 768px) {
         .services-container {
@@ -81,31 +81,31 @@
             height: calc(100vh - 80px);
             overflow: hidden;
         }
-        
+
         .services-header h1 {
             font-size: 1.5rem;
         }
-        
+
         .services-header p {
             font-size: 0.875rem;
         }
-        
+
         .services-table-container {
             flex: 1;
             overflow-y: auto;
         }
-        
+
         .services-table th {
             padding: 0.75rem 0.5rem;
             font-size: 0.75rem;
         }
-        
+
         .services-table td {
             padding: 0.75rem 0.5rem;
             font-size: 0.8125rem;
         }
     }
-    
+
     /* ===== TABLET (640px - 767px) ===== */
     @media (max-width: 767px) and (min-width: 640px) {
         .services-container {
@@ -113,27 +113,27 @@
             height: calc(100vh - 70px);
             overflow: hidden;
         }
-        
+
         .services-header {
             margin-bottom: 0.75rem !important;
         }
-        
+
         .services-header h1 {
             font-size: 1.375rem;
             margin-bottom: 0.25rem;
         }
-        
+
         .services-header p {
             font-size: 0.8125rem;
         }
-        
+
         .services-table-container {
             flex: 1;
             overflow-y: auto;
             border-radius: 8px;
         }
     }
-    
+
     /* ===== MOBILE (481px - 639px) ===== */
     @media (max-width: 639px) and (min-width: 481px) {
         .services-container {
@@ -141,28 +141,28 @@
             height: calc(100vh - 65px);
             overflow: hidden;
         }
-        
+
         .services-header {
             margin-bottom: 0.5rem !important;
             padding-bottom: 0.5rem !important;
         }
-        
+
         .services-header h1 {
             font-size: 1.25rem;
             margin-bottom: 0.125rem;
         }
-        
+
         .services-header p {
             font-size: 0.75rem;
         }
-        
+
         .services-table-container {
             flex: 1;
             overflow-y: auto;
             border-radius: 8px;
         }
     }
-    
+
     /* ===== SMALL MOBILE (376px - 480px) ===== */
     @media (max-width: 480px) and (min-width: 376px) {
         .services-container {
@@ -170,27 +170,27 @@
             height: calc(100vh - 60px);
             overflow: hidden;
         }
-        
+
         .services-header {
             margin-bottom: 0.375rem !important;
             padding-bottom: 0.25rem !important;
         }
-        
+
         .services-header h1 {
             font-size: 1.125rem;
         }
-        
+
         .services-header p {
             font-size: 0.6875rem;
         }
-        
+
         .services-table-container {
             flex: 1;
             overflow-y: auto;
             border-radius: 6px;
         }
     }
-    
+
     /* ===== EXTRA SMALL MOBILE (320px - 375px) ===== */
     @media (max-width: 375px) and (min-width: 321px) {
         .services-container {
@@ -198,27 +198,27 @@
             height: calc(100vh - 56px);
             overflow: hidden;
         }
-        
+
         .services-header {
             margin-bottom: 0.25rem !important;
             padding-bottom: 0.125rem !important;
         }
-        
+
         .services-header h1 {
             font-size: 1rem;
         }
-        
+
         .services-header p {
             font-size: 0.625rem;
         }
-        
+
         .services-table-container {
             flex: 1;
             overflow-y: auto;
             border-radius: 6px;
         }
     }
-    
+
     /* ===== ULTRA SMALL MOBILE (320px and below) ===== */
     @media (max-width: 320px) {
         .services-container {
@@ -226,71 +226,71 @@
             height: calc(100vh - 52px);
             overflow: hidden;
         }
-        
+
         .services-header {
             margin-bottom: 0.125rem !important;
             padding-bottom: 0 !important;
         }
-        
+
         .services-header h1 {
             font-size: 0.9375rem;
         }
-        
+
         .services-header p {
             font-size: 0.5625rem;
             display: none;
         }
-        
+
         .services-table-container {
             flex: 1;
             overflow-y: auto;
             border-radius: 4px;
         }
     }
-    
+
     /* ===== MODAL RESPONSIVE STYLES ===== */
     #editModal .modal-content {
         max-height: 90vh;
         overflow-y: auto;
     }
-    
+
     @media (max-width: 640px) {
         #editModal > div:last-child {
             margin: 0.5rem;
             max-width: calc(100vw - 1rem);
         }
-        
+
         #editModal .px-6 {
             padding-left: 1rem;
             padding-right: 1rem;
         }
-        
+
         #editModal .py-4 {
             padding-top: 0.75rem;
             padding-bottom: 0.75rem;
         }
-        
+
         #editModal input,
         #editModal select,
         #editModal textarea {
             font-size: 16px;
         }
     }
-    
+
     @media (max-width: 375px) {
         #editModal > div:last-child {
             margin: 0.25rem;
             max-width: calc(100vw - 0.5rem);
         }
-        
+
         #editModal .text-xl {
             font-size: 1rem;
         }
-        
+
         #editModal label {
             font-size: 0.75rem;
         }
-        
+
         #editModal input,
         #editModal select,
         #editModal textarea {
@@ -361,7 +361,7 @@
                             <div class="service-description text-sm text-gray-600 dark:text-gray-300" title="{{ $service->description ?? '—' }}">{{ $service->description ?? '—' }}</div>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <button 
+                            <button
                                 data-name="{{ e($service->service_name) }}"
                                 data-description="{{ e($service->description) }}"
                                 data-category="{{ e($service->service_category) }}"
@@ -475,7 +475,7 @@
             @endif
 
             <div class="service-card-actions">
-                <button 
+                <button
                     data-name="{{ e($service->service_name) }}"
                     data-description="{{ e($service->description) }}"
                     data-category="{{ e($service->service_category) }}"
@@ -515,8 +515,24 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration (minutes)</label>
-                    <input type="number" id="edit_duration" name="duration" min="0" step="5" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration <span class="text-red-600">*</span></label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Hours</label>
+                            <input type="number" id="edit_hours" min="0" max="5" value="1" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Minutes</label>
+                            <select id="edit_minutes" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white">
+                                <option value="0">0</option>
+                                <option value="15">15</option>
+                                <option value="30">30</option>
+                                <option value="45">45</option>
+                            </select>
+                        </div>
+                    </div>
+                    <input type="hidden" id="edit_duration_hidden" name="duration" value="60">
+                    <p id="edit_duration_error" class="mt-2 text-sm text-red-600 hidden">Duration cannot exceed 5 hours (300 minutes).</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description (Optional)</label>
@@ -524,7 +540,7 @@
                 </div>
             </div>
             <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex gap-3">
-                <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200">
+                <button type="button" onclick="submitEditForm()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition duration-200">
                     Update Service
                 </button>
                 <button type="button" onclick="closeEditModal()" class="flex-1 bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-semibold py-2 px-4 rounded-md transition duration-200">
@@ -536,13 +552,44 @@
     </div>
 
 <script>
+function validateEditDuration() {
+    const hours = parseInt(document.getElementById('edit_hours').value, 10) || 0;
+    const minutes = parseInt(document.getElementById('edit_minutes').value, 10) || 0;
+    const totalMinutes = (hours * 60) + minutes;
+    const durationHidden = document.getElementById('edit_duration_hidden');
+    const durationError = document.getElementById('edit_duration_error');
+
+    durationHidden.value = totalMinutes;
+
+    if (totalMinutes > 300) {
+        durationError.classList.remove('hidden');
+        return false;
+    }
+
+    durationError.classList.add('hidden');
+    return true;
+}
+
+function submitEditForm() {
+    if (!validateEditDuration()) {
+        return;
+    }
+
+    document.getElementById('editForm').submit();
+}
+
 function openEditModal(id, name, description, category, duration) {
     document.getElementById('edit_service_name').value = name || '';
     document.getElementById('edit_description').value = description || '';
     const catSelect = document.getElementById('edit_service_category');
     if (catSelect) catSelect.value = category || '';
-    const durInput = document.getElementById('edit_duration');
-    if (durInput) durInput.value = duration || '';
+    const totalMinutes = parseInt(duration, 10) || 0;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    document.getElementById('edit_hours').value = hours;
+    document.getElementById('edit_minutes').value = String(minutes);
+    document.getElementById('edit_duration_hidden').value = totalMinutes;
+    document.getElementById('edit_duration_error').classList.add('hidden');
     document.getElementById('editForm').action = '{{ route("staff.services.manage.update", ":id") }}'.replace(':id', id);
     document.getElementById('editModal').classList.remove('hidden');
 }
@@ -561,6 +608,18 @@ document.getElementById('editModal').addEventListener('click', closeEditModal);
 
 // Bind edit buttons
 document.addEventListener('DOMContentLoaded', function() {
+    const editHours = document.getElementById('edit_hours');
+    const editMinutes = document.getElementById('edit_minutes');
+
+    if (editHours) {
+        editHours.addEventListener('input', validateEditDuration);
+        editHours.addEventListener('change', validateEditDuration);
+    }
+
+    if (editMinutes) {
+        editMinutes.addEventListener('change', validateEditDuration);
+    }
+
     document.querySelectorAll('.btn-edit-service').forEach(btn => {
         btn.addEventListener('click', function() {
             openEditModal(this.dataset.id, this.dataset.name, this.dataset.description, this.dataset.category, this.dataset.duration);

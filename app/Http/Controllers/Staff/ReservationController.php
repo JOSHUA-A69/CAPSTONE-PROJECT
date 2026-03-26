@@ -29,7 +29,7 @@ class ReservationController extends Controller
         $search = request('q');
         $status = request('status');
 
-        $query = Reservation::with(['user', 'service', 'venue', 'organization', 'officiant']);
+        $query = Reservation::with(['user', 'service', 'venue', 'organization', 'organizations', 'officiant']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -136,7 +136,7 @@ class ReservationController extends Controller
 
     public function show($reservation_id)
     {
-        $reservation = Reservation::with(['user', 'service', 'venue', 'organization', 'officiant', 'priests', 'history.performedBy'])
+        $reservation = Reservation::with(['user', 'service', 'venue', 'organization', 'organizations.adviser', 'officiant', 'priests', 'history.performedBy'])
             ->findOrFail($reservation_id);
 
         $priests = User::where('role', 'priest')->orderBy('first_name')->get();

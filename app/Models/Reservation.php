@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * @property int $reservation_id
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
  * @property int $service_id
  * @property int|null $officiant_id
  * @property \Carbon\Carbon $schedule_date
+ * @property \Carbon\Carbon|null $end_time
  * @property string $schedule_time
  * @property string $status
  * @property string $purpose
@@ -54,6 +56,10 @@ class Reservation extends Model
 {
     use HasFactory;
 
+    protected static ?bool $hasMainCelebrantPivotColumn = null;
+    protected static ?array $reservationOrganizationPivotColumns = null;
+    protected static ?bool $hasReservationOrganizationApprovalColumn = null;
+
     protected $table = 'reservations';
     protected $primaryKey = 'reservation_id';
     public $incrementing = true;
@@ -70,6 +76,7 @@ class Reservation extends Model
         'external_priest_name',
         'external_priest_contact',
         'schedule_date',
+        'end_time',
         'status',
         'purpose',
         'activity_name',
@@ -104,6 +111,7 @@ class Reservation extends Model
 
     protected $casts = [
         'schedule_date' => 'datetime',
+        'end_time' => 'datetime',
         'participants_count' => 'integer',
         'adviser_notified_at' => 'datetime',
         'adviser_responded_at' => 'datetime',
@@ -134,9 +142,16 @@ class Reservation extends Model
      */
     public function organizations()
     {
-        return $this->belongsToMany(Organization::class, 'reservation_organization', 'reservation_id', 'organization_id')
-            ->withPivot('notified', 'notified_at', 'approval_status', 'rejection_reason', 'responded_by', 'responded_at')
-            ->withTimestamps()->withTrashed(); // Include soft-deleted
+        $relation = $this->belongsToMany(Organization::class, 'reservation_organization', 'reservation_id', 'organization_id')
+            ->withTimestamps()
+            ->withTrashed(); // Include soft-deleted
+
+        $pivotColumns = self::reservationOrganizationPivotColumns();
+        if (!empty($pivotColumns)) {
+            $relation->withPivot($pivotColumns);
+        }
+
+        return $relation;
     }
 
     /**
@@ -144,9 +159,111 @@ class Reservation extends Model
      */
     public function priests()
     {
-        return $this->belongsToMany(User::class, 'reservation_priest', 'reservation_id', 'priest_id')
+        $relation = $this->belongsToMany(User::class, 'reservation_priest', 'reservation_id', 'priest_id')
             ->withPivot('confirmation_status', 'decline_reason', 'notified', 'notified_at', 'responded_at')
-            ->withTimestamps()->withTrashed(); // Include soft-deleted
+            ->withTimestamps()
+            ->withTrashed(); // Include soft-deleted
+
+        if (self::supportsMainCelebrantPivotColumn()) {
+            $relation->withPivot('is_main_celebrant');
+        }
+
+        return $relation;
+    }
+
+    /**
+     * Get the main celebrant for this reservation
+     */
+    public function mainCelebrant()
+    {
+        if (!self::supportsMainCelebrantPivotColumn()) {
+            return $this->belongsTo(User::class, 'officiant_id')->withTrashed();
+        }
+
+        return $this->belongsToMany(User::class, 'reservation_priest', 'reservation_id', 'priest_id')
+            ->withPivot('is_main_celebrant')
+            ->wherePivot('is_main_celebrant', true)
+            ->withTrashed();
+    }
+
+    /**
+     * Get the main celebrant name
+     */
+    public function getMainCelebrantNameAttribute(): ?string
+    {
+        $mainCelebrant = $this->mainCelebrant()->first();
+        if ($mainCelebrant) {
+            return $mainCelebrant->full_name;
+        }
+
+        // Fallback to first priest or officiant
+        if ($this->priests->isNotEmpty()) {
+            return $this->priests->first()->full_name;
+        }
+
+        if ($this->officiant) {
+            return $this->officiant->full_name;
+        }
+
+        if ($this->external_priest_name) {
+            return $this->external_priest_name;
+        }
+
+        return null;
+    }
+
+    /**
+     * Get all priest names formatted for display
+     */
+    public function getAllPriestNamesAttribute(): string
+    {
+        $names = [];
+
+        if ($this->priests->isNotEmpty()) {
+            foreach ($this->priests as $priest) {
+                $name = $priest->full_name;
+                if (($priest->pivot->is_main_celebrant ?? false) || ((int) $this->officiant_id === (int) $priest->id)) {
+                    $name .= ' (Main Celebrant)';
+                }
+                $names[] = $name;
+            }
+        } elseif ($this->officiant) {
+            $names[] = $this->officiant->full_name;
+        } elseif ($this->external_priest_name) {
+            $names[] = $this->external_priest_name . ' (External)';
+        }
+
+        return implode(', ', $names) ?: 'Not assigned';
+    }
+
+    public static function supportsMainCelebrantPivotColumn(): bool
+    {
+        if (self::$hasMainCelebrantPivotColumn === null) {
+            try {
+                self::$hasMainCelebrantPivotColumn = Schema::hasTable('reservation_priest')
+                    && Schema::hasColumn('reservation_priest', 'is_main_celebrant');
+            } catch (\Throwable $e) {
+                self::$hasMainCelebrantPivotColumn = false;
+            }
+        }
+
+        return self::$hasMainCelebrantPivotColumn;
+    }
+
+    /**
+     * Get all organization names formatted for display
+     */
+    public function getAllOrganizationNamesAttribute(): string
+    {
+        if ($this->organizations->isNotEmpty()) {
+            return $this->organizations->pluck('org_name')->join(', ');
+        }
+
+        if ($this->organization) {
+            return $this->organization->org_name;
+        }
+
+        return 'No organization';
     }
 
     public function venue()
@@ -394,9 +511,13 @@ class Reservation extends Model
     public function allAdvisersApproved(): bool
     {
         $orgs = $this->organizations;
-        
+
         // If no organizations attached, check if single org_id is approved (legacy)
         if ($orgs->isEmpty()) {
+            return $this->status !== 'pending';
+        }
+
+        if (!self::supportsReservationOrganizationApprovalColumn()) {
             return $this->status !== 'pending';
         }
 
@@ -409,6 +530,10 @@ class Reservation extends Model
      */
     public function anyAdviserRejected(): bool
     {
+        if (!self::supportsReservationOrganizationApprovalColumn()) {
+            return $this->status === 'rejected';
+        }
+
         return $this->organizations->contains(fn($org) => $org->pivot->approval_status === 'rejected');
     }
 
@@ -417,6 +542,10 @@ class Reservation extends Model
      */
     public function pendingAdviserCount(): int
     {
+        if (!self::supportsReservationOrganizationApprovalColumn()) {
+            return $this->status === 'pending' ? $this->organizations->count() : 0;
+        }
+
         return $this->organizations->filter(fn($org) => $org->pivot->approval_status === 'pending')->count();
     }
 
@@ -425,7 +554,55 @@ class Reservation extends Model
      */
     public function approvedAdviserCount(): int
     {
+        if (!self::supportsReservationOrganizationApprovalColumn()) {
+            return $this->status !== 'pending' ? $this->organizations->count() : 0;
+        }
+
         return $this->organizations->filter(fn($org) => $org->pivot->approval_status === 'approved')->count();
+    }
+
+    public static function reservationOrganizationPivotColumns(): array
+    {
+        if (self::$reservationOrganizationPivotColumns === null) {
+            self::$reservationOrganizationPivotColumns = [];
+
+            try {
+                if (Schema::hasTable('reservation_organization')) {
+                    $candidateColumns = [
+                        'notified',
+                        'notified_at',
+                        'approval_status',
+                        'rejection_reason',
+                        'responded_by',
+                        'responded_at',
+                    ];
+
+                    foreach ($candidateColumns as $column) {
+                        if (Schema::hasColumn('reservation_organization', $column)) {
+                            self::$reservationOrganizationPivotColumns[] = $column;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                self::$reservationOrganizationPivotColumns = [];
+            }
+        }
+
+        return self::$reservationOrganizationPivotColumns;
+    }
+
+    public static function supportsReservationOrganizationApprovalColumn(): bool
+    {
+        if (self::$hasReservationOrganizationApprovalColumn === null) {
+            try {
+                self::$hasReservationOrganizationApprovalColumn = Schema::hasTable('reservation_organization')
+                    && Schema::hasColumn('reservation_organization', 'approval_status');
+            } catch (\Throwable $e) {
+                self::$hasReservationOrganizationApprovalColumn = false;
+            }
+        }
+
+        return self::$hasReservationOrganizationApprovalColumn;
     }
 
     /**
@@ -434,7 +611,7 @@ class Reservation extends Model
     public function allPriestsConfirmed(): bool
     {
         $priests = $this->priests;
-        
+
         // If no priests attached via pivot, check legacy officiant
         if ($priests->isEmpty()) {
             return $this->priest_confirmation === 'confirmed';

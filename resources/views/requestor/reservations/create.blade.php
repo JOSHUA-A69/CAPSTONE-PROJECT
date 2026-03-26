@@ -4,7 +4,7 @@
 
 <div class="py-12">
     <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
-        
+
         <!-- Loading Overlay -->
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden" id="loadingOverlay">
             <div class="text-center text-white">
@@ -37,7 +37,7 @@
         @endif
 
         <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-2xl border border-gray-100 dark:border-gray-700 transition-all duration-300 hover:shadow-2xl">
-            
+
             <!-- Header Section -->
             <div class="p-8 text-center border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <div class="flex flex-col items-center">
@@ -48,7 +48,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <h2 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white mb-2">
                         Spiritual Activity Request
                     </h2>
@@ -87,10 +87,10 @@
                 <!-- Section 1: Basic Information -->
                 <div class="space-y-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-l-4 border-indigo-500 pl-3">Basic Information</h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <div class="grid grid-cols-1 gap-6">
                         <!-- Activity Name -->
-                        <div class="col-span-1 md:col-span-2">
+                        <div>
                             <label for="activity_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Name of Activity <span class="text-red-500">*</span>
                             </label>
@@ -104,41 +104,67 @@
                             @error('activity_name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
 
-                        <!-- Date -->
-                        <div>
-                            <label for="schedule_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Date of Activity <span class="text-red-500">*</span>
-                            </label>
-                            <input type="date" name="schedule_date" id="schedule_date" value="{{ old('schedule_date') }}" required min="{{ date('Y-m-d', strtotime('+7 days')) }}"
-                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Must be at least 7 days from today</p>
-                            @error('schedule_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Date -->
+                            <div>
+                                <label for="schedule_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Date of Activity <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="schedule_date" id="schedule_date" value="{{ old('schedule_date') }}" required min="{{ date('Y-m-d', strtotime('+7 days')) }}"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Must be at least 7 days from today</p>
+                                @error('schedule_date') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
 
-                        <!-- Time -->
-                        <div>
-                            <label for="schedule_time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Time <span class="text-red-500">*</span>
-                            </label>
-                            <input type="time" name="schedule_time" id="schedule_time" value="{{ old('schedule_time', '08:00') }}" required
-                                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
-                            @error('schedule_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            <!-- Time Range (Time In & Time Out) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Time Schedule <span class="text-red-500">*</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label for="schedule_time" class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Time In</label>
+                                        <input type="time" name="schedule_time" id="schedule_time" value="{{ old('schedule_time', '08:00') }}" required
+                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors text-center font-semibold">
+                                        @error('schedule_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div>
+                                        <label for="end_time" class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Time Out</label>
+                                        <input type="time" name="end_time" id="end_time" value="{{ old('end_time', '10:00') }}" required
+                                            class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors text-center font-semibold">
+                                        @error('end_time') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Time Out must be after Time In
+                                </p>
+                                <!-- Live validation error message -->
+                                <div id="time_validation_error" class="hidden mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+                                    <p class="text-xs text-red-700 dark:text-red-300 flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <span><strong>Invalid Time:</strong> Time Out must be later than Time In</span>
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Purpose/Theme -->
-                        <div class="col-span-1 md:col-span-2">
-                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Theme</label>
-                                    <textarea name="theme" id="theme" rows="3" maxlength="500" placeholder="e.g., Empowered by Faith, Guided to Serve"
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">{{ old('theme') }}</textarea>
-                                    <div class="text-right text-xs text-gray-500 dark:text-gray-400 mt-1" id="theme_counter">0 / 500</div>
-                                </div>
-                                <div>
-                                    <label for="participants_count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expected Participants</label>
-                                    <input type="number" name="participants_count" id="participants_count" value="{{ old('participants_count') }}" min="1" max="10000" placeholder="e.g., 35"
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
-                                </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Theme</label>
+                                <textarea name="theme" id="theme" rows="3" maxlength="500" placeholder="e.g., Empowered by Faith, Guided to Serve"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">{{ old('theme') }}</textarea>
+                                <div class="text-right text-xs text-gray-500 dark:text-gray-400 mt-1" id="theme_counter">0 / 500</div>
+                            </div>
+                            <div>
+                                <label for="participants_count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Expected Participants</label>
+                                <input type="number" name="participants_count" id="participants_count" value="{{ old('participants_count') }}" min="1" max="10000" placeholder="e.g., 35"
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
                             </div>
                         </div>
                     </div>
@@ -147,7 +173,7 @@
                 <!-- Section 2: Contact & Requesting Group -->
                 <div class="space-y-6 pt-6 border-t border-gray-100 dark:border-gray-700">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white border-l-4 border-indigo-500 pl-3">Contact Information</h3>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                          <!-- Requesting Group -->
                          <div class="col-span-1 md:col-span-2">
@@ -218,14 +244,14 @@
                         <!-- Specific Priest Selection -->
                         <div id="specific_priest_div" class="hidden mt-3 space-y-2">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Choose Priest(s) <span class="text-red-500">*</span></label>
-                            
+
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                                 @foreach($priests as $priest)
-                                    <label class="relative flex items-center p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all cursor-pointer group shadow-sm">
+                                    <label class="priest-card relative flex items-center p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/10 hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all cursor-pointer group shadow-sm" data-priest-id="{{ $priest->id }}">
                                         <div class="flex items-center gap-3 w-full">
                                             <div class="flex-shrink-0">
-                                                <img class="h-12 w-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-600 group-hover:border-indigo-200 dark:group-hover:border-indigo-500 transition-colors" 
-                                                     src="{{ $priest->profile_picture_url }}" 
+                                                <img class="h-12 w-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-600 group-hover:border-indigo-200 dark:group-hover:border-indigo-500 transition-colors"
+                                                     src="{{ $priest->profile_picture_url }}"
                                                      alt="{{ $priest->full_name }}">
                                             </div>
                                             <div class="flex-1 min-w-0 pr-6">
@@ -233,17 +259,38 @@
                                                     {{ $priest->full_name }}
                                                 </p>
                                                 <p class="text-xs text-gray-500 dark:text-gray-400 truncate">SVD Priest</p>
+                                                <!-- Main celebrant indicator (shown when selected) -->
+                                                <div class="main-celebrant-badge hidden mt-1">
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                                                        Main Celebrant
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div class="flex-shrink-0 ml-2">
+                                            <div class="flex flex-col items-center gap-1">
                                                 <input type="checkbox" name="priest_ids[]" value="{{ $priest->id }}"
                                                     @if(is_array(old('priest_ids')) && in_array($priest->id, old('priest_ids'))) checked @endif
-                                                    class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors">
+                                                    class="priest-checkbox h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded transition-colors"
+                                                    onchange="updateMainCelebrantOptions()">
                                             </div>
                                         </div>
                                     </label>
                                 @endforeach
                             </div>
-                            
+
+                            <!-- Main Celebrant Selection (shown when multiple priests selected) -->
+                            <div id="main_celebrant_container" class="hidden mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-700/50">
+                                <label class="block text-sm font-medium text-amber-800 dark:text-amber-200 mb-3">
+                                    <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                    </svg>
+                                    Select Main Celebrant <span class="text-red-500">*</span>
+                                </label>
+                                <p class="text-xs text-amber-700 dark:text-amber-300 mb-3">When multiple priests are assigned, please designate who will be the main celebrant.</p>
+                                <div id="main_celebrant_options" class="space-y-2">
+                                    <!-- Dynamically populated -->
+                                </div>
+                            </div>
+
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
                                 <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 Check multiple priests if co-celebration is needed
@@ -293,7 +340,7 @@
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                                     Service Type <span class="text-red-500">*</span>
                                 </label>
-                                
+
                                 <div id="service_dropdown_container" class="hidden">
                                     <select name="service_id" id="service_id" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
                                         <option value="">-- Select Service Type --</option>
@@ -330,7 +377,7 @@
                                 @endforeach
                                 <option value="custom" @if(old('venue_id')=='custom') selected @endif>Other/Custom</option>
                             </select>
-                            
+
                             <div id="custom_venue_container" class="hidden mt-3">
                                 <input type="text" name="custom_venue" id="custom_venue_input" placeholder="Specify exact location" maxlength="200"
                                     class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
@@ -398,7 +445,7 @@
                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">{{ old('details') }}</textarea>
                     <div class="text-right text-xs text-gray-500 dark:text-gray-400" id="details_counter">0 / 1000</div>
                 </div>
-                
+
                 <!-- Footer Actions -->
                 <div class="pt-8 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div class="text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -477,13 +524,13 @@
         const otherServiceTypeInput = document.getElementById('other_service_type');
         const institutionalOptions = document.getElementById('institutional_mass_options');
         const nonInstitutionalOptions = document.getElementById('non_institutional_mass_options');
-        
+
         const selectedOption = serviceCategorySelect.options[serviceCategorySelect.selectedIndex];
         const requiresMassType = selectedOption.getAttribute('data-requires-mass-type') === 'true';
-        
+
         if (requiresMassType) {
             massTypeContainer.classList.remove('hidden');
-            
+
             // Show appropriate mass type options
             if (serviceCategorySelect.value === 'institutional_mass') {
                 serviceDropdownContainer.classList.remove('hidden');
@@ -539,11 +586,11 @@
             if (field.offsetParent === null && field.type !== 'hidden') {
                 return;
             }
-            
+
             if (!field.value.trim()) {
                 field.classList.add('border-red-500');
                 isValid = false;
-                
+
                 // Get field label - clean version
                 let label = getFieldLabel(field);
                 if (label && !errorMessages.includes(label)) {
@@ -571,6 +618,28 @@
             }
         }
 
+        // Validate Time Out must be after Time In
+        const timeIn = document.getElementById('schedule_time');
+        const timeOut = document.getElementById('end_time');
+        if (timeIn && timeOut && timeIn.value && timeOut.value) {
+            // Convert times to minutes for comparison
+            const [inHours, inMinutes] = timeIn.value.split(':').map(Number);
+            const [outHours, outMinutes] = timeOut.value.split(':').map(Number);
+
+            const timeInMinutes = (inHours * 60) + inMinutes;
+            const timeOutMinutes = (outHours * 60) + outMinutes;
+
+            if (timeOutMinutes <= timeInMinutes) {
+                timeOut.classList.add('border-red-500');
+                timeIn.classList.add('border-red-500');
+                errorMessages.push('Time Out must be after Time In');
+                isValid = false;
+            } else {
+                timeOut.classList.remove('border-red-500');
+                timeIn.classList.remove('border-red-500');
+            }
+        }
+
         // Validate Organization Selection (Optional now)
         const orgCheckboxes = document.querySelectorAll('input[name="organization_ids[]"]');
         if (orgCheckboxes.length > 0) {
@@ -585,7 +654,7 @@
         const priestTypeSelect = document.getElementById('priest_selection_type');
         if (priestTypeSelect) {
             const type = priestTypeSelect.value;
-            
+
             if (type === 'specific') {
                 const priestCheckboxes = document.querySelectorAll('input[name="priest_ids[]"]');
                 let onePriestChecked = false;
@@ -593,14 +662,14 @@
                     priestCheckboxes.forEach(cb => {
                         if (cb.checked) onePriestChecked = true;
                     });
-                    
+
                     if (!onePriestChecked) {
                         const priestContainer = priestCheckboxes[0].closest('.checkbox-list');
                          if (priestContainer) {
                             priestContainer.classList.add('border-red-500', 'bg-red-50');
                          }
                         errorMessages.push('Please select at least one SVD Priest');
-                        isValid = false; 
+                        isValid = false;
                     } else {
                          const priestContainer = priestCheckboxes[0].closest('.checkbox-list');
                          if (priestContainer) {
@@ -638,13 +707,14 @@
 
         return isValid;
     }
-    
+
     // Get clean field label
     function getFieldLabel(field) {
         const fieldLabels = {
             'activity_name': 'Activity Name',
             'schedule_date': 'Date of Activity',
-            'schedule_time': 'Time',
+            'schedule_time': 'Time In',
+            'end_time': 'Time Out',
             'contact_person': 'Contact Person',
             'contact_number': 'Contact Number',
             'officiant_id': 'Officiant/Priest',
@@ -661,14 +731,14 @@
             'priest_selection_type': 'Priest Selection',
             'external_priest_name': 'External Priest Name'
         };
-        
+
         if (fieldLabels[field.id]) {
             return fieldLabels[field.id];
         }
         if (fieldLabels[field.name]) {
             return fieldLabels[field.name];
         }
-        
+
         let name = field.name || field.id || 'Field';
         return name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
@@ -695,9 +765,9 @@
                 <span>${escapeHtml(err)}</span>
             </li>
         `).join('');
-        
+
         const remainingCount = uniqueErrors.length - displayErrors.length;
-        
+
         const modalHtml = `
             <div id="validationErrorModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in" onclick="if(event.target === this) closeValidationErrorModal()">
                 <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-slide-up">
@@ -710,7 +780,7 @@
                         <h3 class="text-lg font-bold text-red-900 dark:text-red-100">Action Required</h3>
                         <p class="text-sm text-red-700 dark:text-red-300 mt-1">Please complete the following fields</p>
                     </div>
-                    
+
                     <div class="p-6">
                         <ul class="max-h-48 overflow-y-auto custom-scrollbar">
                             ${errorListHtml}
@@ -719,7 +789,7 @@
                             <p class="text-center text-xs text-gray-400 mt-3">+ ${remainingCount} more field${remainingCount > 1 ? 's' : ''}</p>
                         ` : ''}
                     </div>
-                    
+
                     <div class="p-4 bg-gray-50 dark:bg-gray-700/50">
                         <button onclick="closeValidationErrorModal()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-3 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
                             OK, I'll fix it
@@ -732,13 +802,13 @@
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         resetSubmitButton();
     }
-    
+
     function resetSubmitButton() {
         const submitBtn = document.getElementById('submitBtn');
         const submitText = document.getElementById('submitText');
         const submitLoader = document.getElementById('submitLoader');
         const loadingOverlay = document.getElementById('loadingOverlay');
-        
+
         if (submitBtn) submitBtn.disabled = false;
         if (submitText) submitText.style.display = 'inline';
         if (submitLoader) submitLoader.style.display = 'none';
@@ -751,7 +821,7 @@
         if (modal) {
             modal.remove();
         }
-        
+
         const form = document.getElementById('reservationForm');
         const firstError = form.querySelector('.border-red-500');
         if (firstError) {
@@ -862,10 +932,151 @@
         }
     }
 
+    // Main celebrant selection management
+    function updateMainCelebrantOptions() {
+        const checkboxes = document.querySelectorAll('.priest-checkbox:checked');
+        const container = document.getElementById('main_celebrant_container');
+        const optionsDiv = document.getElementById('main_celebrant_options');
+
+        // Reset all main celebrant badges
+        document.querySelectorAll('.main-celebrant-badge').forEach(badge => {
+            badge.classList.add('hidden');
+        });
+
+        if (checkboxes.length > 1) {
+            // Show main celebrant selection
+            container.classList.remove('hidden');
+
+            // Build radio options for main celebrant
+            let html = '';
+            checkboxes.forEach((checkbox, index) => {
+                const priestId = checkbox.value;
+                const card = checkbox.closest('.priest-card');
+                const priestName = card.querySelector('p.font-semibold').textContent.trim();
+                const isChecked = index === 0 ? 'checked' : ''; // Default first priest as main
+
+                html += `
+                    <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-800/30 cursor-pointer transition-colors">
+                        <input type="radio" name="main_celebrant_id" value="${priestId}" ${isChecked}
+                            class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300"
+                            onchange="updateMainCelebrantBadge()">
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtmlForJs(priestName)}</span>
+                    </label>
+                `;
+            });
+
+            optionsDiv.innerHTML = html;
+            updateMainCelebrantBadge();
+        } else if (checkboxes.length === 1) {
+            // Single priest - automatically set as main celebrant
+            container.classList.add('hidden');
+
+            // Create hidden input for single priest
+            const existingHidden = document.querySelector('input[name="main_celebrant_id"][type="hidden"]');
+            if (existingHidden) existingHidden.remove();
+
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'main_celebrant_id';
+            hiddenInput.value = checkboxes[0].value;
+            container.parentNode.appendChild(hiddenInput);
+
+            // Show badge on the single selected priest
+            const card = checkboxes[0].closest('.priest-card');
+            const badge = card.querySelector('.main-celebrant-badge');
+            if (badge) badge.classList.remove('hidden');
+        } else {
+            // No priests selected
+            container.classList.add('hidden');
+            optionsDiv.innerHTML = '';
+
+            // Remove any hidden inputs
+            const existingHidden = document.querySelector('input[name="main_celebrant_id"][type="hidden"]');
+            if (existingHidden) existingHidden.remove();
+        }
+    }
+
+    function updateMainCelebrantBadge() {
+        // Reset all badges
+        document.querySelectorAll('.main-celebrant-badge').forEach(badge => {
+            badge.classList.add('hidden');
+        });
+
+        // Show badge on selected main celebrant
+        const selectedRadio = document.querySelector('input[name="main_celebrant_id"]:checked');
+        if (selectedRadio) {
+            const priestId = selectedRadio.value;
+            const card = document.querySelector(`.priest-card[data-priest-id="${priestId}"]`);
+            if (card) {
+                const badge = card.querySelector('.main-celebrant-badge');
+                if (badge) badge.classList.remove('hidden');
+            }
+        }
+    }
+
+    function escapeHtmlForJs(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         togglePriestOptions();
         initAvailabilityCheck();
+        initTimeValidation();
+        updateMainCelebrantOptions(); // Initialize main celebrant options
     });
+
+    function initTimeValidation() {
+        const timeIn = document.getElementById('schedule_time');
+        const timeOut = document.getElementById('end_time');
+
+        if (timeIn && timeOut) {
+            timeIn.addEventListener('change', validateTimeRange);
+            timeOut.addEventListener('change', validateTimeRange);
+            // Also validate on input for instant feedback
+            timeIn.addEventListener('input', validateTimeRange);
+            timeOut.addEventListener('input', validateTimeRange);
+        }
+    }
+
+    function validateTimeRange() {
+        const timeIn = document.getElementById('schedule_time');
+        const timeOut = document.getElementById('end_time');
+        const errorDiv = document.getElementById('time_validation_error');
+
+        if (!timeIn || !timeOut || !errorDiv) return;
+
+        const timeInValue = timeIn.value;
+        const timeOutValue = timeOut.value;
+
+        // Only validate if both times are set
+        if (!timeInValue || !timeOutValue) {
+            errorDiv.classList.add('hidden');
+            timeIn.classList.remove('border-red-500', 'dark:border-red-500');
+            timeOut.classList.remove('border-red-500', 'dark:border-red-500');
+            return;
+        }
+
+        // Convert times to minutes for comparison
+        const [inHours, inMinutes] = timeInValue.split(':').map(Number);
+        const [outHours, outMinutes] = timeOutValue.split(':').map(Number);
+
+        const timeInMinutes = (inHours * 60) + inMinutes;
+        const timeOutMinutes = (outHours * 60) + outMinutes;
+
+        if (timeOutMinutes <= timeInMinutes) {
+            // Show error
+            errorDiv.classList.remove('hidden');
+            timeIn.classList.add('border-red-500', 'dark:border-red-500');
+            timeOut.classList.add('border-red-500', 'dark:border-red-500');
+        } else {
+            // Clear error
+            errorDiv.classList.add('hidden');
+            timeIn.classList.remove('border-red-500', 'dark:border-red-500');
+            timeOut.classList.remove('border-red-500', 'dark:border-red-500');
+        }
+    }
 
     function initAvailabilityCheck() {
         const dateInput = document.getElementById('schedule_date');
@@ -883,7 +1094,7 @@
 
     let availabilityTimeout = null;
     let currentAvailabilityStatus = { available: true };
-    
+
     async function checkAvailability() {
         clearTimeout(availabilityTimeout);
         availabilityTimeout = setTimeout(async () => {
@@ -946,11 +1157,11 @@
             showAvailabilityMessage('schedule_time', 'This time slot is available!', 'success');
         } else {
             if (!result.priest_available) {
-                showAvailabilityMessage('specific_priest_div', 
+                showAvailabilityMessage('specific_priest_div',
                     result.messages[0] || 'Priest is not available at this time', 'error');
             }
             if (!result.venue_available) {
-                const venueMsg = result.messages.find(m => m.includes('Venue')) || 
+                const venueMsg = result.messages.find(m => m.includes('Venue')) ||
                     'Venue is not available at this time';
                 showAvailabilityMessage('venue_select', venueMsg, 'error');
             }
@@ -981,7 +1192,7 @@
 
         const messageDiv = document.createElement('div');
         messageDiv.className = 'availability-message flex items-center gap-2 text-xs mt-2 p-2 rounded';
-        
+
         const styles = {
             success: 'bg-green-100 text-green-800 border border-green-200',
             error: 'bg-red-100 text-red-800 border border-red-200',
@@ -992,10 +1203,10 @@
             error: '⚠️',
             warning: '💡'
         };
-        
+
         messageDiv.className += ' ' + (styles[type] || styles.warning);
            messageDiv.innerHTML = `<span class="font-bold">${icons[type] || icons.warning}</span> <span>${escapeHtml(message)}</span>`;
-        
+
         if (targetElement.nextSibling) {
              targetElement.parentNode.insertBefore(messageDiv, targetElement.nextSibling);
         } else {
@@ -1033,7 +1244,7 @@
                             if (!priest.available) {
                                 label.classList.add('opacity-50', 'bg-gray-100');
                                 label.title = 'Not available at this time';
-                                
+
                                 let busyBadge = label.querySelector('.busy-badge');
                                 if (!busyBadge) {
                                     busyBadge = document.createElement('span');
@@ -1085,7 +1296,7 @@
                         if (!venue.available) {
                             if (!option.textContent.includes('(BUSY)')) {
                                 option.textContent = option.textContent + ' (BUSY)';
-                                option.style.color = '#ef4444'; 
+                                option.style.color = '#ef4444';
                             }
                         } else {
                             option.textContent = option.textContent.replace(' (BUSY)', '');
@@ -1098,13 +1309,105 @@
             console.error('Failed to update venue availability UI:', error);
         }
     }
+
+    // ===========================
+    // Session Timeout Management
+    // ===========================
+    let sessionTimeout;
+    let warningTimeout;
+    const INACTIVE_TIME = 15 * 60 * 1000; // 15 minutes of inactivity
+    const WARNING_TIME = 13 * 60 * 1000; // Show warning after 13 minutes
+
+    function resetSessionTimer() {
+        // Clear existing timers
+        clearTimeout(sessionTimeout);
+        clearTimeout(warningTimeout);
+
+        // Start warning timer
+        warningTimeout = setTimeout(showInactivityWarning, WARNING_TIME);
+
+        // Start session timeout
+        sessionTimeout = setTimeout(handleSessionTimeout, INACTIVE_TIME);
+    }
+
+    function showInactivityWarning() {
+        const warningHtml = `
+            <div id="inactivityWarning" class="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-slide-up">
+                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-6 text-center border-b border-yellow-100 dark:border-yellow-800/50">
+                        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/50 mb-4">
+                            <svg class="h-6 w-6 text-yellow-600 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-yellow-900 dark:text-yellow-100">Still There?</h3>
+                        <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-2">Your session will expire in <span id="countdown" class="font-bold">2:00</span> due to inactivity.</p>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            Click "Continue Working" to stay on this page and keep your form data.
+                        </p>
+                        <button onclick="continueSession()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-3 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                            Continue Working
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', warningHtml);
+        startCountdown();
+    }
+
+    let countdownInterval;
+    function startCountdown() {
+        let secondsLeft = 120; // 2 minutes
+        const countdownEl = document.getElementById('countdown');
+
+        countdownInterval = setInterval(() => {
+            secondsLeft--;
+            const minutes = Math.floor(secondsLeft / 60);
+            const seconds = secondsLeft % 60;
+            if (countdownEl) {
+                countdownEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            if (secondsLeft <= 0) {
+                clearInterval(countdownInterval);
+            }
+        }, 1000);
+    }
+
+    function continueSession() {
+        const warning = document.getElementById('inactivityWarning');
+        if (warning) {
+            warning.remove();
+        }
+        clearInterval(countdownInterval);
+        resetSessionTimer();
+    }
+
+    function handleSessionTimeout() {
+        alert('Your session has expired due to inactivity. Please save your work and refresh the page.');
+        // Optionally redirect to the reservations index
+        // window.location.href = '{{ route("requestor.reservations.index") }}';
+    }
+
+    // Track user activity
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    activityEvents.forEach(event => {
+        document.addEventListener(event, resetSessionTimer, true);
+    });
+
+    // Initialize session timer on page load
+    resetSessionTimer();
 </script>
 
 @if ($errors->any() || session('error'))
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             let allErrors = [];
-            
+
             @if ($errors->any())
                 const validationErrors = @json($errors->all());
                 allErrors = allErrors.concat(validationErrors);

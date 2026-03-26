@@ -5,7 +5,7 @@
     <!-- Header -->
     <div class="mb-8">
         <div class="flex items-center space-x-4">
-            <a href="{{ route('requestor.organization-bookings.index') }}" 
+            <a href="{{ route('requestor.organization-bookings.index') }}"
                class="btn-secondary">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -28,13 +28,13 @@
                 <label for="organization_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Select Organization <span class="text-red-500">*</span>
                 </label>
-                <select id="organization_id" 
-                        name="organization_id" 
+                <select id="organization_id"
+                        name="organization_id"
                         class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('organization_id') border-red-500 @enderror"
                         required>
                     <option value="">-- Select an organization --</option>
                     @foreach($organizations as $org)
-                        <option value="{{ $org->org_id }}" 
+                        <option value="{{ $org->org_id }}"
                                 data-adviser="{{ $org->adviser ? $org->adviser->full_name : 'No adviser assigned' }}"
                                 data-desc="{{ $org->org_desc }}"
                                 {{ old('organization_id', $organizationBookingRequest->organization_id) == $org->org_id ? 'selected' : '' }}>
@@ -45,7 +45,7 @@
                 @error('organization_id')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
-                
+
                 <!-- Organization Info Display -->
                 <div id="org-info" class="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md hidden">
                     <div class="text-sm">
@@ -60,9 +60,9 @@
                 <label for="activity_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Activity Name <span class="text-red-500">*</span>
                 </label>
-                <input type="text" 
-                       id="activity_name" 
-                       name="activity_name" 
+                <input type="text"
+                       id="activity_name"
+                       name="activity_name"
                        value="{{ old('activity_name', $organizationBookingRequest->activity_name) }}"
                        placeholder="e.g., Christmas Concert, Youth Retreat, Community Service"
                        class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('activity_name') border-red-500 @enderror"
@@ -78,8 +78,8 @@
                 <label for="purpose" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Purpose <span class="text-red-500">*</span>
                 </label>
-                <textarea id="purpose" 
-                          name="purpose" 
+                <textarea id="purpose"
+                          name="purpose"
                           rows="4"
                           placeholder="Describe the purpose and goals of this activity..."
                           class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('purpose') border-red-500 @enderror"
@@ -95,35 +95,68 @@
                 </div>
             </div>
 
-            <!-- Requested Date & Time -->
-            <div class="mb-6">
-                <label for="requested_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Requested Date & Time <span class="text-red-500">*</span>
-                </label>
-                <input type="datetime-local" 
-                       id="requested_date" 
-                       name="requested_date" 
-                       value="{{ old('requested_date', $organizationBookingRequest->requested_date->format('Y-m-d\TH:i')) }}"
-                       min="{{ now()->addDay()->format('Y-m-d\TH:i') }}"
-                       class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('requested_date') border-red-500 @enderror"
-                       required>
-                @error('requested_date')
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @else
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Select your preferred date and time</p>
-                @enderror
+            <!-- Date and Time -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Date -->
+                <div>
+                    <label for="requested_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Event Date <span class="text-red-500">*</span>
+                    </label>
+                    <input type="date"
+                           id="requested_date"
+                           name="requested_date"
+                           value="{{ old('requested_date', $organizationBookingRequest->requested_date->format('Y-m-d')) }}"
+                           min="{{ now()->addDay()->format('Y-m-d') }}"
+                           class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('requested_date') border-red-500 @enderror"
+                           required>
+                    @error('requested_date')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Time In -->
+                <div>
+                    <label for="time_in" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Time In (Start) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="time"
+                           id="time_in"
+                           name="time_in"
+                           value="{{ old('time_in', $organizationBookingRequest->time_in ?: $organizationBookingRequest->requested_date->format('H:i')) }}"
+                           class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('time_in') border-red-500 @enderror"
+                           required>
+                    @error('time_in')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Time Out -->
+                <div>
+                    <label for="time_out" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Time Out (End) <span class="text-red-500">*</span>
+                    </label>
+                    <input type="time"
+                           id="time_out"
+                           name="time_out"
+                           value="{{ old('time_out', $organizationBookingRequest->time_out ?: $organizationBookingRequest->requested_date->addHours(2)->format('H:i')) }}"
+                           class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('time_out') border-red-500 @enderror"
+                           required>
+                    @error('time_out')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
-            <!-- Two Column Layout for Additional Details -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Three Column Layout for Additional Details -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Requested Venue -->
                 <div>
                     <label for="requested_venue" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Preferred Venue
                     </label>
-                    <input type="text" 
-                           id="requested_venue" 
-                           name="requested_venue" 
+                    <input type="text"
+                           id="requested_venue"
+                           name="requested_venue"
                            value="{{ old('requested_venue', $organizationBookingRequest->requested_venue) }}"
                            placeholder="e.g., Church Hall, Outdoor Area"
                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('requested_venue') border-red-500 @enderror"
@@ -140,9 +173,9 @@
                     <label for="estimated_participants" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Estimated Participants
                     </label>
-                    <input type="number" 
-                           id="estimated_participants" 
-                           name="estimated_participants" 
+                    <input type="number"
+                           id="estimated_participants"
+                           name="estimated_participants"
                            value="{{ old('estimated_participants', $organizationBookingRequest->estimated_participants) }}"
                            placeholder="50"
                            min="1"
@@ -154,6 +187,26 @@
                         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Optional: Help us prepare appropriate arrangements</p>
                     @enderror
                 </div>
+
+                <!-- Servers Needed -->
+                <div>
+                    <label for="servers_needed" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Servers Needed
+                    </label>
+                    <input type="number"
+                           id="servers_needed"
+                           name="servers_needed"
+                           value="{{ old('servers_needed', $organizationBookingRequest->servers_needed) }}"
+                           placeholder="4"
+                           min="0"
+                           max="50"
+                           class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('servers_needed') border-red-500 @enderror">
+                    @error('servers_needed')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @else
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Optional: Number of altar servers or assistants needed</p>
+                    @enderror
+                </div>
             </div>
 
             <!-- Special Requirements -->
@@ -161,8 +214,8 @@
                 <label for="special_requirements" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Special Requirements
                 </label>
-                <textarea id="special_requirements" 
-                          name="special_requirements" 
+                <textarea id="special_requirements"
+                          name="special_requirements"
                           rows="3"
                           placeholder="Any special equipment, setup, or accommodation needs..."
                           class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @error('special_requirements') border-red-500 @enderror"
@@ -179,7 +232,7 @@
 
             <!-- Form Actions -->
             <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <a href="{{ route('requestor.organization-bookings.index') }}" 
+                <a href="{{ route('requestor.organization-bookings.index') }}"
                    class="btn-secondary">
                     Cancel
                 </a>
@@ -205,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     orgSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
-        
+
         if (this.value && selectedOption.dataset.desc) {
             orgDescription.textContent = selectedOption.dataset.desc;
             orgAdviser.textContent = 'Adviser: ' + selectedOption.dataset.adviser;
@@ -219,20 +272,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupCounter(textareaId, counterId) {
         const textarea = document.getElementById(textareaId);
         const counter = document.getElementById(counterId);
-        
+
         if (textarea && counter) {
             function updateCounter() {
                 const length = textarea.value.length;
                 const maxLength = textarea.maxLength;
                 counter.textContent = `${length}/${maxLength}`;
-                
+
                 if (length > maxLength * 0.9) {
                     counter.classList.add('text-red-500');
                 } else {
                     counter.classList.remove('text-red-500');
                 }
             }
-            
+
             textarea.addEventListener('input', updateCounter);
             updateCounter(); // Initial count
         }

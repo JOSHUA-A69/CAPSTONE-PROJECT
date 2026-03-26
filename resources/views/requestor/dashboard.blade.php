@@ -426,6 +426,22 @@
                             </a>
                         </div>
                     </div>
+
+                    <!-- My Reservations -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100 dark:border-gray-700">
+                        <div class="text-center">
+                            <div class="bg-blue-50 dark:bg-blue-900/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-gray-900 dark:text-white mb-2">My Reservations</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-300 mb-4">Review all your submitted and upcoming reservation requests</p>
+                            <a href="{{ route('requestor.reservations.index') }}" class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl">
+                                View My Reservations
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

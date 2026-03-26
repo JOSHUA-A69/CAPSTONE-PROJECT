@@ -6,6 +6,7 @@ use App\Models\LiturgicalSchedule;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PublicCalendarController extends Controller
 {
@@ -26,14 +27,16 @@ class PublicCalendarController extends Controller
                 'service:service_id,service_name,service_category',
                 'venue:venue_id,name',
                 'priests:id,first_name,middle_name,last_name,email',
-                'officiant:id,first_name,middle_name,last_name,email'
+                'officiant:id,first_name,middle_name,last_name,email',
+            'organizations:org_id,org_name',
+            'organization:org_id,org_name'
             ])
             ->whereIn('status', ['admin_approved', 'approved'])
             ->whereDate('schedule_date', '>=', now()->toDateString())
             ->orderBy('schedule_date')
             ->get();
 
-        \Log::info('Public Calendar - Reservations Query', [
+        Log::info('Public Calendar - Reservations Query', [
             'today' => now()->toDateString(),
             'reservation_count' => $reservations->count(),
             'reservation_ids' => $reservations->pluck('reservation_id')->toArray(),
@@ -42,14 +45,46 @@ class PublicCalendarController extends Controller
 
         // Transform reservations to match schedule format for the calendar
         $reservationSchedules = $reservations->map(function ($reservation) {
-            // Determine priest name (check many-to-many first, then single officiant, then external)
+            // Determine priest names with main celebrant indication
             $priestName = null;
+            $mainCelebrant = null;
+            $allPriests = [];
+
             if ($reservation->priests && $reservation->priests->count() > 0) {
-                $priestName = $reservation->priests->pluck('full_name')->join(', ');
+                $firstPriestName = null;
+                foreach ($reservation->priests as $priest) {
+                    $name = $priest->full_name;
+                    if ($firstPriestName === null) {
+                        $firstPriestName = $name;
+                    }
+
+                    $isMainCelebrant = ($priest->pivot->is_main_celebrant ?? false)
+                        || ((int) $reservation->officiant_id === (int) $priest->id);
+
+                    if ($isMainCelebrant) {
+                        $mainCelebrant = $name;
+                        $name .= ' (Main Celebrant)';
+                    }
+                    $allPriests[] = $name;
+                }
+                if ($mainCelebrant === null) {
+                    $mainCelebrant = $firstPriestName;
+                }
+                $priestName = implode(', ', $allPriests);
             } elseif ($reservation->officiant) {
                 $priestName = $reservation->officiant->full_name;
+                $mainCelebrant = $priestName;
             } elseif ($reservation->external_priest_name) {
-                $priestName = $reservation->external_priest_name;
+                $priestName = $reservation->external_priest_name . ' (External)';
+                $mainCelebrant = $reservation->external_priest_name;
+            }
+
+            // Get organizations
+            $organizationNames = [];
+            if ($reservation->organizations && $reservation->organizations->count() > 0) {
+                $organizationNames = $reservation->organizations->pluck('org_name')->toArray();
+            } elseif ($reservation->organization) {
+                $organizationNames[] = $reservation->organization->org_name;
             }
 
             return [
@@ -59,10 +94,13 @@ class PublicCalendarController extends Controller
                 'mass_subtype' => null,
                 'schedule_date' => $reservation->schedule_date->format('Y-m-d'),
                 'start_time' => $reservation->schedule_date->format('H:i'),
-                'end_time' => null,
+                'end_time' => $reservation->end_time ? $reservation->end_time->format('H:i') : null,
                 'location' => $reservation->custom_venue_name ?: ($reservation->venue?->name ?? null),
                 'venue' => $reservation->venue ? ['name' => $reservation->venue->name] : null,
                 'priest' => $priestName ? ['name' => $priestName] : null,
+                'main_celebrant' => $mainCelebrant,
+                'all_priests' => $allPriests,
+                'organizations' => $organizationNames,
                 'external_priest_name' => $reservation->external_priest_name,
                 'external_priest_contact' => $reservation->external_priest_contact,
                 'is_public' => true,
@@ -84,7 +122,7 @@ class PublicCalendarController extends Controller
     public function getSchedules(Request $request)
     {
         $date = $request->get('date');
-        
+
         // Get liturgical schedules for the date
         $liturgicalSchedules = LiturgicalSchedule::with(['priest', 'venue'])
             ->public()
@@ -97,7 +135,9 @@ class PublicCalendarController extends Controller
                 'service:service_id,service_name,service_category',
                 'venue:venue_id,name',
                 'priests:id,first_name,middle_name,last_name,email',
-                'officiant:id,first_name,middle_name,last_name,email'
+                'officiant:id,first_name,middle_name,last_name,email',
+            'organizations:org_id,org_name',
+            'organization:org_id,org_name'
             ])
             ->whereIn('status', ['admin_approved', 'approved'])
             ->whereDate('schedule_date', $date)
@@ -105,13 +145,46 @@ class PublicCalendarController extends Controller
 
         // Transform reservations to match schedule format
         $reservationSchedules = $reservations->map(function ($reservation) {
+            // Determine priest names with main celebrant indication
             $priestName = null;
+            $mainCelebrant = null;
+            $allPriests = [];
+
             if ($reservation->priests && $reservation->priests->count() > 0) {
-                $priestName = $reservation->priests->pluck('full_name')->join(', ');
+                $firstPriestName = null;
+                foreach ($reservation->priests as $priest) {
+                    $name = $priest->full_name;
+                    if ($firstPriestName === null) {
+                        $firstPriestName = $name;
+                    }
+
+                    $isMainCelebrant = ($priest->pivot->is_main_celebrant ?? false)
+                        || ((int) $reservation->officiant_id === (int) $priest->id);
+
+                    if ($isMainCelebrant) {
+                        $mainCelebrant = $name;
+                        $name .= ' (Main Celebrant)';
+                    }
+                    $allPriests[] = $name;
+                }
+                if ($mainCelebrant === null) {
+                    $mainCelebrant = $firstPriestName;
+                }
+                $priestName = implode(', ', $allPriests);
             } elseif ($reservation->officiant) {
                 $priestName = $reservation->officiant->full_name;
+                $mainCelebrant = $priestName;
             } elseif ($reservation->external_priest_name) {
-                $priestName = $reservation->external_priest_name;
+                $priestName = $reservation->external_priest_name . ' (External)';
+                $mainCelebrant = $reservation->external_priest_name;
+            }
+
+            // Get organizations
+            $organizationNames = [];
+            if ($reservation->organizations && $reservation->organizations->count() > 0) {
+                $organizationNames = $reservation->organizations->pluck('org_name')->toArray();
+            } elseif ($reservation->organization) {
+                $organizationNames[] = $reservation->organization->org_name;
             }
 
             return [
@@ -120,8 +193,12 @@ class PublicCalendarController extends Controller
                 'event_type' => strtolower(str_replace(' ', '_', $reservation->service?->service_category ?? 'other')),
                 'schedule_date' => $reservation->schedule_date->format('Y-m-d'),
                 'start_time' => $reservation->schedule_date->format('H:i'),
+                'end_time' => $reservation->end_time ? $reservation->end_time->format('H:i') : null,
                 'location' => $reservation->custom_venue_name ?: ($reservation->venue?->name ?? null),
                 'priest' => $priestName ? ['name' => $priestName] : null,
+                'main_celebrant' => $mainCelebrant,
+                'all_priests' => $allPriests,
+                'organizations' => $organizationNames,
                 'external_priest_name' => $reservation->external_priest_name,
                 'description' => $reservation->purpose ?: $reservation->details,
             ];

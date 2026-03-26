@@ -95,7 +95,7 @@
                     </div>
 
                     @if($reservation->status === 'rejected')
-                        <a href="{{ route('requestor.organization-bookings.create') }}" 
+                        <a href="{{ route('requestor.organization-bookings.create') }}"
                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-sm transition-all duration-200">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -151,9 +151,14 @@
                             <div>
                                 <label class="form-label">Schedule</label>
                                 <p class="mt-1 text-base font-semibold text-indigo-600 dark:text-indigo-400">
-                                    {{ $reservation->schedule_date->format('F d, Y') }}<br>
-                                    <span class="text-sm">{{ $reservation->schedule_date->format('g:i A') }}</span>
+                                    {{ $reservation->schedule_date->format('F d, Y') }}
                                 </p>
+                                <div class="mt-1 text-sm text-body">
+                                    <span class="font-medium">Time In:</span> {{ $reservation->schedule_date->format('g:i A') }}
+                                    @if($reservation->end_time)
+                                        <br><span class="font-medium">Time Out:</span> {{ $reservation->end_time->format('g:i A') }}
+                                    @endif
+                                </div>
                             </div>
 
                             @if($reservation->participants_count)
@@ -173,7 +178,24 @@
                             </div>
                             @endif
 
-                            @if($reservation->organization)
+                            @php
+                                $reservationOrganizations = $reservation->organizations ?? collect();
+                            @endphp
+                            @if($reservationOrganizations->isNotEmpty())
+                            <div>
+                                <label class="form-label">Organization{{ $reservationOrganizations->count() > 1 ? 's' : '' }}</label>
+                                <div class="mt-2 space-y-2">
+                                    @foreach($reservationOrganizations as $org)
+                                        <div class="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                            <p class="text-base font-semibold text-heading">{{ $org->org_name }}</p>
+                                            @if($org->adviser)
+                                                <p class="text-xs text-muted mt-0.5">Adviser: {{ $org->adviser->full_name ?? $org->adviser->name }}</p>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @elseif($reservation->organization)
                             <div>
                                 <label class="form-label">Organization</label>
                                 <p class="mt-1 text-base text-body">{{ $reservation->organization->org_name }}</p>
@@ -199,12 +221,37 @@
                             @endphp
                             @if($assignedPriests->count() > 0)
                             <div>
-                                <label class="form-label">Assigned Priests</label>
-                                <ul class="mt-2 space-y-1">
-                                    @foreach($assignedPriests as $p)
-                                        <li class="text-base font-semibold text-heading">{{ $p->full_name }}</li>
+                                <label class="form-label">Assigned Priest(s)</label>
+                                <div class="mt-2 space-y-2">
+                                    @foreach($assignedPriests as $priest)
+                                        <div class="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                            <div class="flex-shrink-0">
+                                                <img class="h-10 w-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+                                                     src="{{ $priest->profile_picture_url }}"
+                                                     alt="{{ $priest->full_name }}">
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-heading">
+                                                    {{ $priest->full_name }}
+                                                    @if(($priest->pivot->is_main_celebrant ?? false) || ((int) $reservation->officiant_id === (int) $priest->id))
+                                                        <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                                                            Main Celebrant
+                                                        </span>
+                                                    @endif
+                                                </p>
+                                                <p class="text-xs text-muted">
+                                                    @if($priest->pivot->confirmation_status === 'confirmed')
+                                                        <span class="text-green-600 dark:text-green-400">✓ Confirmed</span>
+                                                    @elseif($priest->pivot->confirmation_status === 'declined')
+                                                        <span class="text-red-600 dark:text-red-400">✗ Declined</span>
+                                                    @else
+                                                        <span class="text-yellow-600 dark:text-yellow-400">⏳ Pending confirmation</span>
+                                                    @endif
+                                                </p>
+                                            </div>
+                                        </div>
                                     @endforeach
-                                </ul>
+                                </div>
                             </div>
                             @elseif($reservation->priest_selection_type === 'external' && $reservation->external_priest_name)
                             <div>
@@ -278,7 +325,7 @@
             <!-- Actions Card (if applicable) -->
             @php
                 $daysUntilEvent = $reservation->schedule_date ? now()->diffInDays($reservation->schedule_date, false) : -9999;
-                
+
                 // Allow cancellation if:
                 // 1. It is pending (can cancel anytime)
                 // 2. OR it is in an approved state AND the event is 7+ days away

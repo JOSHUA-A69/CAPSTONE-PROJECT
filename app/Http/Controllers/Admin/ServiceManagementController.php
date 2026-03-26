@@ -17,17 +17,22 @@ class ServiceManagementController extends Controller
     public function index(Request $request)
     {
         Log::info('ServiceManagementController index method called with params: ', $request->all());
-        
+
         if ($request->has('archived')) {
-            // Get only archived (soft deleted) services
-            $services = Service::onlyTrashed()->orderBy('service_name', 'asc')->get();
+            // Get only archived (soft deleted) services with pagination
+            $services = Service::onlyTrashed()
+                ->orderBy('service_name', 'asc')
+                ->paginate(10)
+                ->withQueryString();
             $showingArchived = true;
-            Log::info('Showing archived services. Count: ' . $services->count());
+            Log::info('Showing archived services. Page count: ' . $services->count() . ', total: ' . $services->total());
         } else {
-            // Get only active (non-deleted) services
-            $services = Service::orderBy('service_name', 'asc')->get();
+            // Get only active (non-deleted) services with pagination
+            $services = Service::orderBy('service_name', 'asc')
+                ->paginate(10)
+                ->withQueryString();
             $showingArchived = false;
-            Log::info('Showing active services. Count: ' . $services->count());
+            Log::info('Showing active services. Page count: ' . $services->count() . ', total: ' . $services->total());
         }
 
         $categories = $this->getCategories();
@@ -60,7 +65,7 @@ class ServiceManagementController extends Controller
             'service_name' => 'required|string|max:255|unique:services,service_name',
             'service_category' => ['nullable', 'string', Rule::in($this->getCategories())],
             'description' => 'nullable|string|max:500',
-            'duration' => 'nullable|integer|min:0|max:10080',
+            'duration' => 'nullable|integer|min:0|max:300',
         ]);
 
         Service::create($validated);
@@ -80,7 +85,7 @@ class ServiceManagementController extends Controller
             'service_name' => 'required|string|max:255|unique:services,service_name,' . $id . ',service_id',
             'service_category' => ['nullable', 'string', Rule::in($this->getCategories())],
             'description' => 'nullable|string|max:500',
-            'duration' => 'nullable|integer|min:0|max:10080',
+            'duration' => 'nullable|integer|min:0|max:300',
         ]);
 
         $service->update($validated);
@@ -95,7 +100,7 @@ class ServiceManagementController extends Controller
     public function destroy($id)
     {
         $service = Service::findOrFail($id);
-        
+
         // Archiving (soft delete) allows keeping history, so we don't need to block
         // if reservations exist.
         $service->delete();

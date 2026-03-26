@@ -149,12 +149,24 @@
 
                 <!-- Requested Date -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Requested Date & Time</label>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Event Date</label>
                     <p class="text-base font-semibold text-indigo-600 dark:text-indigo-400">
                         {{ $organizationBookingRequest->requested_date->format('F j, Y') }}
                     </p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                        {{ $organizationBookingRequest->requested_date->format('g:i A') }}
+                </div>
+
+                <!-- Time Duration -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Time Duration</label>
+                    <p class="text-base text-gray-900 dark:text-gray-100">
+                        @if($organizationBookingRequest->time_in && $organizationBookingRequest->time_out)
+                            <span class="font-semibold">{{ \Carbon\Carbon::createFromFormat('H:i:s', $organizationBookingRequest->time_in)->format('g:i A') }}</span>
+                            <span class="text-gray-500 dark:text-gray-400 mx-2">to</span>
+                            <span class="font-semibold">{{ \Carbon\Carbon::createFromFormat('H:i:s', $organizationBookingRequest->time_out)->format('g:i A') }}</span>
+                        @else
+                            <span class="font-semibold">{{ $organizationBookingRequest->requested_date->format('g:i A') }}</span>
+                            <span class="text-sm text-gray-500 dark:text-gray-400 block">Legacy format</span>
+                        @endif
                     </p>
                 </div>
 
@@ -178,6 +190,14 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Estimated Participants</label>
                     <p class="text-base text-gray-900 dark:text-gray-100">{{ number_format($organizationBookingRequest->estimated_participants) }} people</p>
+                </div>
+                @endif
+
+                @if($organizationBookingRequest->servers_needed)
+                <!-- Servers Needed -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Servers Needed</label>
+                    <p class="text-base text-gray-900 dark:text-gray-100">{{ number_format($organizationBookingRequest->servers_needed) }} server{{ $organizationBookingRequest->servers_needed > 1 ? 's' : '' }}</p>
                 </div>
                 @endif
             </div>
