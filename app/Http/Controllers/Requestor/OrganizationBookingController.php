@@ -11,6 +11,7 @@ use App\Services\OrganizationBookingNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 
 class OrganizationBookingController extends Controller
@@ -28,7 +29,12 @@ class OrganizationBookingController extends Controller
      */
     public function index()
     {
-        $requests = OrganizationBookingRequest::with(['organization', 'organization.adviser', 'organizations'])
+        $requests = OrganizationBookingRequest::with([
+                'organization',
+                'organization.adviser',
+                'organizations',
+                'pendingCancellation',
+            ])
             ->where('requestor_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
@@ -77,8 +83,9 @@ class OrganizationBookingController extends Controller
         // Remove separate time fields since they're stored independently
         unset($data['requested_time']);
 
-        // Handle organization_ids if multiple organizations selected
-        $organizationIds = $request->input('organization_ids', []);
+        // Handle organization_ids and per-organization server quantities
+        $organizationIds = array_values(array_filter((array) $request->input('organization_ids', [])));
+        $organizationQuantities = (array) $request->input('organization_server_quantities', []);
         $primaryOrgId = $request->input('organization_id');
 
         // If no primary org set but organization_ids exist, use first one
@@ -89,24 +96,37 @@ class OrganizationBookingController extends Controller
         // Ensure primary org is in data for backward compatibility
         $data['organization_id'] = $primaryOrgId;
 
+        // Keep aggregate value for legacy reports/fields
+        $data['servers_needed'] = collect($organizationIds)
+            ->sum(fn ($orgId) => (int) ($organizationQuantities[$orgId] ?? 0));
+
         // Remove organization_ids from data as it's stored in pivot table
         unset($data['organization_ids']);
+        unset($data['organization_server_quantities']);
 
         DB::beginTransaction();
         try {
             $bookingRequest = OrganizationBookingRequest::create($data);
+            $supportsServerQuantity = OrganizationBookingRequest::supportsOrganizationServerQuantityColumn();
 
             // Attach multiple organizations if provided
             if (!empty($organizationIds)) {
                 $orgData = [];
                 foreach ($organizationIds as $orgId) {
-                    $orgData[$orgId] = [
+                    $serverQuantity = (int) ($organizationQuantities[$orgId] ?? 0);
+                    $pivotData = [
                         'is_primary' => ($orgId == $primaryOrgId),
                         'notified' => false,
                         'approval_status' => 'pending',
                         'created_at' => now(),
                         'updated_at' => now()
                     ];
+
+                    if ($supportsServerQuantity) {
+                        $pivotData['server_quantity'] = $serverQuantity;
+                    }
+
+                    $orgData[$orgId] = $pivotData;
                 }
                 $bookingRequest->organizations()->attach($orgData);
             }
@@ -121,6 +141,12 @@ class OrganizationBookingController extends Controller
                 ->with('message', 'Your organization booking request has been submitted successfully. The organization adviser(s) have been notified and will review your request.');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Organization booking store failed', [
+                'requestor_id' => Auth::id(),
+                'organization_ids' => $organizationIds ?? [],
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return back()->withInput()->with('error', 'An error occurred while submitting your request. Please try again.');
         }
     }
@@ -207,8 +233,9 @@ class OrganizationBookingController extends Controller
         }
         unset($data['requested_time']);
 
-        // Handle organization_ids
-        $organizationIds = $request->input('organization_ids', []);
+        // Handle organization_ids and per-organization server quantities
+        $organizationIds = array_values(array_filter((array) $request->input('organization_ids', [])));
+        $organizationQuantities = (array) $request->input('organization_server_quantities', []);
         $primaryOrgId = $request->input('organization_id');
 
         if (empty($primaryOrgId) && !empty($organizationIds)) {
@@ -216,39 +243,55 @@ class OrganizationBookingController extends Controller
         }
 
         $data['organization_id'] = $primaryOrgId;
+        $data['servers_needed'] = collect($organizationIds)
+            ->sum(fn ($orgId) => (int) ($organizationQuantities[$orgId] ?? 0));
         unset($data['organization_ids']);
+        unset($data['organization_server_quantities']);
 
         DB::beginTransaction();
         try {
             $organizationBookingRequest->update($data);
+            $supportsServerQuantity = OrganizationBookingRequest::supportsOrganizationServerQuantityColumn();
 
             // Sync organizations
             if (!empty($organizationIds)) {
                 $orgData = [];
                 foreach ($organizationIds as $orgId) {
-                    $orgData[$orgId] = [
+                    $serverQuantity = (int) ($organizationQuantities[$orgId] ?? 0);
+                    $pivotData = [
                         'is_primary' => ($orgId == $primaryOrgId),
                         'notified' => false,
                         'approval_status' => 'pending',
                         'updated_at' => now()
                     ];
+
+                    if ($supportsServerQuantity) {
+                        $pivotData['server_quantity'] = $serverQuantity;
+                    }
+
+                    $orgData[$orgId] = $pivotData;
                 }
                 $organizationBookingRequest->organizations()->sync($orgData);
             }
 
             DB::commit();
 
-            // If organization changed, re-notify the new adviser
-            if ($organizationBookingRequest->wasChanged('organization_id')) {
-                $organizationBookingRequest->update(['adviser_notified_at' => null]);
-                $this->notificationService->notifyAdviserOfNewRequest($organizationBookingRequest);
-            }
+            // Re-notify advisers after updates because organization assignments are re-synced.
+            $organizationBookingRequest->update(['adviser_notified_at' => null]);
+            $this->notificationService->notifyAdviserOfNewRequest($organizationBookingRequest);
 
             return Redirect::route('requestor.organization-bookings.show', $organizationBookingRequest)
                 ->with('status', 'organization-booking-updated')
                 ->with('message', 'Your organization booking request has been updated successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Organization booking update failed', [
+                'booking_request_id' => $organizationBookingRequest->id,
+                'requestor_id' => Auth::id(),
+                'organization_ids' => $organizationIds ?? [],
+                'exception' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return back()->withInput()->with('error', 'An error occurred while updating your request.');
         }
     }
@@ -320,7 +363,8 @@ class OrganizationBookingController extends Controller
         } else {
             // Direct cancellation for pending bookings
             $organizationBookingRequest->update([
-                'status' => 'cancelled'
+                'status' => 'cancelled',
+                'rejection_reason' => 'Cancelled by requestor',
             ]);
 
             return Redirect::route('requestor.organization-bookings.index')

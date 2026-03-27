@@ -3,6 +3,11 @@
 @section('title', 'New Organization Booking Request')
 
 @section('content')
+    @php
+        $organizationName = $organization->org_name ?? ($request->all_organization_names ?? 'an assigned organization');
+        $adviserDisplayName = $organization->adviser?->full_name ?? $organization->adviser?->name ?? 'Adviser';
+    @endphp
+
     <h1 style="color: #333333; font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 24px;">
         New Organization Booking Request
     </h1>
@@ -14,11 +19,11 @@
     </div>
 
     <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
-        Dear {{ $organization->adviser?->full_name ?? $organization->adviser?->name ?? 'Adviser' }},
+        Dear {{ $adviserDisplayName }},
     </p>
 
     <p style="font-size: 16px; line-height: 24px; margin-bottom: 24px;">
-        A new organization booking request has been submitted for <strong>{{ $organization->org_name }}</strong> and requires your review and approval.
+        A new organization booking request has been submitted for <strong>{{ $organizationName }}</strong> and requires your review and approval.
     </p>
 
     <div style="background-color: #f3f4f6; border-radius: 8px; padding: 24px; margin-bottom: 24px;">
@@ -36,7 +41,7 @@
             </tr>
             <tr>
                 <td style="padding-bottom: 8px; color: #666666;">Organization:</td>
-                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $organization->org_name }}</td>
+                <td style="padding-bottom: 8px; color: #333333; font-weight: 500;">{{ $organizationName }}</td>
             </tr>
             <tr>
                 <td style="padding-bottom: 8px; color: #666666;">Requested Date:</td>

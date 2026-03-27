@@ -26,6 +26,8 @@ class OrganizationBookingRequest extends FormRequest
             'organization_id' => 'required_without:organization_ids|nullable|exists:organizations,org_id',
             'organization_ids' => 'required_without:organization_id|nullable|array|min:1',
             'organization_ids.*' => 'exists:organizations,org_id',
+            'organization_server_quantities' => 'required_with:organization_ids|array',
+            'organization_server_quantities.*' => 'nullable|integer|min:1|max:30',
             'activity_name' => 'required|string|max:255|min:3',
             'purpose' => 'required|string|max:1000|min:10',
             'activity_details' => 'nullable|string|max:2000',
@@ -53,6 +55,10 @@ class OrganizationBookingRequest extends FormRequest
             'organization_ids.required_without' => 'Please select at least one organization for your request.',
             'organization_ids.min' => 'Please select at least one organization.',
             'organization_ids.*.exists' => 'One or more selected organizations are not valid.',
+            'organization_server_quantities.required_with' => 'Please provide the server quantity for each selected organization.',
+            'organization_server_quantities.*.integer' => 'Server quantity must be a whole number.',
+            'organization_server_quantities.*.min' => 'Server quantity must be at least 1.',
+            'organization_server_quantities.*.max' => 'Server quantity must not exceed 30 per organization.',
             'activity_name.required' => 'Activity name is required.',
             'activity_name.min' => 'Activity name must be at least 3 characters.',
             'activity_name.max' => 'Activity name cannot exceed 255 characters.',
@@ -86,10 +92,46 @@ class OrganizationBookingRequest extends FormRequest
     {
         return [
             'organization_id' => 'organization',
+            'organization_server_quantities' => 'organization server quantities',
             'activity_name' => 'activity name',
             'requested_date' => 'requested date',
             'estimated_participants' => 'estimated participants',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $organizationIds = collect($this->input('organization_ids', []))
+                ->filter(fn ($id) => $id !== null && $id !== '')
+                ->map(fn ($id) => (string) $id)
+                ->values();
+
+            if ($organizationIds->isEmpty()) {
+                return;
+            }
+
+            $quantities = (array) $this->input('organization_server_quantities', []);
+
+            foreach ($organizationIds as $organizationId) {
+                $quantity = $quantities[$organizationId] ?? null;
+
+                if ($quantity === null || $quantity === '') {
+                    $validator->errors()->add(
+                        'organization_server_quantities.' . $organizationId,
+                        'Please select a server quantity for each selected organization.'
+                    );
+                    continue;
+                }
+
+                if (!is_numeric($quantity) || (int) $quantity < 1 || (int) $quantity > 30) {
+                    $validator->errors()->add(
+                        'organization_server_quantities.' . $organizationId,
+                        'Server quantity must be between 1 and 30 for each organization.'
+                    );
+                }
+            }
+        });
     }
 
     /**

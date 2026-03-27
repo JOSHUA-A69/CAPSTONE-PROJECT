@@ -294,6 +294,68 @@ document.addEventListener('DOMContentLoaded', function() {
     setupCounter('purpose', 'purpose-counter');
     setupCounter('special_requirements', 'requirements-counter');
 
+    function parseTimeToMinutes(timeValue) {
+        if (!timeValue) return null;
+
+        const normalized = String(timeValue).trim().toLowerCase();
+        const twentyFourHourMatch = normalized.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+        if (twentyFourHourMatch) {
+            return (Number(twentyFourHourMatch[1]) * 60) + Number(twentyFourHourMatch[2]);
+        }
+
+        const twelveHourMatch = normalized.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+        if (twelveHourMatch) {
+            let hours = Number(twelveHourMatch[1]);
+            const minutes = Number(twelveHourMatch[2]);
+            const period = twelveHourMatch[3];
+            if (period === 'pm' && hours < 12) hours += 12;
+            if (period === 'am' && hours === 12) hours = 0;
+            return (hours * 60) + minutes;
+        }
+
+        return null;
+    }
+
+    const form = document.getElementById('organization-booking-form');
+    const timeInInput = document.getElementById('time_in');
+    const timeOutInput = document.getElementById('time_out');
+
+    const validateTimeRange = () => {
+        if (!timeInInput || !timeOutInput) return true;
+
+        const inMinutes = parseTimeToMinutes(timeInInput.value);
+        const outMinutes = parseTimeToMinutes(timeOutInput.value);
+        const valid = inMinutes !== null && outMinutes !== null && outMinutes > inMinutes;
+
+        if (!valid) {
+            timeInInput.classList.add('border-red-500');
+            timeOutInput.classList.add('border-red-500');
+            timeOutInput.setCustomValidity('Time Out must be later than Time In.');
+        } else {
+            timeInInput.classList.remove('border-red-500');
+            timeOutInput.classList.remove('border-red-500');
+            timeOutInput.setCustomValidity('');
+        }
+
+        return valid;
+    };
+
+    if (timeInInput && timeOutInput) {
+        timeInInput.addEventListener('change', validateTimeRange);
+        timeOutInput.addEventListener('change', validateTimeRange);
+        validateTimeRange();
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateTimeRange()) {
+                e.preventDefault();
+                alert('Time Out must be later than Time In.');
+                timeOutInput.focus();
+            }
+        });
+    }
+
     // Trigger initial organization info display if value exists
     if (orgSelect.value) {
         orgSelect.dispatchEvent(new Event('change'));

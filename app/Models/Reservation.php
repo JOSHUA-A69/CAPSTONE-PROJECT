@@ -142,7 +142,14 @@ class Reservation extends Model
      */
     public function organizations()
     {
-        $relation = $this->belongsToMany(Organization::class, 'reservation_organization', 'reservation_id', 'organization_id')
+        $relation = $this->belongsToMany(
+                Organization::class,
+                'reservation_organization',
+                'reservation_id',       // Foreign key on pivot table for this model
+                'organization_id',      // Foreign key on pivot table for related model
+                'reservation_id',       // Local key on this model
+                'org_id'                // Local key on related model (Organization uses org_id as primary key)
+            )
             ->withTimestamps()
             ->withTrashed(); // Include soft-deleted
 

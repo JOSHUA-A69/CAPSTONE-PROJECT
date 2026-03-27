@@ -32,7 +32,7 @@ class OrganizationBookingController extends Controller
             ->where(function ($q) use ($adviserOrganizations) {
                 $q->whereIn('organization_id', $adviserOrganizations)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                      $subQ->whereIn('organization_id', $adviserOrganizations);
+                      $subQ->whereIn('org_id', $adviserOrganizations);
                   });
             });
 
@@ -41,7 +41,7 @@ class OrganizationBookingController extends Controller
             $query->where('status', $request->status);
         }
 
-        $requests = $query->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
+        $requests = $query->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected', 'cancelled')")
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -50,27 +50,33 @@ class OrganizationBookingController extends Controller
             'all' => OrganizationBookingRequest::where(function ($q) use ($adviserOrganizations) {
                 $q->whereIn('organization_id', $adviserOrganizations)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                      $subQ->whereIn('organization_id', $adviserOrganizations);
+                      $subQ->whereIn('org_id', $adviserOrganizations);
                   });
             })->count(),
             'pending' => OrganizationBookingRequest::where(function ($q) use ($adviserOrganizations) {
                 $q->whereIn('organization_id', $adviserOrganizations)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                      $subQ->whereIn('organization_id', $adviserOrganizations);
+                      $subQ->whereIn('org_id', $adviserOrganizations);
                   });
             })->pending()->count(),
             'approved' => OrganizationBookingRequest::where(function ($q) use ($adviserOrganizations) {
                 $q->whereIn('organization_id', $adviserOrganizations)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                      $subQ->whereIn('organization_id', $adviserOrganizations);
+                      $subQ->whereIn('org_id', $adviserOrganizations);
                   });
             })->approved()->count(),
             'rejected' => OrganizationBookingRequest::where(function ($q) use ($adviserOrganizations) {
                 $q->whereIn('organization_id', $adviserOrganizations)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                      $subQ->whereIn('organization_id', $adviserOrganizations);
+                      $subQ->whereIn('org_id', $adviserOrganizations);
                   });
             })->rejected()->count(),
+            'cancelled' => OrganizationBookingRequest::where(function ($q) use ($adviserOrganizations) {
+                $q->whereIn('organization_id', $adviserOrganizations)
+                  ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
+                      $subQ->whereIn('org_id', $adviserOrganizations);
+                  });
+            })->where('status', 'cancelled')->count(),
         ];
 
         // Get pending cancellation requests count
@@ -118,7 +124,10 @@ class OrganizationBookingController extends Controller
         // Validate adviser authorization
         $adviserOrganizations = Auth::user()->organizations->pluck('org_id');
 
-        if (!$adviserOrganizations->contains($organizationBookingRequest->organization_id)) {
+        $isAuthorized = $adviserOrganizations->contains($organizationBookingRequest->organization_id)
+            || $organizationBookingRequest->organizations->whereIn('org_id', $adviserOrganizations)->isNotEmpty();
+
+        if (!$isAuthorized) {
             abort(403, 'You are not authorized to approve this request.');
         }
 
@@ -152,7 +161,10 @@ class OrganizationBookingController extends Controller
         // Validate adviser authorization
         $adviserOrganizations = Auth::user()->organizations->pluck('org_id');
 
-        if (!$adviserOrganizations->contains($organizationBookingRequest->organization_id)) {
+        $isAuthorized = $adviserOrganizations->contains($organizationBookingRequest->organization_id)
+            || $organizationBookingRequest->organizations->whereIn('org_id', $adviserOrganizations)->isNotEmpty();
+
+        if (!$isAuthorized) {
             abort(403, 'You are not authorized to reject this request.');
         }
 
@@ -205,7 +217,10 @@ class OrganizationBookingController extends Controller
     {
         $adviserOrganizations = Auth::user()->organizations->pluck('org_id');
 
-        if (!$adviserOrganizations->contains($cancellation->bookingRequest->organization_id)) {
+        $isAuthorized = $adviserOrganizations->contains($cancellation->bookingRequest->organization_id)
+            || $cancellation->bookingRequest->organizations->whereIn('org_id', $adviserOrganizations)->isNotEmpty();
+
+        if (!$isAuthorized) {
             abort(403, 'You are not authorized to approve this cancellation.');
         }
 
@@ -234,7 +249,10 @@ class OrganizationBookingController extends Controller
     {
         $adviserOrganizations = Auth::user()->organizations->pluck('org_id');
 
-        if (!$adviserOrganizations->contains($cancellation->bookingRequest->organization_id)) {
+        $isAuthorized = $adviserOrganizations->contains($cancellation->bookingRequest->organization_id)
+            || $cancellation->bookingRequest->organizations->whereIn('org_id', $adviserOrganizations)->isNotEmpty();
+
+        if (!$isAuthorized) {
             abort(403, 'You are not authorized to reject this cancellation.');
         }
 
@@ -268,7 +286,7 @@ class OrganizationBookingController extends Controller
             ->where(function ($q) use ($adviserOrganizations) {
                 $q->whereIn('organization_id', $adviserOrganizations)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                      $subQ->whereIn('organization_id', $adviserOrganizations);
+                      $subQ->whereIn('org_id', $adviserOrganizations);
                   });
             })
             ->where('status', 'approved')
@@ -295,12 +313,12 @@ class OrganizationBookingController extends Controller
             ->where(function ($query) use ($adviserOrganizations) {
                 $query->whereIn('organization_id', $adviserOrganizations)
                       ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                          $subQ->whereIn('organization_id', $adviserOrganizations);
+                          $subQ->whereIn('org_id', $adviserOrganizations);
                       });
             });
 
         // Status filter
-        if (in_array($filter, ['pending','approved','rejected'])) {
+        if (in_array($filter, ['pending','approved','rejected','cancelled'])) {
             $q->where('status', $filter);
         } elseif ($filter === 'past') {
             $q->where('status', 'approved')->whereDate('requested_date', '<', now()->toDateString());
@@ -362,7 +380,7 @@ class OrganizationBookingController extends Controller
             ->where(function ($q) use ($adviserOrganizations) {
                 $q->whereIn('organization_id', $adviserOrganizations)
                   ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                      $subQ->whereIn('organization_id', $adviserOrganizations);
+                      $subQ->whereIn('org_id', $adviserOrganizations);
                   });
             })
             ->pending()
@@ -373,7 +391,7 @@ class OrganizationBookingController extends Controller
         $overdueCount = OrganizationBookingRequest::where(function ($q) use ($adviserOrganizations) {
             $q->whereIn('organization_id', $adviserOrganizations)
               ->orWhereHas('organizations', function ($subQ) use ($adviserOrganizations) {
-                  $subQ->whereIn('organization_id', $adviserOrganizations);
+                  $subQ->whereIn('org_id', $adviserOrganizations);
               });
         })->needingReminder()->count();
 

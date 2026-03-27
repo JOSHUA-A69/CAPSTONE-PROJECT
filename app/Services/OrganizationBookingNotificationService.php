@@ -24,48 +24,118 @@ use Illuminate\Support\Facades\Log;
 class OrganizationBookingNotificationService
 {
     /**
+     * Collect all target organizations for adviser notification.
+     * Falls back to legacy single organization relation when needed.
+     */
+    private function resolveTargetOrganizations(OrganizationBookingRequest $request)
+    {
+        $request->loadMissing(['organizations.adviser', 'organization.adviser', 'requestor']);
+
+        $organizations = $request->organizations ?? collect();
+
+        if ($organizations->isEmpty() && $request->organization) {
+            $organizations = collect([$request->organization]);
+        }
+
+        return $organizations->filter();
+    }
+
+    /**
      * Notify organization adviser about a new booking request
      */
     public function notifyAdviserOfNewRequest(OrganizationBookingRequest $request)
     {
-        $organization = $request->organization;
-        $adviser = $organization->adviser;
+        $organizations = $this->resolveTargetOrganizations($request);
 
-        if (!$adviser) {
-            Log::warning("No adviser assigned to organization {$organization->org_name} for booking request #{$request->id}");
+        if ($organizations->isEmpty()) {
+            Log::warning("No organizations found for booking request #{$request->id}");
             return false;
         }
 
-        try {
-            // Send email notification
-            if ($adviser->email) {
-                Mail::to($adviser->email)->send(new OrganizationBookingAdviserNotification($request));
+        // Group organizations by adviser to avoid duplicate notifications to the same adviser.
+        $adviserOrganizations = [];
+        foreach ($organizations as $organization) {
+            $adviser = $organization->adviser;
+            if (!$adviser || !$adviser->id) {
+                Log::warning("No adviser assigned to organization {$organization->org_name} for booking request #{$request->id}");
+                continue;
             }
 
-            // Create in-app database notification for adviser
-            Notification::create([
-                'user_id' => $adviser->id,
-                'message' => "New organization booking request for \"{$request->activity_name}\" from {$organization->org_name} requires your approval.",
-                'type' => 'org_booking_new_request',
-                'sent_at' => now(),
-                'data' => [
-                    'organization_booking_request_id' => $request->id,
-                    'activity_name' => $request->activity_name,
-                    'organization_name' => $organization->org_name,
-                    'requestor_name' => $request->requestor ? $request->requestor->full_name : 'Unknown User',
-                ],
-            ]);
+            if (!isset($adviserOrganizations[$adviser->id])) {
+                $adviserOrganizations[$adviser->id] = [
+                    'adviser' => $adviser,
+                    'organizations' => collect(),
+                ];
+            }
 
-            // Mark as notified
-            $request->markAdviserNotified();
+            $adviserOrganizations[$adviser->id]['organizations']->push($organization);
+        }
 
-            Log::info("Adviser notification sent for booking request #{$request->id} to {$adviser->email}");
-            return true;
-
-        } catch (\Exception $e) {
-            Log::error("Failed to send adviser notification for booking request #{$request->id}: " . $e->getMessage());
+        if (empty($adviserOrganizations)) {
+            Log::warning("No advisers found for booking request #{$request->id}");
             return false;
         }
+
+        $successCount = 0;
+
+        foreach ($adviserOrganizations as $adviserData) {
+            $adviser = $adviserData['adviser'];
+            $assignedOrganizations = $adviserData['organizations'];
+            $assignedOrganizationNames = $assignedOrganizations->pluck('org_name')->values()->all();
+            $organizationListLabel = implode(', ', $assignedOrganizationNames);
+            $emailSent = false;
+
+            try {
+                if ($adviser->email) {
+                    try {
+                        // Use first assigned org as the per-email context organization.
+                        $primaryContextOrg = $assignedOrganizations->first();
+                        Mail::to($adviser->email)->send(new OrganizationBookingAdviserNotification($request, $primaryContextOrg));
+                        $emailSent = true;
+                    } catch (\Exception $mailException) {
+                        Log::warning("Email delivery failed for booking request #{$request->id} to adviser #{$adviser->id}: " . $mailException->getMessage());
+                    }
+                }
+
+                Notification::create([
+                    'user_id' => $adviser->id,
+                    'message' => "New organization booking request for \"{$request->activity_name}\" from {$organizationListLabel} requires your approval.",
+                    'type' => 'org_booking_new_request',
+                    'sent_at' => now(),
+                    'data' => [
+                        'organization_booking_request_id' => $request->id,
+                        'activity_name' => $request->activity_name,
+                        'organization_name' => $organizationListLabel,
+                        'organization_names' => $assignedOrganizationNames,
+                        'requestor_name' => $request->requestor ? ($request->requestor->full_name ?? $request->requestor->name) : 'Unknown User',
+                    ],
+                ]);
+
+                foreach ($assignedOrganizations as $assignedOrganization) {
+                    $request->organizations()
+                        ->updateExistingPivot($assignedOrganization->org_id, [
+                            'notified' => true,
+                            'notified_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                }
+
+                $successCount++;
+                Log::info("Adviser notification recorded for booking request #{$request->id} to adviser #{$adviser->id}", [
+                    'email_sent' => $emailSent,
+                    'email' => $adviser->email,
+                ]);
+            } catch (\Exception $e) {
+                Log::error("Failed to send adviser notification for booking request #{$request->id} to adviser #{$adviser->id}: " . $e->getMessage());
+            }
+        }
+
+        if ($successCount > 0) {
+            $request->markAdviserNotified();
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -260,36 +330,65 @@ class OrganizationBookingNotificationService
      */
     public function notifyAdviserOfCancellationRequest(OrganizationBookingRequest $request)
     {
-        $organization = $request->organization;
-        $adviser = $organization->adviser;
+        $organizations = $this->resolveTargetOrganizations($request);
 
-        if (!$adviser) {
-            Log::warning("No adviser assigned to organization {$organization->org_name} for cancellation request");
+        if ($organizations->isEmpty()) {
+            Log::warning("No organizations found for cancellation request notification on booking #{$request->id}");
             return false;
         }
 
-        try {
-            // Create in-app database notification for adviser
-            Notification::create([
-                'user_id' => $adviser->id,
-                'message' => "Cancellation request received for \"{$request->activity_name}\" from {$organization->org_name}. Please review and respond.",
-                'type' => 'org_booking_cancellation_request',
-                'sent_at' => now(),
-                'data' => [
-                    'organization_booking_request_id' => $request->id,
-                    'activity_name' => $request->activity_name,
-                    'organization_name' => $organization->org_name,
-                    'requestor_name' => $request->requestor ? $request->requestor->full_name : 'Unknown User',
-                ],
-            ]);
+        $adviserOrganizations = [];
+        foreach ($organizations as $organization) {
+            $adviser = $organization->adviser;
+            if (!$adviser || !$adviser->id) {
+                Log::warning("No adviser assigned to organization {$organization->org_name} for cancellation request on booking #{$request->id}");
+                continue;
+            }
 
-            Log::info("Cancellation request notification sent for booking #{$request->id} to adviser {$adviser->email}");
-            return true;
+            if (!isset($adviserOrganizations[$adviser->id])) {
+                $adviserOrganizations[$adviser->id] = [
+                    'adviser' => $adviser,
+                    'organizations' => collect(),
+                ];
+            }
 
-        } catch (\Exception $e) {
-            Log::error("Failed to send cancellation request notification for booking #{$request->id}: " . $e->getMessage());
+            $adviserOrganizations[$adviser->id]['organizations']->push($organization);
+        }
+
+        if (empty($adviserOrganizations)) {
             return false;
         }
+
+        $successCount = 0;
+
+        foreach ($adviserOrganizations as $adviserData) {
+            $adviser = $adviserData['adviser'];
+            $assignedOrganizationNames = $adviserData['organizations']->pluck('org_name')->values()->all();
+            $organizationListLabel = implode(', ', $assignedOrganizationNames);
+
+            try {
+                Notification::create([
+                    'user_id' => $adviser->id,
+                    'message' => "Cancellation request received for \"{$request->activity_name}\" from {$organizationListLabel}. Please review and respond.",
+                    'type' => 'org_booking_cancellation_request',
+                    'sent_at' => now(),
+                    'data' => [
+                        'organization_booking_request_id' => $request->id,
+                        'activity_name' => $request->activity_name,
+                        'organization_name' => $organizationListLabel,
+                        'organization_names' => $assignedOrganizationNames,
+                        'requestor_name' => $request->requestor ? ($request->requestor->full_name ?? $request->requestor->name) : 'Unknown User',
+                    ],
+                ]);
+
+                $successCount++;
+                Log::info("Cancellation request notification sent for booking #{$request->id} to adviser {$adviser->email}");
+            } catch (\Exception $e) {
+                Log::error("Failed to send cancellation request notification for booking #{$request->id} to adviser #{$adviser->id}: " . $e->getMessage());
+            }
+        }
+
+        return $successCount > 0;
     }
 
     /**

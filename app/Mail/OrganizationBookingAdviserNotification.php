@@ -14,13 +14,15 @@ class OrganizationBookingAdviserNotification extends Mailable
     use Queueable, SerializesModels;
 
     public $bookingRequest;
+    public $targetOrganization;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(OrganizationBookingRequest $bookingRequest)
+    public function __construct(OrganizationBookingRequest $bookingRequest, $targetOrganization = null)
     {
         $this->bookingRequest = $bookingRequest;
+        $this->targetOrganization = $targetOrganization;
     }
 
     /**
@@ -38,11 +40,13 @@ class OrganizationBookingAdviserNotification extends Mailable
      */
     public function content(): Content
     {
+        $organization = $this->targetOrganization ?: $this->bookingRequest->organization;
+
         return new Content(
             view: 'emails.organization-booking.adviser-notification',
             with: [
                 'request' => $this->bookingRequest,
-                'organization' => $this->bookingRequest->organization,
+                'organization' => $organization,
                 'requestor' => $this->bookingRequest->requestor,
             ],
         );

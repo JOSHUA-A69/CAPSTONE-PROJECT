@@ -105,9 +105,10 @@ class OrganizationBookingCancellation extends Model
             'responded_at' => now(),
         ]);
 
-        // Also update the booking request status to cancelled
+        // Mark booking as cancelled after adviser approval of the cancellation request.
         $this->bookingRequest->update([
             'status' => 'cancelled',
+            'rejection_reason' => 'Cancelled by requestor (approved by adviser)',
         ]);
 
         return $this;

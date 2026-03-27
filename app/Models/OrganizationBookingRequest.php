@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use DateTimeInterface;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Organization Booking Request Model
@@ -18,6 +19,8 @@ use DateTimeInterface;
 class OrganizationBookingRequest extends Model
 {
     use HasFactory;
+
+    protected static ?bool $supportsOrganizationServerQuantityColumn = null;
 
     protected $fillable = [
         'requestor_id',
@@ -108,10 +111,45 @@ class OrganizationBookingRequest extends Model
      */
     public function organizations()
     {
-        return $this->belongsToMany(Organization::class, 'organization_booking_organizations', 'booking_request_id', 'organization_id')
-            ->withPivot('is_primary', 'notified', 'notified_at', 'approval_status', 'rejection_reason', 'responded_by', 'responded_at')
+        $pivotColumns = [
+            'is_primary',
+            'notified',
+            'notified_at',
+            'approval_status',
+            'rejection_reason',
+            'responded_by',
+            'responded_at',
+        ];
+
+        if (static::supportsOrganizationServerQuantityColumn()) {
+            array_splice($pivotColumns, 1, 0, ['server_quantity']);
+        }
+
+        return $this->belongsToMany(
+                Organization::class,
+                'organization_booking_organizations',
+                'booking_request_id',   // Foreign key on pivot table for this model
+                'organization_id',      // Foreign key on pivot table for related model
+                'id',                   // Local key on this model
+                'org_id'                // Local key on related model (Organization uses org_id as primary key)
+            )
+            ->withPivot($pivotColumns)
             ->withTimestamps()
             ->withTrashed();
+    }
+
+    public static function supportsOrganizationServerQuantityColumn(): bool
+    {
+        if (static::$supportsOrganizationServerQuantityColumn !== null) {
+            return static::$supportsOrganizationServerQuantityColumn;
+        }
+
+        static::$supportsOrganizationServerQuantityColumn = Schema::hasColumn(
+            'organization_booking_organizations',
+            'server_quantity'
+        );
+
+        return static::$supportsOrganizationServerQuantityColumn;
     }
 
     /**
@@ -119,7 +157,14 @@ class OrganizationBookingRequest extends Model
      */
     public function primaryOrganization()
     {
-        return $this->belongsToMany(Organization::class, 'organization_booking_organizations', 'booking_request_id', 'organization_id')
+        return $this->belongsToMany(
+                Organization::class,
+                'organization_booking_organizations',
+                'booking_request_id',
+                'organization_id',
+                'id',
+                'org_id'
+            )
             ->withPivot('is_primary')
             ->wherePivot('is_primary', true)
             ->withTrashed();
@@ -231,6 +276,7 @@ class OrganizationBookingRequest extends Model
             'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
             'approved' => 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
             'rejected' => 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+            'cancelled' => 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
             default => 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-300'
         };
     }
@@ -335,7 +381,6 @@ class OrganizationBookingRequest extends Model
     {
         return $this->update([
             'session_expired' => true,
-            'status' => 'expired',
         ]);
     }
 
@@ -365,22 +410,12 @@ class OrganizationBookingRequest extends Model
     // ===========================
 
     /**
-     * Check if cancellation is allowed (adviser approval required for confirmed bookings)
+     * Check if cancellation is allowed.
+     * Business rule: once a booking is approved by advisers, it can no longer be cancelled by requestor.
      */
     public function canRequestCancellation(): bool
     {
-        // Can always cancel if still pending
-        if ($this->status === 'pending') {
-            return true;
-        }
-
-        // Cannot cancel if already cancelled or rejected
-        if (in_array($this->status, ['cancelled', 'rejected', 'expired'])) {
-            return false;
-        }
-
-        // Confirmed bookings require adviser approval for cancellation
-        return true;
+        return $this->status === 'pending';
     }
 
     /**
@@ -388,7 +423,7 @@ class OrganizationBookingRequest extends Model
      */
     public function requiresCancellationApproval(): bool
     {
-        return $this->status === 'approved' && $this->cancellation_restricted;
+        return false;
     }
 
     /**
@@ -409,15 +444,7 @@ class OrganizationBookingRequest extends Model
     public function getAllOrganizationNamesAttribute(): string
     {
         if ($this->organizations->isNotEmpty()) {
-            $names = [];
-            foreach ($this->organizations as $org) {
-                $name = $org->org_name;
-                if ($org->pivot->is_primary) {
-                    $name .= ' (Primary)';
-                }
-                $names[] = $name;
-            }
-            return implode(', ', $names);
+            return $this->organizations->pluck('org_name')->implode(', ');
         }
 
         if ($this->organization) {

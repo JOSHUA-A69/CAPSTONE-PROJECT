@@ -136,14 +136,35 @@
                     <p class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ $organizationBookingRequest->activity_name }}</p>
                 </div>
 
-                <!-- Organization -->
+                <!-- Organization(s) -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Organization</label>
-                    <p class="text-base text-gray-900 dark:text-gray-100">{{ $organizationBookingRequest->organization->org_name }}</p>
-                    @if($organizationBookingRequest->organization->adviser)
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
-                            Adviser: {{ $organizationBookingRequest->organization->adviser->full_name ?? $organizationBookingRequest->organization->adviser->name }}
-                        </p>
+                    @php
+                        $requestOrganizations = $organizationBookingRequest->organizations ?? collect();
+                    @endphp
+                    <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        Organization{{ $requestOrganizations->count() > 1 ? 's' : '' }}
+                    </label>
+
+                    @if($requestOrganizations->isNotEmpty())
+                        <div class="space-y-2">
+                            @foreach($requestOrganizations as $org)
+                                <div>
+                                    <p class="text-base text-gray-900 dark:text-gray-100">{{ $org->org_name }}</p>
+                                    @if($org->adviser)
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                                            Adviser: {{ $org->adviser->full_name ?? $org->adviser->name }}
+                                        </p>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-base text-gray-900 dark:text-gray-100">{{ $organizationBookingRequest->organization->org_name }}</p>
+                        @if($organizationBookingRequest->organization->adviser)
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Adviser: {{ $organizationBookingRequest->organization->adviser->full_name ?? $organizationBookingRequest->organization->adviser->name }}
+                            </p>
+                        @endif
                     @endif
                 </div>
 

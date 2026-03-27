@@ -43,10 +43,46 @@
                     </h2>
                 </div>
                 <div class="p-6">
+                    @php
+                        $adviserOrganizationIds = auth()->user()->organizations->pluck('org_id')->toArray();
+                        $linkedOrganizations = $organizationBookingRequest->organizations ?? collect();
+                    @endphp
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Organization Name</label>
-                            <p class="text-gray-900 dark:text-white font-medium">{{ $organizationBookingRequest->organization->org_name }}</p>
+                            <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+                                Organization{{ $linkedOrganizations->count() > 1 ? 's' : '' }}
+                            </label>
+
+                            @if($linkedOrganizations->isNotEmpty())
+                                <div class="space-y-2">
+                                    @foreach($linkedOrganizations as $org)
+                                        @php
+                                            $isAdviserOrganization = in_array($org->org_id, $adviserOrganizationIds, true);
+                                        @endphp
+                                        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-700/40">
+                                            <div class="flex items-start justify-between gap-3">
+                                                <p class="text-gray-900 dark:text-white font-medium">{{ $org->org_name }}</p>
+                                                @if($isAdviserOrganization)
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-200">
+                                                        Your Organization
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                                Requested Servers: <span class="font-semibold">{{ (int) ($org->pivot->server_quantity ?? 0) }}</span>
+                                            </p>
+                                            @if($org->adviser)
+                                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                    Adviser: {{ $org->adviser->full_name ?? $org->adviser->name }}
+                                                </p>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <p class="text-gray-900 dark:text-white font-medium">{{ $organizationBookingRequest->organization->org_name }}</p>
+                            @endif
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Requestor</label>
@@ -72,7 +108,7 @@
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Activity Name</label>
                         <p class="text-gray-900 dark:text-white font-medium text-lg">{{ $organizationBookingRequest->activity_name }}</p>
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Purpose</label>
                         <p class="text-gray-900 dark:text-white">{{ $organizationBookingRequest->purpose ?? 'No purpose specified' }}</p>
@@ -167,6 +203,10 @@
                     </h2>
                 </div>
                 <div class="p-6">
+                    @php
+                        $isCancelledByRequestor = $organizationBookingRequest->status === 'cancelled'
+                            || str_contains(strtolower((string) $organizationBookingRequest->rejection_reason), 'cancelled by requestor');
+                    @endphp
                     <!-- Status Badge - Compact Design -->
                     <div class="flex justify-center mb-6">
                         @if($organizationBookingRequest->status === 'pending')
@@ -186,6 +226,13 @@
                                 </svg>
                                 Approved
                             </span>
+                        @elseif($isCancelledByRequestor)
+                            <span class="inline-flex items-center px-4 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-sm font-semibold rounded-full">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                                Cancelled by Requestor
+                            </span>
                         @elseif($organizationBookingRequest->status === 'rejected')
                             <span class="inline-flex items-center px-6 py-2 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 text-base font-bold rounded-lg shadow-md border border-red-300 dark:border-red-700">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -197,17 +244,25 @@
                         @endif
                     </div>
 
+                    @if($isCancelledByRequestor)
+                        <div class="mb-4 rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20 p-3">
+                            <p class="text-sm font-medium text-orange-800 dark:text-orange-300">
+                                This booking is cancelled by requestor.
+                            </p>
+                        </div>
+                    @endif
+
                     <!-- Action Buttons for Pending -->
                     @if($organizationBookingRequest->status === 'pending')
                         <div class="space-y-3">
-                                <button type="button" onclick="openApproveModal()" 
+                                <button type="button" onclick="openApproveModal()"
                                     class="w-full inline-flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                                 Approve Request
                             </button>
-                            <button type="button" onclick="openRejectModal()" 
+                            <button type="button" onclick="openRejectModal()"
                                     class="w-full inline-flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -251,7 +306,7 @@
                     <div class="relative">
                         <!-- Timeline Line -->
                         <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
-                        
+
                         <!-- Timeline Items -->
                         <div class="space-y-6">
                             <!-- Submitted -->
@@ -324,6 +379,20 @@
                                     </p>
                                 </div>
                             </div>
+                            @elseif($isCancelledByRequestor)
+                            <div class="relative flex items-start">
+                                <div class="absolute left-0 w-8 h-8 bg-orange-100 dark:bg-orange-900/40 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
+                                    <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </div>
+                                <div class="ml-12">
+                                    <h4 class="text-sm font-medium text-gray-900 dark:text-white">Cancelled by Requestor</h4>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                        {{ $organizationBookingRequest->updated_at->format('M j, Y g:i A') }}
+                                    </p>
+                                </div>
+                            </div>
                             @endif
                         </div>
                     </div>
@@ -379,16 +448,16 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Approval Notes (Optional)
                     </label>
-                    <textarea name="comments" rows="4" 
+                    <textarea name="comments" rows="4"
                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 dark:bg-gray-700 dark:text-white"
                               placeholder="Add any notes or conditions for approval..."></textarea>
                 </div>
                 <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeApproveModal()" 
+                    <button type="button" onclick="closeApproveModal()"
                             class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" 
+                    <button type="submit"
                             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
                         Approve Request
                     </button>
@@ -427,11 +496,11 @@
                               placeholder="Please provide a clear reason for rejecting this request..."></textarea>
                 </div>
                 <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeRejectModal()" 
+                    <button type="button" onclick="closeRejectModal()"
                             class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors">
                         Cancel
                     </button>
-                    <button type="submit" 
+                    <button type="submit"
                             class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors">
                         Reject Request
                     </button>
@@ -481,7 +550,7 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const action = urlParams.get('action');
-    
+
     if (action === 'reject') {
         openRejectModal();
     } else if (action === 'approve') {

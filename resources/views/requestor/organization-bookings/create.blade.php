@@ -92,11 +92,11 @@
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                             Select Organization(s) <span class="text-red-500">*</span>
                         </label>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Select one or more organizations involved in this activity. The first selected will be the primary organization.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Select one or more organizations involved in this activity, then assign server quantity per organization (maximum of 30 each).</p>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="organizations-container">
                             @foreach($organizations as $org)
-                                <label class="org-card relative flex items-center p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-teal-50 dark:hover:bg-teal-900/10 hover:border-teal-200 dark:hover:border-teal-500/30 transition-all cursor-pointer group shadow-sm" data-org-id="{{ $org->org_id }}">
+                                <label class="org-card relative flex items-center p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-teal-50 dark:hover:bg-teal-900/10 hover:border-teal-200 dark:hover:border-teal-500/30 transition-all cursor-pointer group shadow-sm" data-org-id="{{ $org->org_id }}" data-old-quantity="{{ old('organization_server_quantities.' . $org->org_id) }}">
                                     <div class="flex items-center gap-3 w-full">
                                         <div class="flex-1 min-w-0">
                                             <p class="text-sm font-semibold text-gray-900 dark:text-white truncate group-hover:text-teal-700 dark:group-hover:text-teal-300">
@@ -105,39 +105,30 @@
                                             <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                                 Adviser: {{ $org->adviser ? $org->adviser->full_name : 'No adviser' }}
                                             </p>
-                                            <!-- Primary badge -->
-                                            <div class="primary-org-badge hidden mt-1">
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300">
-                                                    Primary
-                                                </span>
-                                            </div>
                                         </div>
                                         <div class="flex-shrink-0">
                                             <input type="checkbox" name="organization_ids[]" value="{{ $org->org_id }}"
                                                 {{ is_array(old('organization_ids')) && in_array($org->org_id, old('organization_ids')) ? 'checked' : '' }}
                                                 class="org-checkbox h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded transition-colors"
-                                                onchange="updatePrimaryOrgOptions()">
+                                                onchange="updateOrgServerQuantityInputs()">
                                         </div>
                                     </div>
                                 </label>
                             @endforeach
                         </div>
                         @error('organization_ids') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                        @error('organization_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        @error('organization_server_quantities') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
 
-                        <!-- Primary Organization Selection (shown when multiple orgs selected) -->
-                        <div id="primary_org_container" class="hidden mt-4 p-4 bg-teal-100 dark:bg-teal-800/30 rounded-xl border border-teal-200 dark:border-teal-700/50">
+                        <!-- Server Quantity Per Organization -->
+                        <div id="org_quantity_container" class="hidden mt-4 p-4 bg-teal-100 dark:bg-teal-800/30 rounded-xl border border-teal-200 dark:border-teal-700/50">
                             <label class="block text-sm font-medium text-teal-800 dark:text-teal-200 mb-2">
-                                Select Primary Organization
+                                Assign Servers Per Organization
                             </label>
-                            <p class="text-xs text-teal-700 dark:text-teal-300 mb-3">The primary organization's adviser will be the main point of contact.</p>
-                            <div id="primary_org_options" class="space-y-2">
+                            <p class="text-xs text-teal-700 dark:text-teal-300 mb-3">Select the quantity needed for each chosen organization. Maximum is 30 per organization.</p>
+                            <div id="org_quantity_options" class="space-y-3">
                                 <!-- Dynamically populated -->
                             </div>
                         </div>
-
-                        <!-- Hidden field for backward compatibility -->
-                        <input type="hidden" name="organization_id" id="primary_organization_id" value="{{ old('organization_id') }}">
                     </div>
                 </div>
 
@@ -211,14 +202,6 @@
                                     <input type="number" name="estimated_participants" id="estimated_participants" value="{{ old('estimated_participants') }}" min="1" max="10000" placeholder="e.g., 35"
                                         class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
                                     @error('estimated_participants') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-
-                                    <label for="servers_needed" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 mt-4">
-                                        Number of Servers Needed
-                                    </label>
-                                    <input type="number" name="servers_needed" id="servers_needed" value="{{ old('servers_needed') }}" min="0" max="50" placeholder="e.g., 4"
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Altar servers or assistants needed</p>
-                                    @error('servers_needed') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                                 </div>
                              </div>
                         </div>
@@ -305,87 +288,89 @@
 
     // Organization details toggle
     function initOrgSelector() {
-        // Initialize multi-organization selection
-        updatePrimaryOrgOptions();
+        // Initialize quantity inputs for selected organizations
+        updateOrgServerQuantityInputs();
     }
 
-    // Handle multiple organization selection
-    function updatePrimaryOrgOptions() {
+    // Show server quantity selector for each checked organization
+    function updateOrgServerQuantityInputs() {
         const checkboxes = document.querySelectorAll('.org-checkbox:checked');
-        const container = document.getElementById('primary_org_container');
-        const optionsDiv = document.getElementById('primary_org_options');
-        const primaryOrgInput = document.getElementById('primary_organization_id');
+        const container = document.getElementById('org_quantity_container');
+        const optionsDiv = document.getElementById('org_quantity_options');
 
-        // Reset all primary badges
-        document.querySelectorAll('.primary-org-badge').forEach(badge => {
-            badge.classList.add('hidden');
+        const currentValues = {};
+        document.querySelectorAll('select[name^="organization_server_quantities["]').forEach(select => {
+            const match = select.name.match(/organization_server_quantities\[(.+)\]/);
+            if (match && match[1]) {
+                currentValues[match[1]] = select.value;
+            }
         });
 
-        if (checkboxes.length > 1) {
-            // Show primary org selection
-            container.classList.remove('hidden');
-
-            // Build radio options
-            let html = '';
-            checkboxes.forEach((checkbox, index) => {
-                const orgId = checkbox.value;
-                const card = checkbox.closest('.org-card');
-                const orgName = card.querySelector('p.font-semibold').textContent.trim();
-                const isChecked = index === 0 ? 'checked' : '';
-
-                html += `
-                    <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-700/30 cursor-pointer transition-colors">
-                        <input type="radio" name="primary_org_radio" value="${orgId}" ${isChecked}
-                            class="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300"
-                            onchange="updatePrimaryOrgBadge()">
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">${escapeHtmlForOrg(orgName)}</span>
-                    </label>
-                `;
-            });
-
-            optionsDiv.innerHTML = html;
-            updatePrimaryOrgBadge();
-        } else if (checkboxes.length === 1) {
-            // Single org - automatically primary
-            container.classList.add('hidden');
-            primaryOrgInput.value = checkboxes[0].value;
-
-            // Show badge
-            const card = checkboxes[0].closest('.org-card');
-            const badge = card.querySelector('.primary-org-badge');
-            if (badge) badge.classList.remove('hidden');
-        } else {
-            // No orgs selected
+        if (checkboxes.length === 0) {
             container.classList.add('hidden');
             optionsDiv.innerHTML = '';
-            primaryOrgInput.value = '';
+            return;
         }
-    }
 
-    function updatePrimaryOrgBadge() {
-        // Reset all badges
-        document.querySelectorAll('.primary-org-badge').forEach(badge => {
-            badge.classList.add('hidden');
+        container.classList.remove('hidden');
+
+        let html = '';
+        checkboxes.forEach((checkbox) => {
+            const orgId = checkbox.value;
+            const card = checkbox.closest('.org-card');
+            const orgName = card.querySelector('p.font-semibold').textContent.trim();
+            const oldQuantity = card.dataset.oldQuantity || '';
+            const selectedValue = currentValues[orgId] || oldQuantity;
+
+            html += `
+                <div class="bg-white dark:bg-gray-800 rounded-lg border border-teal-200 dark:border-teal-700/40 p-3">
+                    <label for="org-qty-${orgId}" class="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">${escapeHtmlForOrg(orgName)}</label>
+                    <select id="org-qty-${orgId}" name="organization_server_quantities[${orgId}]" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-colors" required>
+                        <option value="">Select quantity (max 30)</option>
+                        ${Array.from({ length: 30 }, (_, i) => {
+                            const quantity = String(i + 1);
+                            const selected = String(selectedValue) === quantity ? 'selected' : '';
+                            return `<option value="${quantity}" ${selected}>${quantity} server${quantity === '1' ? '' : 's'}</option>`;
+                        }).join('')}
+                    </select>
+                </div>
+            `;
         });
 
-        // Update hidden input and show badge
-        const selectedRadio = document.querySelector('input[name="primary_org_radio"]:checked');
-        const primaryOrgInput = document.getElementById('primary_organization_id');
-
-        if (selectedRadio) {
-            primaryOrgInput.value = selectedRadio.value;
-            const card = document.querySelector(`.org-card[data-org-id="${selectedRadio.value}"]`);
-            if (card) {
-                const badge = card.querySelector('.primary-org-badge');
-                if (badge) badge.classList.remove('hidden');
-            }
-        }
+        optionsDiv.innerHTML = html;
     }
 
     function escapeHtmlForOrg(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+
+    function parseTimeToMinutes(timeValue) {
+        if (!timeValue) return null;
+
+        const normalized = String(timeValue).trim().toLowerCase();
+
+        // Handles native input[type=time] values like HH:mm or HH:mm:ss
+        const twentyFourHourMatch = normalized.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+        if (twentyFourHourMatch) {
+            const hours = Number(twentyFourHourMatch[1]);
+            const minutes = Number(twentyFourHourMatch[2]);
+            return (hours * 60) + minutes;
+        }
+
+        // Handles fallback values like h:mm am/pm
+        const twelveHourMatch = normalized.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/);
+        if (twelveHourMatch) {
+            let hours = Number(twelveHourMatch[1]);
+            const minutes = Number(twelveHourMatch[2]);
+            const period = twelveHourMatch[3];
+            if (period === 'pm' && hours < 12) hours += 12;
+            if (period === 'am' && hours === 12) hours = 0;
+            return (hours * 60) + minutes;
+        }
+
+        return null;
     }
 
     // Form validation
@@ -404,6 +389,27 @@
             document.getElementById('organizations-container').classList.add('ring-2', 'ring-red-500', 'rounded-xl');
         } else {
             document.getElementById('organizations-container').classList.remove('ring-2', 'ring-red-500', 'rounded-xl');
+
+            orgCheckboxes.forEach(checkbox => {
+                const quantityField = document.querySelector(`select[name="organization_server_quantities[${checkbox.value}]"]`);
+                if (!quantityField || !quantityField.value) {
+                    isValid = false;
+                    errorMessages.push('Please select server quantity for every selected organization.');
+                    if (quantityField) {
+                        quantityField.classList.add('border-red-500');
+                    }
+                    return;
+                }
+
+                const quantity = Number(quantityField.value);
+                if (!Number.isInteger(quantity) || quantity < 1 || quantity > 30) {
+                    isValid = false;
+                    errorMessages.push('Server quantity per organization must be between 1 and 30.');
+                    quantityField.classList.add('border-red-500');
+                } else {
+                    quantityField.classList.remove('border-red-500');
+                }
+            });
         }
 
         // Check required fields
@@ -436,6 +442,24 @@
                 dateInput.classList.add('border-red-500');
                 errorMessages.push('Event date must be at least 7 days from today');
                 isValid = false;
+            }
+        }
+
+        // Validate time range (time out must be after time in)
+        const timeInInput = document.getElementById('time_in');
+        const timeOutInput = document.getElementById('time_out');
+        if (timeInInput && timeOutInput && timeInInput.value && timeOutInput.value) {
+            const timeInMinutes = parseTimeToMinutes(timeInInput.value);
+            const timeOutMinutes = parseTimeToMinutes(timeOutInput.value);
+
+            if (timeInMinutes === null || timeOutMinutes === null || timeOutMinutes <= timeInMinutes) {
+                timeInInput.classList.add('border-red-500');
+                timeOutInput.classList.add('border-red-500');
+                errorMessages.push('Time Out must be later than Time In.');
+                isValid = false;
+            } else {
+                timeInInput.classList.remove('border-red-500');
+                timeOutInput.classList.remove('border-red-500');
             }
         }
 
@@ -531,6 +555,25 @@
         updateCharCounter('special_requirements', 'requirements_counter', 1000);
 
         const form = document.getElementById('organizationBookingForm');
+        const timeInInput = document.getElementById('time_in');
+        const timeOutInput = document.getElementById('time_out');
+
+        if (timeInInput && timeOutInput) {
+            const enforceTimeOrdering = () => {
+                const inMinutes = parseTimeToMinutes(timeInInput.value);
+                const outMinutes = parseTimeToMinutes(timeOutInput.value);
+                if (inMinutes !== null && outMinutes !== null && outMinutes <= inMinutes) {
+                    timeOutInput.setCustomValidity('Time Out must be later than Time In.');
+                } else {
+                    timeOutInput.setCustomValidity('');
+                }
+            };
+
+            timeInInput.addEventListener('change', enforceTimeOrdering);
+            timeOutInput.addEventListener('change', enforceTimeOrdering);
+            enforceTimeOrdering();
+        }
+
         form.addEventListener('submit', function(e) {
             if (!validateForm()) {
                 e.preventDefault();

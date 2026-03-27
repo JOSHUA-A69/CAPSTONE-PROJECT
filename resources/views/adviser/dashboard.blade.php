@@ -52,11 +52,21 @@
                     ->count();
 
                 // Organization booking counts
-                $orgBookingPending = \App\Models\OrganizationBookingRequest::whereIn('organization_id', $orgIds)
+                $orgBookingPending = \App\Models\OrganizationBookingRequest::where(function($q) use ($orgIds) {
+                        $q->whereIn('organization_id', $orgIds)
+                          ->orWhereHas('organizations', function($sq) use ($orgIds) {
+                              $sq->whereIn('organization_id', $orgIds);
+                          });
+                    })
                     ->where('status', 'pending')
                     ->count();
 
-                $orgBookingApproved = \App\Models\OrganizationBookingRequest::whereIn('organization_id', $orgIds)
+                $orgBookingApproved = \App\Models\OrganizationBookingRequest::where(function($q) use ($orgIds) {
+                        $q->whereIn('organization_id', $orgIds)
+                          ->orWhereHas('organizations', function($sq) use ($orgIds) {
+                              $sq->whereIn('organization_id', $orgIds);
+                          });
+                    })
                     ->where('status', 'approved')
                     ->count();
 
@@ -273,11 +283,33 @@
                 </div>
             </div>
 
-            <!-- Organization Booking Requests Section -->
-            @if($orgBookingPending > 0 || $orgBookingApproved > 0)
+            <!-- Organization Booking Services Section -->
+            @php
+                // Get recent organization bookings for this adviser
+                $recentOrgBookings = \App\Models\OrganizationBookingRequest::with(['requestor', 'organization', 'organizations'])
+                    ->where(function ($q) use ($orgIds) {
+                        $q->whereIn('organization_id', $orgIds)
+                          ->orWhereHas('organizations', function ($subQ) use ($orgIds) {
+                              $subQ->whereIn('organization_id', $orgIds);
+                          });
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->limit(5)
+                    ->get();
+            @endphp
             <div class="mb-4 sm:mb-8">
-                <h3 class="text-base sm:text-lg lg:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">Organization Bookings</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+                    <h3 class="text-base sm:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">Organization Booking Services</h3>
+                    <a href="{{ route('adviser.organization-bookings.index') }}" class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors">
+                        View All
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6">
                     <!-- Pending Org Bookings -->
                     <a href="{{ route('adviser.organization-bookings.index', ['status' => 'pending']) }}" class="group rounded-2xl overflow-hidden">
                         <div class="bg-white border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-200 p-3 sm:p-4 lg:p-6">
@@ -289,10 +321,10 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <h4 class="font-semibold text-base sm:text-lg text-gray-800 truncate">Pending</h4>
+                                        <h4 class="font-semibold text-base sm:text-lg text-gray-800 truncate">Pending Requests</h4>
                                         <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold bg-purple-100 text-purple-700 rounded-full min-w-[24px] h-6">{{ $orgBookingPending }}</span>
                                     </div>
-                                    <p class="text-xs sm:text-sm text-gray-500">Organization booking requests</p>
+                                    <p class="text-xs sm:text-sm text-gray-500">Awaiting your review</p>
                                 </div>
                                 <svg class="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-purple-600 group-hover:translate-x-1 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -312,7 +344,7 @@
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 mb-1">
-                                        <h4 class="font-semibold text-base sm:text-lg text-gray-800 truncate">Approved</h4>
+                                        <h4 class="font-semibold text-base sm:text-lg text-gray-800 truncate">Approved Bookings</h4>
                                         <span class="inline-flex items-center justify-center px-2 py-1 text-xs font-bold bg-teal-100 text-teal-700 rounded-full min-w-[24px] h-6">{{ $orgBookingApproved }}</span>
                                     </div>
                                     <p class="text-xs sm:text-sm text-gray-500">Ready to be scheduled</p>
@@ -324,8 +356,105 @@
                         </div>
                     </a>
                 </div>
+
+                <!-- Recent Booking Requests List -->
+                @if($recentOrgBookings->count() > 0)
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Activity</th>
+                                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Requestor</th>
+                                    <th class="hidden md:table-cell px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Organizations</th>
+                                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                                    <th class="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($recentOrgBookings as $booking)
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <!-- Activity Name -->
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-gray-900">{{ Str::limit($booking->activity_name, 30) }}</div>
+                                        <div class="text-xs text-gray-500 mt-0.5">{{ $booking->purpose ? Str::limit($booking->purpose, 25) : '—' }}</div>
+                                    </td>
+
+                                    <!-- Requestor Name -->
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                        <div class="text-sm text-gray-800">{{ $booking->requestor->first_name ?? 'Unknown' }}</div>
+                                        <div class="text-xs text-gray-500">{{ $booking->requestor->email ?? '—' }}</div>
+                                    </td>
+
+                                    <!-- Organizations (hidden on mobile) -->
+                                    <td class="hidden md:table-cell px-4 sm:px-6 py-3 sm:py-4">
+                                        <div class="flex flex-wrap gap-1">
+                                            @php
+                                                $organizations = $booking->organizations->count() > 0 ? $booking->organizations : ($booking->organization ? [$booking->organization] : []);
+                                            @endphp
+                                            @foreach($organizations->take(2) as $org)
+                                                <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                                                    {{ Str::limit($org->org_name, 15) }}
+                                                </span>
+                                            @endforeach
+                                            @if($organizations->count() > 2)
+                                                <span class="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">
+                                                    +{{ $organizations->count() - 2 }}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    <!-- Requested Date -->
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-sm text-gray-700">
+                                        {{ $booking->requested_date?->format('M d, Y') ?? '—' }}
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
+                                        @switch($booking->status)
+                                            @case('pending')
+                                                <span class="inline-block px-3 py-1 text-xs font-semibold text-amber-700 bg-amber-100 rounded-full">Pending</span>
+                                                @break
+                                            @case('approved')
+                                                <span class="inline-block px-3 py-1 text-xs font-semibold text-teal-700 bg-teal-100 rounded-full">Approved</span>
+                                                @break
+                                            @case('rejected')
+                                                <span class="inline-block px-3 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">Rejected</span>
+                                                @break
+                                            @default
+                                                <span class="inline-block px-3 py-1 text-xs font-semibold text-gray-700 bg-gray-100 rounded-full">{{ ucfirst($booking->status) }}</span>
+                                        @endswitch
+                                    </td>
+
+                                    <!-- Action Button -->
+                                    <td class="px-4 sm:px-6 py-3 sm:py-4 text-center whitespace-nowrap">
+                                        <a href="{{ route('adviser.organization-bookings.show', $booking->id) }}" class="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors">
+                                            <span class="hidden sm:inline">View</span>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                            </svg>
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @else
+                <div class="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 text-center">
+                    <div class="flex justify-center mb-4">
+                        <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                        </svg>
+                    </div>
+                    <p class="text-gray-500 text-sm">No organization booking requests yet.</p>
+                    <p class="text-gray-400 text-xs mt-1">Booking requests from requestors will appear here.</p>
+                </div>
+                @endif
             </div>
-            @endif
 
             </div>
 

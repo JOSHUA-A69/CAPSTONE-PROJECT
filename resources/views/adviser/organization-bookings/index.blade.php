@@ -44,6 +44,11 @@
                     Rejected
                     <span class="ml-1 px-2 py-0.5 rounded-full text-xs {{ request('status') === 'rejected' ? 'bg-red-500' : 'bg-red-200 text-red-800' }}">{{ $counts['rejected'] ?? 0 }}</span>
                 </a>
+                <a href="{{ route('adviser.organization-bookings.index', ['status' => 'cancelled']) }}"
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ request('status') === 'cancelled' ? 'bg-orange-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' }}">
+                    Cancelled
+                    <span class="ml-1 px-2 py-0.5 rounded-full text-xs {{ request('status') === 'cancelled' ? 'bg-orange-500' : 'bg-orange-200 text-orange-800' }}">{{ $counts['cancelled'] ?? 0 }}</span>
+                </a>
             </div>
         </div>
 
@@ -79,6 +84,9 @@
         @else
             <div class="space-y-4">
                 @foreach($requests as $request)
+                    @php
+                        $isCancelledByRequestor = $request->status === 'cancelled' || str_contains(strtolower((string) $request->rejection_reason), 'cancelled by requestor');
+                    @endphp
                     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow">
                         <!-- Desktop Layout -->
                         <div class="hidden sm:block p-6">
@@ -89,7 +97,8 @@
                                         <div class="w-12 h-12 rounded-xl flex items-center justify-center
                                             {{ $request->status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30' : '' }}
                                             {{ $request->status === 'approved' ? 'bg-green-100 dark:bg-green-900/30' : '' }}
-                                            {{ $request->status === 'rejected' ? 'bg-red-100 dark:bg-red-900/30' : '' }}">
+                                            {{ $request->status === 'rejected' ? 'bg-red-100 dark:bg-red-900/30' : '' }}
+                                            {{ $isCancelledByRequestor ? 'bg-orange-100 dark:bg-orange-900/30' : '' }}">
                                             @if($request->status === 'pending')
                                                 <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -97,6 +106,10 @@
                                             @elseif($request->status === 'approved')
                                                 <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                            @elseif($isCancelledByRequestor)
+                                                <svg class="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                 </svg>
                                             @else
                                                 <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,12 +122,32 @@
                                         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                                             {{ $request->activity_name }}
                                         </h3>
-                                        <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
-                                            {{ $request->organization->org_name }}
-                                        </p>
+                                        @php
+                                            $adviserOrganizationIds = auth()->user()->organizations->pluck('org_id')->toArray();
+                                            $relevantOrganizations = ($request->organizations ?? collect())->whereIn('org_id', $adviserOrganizationIds);
+                                        @endphp
+                                        @if($relevantOrganizations->isNotEmpty())
+                                            <div class="mt-1 space-y-1">
+                                                @foreach($relevantOrganizations as $org)
+                                                    <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                                                        {{ $org->org_name }}
+                                                        <span class="text-xs text-gray-600 dark:text-gray-300">• {{ (int) ($org->pivot->server_quantity ?? 0) }} server{{ ((int) ($org->pivot->server_quantity ?? 0)) !== 1 ? 's' : '' }}</span>
+                                                    </p>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">
+                                                {{ $request->organization->org_name }}
+                                            </p>
+                                        @endif
                                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                                             {{ Str::limit($request->purpose, 100) }}
                                         </p>
+                                        @if($isCancelledByRequestor)
+                                            <p class="mt-2 inline-flex items-center px-2.5 py-1 rounded-md bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-xs font-medium">
+                                                This booking is cancelled by requestor
+                                            </p>
+                                        @endif
                                         <div class="flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mt-3">
                                             <span class="flex items-center">
                                                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,8 +176,9 @@
                                     <span class="inline-flex px-3 py-1.5 text-sm font-semibold rounded-full whitespace-nowrap
                                         {{ $request->status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : '' }}
                                         {{ $request->status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : '' }}
-                                        {{ $request->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' : '' }}">
-                                        {{ ucfirst($request->status) }}
+                                        {{ $request->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' : '' }}
+                                        {{ $isCancelledByRequestor ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300' : '' }}">
+                                        {{ $isCancelledByRequestor ? 'Cancelled by Requestor' : ucfirst($request->status) }}
                                     </span>
                                     @if($request->status === 'pending')
                                         <a href="{{ route('adviser.organization-bookings.show', $request) }}"
@@ -161,7 +195,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                             </svg>
-                                            View Details
+                                            {{ $isCancelledByRequestor ? 'View Cancellation' : 'View Details' }}
                                         </a>
                                     @endif
                                 </div>
@@ -178,7 +212,8 @@
                                             <div class="w-10 h-10 rounded-lg flex items-center justify-center
                                                 {{ $request->status === 'pending' ? 'bg-yellow-100 dark:bg-yellow-900/30' : '' }}
                                                 {{ $request->status === 'approved' ? 'bg-green-100 dark:bg-green-900/30' : '' }}
-                                                {{ $request->status === 'rejected' ? 'bg-red-100 dark:bg-red-900/30' : '' }}">
+                                                {{ $request->status === 'rejected' ? 'bg-red-100 dark:bg-red-900/30' : '' }}
+                                                {{ $isCancelledByRequestor ? 'bg-orange-100 dark:bg-orange-900/30' : '' }}">
                                                 @if($request->status === 'pending')
                                                     <svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -186,6 +221,10 @@
                                                 @elseif($request->status === 'approved')
                                                     <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                @elseif($isCancelledByRequestor)
+                                                    <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                                     </svg>
                                                 @else
                                                     <svg class="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,16 +237,31 @@
                                             <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
                                                 {{ $request->activity_name }}
                                             </h3>
-                                            <p class="text-xs text-indigo-600 dark:text-indigo-400 font-medium truncate">
-                                                {{ $request->organization->org_name }}
-                                            </p>
+                                            @php
+                                                $adviserOrganizationIds = auth()->user()->organizations->pluck('org_id')->toArray();
+                                                $relevantOrganizations = ($request->organizations ?? collect())->whereIn('org_id', $adviserOrganizationIds);
+                                            @endphp
+                                            @if($relevantOrganizations->isNotEmpty())
+                                                <div class="space-y-0.5 mt-0.5">
+                                                    @foreach($relevantOrganizations as $org)
+                                                        <p class="text-xs text-indigo-600 dark:text-indigo-400 font-medium truncate">
+                                                            {{ $org->org_name }} • {{ (int) ($org->pivot->server_quantity ?? 0) }} server{{ ((int) ($org->pivot->server_quantity ?? 0)) !== 1 ? 's' : '' }}
+                                                        </p>
+                                                    @endforeach
+                                                </div>
+                                            @else
+                                                <p class="text-xs text-indigo-600 dark:text-indigo-400 font-medium truncate">
+                                                    {{ $request->organization->org_name }}
+                                                </p>
+                                            @endif
                                         </div>
                                     </div>
                                     <span class="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap flex-shrink-0
                                         {{ $request->status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300' : '' }}
                                         {{ $request->status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : '' }}
-                                        {{ $request->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' : '' }}">
-                                        {{ ucfirst($request->status) }}
+                                        {{ $request->status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300' : '' }}
+                                        {{ $isCancelledByRequestor ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300' : '' }}">
+                                        {{ $isCancelledByRequestor ? 'Cancelled by Requestor' : ucfirst($request->status) }}
                                     </span>
                                 </div>
 
@@ -258,7 +312,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                             </svg>
-                                            View Details
+                                            {{ $isCancelledByRequestor ? 'View Cancellation' : 'View Details' }}
                                         </a>
                                     @endif
                                 </div>
