@@ -84,7 +84,7 @@
                                     </svg>
                                 </div>
                                 @if($pendingCancellationsCount > 0)
-                                <span class="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 px-1 sm:px-2 py-0.5 sm:py-1 bg-red-500 text-white text-[8px] sm:text-xs font-bold rounded-full">{{ $pendingCancellationsCount }}</span>
+                                <span data-stat="pending_cancellations" class="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 px-1 sm:px-2 py-0.5 sm:py-1 bg-red-500 text-white text-[8px] sm:text-xs font-bold rounded-full">{{ $pendingCancellationsCount }}</span>
                                 @endif
                             </div>
                             <div class="flex-1 min-w-0 pointer-events-none">

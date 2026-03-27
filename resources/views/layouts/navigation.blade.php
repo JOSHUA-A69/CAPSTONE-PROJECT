@@ -38,30 +38,23 @@
                     @if(auth()->check() && in_array(auth()->user()->role, ['admin', 'requestor']))
                         <x-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')"
                                     role="menuitem"
-                                    x-data="{ unreadCount: 0, _seq: 0 }"
+                                    x-data="{ unreadCount: 0 }"
                                     x-init="
-                                        const updateUnread = () => {
-                                            const seq = ++_seq;
-                                            fetch(`{{ route('chat.unread.count') }}?t=${Date.now()}` , { cache: 'no-store' })
-                                                .then(res => res.json())
-                                                .then(data => {
-                                                    if (seq !== _seq) return; // ignore stale responses
-                                                    const n = Number(data?.count ?? 0);
-                                                    unreadCount = isNaN(n) ? 0 : n;
-                                                })
-                                                .catch(() => {});
-                                        };
-                                        updateUnread();
-                                        setInterval(updateUnread, 60000);
+                                        // Initial fetch
+                                        fetch(`{{ route('chat.unread.count') }}?t=${Date.now()}`, { cache: 'no-store' })
+                                            .then(res => res.json())
+                                            .then(data => {
+                                                const n = Number(data?.count ?? 0);
+                                                unreadCount = isNaN(n) ? 0 : n;
+                                            })
+                                            .catch(() => {});
+                                        // Listen for SSE updates (no more polling!)
                                         window.addEventListener('chat:unread-updated', (e) => {
                                             if (e?.detail && typeof e.detail.count !== 'undefined') {
                                                 const n = Number(e.detail.count);
                                                 unreadCount = isNaN(n) ? 0 : n;
-                                            } else {
-                                                updateUnread();
                                             }
                                         });
-                                        window.addEventListener('focus', updateUnread);
                                     "
                                     class="text-xs sm:text-sm lg:text-base whitespace-nowrap px-2 sm:px-3">
                             <span class="inline-flex items-center gap-0.5 sm:gap-1">
@@ -73,6 +66,7 @@
                                     <span class="sm:hidden">Chat</span>
                                     <span x-show="Number(unreadCount) > 0"
                                         x-cloak
+                                        data-chat-unread-count
                                         x-text="Number(unreadCount) > 9 ? '9+' : unreadCount"
                                         class="ml-0.5 sm:ml-1 inline-flex items-center justify-center px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-xs font-bold leading-none bg-red-600 text-white rounded-full"
                                         role="status"
@@ -143,10 +137,14 @@
                     }
                 }" x-init="
                     updateCount();
-                    setInterval(() => updateCount(), 30000);
-                    // Also update when window regains focus (returning from notification page)
-                    window.addEventListener('focus', () => updateCount());
-                    window.addEventListener('notification-update', () => updateCount());
+                    // Listen for SSE updates (no more polling!)
+                    window.addEventListener('notification-update', (e) => {
+                        if (e?.detail && typeof e.detail.count !== 'undefined') {
+                            count = Number(e.detail.count);
+                        } else {
+                            updateCount();
+                        }
+                    });
                 ">
             <button @click="open = !open; if (open) loadNotifications()"
                     title="View notifications"
@@ -158,6 +156,7 @@
                         <span x-show="count > 0"
                               x-cloak
                               x-transition
+                              data-notification-count
                               class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-gradient-to-r from-red-500 to-red-600 rounded-full border-2 border-white dark:border-gray-800 shadow-lg ring-2 ring-white/30 dark:ring-gray-700/30 animate-pulse"
                               x-text="count > 99 ? '99+' : count"
                               style="min-width: 1.5rem;">
@@ -531,30 +530,23 @@
                 @if(in_array(auth()->user()->role, ['admin', 'requestor']))
                     <x-responsive-nav-link :href="route('chat.index')" :active="request()->routeIs('chat.*')"
                         class="text-white hover:text-violet-300 {{ request()->routeIs('chat.*') ? 'text-violet-400 bg-violet-500/10' : '' }}"
-                        x-data="{ unreadCount: 0, _seq: 0 }"
+                        x-data="{ unreadCount: 0 }"
                         x-init="
-                            const updateUnread = () => {
-                                const seq = ++_seq;
-                                fetch(`{{ route('chat.unread.count') }}?t=${Date.now()}`, { cache: 'no-store' })
-                                    .then(res => res.json())
-                                    .then(data => {
-                                        if (seq !== _seq) return;
-                                        const n = Number(data?.count ?? 0);
-                                        unreadCount = isNaN(n) ? 0 : n;
-                                    })
-                                    .catch(() => {});
-                            };
-                            updateUnread();
-                            setInterval(updateUnread, 60000);
+                            // Initial fetch
+                            fetch(`{{ route('chat.unread.count') }}?t=${Date.now()}`, { cache: 'no-store' })
+                                .then(res => res.json())
+                                .then(data => {
+                                    const n = Number(data?.count ?? 0);
+                                    unreadCount = isNaN(n) ? 0 : n;
+                                })
+                                .catch(() => {});
+                            // Listen for SSE updates (no more polling!)
                             window.addEventListener('chat:unread-updated', (e) => {
                                 if (e?.detail && typeof e.detail.count !== 'undefined') {
                                     const n = Number(e.detail.count);
                                     unreadCount = isNaN(n) ? 0 : n;
-                                } else {
-                                    updateUnread();
                                 }
                             });
-                            window.addEventListener('focus', updateUnread);
                         ">
                         <span class="flex items-center justify-between w-full">
                             <span class="flex items-center gap-3">
@@ -565,6 +557,7 @@
                             </span>
                             <span x-show="Number(unreadCount) > 0"
                                   x-cloak
+                                  data-chat-unread-count
                                   x-text="Number(unreadCount) > 9 ? '9+' : unreadCount"
                                   class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-bold leading-none bg-red-600 text-white rounded-full shadow-sm"
                                   style="min-width: 1.5rem;">

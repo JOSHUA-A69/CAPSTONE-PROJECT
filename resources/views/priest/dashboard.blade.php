@@ -74,7 +74,7 @@
                         <div class="flex items-center justify-between">
                             <div class="min-w-0 flex-1">
                                 <p class="text-[10px] sm:text-sm font-medium text-gray-500 mb-0.5 sm:mb-1 line-clamp-2 group-hover:text-amber-600 transition-colors">Pending Assignments</p>
-                                <p class="text-2xl sm:text-4xl font-bold text-gray-800 group-hover:text-amber-700 transition-colors">{{ $pendingCount }}</p>
+                                <p data-stat="pending_reservations" class="text-2xl sm:text-4xl font-bold text-gray-800 group-hover:text-amber-700 transition-colors">{{ $pendingCount }}</p>
                             </div>
                             <div class="p-2 sm:p-3 bg-amber-100 rounded-full flex-shrink-0 ml-2 group-hover:bg-amber-200 transition-colors">
                                 <svg class="w-5 h-5 sm:w-8 sm:h-8 text-amber-600 group-hover:text-amber-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +104,7 @@
                         <div class="flex items-center justify-between">
                             <div class="min-w-0 flex-1">
                                 <p class="text-[10px] sm:text-sm font-medium text-gray-500 mb-0.5 sm:mb-1 line-clamp-2 group-hover:text-emerald-600 transition-colors">Upcoming Services</p>
-                                <p class="text-2xl sm:text-4xl font-bold text-gray-800 group-hover:text-emerald-700 transition-colors">{{ $upcomingCount }}</p>
+                                <p data-stat="upcoming_reservations" class="text-2xl sm:text-4xl font-bold text-gray-800 group-hover:text-emerald-700 transition-colors">{{ $upcomingCount }}</p>
                             </div>
                             <div class="p-2 sm:p-3 bg-emerald-100 rounded-full flex-shrink-0 ml-2 group-hover:bg-emerald-200 transition-colors">
                                 <svg class="w-5 h-5 sm:w-8 sm:h-8 text-emerald-600 group-hover:text-emerald-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">

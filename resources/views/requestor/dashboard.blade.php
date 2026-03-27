@@ -208,7 +208,7 @@
                         <div class="flex items-center justify-between">
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 sm:mb-2 truncate">Pending</p>
-                                <p class="text-lg sm:text-3xl font-bold text-gray-900 dark:text-white">{{ $pendingCount }}</p>
+                                <p data-stat="pending_reservations" class="text-lg sm:text-3xl font-bold text-gray-900 dark:text-white">{{ $pendingCount }}</p>
                                 <p class="text-xs sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1 truncate">Awaiting</p>
                             </div>
                             <div class="bg-orange-50 dark:bg-orange-900/20 p-2 sm:p-3 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
@@ -225,7 +225,7 @@
                         <div class="flex items-center justify-between">
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 sm:mb-2 truncate">Approved</p>
-                                <p class="text-lg sm:text-3xl font-bold text-gray-900 dark:text-white">{{ $approvedCount }}</p>
+                                <p data-stat="approved_reservations" class="text-lg sm:text-3xl font-bold text-gray-900 dark:text-white">{{ $approvedCount }}</p>
                                 <p class="text-xs sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1 truncate">Ready!</p>
                             </div>
                             <div class="bg-green-50 dark:bg-green-900/20 p-2 sm:p-3 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
@@ -243,7 +243,7 @@
                         <div class="flex items-center justify-between">
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 sm:mb-2 truncate">Upcoming</p>
-                                <p class="text-lg sm:text-3xl font-bold text-gray-900 dark:text-white">{{ $upcomingCount }}</p>
+                                <p data-stat="upcoming_reservations" class="text-lg sm:text-3xl font-bold text-gray-900 dark:text-white">{{ $upcomingCount }}</p>
                                 <p class="text-xs sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1 truncate">This month</p>
                             </div>
                             <div class="bg-purple-50 dark:bg-purple-900/20 p-2 sm:p-3 rounded-xl sm:rounded-2xl group-hover:scale-110 transition-transform duration-300 flex-shrink-0 ml-2">
