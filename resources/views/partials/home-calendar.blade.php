@@ -15,63 +15,7 @@
             </div>
         </div>
 
-        <!-- Filter Section -->
-        <div class="mb-4 sm:mb-6 max-w-5xl mx-auto">
-            <!-- Reservation Filters (always visible) -->
-            <div id="reservationFilters" class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
-                <!-- Service Filter -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border-2 border-emerald-200 dark:border-emerald-700">
-                    <label for="resServiceFilter" class="text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
-                        <svg class="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                        </svg>
-                        <span class="hidden sm:inline">Service</span>
-                        <span class="sm:hidden">Service</span>
-                    </label>
-                    <select id="resServiceFilter" class="w-full px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl shadow-sm focus:ring-4 focus:ring-emerald-300 focus:border-emerald-500 dark:bg-gray-700 dark:text-white font-semibold transition-all">
-                        <option value="">All Services</option>
-                        @foreach($services as $svc)
-                            <option value="{{ $svc->service_id }}">{{ $svc->service_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
 
-                <!-- Venue Filter -->
-                <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border-2 border-green-200 dark:border-green-700">
-                    <label for="resVenueFilter" class="text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
-                        <svg class="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        <span class="hidden sm:inline">Venue</span>
-                        <span class="sm:hidden">Venue</span>
-                    </label>
-                    <select id="resVenueFilter" class="w-full px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl shadow-sm focus:ring-4 focus:ring-green-300 focus:border-green-500 dark:bg-gray-700 dark:text-white font-semibold transition-all">
-                        <option value="">All Venues</option>
-                        @foreach($venues as $v)
-                            <option value="{{ $v->venue_id }}">{{ $v->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Status Filter -->
-                <div class="col-span-2 sm:col-span-1 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border-2 border-teal-200 dark:border-teal-700">
-                    <label for="resStatusFilter" class="text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
-                        <svg class="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span>Status</span>
-                    </label>
-                    <select id="resStatusFilter" class="w-full px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl shadow-sm focus:ring-4 focus:ring-teal-300 focus:border-teal-500 dark:bg-gray-700 dark:text-white font-semibold transition-all">
-                        <option value="">All Statuses</option>
-                        <option value="admin_approved">🛡️ Admin Approved</option>
-                        <option value="approved">✅ Approved</option>
-                        <option value="confirmed">📌 Confirmed</option>
-                    </select>
-                </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Calendar + Right Details Panel -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -115,11 +59,11 @@
                 <div class="space-y-1 sm:space-y-2 text-gray-700 dark:text-gray-300">
                     <p class="flex items-start gap-1 sm:gap-2 text-xs sm:text-sm font-semibold">
                         <span class="text-emerald-600 dark:text-emerald-400">•</span>
-                        <span>Click events for details</span>
+                        <span>Shows available and occupied slots</span>
                     </p>
                     <p class="flex items-start gap-1 sm:gap-2 text-xs sm:text-sm font-semibold">
                         <span class="text-emerald-600 dark:text-emerald-400">•</span>
-                        <span>Filter by service, venue, or status</span>
+                        <span>No event details displayed</span>
                     </p>
                 </div>
             </div>
@@ -1022,19 +966,21 @@ function initializeReservationCalendar(reservations) {
                     : '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>' + escapeHtml(getReservationStatusLabel(arg.event.extendedProps.status)) + '</span>';
                 wrapper.appendChild(statusDiv);
 
-                // Title
-                var titleDiv = document.createElement('div');
-                titleDiv.style.fontSize = '0.75rem';
-                titleDiv.style.fontWeight = '700';
-                titleDiv.style.lineHeight = '1.2';
-                titleDiv.style.wordBreak = 'break-word';
-                titleDiv.style.overflow = 'hidden';
-                titleDiv.style.textOverflow = 'ellipsis';
-                titleDiv.style.display = '-webkit-box';
-                titleDiv.style.webkitLineClamp = '2';
-                titleDiv.style.webkitBoxOrient = 'vertical';
-                titleDiv.textContent = isPrivate ? 'Occupied' : arg.event.title;
-                wrapper.appendChild(titleDiv);
+                // Title - skip for occupied (private) since status already shows "Occupied"
+                if (!isPrivate) {
+                    var titleDiv = document.createElement('div');
+                    titleDiv.style.fontSize = '0.75rem';
+                    titleDiv.style.fontWeight = '700';
+                    titleDiv.style.lineHeight = '1.2';
+                    titleDiv.style.wordBreak = 'break-word';
+                    titleDiv.style.overflow = 'hidden';
+                    titleDiv.style.textOverflow = 'ellipsis';
+                    titleDiv.style.display = '-webkit-box';
+                    titleDiv.style.webkitLineClamp = '2';
+                    titleDiv.style.webkitBoxOrient = 'vertical';
+                    titleDiv.textContent = arg.event.title;
+                    wrapper.appendChild(titleDiv);
+                }
 
                 // Service name - desktop only
                 if (!isPrivate && arg.event.extendedProps.serviceName) {
