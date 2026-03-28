@@ -391,7 +391,7 @@
                                     <td class="hidden md:table-cell px-4 sm:px-6 py-3 sm:py-4">
                                         <div class="flex flex-wrap gap-1">
                                             @php
-                                                $organizations = $booking->organizations->count() > 0 ? $booking->organizations : ($booking->organization ? [$booking->organization] : []);
+                                                $organizations = collect($booking->organizations->count() > 0 ? $booking->organizations : ($booking->organization ? [$booking->organization] : []));
                                             @endphp
                                             @foreach($organizations->take(2) as $org)
                                                 <span class="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
