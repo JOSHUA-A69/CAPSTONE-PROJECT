@@ -17,7 +17,7 @@ class WelcomeController extends Controller
         // Caching for 5 minutes (300 seconds) to reduce DB load
         // Cached data includes reservations, schedules, services, venues
         // Cache key depends on the month filter if present
-        $cacheKey = 'welcome_page_data_v2_' . ($request->query('month') ?? 'current');
+        $cacheKey = 'welcome_page_data_v3_' . ($request->query('month') ?? 'current');
 
         $data = Cache::remember($cacheKey, 300, function () use ($request) {
             // Fetch upcoming reservations (only necessary columns)
@@ -34,10 +34,22 @@ class WelcomeController extends Controller
                     'schedule_date', 'status', 'activity_name', 'custom_venue_name', 'external_priest_name', 'priest_selection_type'
                 ])
                 ->upcoming()
-                ->whereNotIn('status', ['cancelled', 'rejected'])
+                ->whereIn('status', ['admin_approved', 'approved', 'confirmed'])
                 ->where('schedule_date', '<=', Carbon::now()->addMonths(6))
                 ->orderBy('schedule_date')
                 ->get();
+
+            // Public calendar should never expose reservation details.
+            $upcomingReservations->transform(function ($reservation) {
+                $isPrivateReservation = in_array($reservation->status, ['admin_approved', 'approved', 'confirmed'], true);
+
+                $reservation->setAttribute('is_private_reservation', $isPrivateReservation);
+                $reservation->setAttribute('public_title', $isPrivateReservation
+                    ? 'Occupied'
+                    : ($reservation->activity_name ?: ($reservation->service?->service_name ?? 'Reservation')));
+
+                return $reservation;
+            });
 
             // Fetch liturgical schedules
             $allSchedules = LiturgicalSchedule::with(['priest:id,first_name,last_name', 'venue:venue_id,name'])

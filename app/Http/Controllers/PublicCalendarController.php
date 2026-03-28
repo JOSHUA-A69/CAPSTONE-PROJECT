@@ -44,67 +44,27 @@ class PublicCalendarController extends Controller
         ]);
 
         // Transform reservations to match schedule format for the calendar
+        // Public view should only show slot occupancy for reservations.
         $reservationSchedules = $reservations->map(function ($reservation) {
-            // Determine priest names with main celebrant indication
-            $priestName = null;
-            $mainCelebrant = null;
-            $allPriests = [];
-
-            if ($reservation->priests && $reservation->priests->count() > 0) {
-                $firstPriestName = null;
-                foreach ($reservation->priests as $priest) {
-                    $name = $priest->full_name;
-                    if ($firstPriestName === null) {
-                        $firstPriestName = $name;
-                    }
-
-                    $isMainCelebrant = ($priest->pivot->is_main_celebrant ?? false)
-                        || ((int) $reservation->officiant_id === (int) $priest->id);
-
-                    if ($isMainCelebrant) {
-                        $mainCelebrant = $name;
-                        $name .= ' (Main Celebrant)';
-                    }
-                    $allPriests[] = $name;
-                }
-                if ($mainCelebrant === null) {
-                    $mainCelebrant = $firstPriestName;
-                }
-                $priestName = implode(', ', $allPriests);
-            } elseif ($reservation->officiant) {
-                $priestName = $reservation->officiant->full_name;
-                $mainCelebrant = $priestName;
-            } elseif ($reservation->external_priest_name) {
-                $priestName = $reservation->external_priest_name . ' (External)';
-                $mainCelebrant = $reservation->external_priest_name;
-            }
-
-            // Get organizations
-            $organizationNames = [];
-            if ($reservation->organizations && $reservation->organizations->count() > 0) {
-                $organizationNames = $reservation->organizations->pluck('org_name')->toArray();
-            } elseif ($reservation->organization) {
-                $organizationNames[] = $reservation->organization->org_name;
-            }
-
             return [
                 'schedule_id' => 'reservation_' . $reservation->reservation_id,
-                'title' => $reservation->activity_name ?: ($reservation->service?->service_name ?? 'Unknown Service'),
-                'event_type' => strtolower(str_replace(' ', '_', $reservation->service?->service_category ?? 'other')),
+                'title' => 'Occupied',
+                'event_type' => 'other',
                 'mass_subtype' => null,
                 'schedule_date' => $reservation->schedule_date->format('Y-m-d'),
                 'start_time' => $reservation->schedule_date->format('H:i'),
                 'end_time' => $reservation->end_time ? $reservation->end_time->format('H:i') : null,
-                'location' => $reservation->custom_venue_name ?: ($reservation->venue?->name ?? null),
-                'venue' => $reservation->venue ? ['name' => $reservation->venue->name] : null,
-                'priest' => $priestName ? ['name' => $priestName] : null,
-                'main_celebrant' => $mainCelebrant,
-                'all_priests' => $allPriests,
-                'organizations' => $organizationNames,
-                'external_priest_name' => $reservation->external_priest_name,
-                'external_priest_contact' => $reservation->external_priest_contact,
+                'location' => null,
+                'venue' => null,
+                'priest' => null,
+                'main_celebrant' => null,
+                'all_priests' => [],
+                'organizations' => [],
+                'external_priest_name' => null,
+                'external_priest_contact' => null,
                 'is_public' => true,
-                'description' => $reservation->purpose ?: $reservation->details,
+                'is_private_reservation' => true,
+                'description' => null,
             ];
         });
 
@@ -144,63 +104,23 @@ class PublicCalendarController extends Controller
             ->get();
 
         // Transform reservations to match schedule format
+        // Public view should only show slot occupancy for reservations.
         $reservationSchedules = $reservations->map(function ($reservation) {
-            // Determine priest names with main celebrant indication
-            $priestName = null;
-            $mainCelebrant = null;
-            $allPriests = [];
-
-            if ($reservation->priests && $reservation->priests->count() > 0) {
-                $firstPriestName = null;
-                foreach ($reservation->priests as $priest) {
-                    $name = $priest->full_name;
-                    if ($firstPriestName === null) {
-                        $firstPriestName = $name;
-                    }
-
-                    $isMainCelebrant = ($priest->pivot->is_main_celebrant ?? false)
-                        || ((int) $reservation->officiant_id === (int) $priest->id);
-
-                    if ($isMainCelebrant) {
-                        $mainCelebrant = $name;
-                        $name .= ' (Main Celebrant)';
-                    }
-                    $allPriests[] = $name;
-                }
-                if ($mainCelebrant === null) {
-                    $mainCelebrant = $firstPriestName;
-                }
-                $priestName = implode(', ', $allPriests);
-            } elseif ($reservation->officiant) {
-                $priestName = $reservation->officiant->full_name;
-                $mainCelebrant = $priestName;
-            } elseif ($reservation->external_priest_name) {
-                $priestName = $reservation->external_priest_name . ' (External)';
-                $mainCelebrant = $reservation->external_priest_name;
-            }
-
-            // Get organizations
-            $organizationNames = [];
-            if ($reservation->organizations && $reservation->organizations->count() > 0) {
-                $organizationNames = $reservation->organizations->pluck('org_name')->toArray();
-            } elseif ($reservation->organization) {
-                $organizationNames[] = $reservation->organization->org_name;
-            }
-
             return [
                 'schedule_id' => 'reservation_' . $reservation->reservation_id,
-                'title' => $reservation->activity_name ?: ($reservation->service?->service_name ?? 'Unknown Service'),
-                'event_type' => strtolower(str_replace(' ', '_', $reservation->service?->service_category ?? 'other')),
+                'title' => 'Occupied',
+                'event_type' => 'other',
                 'schedule_date' => $reservation->schedule_date->format('Y-m-d'),
                 'start_time' => $reservation->schedule_date->format('H:i'),
                 'end_time' => $reservation->end_time ? $reservation->end_time->format('H:i') : null,
-                'location' => $reservation->custom_venue_name ?: ($reservation->venue?->name ?? null),
-                'priest' => $priestName ? ['name' => $priestName] : null,
-                'main_celebrant' => $mainCelebrant,
-                'all_priests' => $allPriests,
-                'organizations' => $organizationNames,
-                'external_priest_name' => $reservation->external_priest_name,
-                'description' => $reservation->purpose ?: $reservation->details,
+                'location' => null,
+                'priest' => null,
+                'main_celebrant' => null,
+                'all_priests' => [],
+                'organizations' => [],
+                'external_priest_name' => null,
+                'is_private_reservation' => true,
+                'description' => null,
             ];
         });
 
