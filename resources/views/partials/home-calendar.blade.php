@@ -21,7 +21,7 @@
             <div id="reservationFilters" class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4">
                 <!-- Service Filter -->
                 <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border-2 border-emerald-200 dark:border-emerald-700">
-                    <label for="resServiceFilter" class="block text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                    <label for="resServiceFilter" class="text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
                         <svg class="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                         </svg>
@@ -38,7 +38,7 @@
 
                 <!-- Venue Filter -->
                 <div class="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border-2 border-green-200 dark:border-green-700">
-                    <label for="resVenueFilter" class="block text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                    <label for="resVenueFilter" class="text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
                         <svg class="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -56,7 +56,7 @@
 
                 <!-- Status Filter -->
                 <div class="col-span-2 sm:col-span-1 bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-6 border-2 border-teal-200 dark:border-teal-700">
-                    <label for="resStatusFilter" class="block text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
+                    <label for="resStatusFilter" class="text-xs sm:text-sm font-black text-gray-700 dark:text-gray-300 mb-2 sm:mb-3 flex items-center gap-1 sm:gap-2">
                         <svg class="w-3 h-3 sm:w-5 sm:h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
@@ -64,10 +64,9 @@
                     </label>
                     <select id="resStatusFilter" class="w-full px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg sm:rounded-xl shadow-sm focus:ring-4 focus:ring-teal-300 focus:border-teal-500 dark:bg-gray-700 dark:text-white font-semibold transition-all">
                         <option value="">All Statuses</option>
-                        <option value="pending">⏳ Pending</option>
-                        <option value="adviser_approved">📋 Adviser Approved</option>
+                        <option value="admin_approved">🛡️ Admin Approved</option>
                         <option value="approved">✅ Approved</option>
-                        <option value="completed">🏁 Completed</option>
+                        <option value="confirmed">📌 Confirmed</option>
                     </select>
                 </div>
                 </div>
@@ -824,6 +823,12 @@ function getReservationStatusLabel(status) {
     return labels[status] || status;
 }
 
+function isPrivateReservation(res) {
+    if (!res) return false;
+    if (res.is_private_reservation === true) return true;
+    return ['admin_approved', 'approved', 'confirmed'].indexOf(String(res.status || '').toLowerCase()) !== -1;
+}
+
 function getReservationOrganizations(res) {
     if (!res) return [];
 
@@ -897,15 +902,18 @@ function initializeReservationCalendar(reservations) {
         var serviceName = (res.service && res.service.service_name) ? res.service.service_name : 'Service';
         var venueName = (res.venue && res.venue.name) ? res.venue.name : (res.custom_venue_name || '');
         var orgName = (res.organization && res.organization.org_name) ? res.organization.org_name : '';
+        var privateReservation = isPrivateReservation(res);
+        var publicTitle = (res.public_title || '').trim() || (privateReservation ? 'Occupied' : (res.activity_name || serviceName));
 
         return {
             id: 'res-' + res.reservation_id,
-            title: res.activity_name || serviceName,
+            title: publicTitle,
             start: eventStart,
             backgroundColor: color,
             borderColor: color,
             extendedProps: {
                 type: 'reservation',
+                isPrivateReservation: privateReservation,
                 status: res.status,
                 serviceName: serviceName,
                 venueName: venueName,
@@ -970,6 +978,8 @@ function initializeReservationCalendar(reservations) {
             wrapper.style.textOverflow = 'ellipsis';
             wrapper.style.fontWeight = '600';
 
+            var isPrivate = !!(arg.event.extendedProps && arg.event.extendedProps.isPrivateReservation);
+
             if (isMobile) {
                 // Mobile: Show only status dot + title in one line
                 var statusDot = document.createElement('div');
@@ -991,7 +1001,7 @@ function initializeReservationCalendar(reservations) {
                 titleDiv.style.whiteSpace = 'nowrap';
                 titleDiv.style.flex = '1';
                 titleDiv.style.minWidth = '0';
-                titleDiv.textContent = arg.event.title;
+                titleDiv.textContent = isPrivate ? 'Occupied' : arg.event.title;
                 wrapper.appendChild(titleDiv);
             } else {
                 // Desktop: Full content as before
@@ -1007,7 +1017,9 @@ function initializeReservationCalendar(reservations) {
                 statusDiv.style.whiteSpace = 'nowrap';
                 statusDiv.style.overflow = 'hidden';
                 statusDiv.style.textOverflow = 'ellipsis';
-                statusDiv.innerHTML = '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>' + escapeHtml(getReservationStatusLabel(arg.event.extendedProps.status)) + '</span>';
+                statusDiv.innerHTML = isPrivate
+                    ? '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>Occupied</span>'
+                    : '<svg style="width:10px;height:10px;flex-shrink:0;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span>' + escapeHtml(getReservationStatusLabel(arg.event.extendedProps.status)) + '</span>';
                 wrapper.appendChild(statusDiv);
 
                 // Title
@@ -1021,11 +1033,11 @@ function initializeReservationCalendar(reservations) {
                 titleDiv.style.display = '-webkit-box';
                 titleDiv.style.webkitLineClamp = '2';
                 titleDiv.style.webkitBoxOrient = 'vertical';
-                titleDiv.textContent = arg.event.title;
+                titleDiv.textContent = isPrivate ? 'Occupied' : arg.event.title;
                 wrapper.appendChild(titleDiv);
 
                 // Service name - desktop only
-                if (arg.event.extendedProps.serviceName) {
+                if (!isPrivate && arg.event.extendedProps.serviceName) {
                     var svcDiv = document.createElement('div');
                     svcDiv.style.fontSize = '0.65rem';
                     svcDiv.style.opacity = '0.9';
@@ -1040,7 +1052,7 @@ function initializeReservationCalendar(reservations) {
                 }
 
                 // Venue - desktop only
-                if (arg.event.extendedProps.venueName) {
+                if (!isPrivate && arg.event.extendedProps.venueName) {
                     var venDiv = document.createElement('div');
                     venDiv.style.fontSize = '0.65rem';
                     venDiv.style.opacity = '0.9';
@@ -1078,6 +1090,7 @@ function initializeReservationCalendar(reservations) {
 function renderReservationEventDetails(res) {
     var panel = document.getElementById('homeEventDetailsBox');
     if (!panel) return;
+    var privateReservation = isPrivateReservation(res);
     var venueName = (res.venue && res.venue.name) ? res.venue.name : (res.custom_venue_name || '');
     var serviceName = (res.service && res.service.service_name) ? res.service.service_name : '';
     var organizations = getReservationOrganizations(res);
@@ -1085,6 +1098,26 @@ function renderReservationEventDetails(res) {
     var color = getReservationStatusColor(res.status);
     var dateObj = new Date((res.schedule_date || '').toString().slice(0,10));
     var dateLabel = isNaN(dateObj) ? res.schedule_date : dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    if (privateReservation) {
+        panel.innerHTML =
+            '<div class="rounded-2xl border-2" style="border-color:' + color + ';">' +
+                '<div class="p-4 bg-white/80 dark:bg-gray-800/70 rounded-t-2xl">' +
+                    '<h4 class="text-lg font-extrabold text-emerald-800 dark:text-emerald-200">Occupied</h4>' +
+                    '<div class="mt-1 inline-flex items-center px-2 py-1 text-xs rounded-full text-white" style="background:' + color + ';">Reserved Slot</div>' +
+                '</div>' +
+                '<div class="p-4 space-y-2 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-b-2xl text-sm text-gray-800 dark:text-gray-200">' +
+                    '<p><strong>Status:</strong> Admin-approved reservation</p>' +
+                    '<p class="text-xs text-gray-600 dark:text-gray-400">Reservation details are hidden from the public calendar.</p>' +
+                '</div>' +
+            '</div>';
+        panel.classList.remove('hidden');
+        var privatePanelWrap = document.getElementById('homeEventPanel');
+        if (privatePanelWrap && privatePanelWrap.scrollIntoView) {
+            privatePanelWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+    }
 
     panel.innerHTML =
         '<div class="rounded-2xl border-2" style="border-color:' + color + ';">' +
@@ -1114,6 +1147,27 @@ function showReservationModal(res) {
     var modal = document.getElementById('reservationModal');
     var modalBody = document.getElementById('reservationModalBody');
     if (!modal || !modalBody || !res) return;
+
+    if (isPrivateReservation(res)) {
+        var privateColor = getReservationStatusColor(res.status);
+
+        modalBody.innerHTML =
+            '<div class="p-4 sm:p-5" style="border-top: 4px solid ' + privateColor + '; max-height: calc(90vh - 80px); overflow-y: auto;">' +
+                '<div class="mb-3">' +
+                    '<h3 class="text-lg sm:text-xl font-black text-emerald-800 dark:text-emerald-200 mb-2 pr-8 leading-tight">Occupied</h3>' +
+                    '<div class="inline-flex items-center gap-2 px-2 py-1 text-xs font-bold rounded-full text-white" style="background:' + privateColor + ';">' +
+                        '<span>Reserved Slot</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="space-y-2 bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/30 dark:to-green-900/30 rounded-lg p-3 text-xs sm:text-sm">' +
+                    '<p class="text-gray-600 dark:text-gray-400 text-xs">Reservation details are hidden from the public calendar.</p>' +
+                '</div>' +
+            '</div>';
+
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        return;
+    }
 
     var venueName = (res.venue && res.venue.name) ? res.venue.name : (res.custom_venue_name || 'Not specified');
     var serviceName = (res.service && res.service.service_name) ? res.service.service_name : 'Not specified';
@@ -1291,9 +1345,12 @@ function renderReservationUpcomingList(reservations) {
         var svcName = (res.service && res.service.service_name) ? res.service.service_name : '';
         var venName = (res.venue && res.venue.name) ? res.venue.name : '';
         var color = getReservationStatusColor(res.status);
+        var privateReservation = isPrivateReservation(res);
         var safeReservationId = escapeHtml(res.reservation_id);
-        var safeTitle = escapeHtml(res.activity_name || svcName);
-        var safeStatusLine = escapeHtml(getReservationStatusLabel(res.status) + (venName ? ' \u2022 ' + venName : ''));
+        var safeTitle = escapeHtml(privateReservation ? 'Occupied' : (res.activity_name || svcName));
+        var safeStatusLine = escapeHtml(privateReservation
+            ? 'Admin-approved reservation'
+            : (getReservationStatusLabel(res.status) + (venName ? ' \u2022 ' + venName : '')));
         htmlParts.push(
             '<button type="button" data-res-id="' + safeReservationId + '" class="w-full text-left p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex items-start gap-3">' +
                 '<span class="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-white text-xs font-bold" style="background:' + color + ';">' + displayDate.replace(/[^\d]/g,'').padStart(2,'0') + '</span>' +
