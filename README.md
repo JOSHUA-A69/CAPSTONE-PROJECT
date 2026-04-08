@@ -330,7 +330,7 @@ docker exec laravel_app php artisan config:clear
 
 git add .
 git commit -m "Your commit message"
-git push origin new-feature
+git push -u origin other-new-feature
 
 ## TO EDIT
 
@@ -403,8 +403,6 @@ docker compose down
 
 docker compose up
 npmrundev
-
-
 
 * **App** : [http://localhost:8000](vscode-file://vscode-app/c:/Users/HP%20User/AppData/Local/Programs/Microsoft%20VS%20Code/ce099c1ed2/resources/app/out/vs/code/electron-browser/workbench/workbench.html)
 * and Db host below
