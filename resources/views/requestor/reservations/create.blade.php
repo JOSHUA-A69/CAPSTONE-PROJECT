@@ -373,7 +373,9 @@
                                 class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 transition-colors">
                                 <option value="">-- Select Venue --</option>
                                 @foreach($venues as $v)
-                                    <option value="{{ $v->venue_id }}" @if(old('venue_id')==$v->venue_id) selected @endif>{{ $v->name }}</option>
+                                    <option value="{{ $v->venue_id }}" @if(old('venue_id')==$v->venue_id) selected @endif>
+                                        {{ $v->name }}{{ $v->location ? ' - ' . $v->location : '' }}
+                                    </option>
                                 @endforeach
                                 <option value="custom" @if(old('venue_id')=='custom') selected @endif>Other/Custom</option>
                             </select>

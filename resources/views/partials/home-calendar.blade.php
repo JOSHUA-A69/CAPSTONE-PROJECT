@@ -139,6 +139,78 @@ try {
 // Track active tab: reservations only
 var activeCalendarTab = 'reservations';
 
+function buildHomepageCalendarEvents(reservations, schedules) {
+    var reservationEvents = (reservations || []).map(function(res) {
+        var dateOnly = (res.schedule_date || '').toString().slice(0, 10);
+        if (dateOnly.includes('T')) dateOnly = dateOnly.split('T')[0];
+        if (dateOnly.includes(' ')) dateOnly = dateOnly.split(' ')[0];
+
+        var timeStr = '';
+        var rawDate = (res.schedule_date || '').toString();
+        if (rawDate.includes('T')) {
+            timeStr = rawDate.split('T')[1] || '';
+        } else if (rawDate.includes(' ')) {
+            timeStr = rawDate.split(' ')[1] || '';
+        }
+        if (timeStr.includes('.')) timeStr = timeStr.split('.')[0];
+        if (!timeStr || timeStr === '00:00:00') timeStr = '08:00:00';
+
+        var eventStart = dateOnly + 'T' + timeStr;
+        var color = getReservationStatusColor(res.status);
+        var serviceName = (res.service && res.service.service_name) ? res.service.service_name : 'Service';
+        var venueName = (res.venue && res.venue.name) ? res.venue.name : (res.custom_venue_name || '');
+        var orgName = (res.organization && res.organization.org_name) ? res.organization.org_name : '';
+        var privateReservation = isPrivateReservation(res);
+        var publicTitle = (res.public_title || '').trim() || (privateReservation ? 'Occupied' : (res.activity_name || serviceName));
+
+        return {
+            id: 'res-' + res.reservation_id,
+            title: publicTitle,
+            start: eventStart,
+            backgroundColor: color,
+            borderColor: color,
+            extendedProps: {
+                type: 'reservation',
+                isPrivateReservation: privateReservation,
+                status: res.status,
+                serviceName: serviceName,
+                venueName: venueName,
+                orgName: orgName,
+                purpose: res.purpose || '',
+                participants: res.participants_count || '',
+                reservationData: res
+            }
+        };
+    });
+
+    var scheduleEvents = (schedules || []).map(function(schedule) {
+        var dateOnly = (schedule.schedule_date || '').toString().slice(0, 10);
+        if (dateOnly.includes('T')) dateOnly = dateOnly.split('T')[0];
+        if (dateOnly.includes(' ')) dateOnly = dateOnly.split(' ')[0];
+
+        var startTime = (schedule.start_time || '08:00:00').toString();
+        if (startTime.includes(' ')) startTime = startTime.split(' ').pop();
+        if (startTime.includes('.')) startTime = startTime.split('.')[0];
+        if (startTime.length === 5) startTime = startTime + ':00';
+
+        return {
+            id: 'sched-' + schedule.schedule_id,
+            title: schedule.title || 'Schedule',
+            start: dateOnly + 'T' + startTime,
+            backgroundColor: getEventColor(schedule.event_type),
+            borderColor: getEventColor(schedule.event_type),
+            extendedProps: {
+                type: 'schedule',
+                eventType: schedule.event_type,
+                location: schedule.location,
+                scheduleData: schedule
+            }
+        };
+    });
+
+    return reservationEvents.concat(scheduleEvents);
+}
+
 // Wait for both DOM and modules to be ready
 function initWhenReady() {
     const calendarEl = document.getElementById('homepagecalendar');
@@ -147,7 +219,7 @@ function initWhenReady() {
         return;
     }
 
-    console.log('🏠 Homepage calendar: Loading', allReservationsData.length, 'reservations');
+    console.log('🏠 Homepage calendar: Loading', allReservationsData.length, 'reservations and', allSchedulesData.length, 'public schedules');
 
     if (typeof window.Calendar === 'undefined' ||
         typeof window.dayGridPlugin === 'undefined' ||
@@ -160,19 +232,19 @@ function initWhenReady() {
 
     console.log('✅ FullCalendar modules loaded, initializing calendar...');
 
-    // Initialize calendar with reservations
-    initializeReservationCalendar(allReservationsData);
-    renderReservationUpcomingList(allReservationsData);
+    // Initialize calendar with reservations + public schedules
+    initializeReservationCalendar(allReservationsData, allSchedulesData);
+    renderReservationUpcomingList(allReservationsData, allSchedulesData);
 
     // Update initial event count
-    document.getElementById('totalEvents').textContent = allReservationsData.length;
+    document.getElementById('totalEvents').textContent = allReservationsData.length + allSchedulesData.length;
 
     // Setup filter listeners for reservations only
     document.getElementById('resServiceFilter').addEventListener('change', applyReservationFilters);
     document.getElementById('resVenueFilter').addEventListener('change', applyReservationFilters);
     document.getElementById('resStatusFilter').addEventListener('change', applyReservationFilters);
 
-    console.log('✅ Calendar initialized successfully with', allReservationsData.length, 'reservations');
+    console.log('✅ Calendar initialized successfully');
 }
 
 // Start initialization when DOM is ready
@@ -821,53 +893,11 @@ function getReservationPriests(res) {
     return [];
 }
 
-function initializeReservationCalendar(reservations) {
+function initializeReservationCalendar(reservations, schedules) {
     var calendarEl = document.getElementById('homepagecalendar');
     if (!calendarEl) return;
 
-    var events = reservations.map(function(res) {
-        var dateOnly = (res.schedule_date || '').toString().slice(0, 10);
-        if (dateOnly.includes('T')) dateOnly = dateOnly.split('T')[0];
-        if (dateOnly.includes(' ')) dateOnly = dateOnly.split(' ')[0];
-
-        // Extract time from the datetime (schedule_date includes time)
-        var timeStr = '';
-        var rawDate = (res.schedule_date || '').toString();
-        if (rawDate.includes('T')) {
-            timeStr = rawDate.split('T')[1] || '';
-        } else if (rawDate.includes(' ')) {
-            timeStr = rawDate.split(' ')[1] || '';
-        }
-        if (timeStr.includes('.')) timeStr = timeStr.split('.')[0];
-        if (!timeStr || timeStr === '00:00:00') timeStr = '08:00:00';
-
-        var eventStart = dateOnly + 'T' + timeStr;
-        var color = getReservationStatusColor(res.status);
-        var serviceName = (res.service && res.service.service_name) ? res.service.service_name : 'Service';
-        var venueName = (res.venue && res.venue.name) ? res.venue.name : (res.custom_venue_name || '');
-        var orgName = (res.organization && res.organization.org_name) ? res.organization.org_name : '';
-        var privateReservation = isPrivateReservation(res);
-        var publicTitle = (res.public_title || '').trim() || (privateReservation ? 'Occupied' : (res.activity_name || serviceName));
-
-        return {
-            id: 'res-' + res.reservation_id,
-            title: publicTitle,
-            start: eventStart,
-            backgroundColor: color,
-            borderColor: color,
-            extendedProps: {
-                type: 'reservation',
-                isPrivateReservation: privateReservation,
-                status: res.status,
-                serviceName: serviceName,
-                venueName: venueName,
-                orgName: orgName,
-                purpose: res.purpose || '',
-                participants: res.participants_count || '',
-                reservationData: res
-            }
-        };
-    });
+    var events = buildHomepageCalendarEvents(reservations, schedules);
 
     // Detect mobile for responsive settings
     var isMobile = window.innerWidth <= 768;
@@ -897,11 +927,64 @@ function initializeReservationCalendar(reservations) {
             meridiem: 'short'
         },
         eventClick: function(info) {
+            if (info.event.extendedProps.type === 'schedule') {
+                renderHomeEventDetails(info.event.extendedProps.scheduleData);
+                return;
+            }
+
             showReservationModal(info.event.extendedProps.reservationData);
         },
         eventContent: function(arg) {
             var isMobile = window.innerWidth <= 768;
             var wrapper = document.createElement('div');
+            var isScheduleEvent = arg.event.extendedProps.type === 'schedule';
+
+            if (isScheduleEvent) {
+                wrapper.style.padding = isMobile ? '2px 3px' : '6px 8px';
+                wrapper.style.fontSize = isMobile ? '0.45rem' : '0.7rem';
+                wrapper.style.lineHeight = isMobile ? '1.1' : '1.4';
+                wrapper.style.cursor = 'pointer';
+                wrapper.style.backgroundColor = arg.event.backgroundColor || '#6B7280';
+                wrapper.style.border = '1px solid ' + (arg.event.borderColor || arg.event.backgroundColor || '#6B7280');
+                wrapper.style.borderRadius = isMobile ? '3px' : '8px';
+                wrapper.style.color = '#ffffff';
+                wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
+                wrapper.style.gap = isMobile ? '1px' : '3px';
+                wrapper.style.minHeight = isMobile ? '20px' : '60px';
+                wrapper.style.overflow = 'hidden';
+
+                var timeDiv = document.createElement('div');
+                timeDiv.style.fontSize = isMobile ? '0.42rem' : '0.62rem';
+                timeDiv.style.fontWeight = '600';
+                timeDiv.style.opacity = '0.95';
+                timeDiv.textContent = arg.timeText || '';
+                wrapper.appendChild(timeDiv);
+
+                var titleDiv = document.createElement('div');
+                titleDiv.style.fontSize = isMobile ? '0.45rem' : '0.75rem';
+                titleDiv.style.fontWeight = '700';
+                titleDiv.style.lineHeight = '1.2';
+                titleDiv.style.wordBreak = 'break-word';
+                titleDiv.textContent = arg.event.title || 'Schedule';
+                wrapper.appendChild(titleDiv);
+
+                var venueName = (arg.event.extendedProps.scheduleData && arg.event.extendedProps.scheduleData.venue && arg.event.extendedProps.scheduleData.venue.name)
+                    || arg.event.extendedProps.location
+                    || '';
+                if (venueName) {
+                    var locationDiv = document.createElement('div');
+                    locationDiv.style.fontSize = isMobile ? '0.42rem' : '0.62rem';
+                    locationDiv.style.opacity = '0.95';
+                    locationDiv.style.whiteSpace = 'nowrap';
+                    locationDiv.style.overflow = 'hidden';
+                    locationDiv.style.textOverflow = 'ellipsis';
+                    locationDiv.textContent = venueName;
+                    wrapper.appendChild(locationDiv);
+                }
+
+                return { domNodes: [wrapper] };
+            }
 
             // Responsive styling - much more compact on mobile
             wrapper.style.padding = isMobile ? '2px 3px' : '6px 8px';
@@ -1223,17 +1306,58 @@ function applyReservationFilters() {
     var venueVal = document.getElementById('resVenueFilter').value;
     var statusVal = document.getElementById('resStatusFilter').value;
 
+    function normalizeServiceToken(value) {
+        return String(value || '')
+            .toLowerCase()
+            .replace(/[_-]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function scheduleMatchesServiceFilter(schedule, selectedServiceId) {
+        if (!selectedServiceId) return true;
+
+        var rawMassSubtype = String((schedule && schedule.mass_subtype) || '').trim();
+        if (!rawMassSubtype) return false;
+
+        // Direct ID match (current staff UI stores service_id in mass_subtype)
+        if (rawMassSubtype === String(selectedServiceId)) return true;
+
+        // Legacy text/slug match fallback
+        var serviceSelect = document.getElementById('resServiceFilter');
+        var selectedText = '';
+        if (serviceSelect) {
+            var selectedOption = serviceSelect.querySelector('option[value="' + String(selectedServiceId) + '"]');
+            selectedText = selectedOption ? selectedOption.textContent : '';
+        }
+
+        var normalizedMassSubtype = normalizeServiceToken(rawMassSubtype);
+        var normalizedSelectedText = normalizeServiceToken(selectedText);
+
+        return normalizedSelectedText && normalizedMassSubtype === normalizedSelectedText;
+    }
+
     var filtered = allReservationsData;
+    var filteredSchedules = allSchedulesData;
 
     if (serviceVal) {
         filtered = filtered.filter(function(r) {
             return String(r.service_id) === String(serviceVal);
+        });
+
+        filteredSchedules = filteredSchedules.filter(function(s) {
+            return scheduleMatchesServiceFilter(s, serviceVal);
         });
     }
 
     if (venueVal) {
         filtered = filtered.filter(function(r) {
             return String(r.venue_id) === String(venueVal);
+        });
+
+        filteredSchedules = filteredSchedules.filter(function(s) {
+            var scheduleVenueId = (s && s.venue_id) || (s && s.venue && s.venue.venue_id);
+            return String(scheduleVenueId || '') === String(venueVal);
         });
     }
 
@@ -1245,20 +1369,20 @@ function applyReservationFilters() {
 
     console.log('Reservation filter:', { service: serviceVal, venue: venueVal, status: statusVal, results: filtered.length });
 
-    // Update event count
-    document.getElementById('totalEvents').textContent = filtered.length;
+    // Update event count (filtered reservations + filtered public schedules)
+    document.getElementById('totalEvents').textContent = filtered.length + filteredSchedules.length;
 
     if (homepageCalendar) {
         homepageCalendar.destroy();
     }
-    initializeReservationCalendar(filtered);
+    initializeReservationCalendar(filtered, filteredSchedules);
 
-    // Update upcoming list with reservation data
-    renderReservationUpcomingList(filtered);
+    // Update upcoming list with reservation + schedule data
+    renderReservationUpcomingList(filtered, filteredSchedules);
 }
 
 // Render upcoming reservations in the side panel list
-function renderReservationUpcomingList(reservations) {
+function renderReservationUpcomingList(reservations, schedules) {
     var listEl = document.getElementById('homepageUpcomingList');
     if (!listEl) return;
 
@@ -1273,32 +1397,55 @@ function renderReservationUpcomingList(reservations) {
         if (isNaN(d) || d < todayCut) continue;
         var copy = Object.assign({}, r);
         copy._dateObj = d;
+        copy._entryType = 'reservation';
         items.push(copy);
+    }
+
+    for (var s = 0; s < (schedules || []).length; s++) {
+        var sched = schedules[s];
+        var schedDateStr = (sched.schedule_date || '').toString().slice(0, 10);
+        var schedDate = new Date(schedDateStr);
+        if (isNaN(schedDate) || schedDate < todayCut) continue;
+        var schedCopy = Object.assign({}, sched);
+        schedCopy._dateObj = schedDate;
+        schedCopy._entryType = 'schedule';
+        items.push(schedCopy);
     }
 
     items.sort(function(a, b) { return a._dateObj - b._dateObj; });
     items = items.slice(0, 10);
 
     if (items.length === 0) {
-        listEl.innerHTML = '<div class="text-gray-600 dark:text-gray-400 text-sm">No upcoming reservations.</div>';
+        listEl.innerHTML = '<div class="text-gray-600 dark:text-gray-400 text-sm">No upcoming events.</div>';
         return;
     }
 
     var htmlParts = [];
     for (var j = 0; j < items.length; j++) {
-        var res = items[j];
-        var displayDate = res._dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        var svcName = (res.service && res.service.service_name) ? res.service.service_name : '';
-        var venName = (res.venue && res.venue.name) ? res.venue.name : '';
-        var color = getReservationStatusColor(res.status);
-        var privateReservation = isPrivateReservation(res);
-        var safeReservationId = escapeHtml(res.reservation_id);
-        var safeTitle = escapeHtml(privateReservation ? 'Occupied' : (res.activity_name || svcName));
-        var safeStatusLine = escapeHtml(privateReservation
-            ? 'Admin-approved reservation'
-            : (getReservationStatusLabel(res.status) + (venName ? ' \u2022 ' + venName : '')));
+        var item = items[j];
+        var displayDate = item._dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        var isSchedule = item._entryType === 'schedule';
+        var color = isSchedule ? getEventColor(item.event_type) : getReservationStatusColor(item.status);
+        var safeItemId = escapeHtml(isSchedule ? ('sched-' + item.schedule_id) : ('res-' + item.reservation_id));
+        var safeTitle;
+        var safeStatusLine;
+
+        if (isSchedule) {
+            var scheduleVenue = (item.venue && item.venue.name) ? item.venue.name : (item.location || '');
+            safeTitle = escapeHtml(item.title || 'Schedule');
+            safeStatusLine = escapeHtml((item.start_time || '') + (scheduleVenue ? ' \u2022 ' + scheduleVenue : ''));
+        } else {
+            var svcName = (item.service && item.service.service_name) ? item.service.service_name : '';
+            var venName = (item.venue && item.venue.name) ? item.venue.name : '';
+            var privateReservation = isPrivateReservation(item);
+            safeTitle = escapeHtml(privateReservation ? 'Occupied' : (item.activity_name || svcName));
+            safeStatusLine = escapeHtml(privateReservation
+                ? 'Admin-approved reservation'
+                : (getReservationStatusLabel(item.status) + (venName ? ' \u2022 ' + venName : '')));
+        }
+
         htmlParts.push(
-            '<button type="button" data-res-id="' + safeReservationId + '" class="w-full text-left p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex items-start gap-3">' +
+            '<button type="button" data-item-id="' + safeItemId + '" class="w-full text-left p-3 rounded-xl bg-white dark:bg-gray-800 border-2 border-emerald-200 dark:border-emerald-700 hover:border-emerald-400 dark:hover:border-emerald-500 transition flex items-start gap-3">' +
                 '<span class="flex-shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-white text-xs font-bold" style="background:' + color + ';">' + displayDate.replace(/[^\d]/g,'').padStart(2,'0') + '</span>' +
                 '<span class="min-w-0">' +
                     '<span class="block text-sm font-black text-emerald-900 dark:text-emerald-200">' + safeTitle + '</span>' +
@@ -1309,12 +1456,22 @@ function renderReservationUpcomingList(reservations) {
     }
     listEl.innerHTML = htmlParts.join('');
 
-    var buttons = listEl.querySelectorAll('[data-res-id]');
+    var buttons = listEl.querySelectorAll('[data-item-id]');
     for (var k = 0; k < buttons.length; k++) {
         buttons[k].addEventListener('click', function() {
-            var id = this.getAttribute('data-res-id');
-            var selected = reservations.find(function(x) { return String(x.reservation_id) === String(id); });
-            if (selected) showReservationModal(selected);
+            var id = this.getAttribute('data-item-id');
+            if (!id) return;
+
+            if (id.indexOf('sched-') === 0) {
+                var scheduleId = id.replace('sched-', '');
+                var selectedSchedule = (schedules || []).find(function(x) { return String(x.schedule_id) === String(scheduleId); });
+                if (selectedSchedule) renderHomeEventDetails(selectedSchedule);
+                return;
+            }
+
+            var reservationId = id.replace('res-', '');
+            var selectedReservation = reservations.find(function(x) { return String(x.reservation_id) === String(reservationId); });
+            if (selectedReservation) showReservationModal(selectedReservation);
         });
     }
 }

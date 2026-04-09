@@ -62,10 +62,12 @@ class ServiceManagementController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'service_name' => 'required|string|max:255|unique:services,service_name',
+            'service_name' => ['required', 'string', 'max:255', 'unique:services,service_name', 'regex:/^([^0-9]+)$/'],
             'service_category' => ['nullable', 'string', Rule::in($this->getCategories())],
             'description' => 'nullable|string|max:500',
             'duration' => 'nullable|integer|min:0|max:300',
+        ], [
+            'service_name.regex' => 'Service name must not contain numbers.',
         ]);
 
         Service::create($validated);

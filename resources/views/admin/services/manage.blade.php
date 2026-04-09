@@ -286,9 +286,20 @@
                                 @csrf
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Service Name <span class="text-red-500">*</span></label>
-                                    <input type="text" name="service_name" required
-                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
-                                        placeholder="e.g., Wedding, Baptism">
+                                    <select id="service_name_selector"
+                                        class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors">
+                                        <option value="">Choose service</option>
+                                        <option value="Outreach">Outreach</option>
+                                        <option value="Pilgrimage">Pilgrimage</option>
+                                        <option value="Fundraising Events">Fundraising Events</option>
+                                        <option value="Fellowship">Fellowship</option>
+                                        <option value="__custom__">Add New Services</option>
+                                    </select>
+                                    <input type="text" id="service_name_custom_input"
+                                        class="hidden mt-2 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors"
+                                        placeholder="Enter service name">
+                                    <input type="hidden" id="add_service_name" name="service_name" required>
+                                    <p id="add_service_name_error" class="mt-2 text-sm text-red-500 hidden">Service name must not contain numbers.</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mass Category</label>
@@ -469,7 +480,30 @@
 </div>
 
 <script>
+    function validateAddServiceName() {
+        const serviceNameInput = document.getElementById('add_service_name');
+        const errorMsg = document.getElementById('add_service_name_error');
+
+        if (!serviceNameInput || !errorMsg) return false;
+
+        const value = (serviceNameInput.value || '').trim();
+        const hasNumber = /\d/.test(value);
+
+        if (!value || hasNumber) {
+            errorMsg.classList.remove('hidden');
+            return false;
+        }
+
+        errorMsg.classList.add('hidden');
+        return true;
+    }
+
     function submitAddServiceForm() {
+        const isServiceNameValid = validateAddServiceName();
+        if (!isServiceNameValid) {
+            return;
+        }
+
         const isValid = calculateDuration('add_hours', 'add_minutes', 'add_duration_hidden', 'add_duration_error');
         if (isValid) {
             document.getElementById('addServiceForm').submit();
@@ -484,6 +518,19 @@
     }
 
     function openAddModal() {
+        const serviceNameSelector = document.getElementById('service_name_selector');
+        const customNameInput = document.getElementById('service_name_custom_input');
+        const serviceNameHidden = document.getElementById('add_service_name');
+        const serviceNameError = document.getElementById('add_service_name_error');
+
+        if (serviceNameSelector) serviceNameSelector.value = '';
+        if (customNameInput) {
+            customNameInput.value = '';
+            customNameInput.classList.add('hidden');
+        }
+        if (serviceNameHidden) serviceNameHidden.value = '';
+        if (serviceNameError) serviceNameError.classList.add('hidden');
+
         document.getElementById('addModal').classList.remove('hidden');
     }
     function closeAddModal() {
@@ -518,6 +565,39 @@
     if (addHours && addMinutes) {
         addHours.addEventListener('change', () => calculateDuration('add_hours', 'add_minutes', 'add_duration_hidden', 'add_duration_error'));
         addMinutes.addEventListener('change', () => calculateDuration('add_hours', 'add_minutes', 'add_duration_hidden', 'add_duration_error'));
+    }
+
+    // Service Name selector logic (Add modal)
+    const addServiceName = document.getElementById('add_service_name');
+    const serviceNameSelector = document.getElementById('service_name_selector');
+    const customNameInput = document.getElementById('service_name_custom_input');
+
+    function syncServiceNameValue() {
+        if (!addServiceName || !customNameInput) return;
+        addServiceName.value = customNameInput.value;
+    }
+
+    if (serviceNameSelector && addServiceName && customNameInput) {
+        serviceNameSelector.addEventListener('change', () => {
+            const selected = serviceNameSelector.value;
+
+            if (selected === '__custom__') {
+                customNameInput.classList.remove('hidden');
+                addServiceName.value = customNameInput.value;
+                customNameInput.focus();
+                return;
+            }
+
+            customNameInput.classList.add('hidden');
+            customNameInput.value = '';
+            addServiceName.value = selected;
+            validateAddServiceName();
+        });
+
+        customNameInput.addEventListener('input', () => {
+            syncServiceNameValue();
+            validateAddServiceName();
+        });
     }
 
     // Modal logic for Edit
